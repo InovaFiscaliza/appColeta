@@ -588,6 +588,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Axes fixed labels:
             xlabel(app.axes1, 'Frequência (MHz)')
             ylabel(app.axes1, 'Nível (dB)')
+            ysecondarylabel(app.axes1, sprintf('\n\n'))
+            
             xlabel(app.axes2, 'Frequência (MHz)')
             ylabel(app.axes2, 'Amostras')
 
@@ -1690,7 +1692,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function plot_StartUp(app)
+        function plot_Startup(app)
             cla(app.axes1)
             cla(app.axes2)
         
@@ -2142,7 +2144,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
     
                 % TASK INFO THAT ARE UPDATED IN REAL TIME
                 % (LEFT PANEL)
-                app.MetaData.HTMLSource = fcn.htmlCode_TaskMetaData(app.specObj, app.revisitObj, app.Table.Selection, app.Tree.SelectedNodes.NodeData);
+                app.MetaData.Text = fcn.htmlCode_TaskMetaData(app.specObj, app.revisitObj, app.Table.Selection, app.Tree.SelectedNodes.NodeData);
 
     
                 % (RIGHT PANEL)
@@ -2158,17 +2160,17 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
     
                 if ~isempty(app.specObj(ii).Band(jj).Mask)
-                    set(app.Button_MaskPlot, 'Enable', 1)
+                    app.axesTool_PlotSource.Items = {'Nível', 'Máscara'};
                     app.lastMask_text.Enable = 1;
                     Layout_lastMaskValidation(app, true, ii, jj)
                 else
-                    set(app.Button_MaskPlot, 'Enable', 0, 'Value', 0)
+                    app.axesTool_PlotSource.Items = {'Nível'};
                     Layout_lastMaskInitialState(app)
                 end
                 Layout_lastGPS(app, app.specObj(ii).lastGPS)
     
                 % (DOWN STATUS PANEL)
-                app.tool_Status.Text = sprintf('%s\n%s', app.Table.Data.Receiver(ii), app.Tree.SelectedNodes.Text);
+                ysecondarylabel(app.axes1, sprintf('%s\n%s\n', app.Table.Data.Receiver(ii), app.Tree.SelectedNodes.Text))
                 if ~isempty(app.tool_RevisitTime.Text); app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.specObj(ii).Band(jj).nSweeps, app.specObj(ii).Band(jj).RevisitTime);
                 else;                                   app.tool_RevisitTime.Text = '';
                 end
@@ -2180,7 +2182,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     otherwise;           set(app.tool_ButtonPlay, 'Enable', 'on',  'Icon', 'play_32.png')
                 end
 
-            catch
+            catch ME
+                struct2table(ME.stack)
+
+
                 % Return to initial layout aspect...
                 plot_Startup(app)
 
@@ -2189,10 +2194,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 app.Sweeps_REC.Visible    = 0;
                 Layout_errorCount(app, [])
                 
-                set(app.Button_MaskPlot, 'Enable', 0, 'Value', 0)
+                app.axesTool_PlotSource.Items = {'Nível'};
                 Layout_lastMaskInitialState(app)
-                
-                app.tool_Status.Text      = '';
+
+                ysecondarylabel(app.axes1, sprintf('\n\n'))
                 app.tool_RevisitTime.Text = '';
 
                 app.lastGPS_color.Color   = [0.502 0.502 0.502];
@@ -2371,7 +2376,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % Create task_docGrid
             app.task_docGrid = uigridlayout(app.Tab1Grid);
-            app.task_docGrid.ColumnWidth = {320, 10, 5, 280, '1x', 10, 130};
+            app.task_docGrid.ColumnWidth = {320, 10, '1x', 280, 5, 10, 130};
             app.task_docGrid.RowHeight = {140, 10, 24, '1x'};
             app.task_docGrid.ColumnSpacing = 0;
             app.task_docGrid.RowSpacing = 0;
