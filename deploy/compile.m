@@ -9,7 +9,7 @@ function varargout = compile(compilationType, rootCompiledFolder, matlabRuntimeF
     % Publicação do webapp no MATLAB WebServer ou no servidor local.
 
     arguments
-        compilationType         char {mustBeMember(compilationType, {'Desktop+WebApp', 'Desktop', 'WebApp'})} = 'Desktop'
+        compilationType         char {mustBeMember(compilationType, {'Desktop+WebApp', 'Desktop', 'WebApp'})} = 'Desktop+WebApp'
         rootCompiledFolder      char    = 'C:\InovaFiscaliza (AppsDeployVersions)'
         matlabRuntimeFolder     char    = 'D:\MATLAB Runtime\MATLAB Runtime (Custom)\R2024a'
         showConsoleInDesktopBuild  (1,1) logical = false % versão desktop apresenta console

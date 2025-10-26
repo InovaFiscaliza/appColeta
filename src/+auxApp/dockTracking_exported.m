@@ -331,6 +331,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
 
             % Create Panel
             app.Panel = uipanel(app.DocumentGrid);
+            app.Panel.AutoResizeChildren = 'off';
             app.Panel.BackgroundColor = [1 1 1];
             app.Panel.Layout.Row = 3;
             app.Panel.Layout.Column = [1 3];

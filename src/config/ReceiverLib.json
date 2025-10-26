@@ -4,7 +4,7 @@
     "Name": "Anritsu MS2720T",
     "Tag": "MS2720T",
     "Band": "9 kHz - 32 GHz",
-    "Logo": "Instr_Anritsu.png",
+    "Logo": "",
     "Image": "Instr_Anritsu_MS2720T.png",
     "connectType": [
       "TCPIP Socket"
@@ -58,7 +58,7 @@
     "Name": "Keysight N9344C",
     "Tag": "N9344C",
     "Band": "1 MHz - 20 GHz",
-    "Logo": "Instr_KeySight.png",
+    "Logo": "",
     "Image": "Instr_KeySight_N9344C.png",
     "connectType": [
       "TCPIP Socket"
@@ -118,7 +118,7 @@
     "Name": "Keysight N9936B",
     "Tag": "N9936B",
     "Band": "5 kHz - 14.1 GHz",
-    "Logo": "Instr_KeySight.png",
+    "Logo": "",
     "Image": "Instr_KeySight_N9936B.png",
     "connectType": [
       "TCPIP Socket"
@@ -174,7 +174,7 @@
     "Name": "R&S EB500",
     "Tag": "EB500",
     "Band": "8 kHz - 6 GHz (ou 3.6 GHz)",
-    "Logo": "Instr_R&S.png",
+    "Logo": "",
     "Image": "Instr_R&S_EB500.png",
     "connectType": [
       "TCP/UDP IP Socket"
@@ -223,7 +223,7 @@
     "Name": "R&S EB500",
     "Tag": "EB500",
     "Band": "8 kHz - 6 GHz (ou 3.6 GHz)",
-    "Logo": "Instr_R&S.png",
+    "Logo": "",
     "Image": "Instr_R&S_EB500.png",
     "connectType": [
       "TCP/UDP IP Socket"
@@ -273,7 +273,7 @@
     "Name": "R&S FSL",
     "Tag": "FSL",
     "Band": "9 kHz - 6 GHz",
-    "Logo": "Instr_R&S.png",
+    "Logo": "",
     "Image": "Instr_R&S_FSL.png",
     "connectType": [
       "TCPIP Socket"
@@ -330,7 +330,7 @@
     "Name": "R&S FSVR",
     "Tag": "FSVR",
     "Band": "10 Hz - 30 GHz",
-    "Logo": "Instr_R&S.png",
+    "Logo": "",
     "Image": "Instr_R&S_FSVR.png",
     "connectType": [
       "TCPIP Socket"
@@ -387,7 +387,7 @@
     "Name": "R&S FSW",
     "Tag": "FSW",
     "Band": "2 Hz - 43.5 GHz",
-    "Logo": "Instr_R&S.png",
+    "Logo": "",
     "Image": "Instr_R&S_FSW.png",
     "connectType": [
       "TCPIP Socket"
@@ -444,7 +444,7 @@
     "Name": "Tektronix SA2500",
     "Tag": "SA2500",
     "Band": "10 kHz - 6.2 GHz",
-    "Logo": "Instr_Tektronix.png",
+    "Logo": "",
     "Image": "Instr_Tektronix_SA2500.png",
     "connectType": [
       "TCPIP Socket"

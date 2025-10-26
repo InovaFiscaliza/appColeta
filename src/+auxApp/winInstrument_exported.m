@@ -1482,11 +1482,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create toolSeparator
             app.toolSeparator = uiimage(app.toolGrid);
-            app.toolSeparator.ScaleMethod = 'fill';
+            app.toolSeparator.ScaleMethod = 'none';
             app.toolSeparator.Enable = 'off';
             app.toolSeparator.Layout.Row = 1;
             app.toolSeparator.Layout.Column = 3;
-            app.toolSeparator.ImageSource = 'LineV.png';
+            app.toolSeparator.ImageSource = 'LineV.svg';
 
             % Create toolButton_connectTest
             app.toolButton_connectTest = uibutton(app.toolGrid, 'push');

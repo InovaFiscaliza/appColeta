@@ -61,51 +61,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
         Band_Tree                  matlab.ui.container.Tree
         Band_TreeLabel             matlab.ui.control.Label
         TaskControl                matlab.ui.container.TabGroup
-        ANTENASTab                 matlab.ui.container.Tab
-        Tab3_Panel                 matlab.ui.container.GridLayout
-        AntennaSwitch_Name         matlab.ui.control.EditField
-        AntennaSwitch_Mode         matlab.ui.control.CheckBox
-        AntennaList_Tree           matlab.ui.container.Tree
-        AddAntenna_Image           matlab.ui.control.Image
-        Antenna_Panel              matlab.ui.container.Panel
-        Antenna_Grid               matlab.ui.container.GridLayout
-        AntennaPolarization        matlab.ui.control.NumericEditField
-        AntennaPolarizationLabel   matlab.ui.control.Label
-        AntennaElevation           matlab.ui.control.NumericEditField
-        AntennaElevationLabel      matlab.ui.control.Label
-        AntennaAzimuth_Grid        matlab.ui.container.GridLayout
-        AntennaAzimuthRef          matlab.ui.control.DropDown
-        AntennaAzimuth             matlab.ui.control.NumericEditField
-        AntennaAzimuthLabel        matlab.ui.control.Label
-        AntennaHeight              matlab.ui.control.NumericEditField
-        AntennaHeightLabel         matlab.ui.control.Label
-        Antenna_TrackingMode       matlab.ui.control.DropDown
-        Antenna_TrackingModeLabel  matlab.ui.control.Label
-        AntennaName                matlab.ui.control.DropDown
-        AntennaNameLabel           matlab.ui.control.Label
-        INSTRUMENTOSTab            matlab.ui.container.Tab
-        Tab2_Panel                 matlab.ui.container.GridLayout
-        GPS_List                   matlab.ui.control.DropDown
-        GPS_ListLabel              matlab.ui.control.Label
-        GPS_FixedStation           matlab.ui.control.Button
-        Receiver_ListLabel         matlab.ui.control.Label
-        Receiver_List              matlab.ui.control.DropDown
-        Receiver_Connectivity      matlab.ui.control.Button
-        GPS_Connectivity           matlab.ui.control.Button
-        GPS_Panel                  matlab.ui.container.Panel
-        GPS_Grid                   matlab.ui.container.GridLayout
-        GPS_manualLongitudeLabel   matlab.ui.control.Label
-        GPS_manualLatitudeLabel    matlab.ui.control.Label
-        GPS_RevisitTimeLabel       matlab.ui.control.Label
-        GPS_RevisitTime            matlab.ui.control.NumericEditField
-        GPS_manualLongitude        matlab.ui.control.NumericEditField
-        GPS_manualLatitude         matlab.ui.control.NumericEditField
-        Receiver_Panel             matlab.ui.container.Panel
-        Receiver_Grid              matlab.ui.container.GridLayout
-        Receiver_SyncRef           matlab.ui.control.DropDown
-        Receiver_SyncRefLabel      matlab.ui.control.Label
-        Receiver_RstCommand        matlab.ui.control.DropDown
-        Receiver_RstCommandLabel   matlab.ui.control.Label
         TAREFATab                  matlab.ui.container.Tab
         Tab1_Panel                 matlab.ui.container.GridLayout
         TaskType                   matlab.ui.control.DropDown
@@ -134,6 +89,51 @@ classdef winAddTask_exported < matlab.apps.AppBase
         ObservationTypeLabel       matlab.ui.control.Label
         ObservationLabel           matlab.ui.control.Label
         BitsPerPoint               matlab.ui.control.DropDown
+        INSTRUMENTOSTab            matlab.ui.container.Tab
+        Tab2_Panel                 matlab.ui.container.GridLayout
+        GPS_List                   matlab.ui.control.DropDown
+        GPS_ListLabel              matlab.ui.control.Label
+        GPS_FixedStation           matlab.ui.control.Button
+        Receiver_ListLabel         matlab.ui.control.Label
+        Receiver_List              matlab.ui.control.DropDown
+        Receiver_Connectivity      matlab.ui.control.Button
+        GPS_Connectivity           matlab.ui.control.Button
+        GPS_Panel                  matlab.ui.container.Panel
+        GPS_Grid                   matlab.ui.container.GridLayout
+        GPS_manualLongitudeLabel   matlab.ui.control.Label
+        GPS_manualLatitudeLabel    matlab.ui.control.Label
+        GPS_RevisitTimeLabel       matlab.ui.control.Label
+        GPS_RevisitTime            matlab.ui.control.NumericEditField
+        GPS_manualLongitude        matlab.ui.control.NumericEditField
+        GPS_manualLatitude         matlab.ui.control.NumericEditField
+        Receiver_Panel             matlab.ui.container.Panel
+        Receiver_Grid              matlab.ui.container.GridLayout
+        Receiver_SyncRef           matlab.ui.control.DropDown
+        Receiver_SyncRefLabel      matlab.ui.control.Label
+        Receiver_RstCommand        matlab.ui.control.DropDown
+        Receiver_RstCommandLabel   matlab.ui.control.Label
+        ANTENASTab                 matlab.ui.container.Tab
+        Tab3_Panel                 matlab.ui.container.GridLayout
+        AntennaSwitch_Name         matlab.ui.control.EditField
+        AntennaSwitch_Mode         matlab.ui.control.CheckBox
+        AntennaList_Tree           matlab.ui.container.Tree
+        AddAntenna_Image           matlab.ui.control.Image
+        Antenna_Panel              matlab.ui.container.Panel
+        Antenna_Grid               matlab.ui.container.GridLayout
+        AntennaPolarization        matlab.ui.control.NumericEditField
+        AntennaPolarizationLabel   matlab.ui.control.Label
+        AntennaElevation           matlab.ui.control.NumericEditField
+        AntennaElevationLabel      matlab.ui.control.Label
+        AntennaAzimuth_Grid        matlab.ui.container.GridLayout
+        AntennaAzimuthRef          matlab.ui.control.DropDown
+        AntennaAzimuth             matlab.ui.control.NumericEditField
+        AntennaAzimuthLabel        matlab.ui.control.Label
+        AntennaHeight              matlab.ui.control.NumericEditField
+        AntennaHeightLabel         matlab.ui.control.Label
+        Antenna_TrackingMode       matlab.ui.control.DropDown
+        Antenna_TrackingModeLabel  matlab.ui.control.Label
+        AntennaName                matlab.ui.control.DropDown
+        AntennaNameLabel           matlab.ui.control.Label
         ContextMenu                matlab.ui.container.ContextMenu
         delAntennaEntry            matlab.ui.container.Menu
     end
@@ -2572,7 +2572,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_FixedStation = uibutton(app.Tab2_Panel, 'push');
             app.GPS_FixedStation.ButtonPushedFcn = createCallbackFcn(app, @GPS_FixedStationButtonPushed, true);
             app.GPS_FixedStation.Tag = 'task_Editable';
-            app.GPS_FixedStation.Icon = 'Pin_32.png';
+            app.GPS_FixedStation.Icon = 'Pin_18.png';
             app.GPS_FixedStation.BackgroundColor = [0.9804 0.9804 0.9804];
             app.GPS_FixedStation.Tooltip = {'Importa coordenadas geográficas da estação'};
             app.GPS_FixedStation.Layout.Row = 5;
@@ -2600,6 +2600,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create ANTENASTab
             app.ANTENASTab = uitab(app.TaskControl);
+            app.ANTENASTab.AutoResizeChildren = 'off';
             app.ANTENASTab.Title = 'ANTENAS';
 
             % Create Tab3_Panel
@@ -2630,6 +2631,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create Antenna_Panel
             app.Antenna_Panel = uipanel(app.Tab3_Panel);
+            app.Antenna_Panel.AutoResizeChildren = 'off';
             app.Antenna_Panel.Layout.Row = 5;
             app.Antenna_Panel.Layout.Column = [1 2];
 
@@ -3105,6 +3107,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create Band_DFPanel
             app.Band_DFPanel = uipanel(app.BandCustomizable);
+            app.Band_DFPanel.AutoResizeChildren = 'off';
             app.Band_DFPanel.Layout.Row = 6;
             app.Band_DFPanel.Layout.Column = [1 3];
 
@@ -3191,6 +3194,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create Band_AntennaPanel
             app.Band_AntennaPanel = uipanel(app.BandCustomizable);
+            app.Band_AntennaPanel.AutoResizeChildren = 'off';
             app.Band_AntennaPanel.Layout.Row = 8;
             app.Band_AntennaPanel.Layout.Column = [1 3];
 
