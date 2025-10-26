@@ -42,8 +42,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         DropDown             matlab.ui.control.DropDown
         MetaData             matlab.ui.control.Label
         play_axesToolbar     matlab.ui.container.GridLayout
+        axesTool_MinHold_3   matlab.ui.control.Image
+        axesTool_MinHold_2   matlab.ui.control.Image
+        axesTool_PlotSource  matlab.ui.control.DropDown
         axesTool_Waterfall   matlab.ui.control.Image
-        axesTool_Mask        matlab.ui.control.Image
         axesTool_Peak        matlab.ui.control.Image
         axesTool_MaxHold     matlab.ui.control.Image
         axesTool_Average     matlab.ui.control.Image
@@ -118,7 +120,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         Flag_running = 0
         Flag_editing = 0
-        plotLayout   = 0
 
         %-----------------------------------------------------------------%
         % PLOT
@@ -176,30 +177,19 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             % versão webapp, quando o navegador atualiza a
                             % página (decorrente de F5 ou CTRL+F5).
 
-                            selectedNodes = app.file_Tree.SelectedNodes;
-                            if ~isempty(app.file_Tree.SelectedNodes)
-                                app.file_Tree.SelectedNodes = [];
-                                file_TreeSelectionChanged(app)
-                            end
-
                             if ~app.menu_Button1.Value
                                 app.menu_Button1.Value = true;                    
                                 menu_mainButtonPushed(app, struct('Source', app.menu_Button1, 'PreviousValue', false))
                                 drawnow
                             end
 
-                            closeModule(app.tabGroupController, ["MONITORINGPLAN", "EXTERNALREQUEST", "RFDATAHUB", "CONFIG"], app.General)
+                            closeModule(app.tabGroupController, ["INSTRUMENT", "TASK:EDIT", "TASK:ADD", "SERVER", "CONFIG"], app.General)
     
                             if ~isempty(app.AppInfo.Tag)
                                 app.AppInfo.Tag = '';
                             end
 
                             startup_Controller(app)
-
-                            if ~isempty(selectedNodes)
-                                app.file_Tree.SelectedNodes = selectedNodes;
-                                file_TreeSelectionChanged(app)
-                            end
 
                             app.progressDialog.Visible = 'hidden';
                         end
@@ -260,17 +250,41 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             try
                 switch operationType
                     case 'closeFcn'
-                        auxAppTag = varargin{1};
+                        auxAppTag    = varargin{1};
                         closeModule(app.tabGroupController, auxAppTag, app.General)
 
                     case 'dockButtonPushed'
-                        auxAppTag = varargin{1};
+                        auxAppTag    = varargin{1};
                         varargout{1} = auxAppInputArguments(app, auxAppTag);
                     
                     case 'openDevTools'
                         dialogBox    = struct('id', 'login',    'label', 'Usuário: ', 'type', 'text');
                         dialogBox(2) = struct('id', 'password', 'label', 'Senha: ',   'type', 'password');
                         sendEventToHTMLSource(app.jsBackDoor, 'customForm', struct('UUID', 'openDevTools', 'Fields', dialogBox))
+
+                    case 'AddOrEditTask'
+                        auxAppTag   = varargin{1};
+                        infoEdition = varargin{2};
+                        newTask     = varargin{3};
+
+                        closeModule(app.tabGroupController, auxAppTag, app.General)
+
+                        % O try/catch possibilita a inclusão do progressDialog sem que 
+                        % exista o risco dele ficar visível, caso ocorra algum erro não
+                        % mapeado no método da classe.
+                        try
+                            app.progressDialog.Visible = 'visible';
+                            [app.specObj, msgError]    = app.specObj.AddOrEditTask(infoEdition, newTask, app.EMSatObj, app.ERMxObj);
+                            app.progressDialog.Visible = 'hidden';
+            
+                            if isempty(msgError)
+                                RegularTask_timerFcn(app)                                 % Startup of every task
+                            else
+                                appUtil.modalWindow(app.UIFigure, 'warning', msgError);
+                            end
+                        catch ME
+                            struct2table(ME.stack)
+                        end
 
                     otherwise
                         error('Unexpected call "%s" from %s', operationType, class(callingApp))
@@ -548,11 +562,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             addComponent(app.tabGroupController, "External", "auxApp.winServer",     app.menu_Button5, "AlwaysOn", struct('On', 'Server_36Yellow.png',   'Off', 'Server_36White.png'),   app.menu_Button1,                    5)
             addComponent(app.tabGroupController, "External", "auxApp.winConfig",     app.menu_Button6, "AlwaysOn", struct('On', 'Settings_36Yellow.png', 'Off', 'Settings_36White.png'), app.menu_Button1,                    6)
 
-            app.axesTool_MinHold.UserData = struct('id', '', 'status', false, 'icon', struct('On', 'MinHold_32Filled.png', 'Off', 'MinHold_32.png'));
-            app.axesTool_Average.UserData = struct('id', '', 'status', false, 'icon', struct('On', 'Average_32Filled.png', 'Off', 'Average_32.png'));
-            app.axesTool_MaxHold.UserData = struct('id', '', 'status', false, 'icon', struct('On', 'MaxHold_32Filled.png', 'Off', 'MaxHold_32.png'));
-            app.axesTool_Peak.UserData    = struct('id', '', 'status', false);
-            app.axesTool_Mask.UserData    = struct('id', '', 'status', false);
+            app.axesTool_PlotSource.UserData = struct('id', '', 'type', 'Nível');
+            app.axesTool_MinHold.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'MinHold_32Filled.png', 'Off', 'MinHold_32.png'));
+            app.axesTool_Average.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'Average_32Filled.png', 'Off', 'Average_32.png'));
+            app.axesTool_MaxHold.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'MaxHold_32Filled.png', 'Off', 'MaxHold_32.png'));
+            app.axesTool_Peak.UserData       = struct('id', '', 'status', false);
+            app.axesTool_Waterfall.UserData  = struct('id', '', 'status', false);
 
             startup_Axes(app)
         end
@@ -1647,46 +1662,31 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         % PLOT
         %-----------------------------------------------------------------%
         function plot_Layout(app)
-            switch app.plotLayout
-                case 0
-                    set(app.axes1,          Visible=1)
-                    set(app.axes1.Children, Visible=1)
-                    app.axes1.Layout.Tile     = 1;
-                    app.axes1.Layout.TileSpan = [3 1];
-                    app.axes1.XTickLabelMode  = 'auto';
-                    xlabel(app.axes1, 'Frequência (MHz)')
-                    
-                    set(app.axes2,          Visible=0)
-                    set(app.axes2.Children, Visible=0)
-                    app.axes2.Layout.Tile     = 4;
-                    app.axes2.Layout.TileSpan = [1 1];
+            if app.axesTool_Waterfall.UserData.status
+                set(app.axes1,          Visible=1)
+                set(app.axes1.Children, Visible=1)
+                app.axes1.Layout.Tile     = 1;
+                app.axes1.Layout.TileSpan = [1 1];
+                app.axes1.XTickLabel      = {};
+                xlabel(app.axes1, '')
 
-                case 1
-                    set(app.axes1,          Visible=1)
-                    set(app.axes1.Children, Visible=1)
-                    app.axes1.Layout.Tile     = 1;
-                    app.axes1.Layout.TileSpan = [1 1];
-                    app.axes1.XTickLabel      = {};
-                    xlabel(app.axes1, '')
-    
-                    set(app.axes2,          Visible=1)
-                    set(app.axes2.Children, Visible=1)
-                    app.axes2.Layout.Tile     = 2;
-                    app.axes2.Layout.TileSpan = [2 1];
-    
-                case 2
-                    set(app.axes1,          Visible=0)
-                    set(app.axes1.Children, Visible=0)
-                    app.axes1.Layout.Tile     = 4;
-                    app.axes1.Layout.TileSpan = [1 1];
-                    app.axes1.XTickLabel      = {};
-                    xlabel(app.axes1, '')
-    
-                    set(app.axes2,          Visible=1)
-                    set(app.axes2.Children, Visible=1)
-                    app.axes2.Layout.Tile     = 1;
-                    app.axes2.Layout.TileSpan = [3 1];
-            end    
+                set(app.axes2,          Visible=1)
+                set(app.axes2.Children, Visible=1)
+                app.axes2.Layout.Tile     = 2;
+                app.axes2.Layout.TileSpan = [2 1];
+            else
+                set(app.axes1,          Visible=1)
+                set(app.axes1.Children, Visible=1)
+                app.axes1.Layout.Tile     = 1;
+                app.axes1.Layout.TileSpan = [3 1];
+                app.axes1.XTickLabelMode  = 'auto';
+                xlabel(app.axes1, 'Frequência (MHz)')
+                
+                set(app.axes2,          Visible=0)
+                set(app.axes2.Children, Visible=0)
+                app.axes2.Layout.Tile     = 4;
+                app.axes2.Layout.TileSpan = [1 1];
+            end
         end
 
         %-----------------------------------------------------------------%
@@ -1707,10 +1707,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             idx = app.specObj(ii).Band(jj).Waterfall.idx;
             newArray = app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:);
         
-            if isempty(app.line_ClrWrite)
-                % Plot Layout
-                plot_Layout(app)
-        
+            if isempty(app.line_ClrWrite)        
                 % xArray
                 FreqStart = app.specObj(ii).Task.Script.Band(jj).FreqStart / 1e+6;
                 FreqStop  = app.specObj(ii).Task.Script.Band(jj).FreqStop  / 1e+6;
@@ -1726,207 +1723,103 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 diffArray = upYLim - downYLim;
         
                 if diffArray < class.Constants.yMinLimRange
-                    upYLim = downYLim + class.Constants.yMinLimRange;
-        
+                    upYLim = downYLim + class.Constants.yMinLimRange;        
                 elseif diffArray > class.Constants.yMaxLimRange
                     downYLim = upYLim - class.Constants.yMaxLimRange;
                 end
         
-                set(app.axes2, XLim=[FreqStart, FreqStop], YLim=[1, app.specObj(ii).Band(jj).Waterfall.Depth], View=[0, 90], CLim=[downYLim, upYLim])                
-        
-                if ~app.axesTool_Mask.UserData.status
-                    % ORDINARY PLOT (SPECTRUM + MASK THRESHOLD)
-                    ylabel(app.axes1, sprintf('Nível (%s)', strUnit));
-                    set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[downYLim, upYLim], YScale='linear')
-        
-                    % Mask threshold
-                    if ~isempty(app.specObj(ii).Band(jj).Mask)
-                        plot.draw2D.mask(app.axes1, app.specObj(ii), jj)
-                    end
+                set(app.axes2, XLim=[FreqStart, FreqStop], YLim=[1, app.specObj(ii).Band(jj).Waterfall.Depth], View=[0, 90], CLim=[downYLim, upYLim])
+
+                switch app.axesTool_PlotSource.UserData.type
+                    case 'Nível'
+                        % ORDINARY PLOT (SPECTRUM + MASK THRESHOLD)
+                        ylabel(app.axes1, sprintf('Nível (%s)', strUnit));
+                        set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[downYLim, upYLim], YScale='linear')
             
-                    % ClearWrite, MinHold, Average and MaxHold
-                    app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, newArray, LevelUnit, 'ClrWrite', app.General);
-                    
-                    if app.Button_MinHold.Value
-                        app.line_MinHold  = plot.draw2D.minHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
-                    end
+                        % Mask threshold
+                        if ~isempty(app.specObj(ii).Band(jj).Mask)
+                            plot.draw2D.mask(app.axes1, app.specObj(ii), jj)
+                        end
+                
+                        % ClearWrite, MinHold, Average and MaxHold
+                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, newArray, LevelUnit, 'ClrWrite', app.General);
+                        
+                        if app.Button_MinHold.Value
+                            app.line_MinHold  = plot.draw2D.minHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                        end
+                
+                        if app.Button_Average.Value
+                            app.line_Average  = plot.draw2D.Average(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                        end
+                
+                        if app.Button_MaxHold.Value
+                            app.line_MaxHold  = plot.draw2D.maxHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                        end
             
-                    if app.Button_Average.Value
-                        app.line_Average  = plot.draw2D.Average(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
-                    end
+                        if app.Button_peakExcursion.Value
+                            app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
+                        end
+
+                    case 'Azimute'
+                        % ToDo: Armazenar azimute em algum lugar, ao que
+                        % parece só estou armazenando nível na matriz de
+                        % Waterfall...
+                        ylabel(app.axes1, 'Azimute (º)');
+                        set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[0, 360], YScale='linear')
+                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, newArray, LevelUnit, 'ClrWrite', app.General);
+
+                    case 'Máscara'
+                        ylabel(app.axes1, 'Rompimento (%)');
+                        set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[.1, 100], YScale='log')
             
-                    if app.Button_MaxHold.Value
-                        app.line_MaxHold  = plot.draw2D.maxHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
-                    end
-        
-                    if app.Button_peakExcursion.Value
-                        app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
-                    end
-        
-                else
-                    % MASK PLOT
-                    ylabel(app.axes1, 'Rompimento (%)');
-                    set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[.1, 100], YScale='log')
-        
-                    KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
-                    app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, '%%', 'MaskPlot', app.General);
+                        KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
+                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, '%%', 'MaskPlot', app.General);
                 end
         
                 % Waterfall
                 app.surface_WFall = plot.draw3D.Waterfall(app.axes2, app.specObj(ii), jj, xArray);
         
             else
-                if ~app.axesTool_Mask.UserData.status
-                    % ORDINARY PLOT (SPECTRUM + MASK THRESHOLD)
-                    plot.draw2D.update(app.line_ClrWrite, newArray, app.General)
-                    
-                    if ~isempty(app.line_MinHold)
-                        plot.draw2D.update(app.line_MinHold, newArray, app.General)
-                    end
-                    
-                    if ~isempty(app.line_Average)
-                        plot.draw2D.update(app.line_Average, newArray, app.General)
-                    end
-                    
-                    if ~isempty(app.line_MaxHold)
-                        plot.draw2D.update(app.line_MaxHold, newArray, app.General)
-                    end
+                switch app.axesTool_PlotSource.UserData.type
+                    case 'Nível'
+                        plot.draw2D.update(app.line_ClrWrite, newArray, app.General)
+                        
+                        if ~isempty(app.line_MinHold)
+                            plot.draw2D.update(app.line_MinHold, newArray, app.General)
+                        end
+                        
+                        if ~isempty(app.line_Average)
+                            plot.draw2D.update(app.line_Average, newArray, app.General)
+                        end
+                        
+                        if ~isempty(app.line_MaxHold)
+                            plot.draw2D.update(app.line_MaxHold, newArray, app.General)
+                        end
+    
+                        if ~isempty(app.peakExcursion)
+                            app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
+                        end
 
-                    if ~isempty(app.peakExcursion)
-                        app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
-                    end
-        
-                else
-                    % MASK PLOT
-                    KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
-                    plot.draw2D.update(app.line_ClrWrite, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, app.General)
+                    case 'Azimute'
+                        plot.draw2D.update(app.line_ClrWrite, newArray, app.General)
+
+                    case 'Máscara'
+                        KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
+                        plot.draw2D.update(app.line_ClrWrite, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, app.General)
                 end
                 
                 app.surface_WFall.CData = circshift(app.specObj(ii).Band(jj).Waterfall.Matrix, -idx);
             end
-        
-            switch app.plotLayout
-                case 2
-                    set(app.axes2.Children, 'Visible', 'off')
-                case 3
-                    set(app.axes1.Children, 'Visible', 'off')
-            end
-            % drawnow
         end
 
         %-----------------------------------------------------------------%
+        % ToDo: Migrar p/ util.Html...
         function logMsg = Misc_logMsg(app, idx)
             logMsg = '';
             if ~isempty(app.specObj(idx).LOG)
                 logTable = struct2table(app.specObj(idx).LOG);
                 logMsg   = strjoin("<b>" + logTable.time + " - " + upper(logTable.type) + "</b>" + newline + logTable.msg, '\n\n');
             end
-        end
-    end
-
-    
-    methods (Access = public)
-        %-----------------------------------------------------------------%
-        function appBackDoor(app, callingApp, operationType, varargin)
-            try
-                switch class(callingApp)
-                    case {'auxApp.winInstrument', 'auxApp.winInstrument_exported', ...
-                          'auxApp.winTaskList',   'auxApp.winTaskList_exported',   ...
-                          'auxApp.winAddTask',    'auxApp.winAddTask_exported',    ...
-                          'auxApp.winServer',     'auxApp.winServer_exported',     ...
-                          'auxApp.winSettings',   'auxApp.winSettings_exported'}
-
-                        switch operationType
-                            case 'closeFcn'
-                                auxAppTag = varargin{1};
-                                closeModule(app.tabGroupController, auxAppTag, app.General)
-
-                            case 'AddOrEditTask'
-                                auxAppTag   = varargin{1};
-                                infoEdition = varargin{2};
-                                newTask     = varargin{3};
-
-                                closeModule(app.tabGroupController, auxAppTag, app.General)
-
-                                % O try/catch possibilita a inclusão do progressDialog sem que 
-                                % exista o risco dele ficar visível, caso ocorra algum erro não
-                                % mapeado no método da classe.
-
-                                try
-                                    app.progressDialog.Visible = 'visible';
-                                    [app.specObj, msgError]    = app.specObj.AddOrEditTask(infoEdition, newTask, app.EMSatObj, app.ERMxObj);
-                                    app.progressDialog.Visible = 'hidden';
-                    
-                                    if isempty(msgError)
-                                        RegularTask_timerFcn(app)                                 % Startup of every task
-                                    else
-                                        appUtil.modalWindow(app.UIFigure, 'warning', msgError);
-                                    end
-                                catch ME
-                                    struct2table(ME.stack)
-                                end
-
-                            otherwise
-                                error('UnexpectedCall')
-                        end
-
-                    case {'auxApp.dockTracking',  'auxApp.dockTracking_exported'}
-                        % O flag "updateFlag" provê essa atualização, e o flag "returnFlag" 
-                        % evita que o módulo seja "fechado" (por meio da invisibilidade do 
-                        % app.popupContainerGrid).
-
-                        updateFlag = varargin{1};
-                        returnFlag = varargin{2};
-
-                        if updateFlag
-                            % ...
-                        end
-
-                        if returnFlag
-                            return
-                        end
-                        
-                        app.popupContainerGrid.Visible = 0;
-    
-                    otherwise
-                        error('UnexpectedCall')
-                end
-
-            catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', ME.message);            
-            end
-
-            % Caso um app auxiliar esteja em modo DOCK, o progressDialog do
-            % app auxiliar coincide com o do appColeta. Força-se, portanto, 
-            % a condição abaixo para evitar possível bloqueio da tela.
-            app.progressDialog.Visible = 'hidden';
-        end
-
-        %-----------------------------------------------------------------%
-        function appOpenPopUpSecundaryApp(app, auxAppName, varargin)
-            arguments
-                app
-                auxAppName char {mustBeMember(auxAppName, {'Tracking'})}
-            end
-
-            arguments (Repeating)
-                varargin 
-            end
-
-            % Inicialmente ajusta as dimensões do container.
-            switch auxAppName
-                case 'Tracking'; screenWidth =  622; screenHeight = 302;
-            end
-
-            app.popupContainerGrid.ColumnWidth{2} = screenWidth;
-            app.popupContainerGrid.RowHeight{3}   = screenHeight-180;
-
-            % Executa o app auxiliar, mas antes tenta configurar transparência
-            % do BackgroundColor do Grid (caso não tenha sido aplicada anteriormente).
-            ccTools.compCustomizationV2(app.jsBackDoor, app.popupContainerGrid, 'backgroundColor', 'rgba(255,255,255,0.65)')
-            inputArguments = [{app}, varargin];
-            eval(sprintf('auxApp.dock%s_exported(app.popupContainer, inputArguments{:})', auxAppName))
-            app.popupContainerGrid.Visible = 1;
         end
     end
 
@@ -2322,7 +2215,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
             end
 
-            if isempty(app.Table.Selection) || isempty(app.Tree.SelectedNodes) || app.axesTool_Mask.UserData.status
+            if isempty(app.Table.Selection) || isempty(app.Tree.SelectedNodes) || strcmp(app.axesTool_PlotSource.UserData.type, 'Máscara')
                 return
             end
 
@@ -2382,12 +2275,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         % Image clicked function: axesTool_Waterfall
         function task_ButtonPushed_plotLayout(app, event)
             
-            app.plotLayout = mod(app.plotLayout+1, 3);
+            event.Source.UserData.status = ~event.Source.UserData.status;
             plot_Layout(app)
 
         end
 
-        % Image clicked function: axesTool_Mask
+        % Callback function
         function task_ButtonPushed_MaskPlot(app, event)
             
             event.Source.UserData.status = ~event.Source.UserData.status;
@@ -2412,6 +2305,22 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             jsBackDoor_Customizations(app, subTabIndex)
 
         end
+
+        % Image clicked function: axesTool_MinHold_2
+        function axesTool_MinHold_2ImageClicked(app, event)
+            
+        end
+
+        % Image clicked function: axesTool_MinHold_3
+        function axesTool_MinHold_3ImageClicked(app, event)
+            
+        end
+
+        % Value changed function: axesTool_PlotSource
+        function axesTool_PlotSourceValueChanged(app, event)
+            value = app.axesTool_PlotSource.Value;
+            
+        end
     end
 
     % Component initialization
@@ -2427,7 +2336,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.UIFigure = uifigure('Visible', 'off');
             app.UIFigure.AutoResizeChildren = 'off';
             app.UIFigure.Position = [100 100 1244 660];
-            app.UIFigure.Name = 'appColeta R2024a';
+            app.UIFigure.Name = 'appColeta';
             app.UIFigure.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'icon_48.png');
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @closeFcn, true);
 
@@ -2462,8 +2371,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % Create task_docGrid
             app.task_docGrid = uigridlayout(app.Tab1Grid);
-            app.task_docGrid.ColumnWidth = {320, 10, '1x', 132, 5, 10, 130};
-            app.task_docGrid.RowHeight = {140, 10, 22, '1x'};
+            app.task_docGrid.ColumnWidth = {320, 10, 5, 280, '1x', 10, 130};
+            app.task_docGrid.RowHeight = {140, 10, 24, '1x'};
             app.task_docGrid.ColumnSpacing = 0;
             app.task_docGrid.RowSpacing = 0;
             app.task_docGrid.Padding = [10 10 10 40];
@@ -2679,11 +2588,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % Create play_axesToolbar
             app.play_axesToolbar = uigridlayout(app.task_docGrid);
-            app.play_axesToolbar.ColumnWidth = {22, 22, 22, 22, 22, 22};
-            app.play_axesToolbar.RowHeight = {'1x'};
+            app.play_axesToolbar.ColumnWidth = {22, 22, 5, 110, 5, 22, 22, 22, 22, 22};
+            app.play_axesToolbar.RowHeight = {2, 18, 2};
             app.play_axesToolbar.ColumnSpacing = 0;
             app.play_axesToolbar.RowSpacing = 0;
-            app.play_axesToolbar.Padding = [0 2 0 2];
+            app.play_axesToolbar.Padding = [2 2 2 0];
             app.play_axesToolbar.Layout.Row = 3;
             app.play_axesToolbar.Layout.Column = 4;
             app.play_axesToolbar.BackgroundColor = [1 1 1];
@@ -2693,8 +2602,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axesTool_MinHold.ImageClickedFcn = createCallbackFcn(app, @task_ButtonPushed_plotTraceMode, true);
             app.axesTool_MinHold.Tag = 'MinHold';
             app.axesTool_MinHold.Tooltip = {'MinHold'};
-            app.axesTool_MinHold.Layout.Row = 1;
-            app.axesTool_MinHold.Layout.Column = 1;
+            app.axesTool_MinHold.Layout.Row = 2;
+            app.axesTool_MinHold.Layout.Column = 6;
+            app.axesTool_MinHold.VerticalAlignment = 'bottom';
             app.axesTool_MinHold.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'MinHold_32.png');
 
             % Create axesTool_Average
@@ -2702,8 +2612,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axesTool_Average.ImageClickedFcn = createCallbackFcn(app, @task_ButtonPushed_plotTraceMode, true);
             app.axesTool_Average.Tag = 'Average';
             app.axesTool_Average.Tooltip = {'Média'};
-            app.axesTool_Average.Layout.Row = 1;
-            app.axesTool_Average.Layout.Column = 2;
+            app.axesTool_Average.Layout.Row = 2;
+            app.axesTool_Average.Layout.Column = 7;
+            app.axesTool_Average.VerticalAlignment = 'bottom';
             app.axesTool_Average.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Average_32.png');
 
             % Create axesTool_MaxHold
@@ -2711,8 +2622,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axesTool_MaxHold.ImageClickedFcn = createCallbackFcn(app, @task_ButtonPushed_plotTraceMode, true);
             app.axesTool_MaxHold.Tag = 'MaxHold';
             app.axesTool_MaxHold.Tooltip = {'MaxHold'};
-            app.axesTool_MaxHold.Layout.Row = 1;
-            app.axesTool_MaxHold.Layout.Column = 3;
+            app.axesTool_MaxHold.Layout.Row = 2;
+            app.axesTool_MaxHold.Layout.Column = 8;
+            app.axesTool_MaxHold.VerticalAlignment = 'bottom';
             app.axesTool_MaxHold.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'MaxHold_32.png');
 
             % Create axesTool_Peak
@@ -2721,30 +2633,54 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axesTool_Peak.ImageClickedFcn = createCallbackFcn(app, @task_ButtonPushed_plotTraceMode, true);
             app.axesTool_Peak.Tag = 'Persistance';
             app.axesTool_Peak.Tooltip = {'Excursão de pico'};
-            app.axesTool_Peak.Layout.Row = 1;
-            app.axesTool_Peak.Layout.Column = 4;
+            app.axesTool_Peak.Layout.Row = 2;
+            app.axesTool_Peak.Layout.Column = 9;
+            app.axesTool_Peak.VerticalAlignment = 'bottom';
             app.axesTool_Peak.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Detection_18.png');
-
-            % Create axesTool_Mask
-            app.axesTool_Mask = uiimage(app.play_axesToolbar);
-            app.axesTool_Mask.ImageClickedFcn = createCallbackFcn(app, @task_ButtonPushed_MaskPlot, true);
-            app.axesTool_Mask.Tag = 'Ocuppancy';
-            app.axesTool_Mask.Tooltip = {'Máscara'};
-            app.axesTool_Mask.Layout.Row = 1;
-            app.axesTool_Mask.Layout.Column = 5;
-            app.axesTool_Mask.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Mask_32.png');
 
             % Create axesTool_Waterfall
             app.axesTool_Waterfall = uiimage(app.play_axesToolbar);
             app.axesTool_Waterfall.ScaleMethod = 'none';
             app.axesTool_Waterfall.ImageClickedFcn = createCallbackFcn(app, @task_ButtonPushed_plotLayout, true);
             app.axesTool_Waterfall.Tag = 'Waterfall';
-            app.axesTool_Waterfall.Tooltip = {'Layout plot'};
-            app.axesTool_Waterfall.Layout.Row = 1;
-            app.axesTool_Waterfall.Layout.Column = 6;
+            app.axesTool_Waterfall.Tooltip = {'Waterfall'};
+            app.axesTool_Waterfall.Layout.Row = 2;
+            app.axesTool_Waterfall.Layout.Column = 10;
             app.axesTool_Waterfall.HorizontalAlignment = 'left';
             app.axesTool_Waterfall.VerticalAlignment = 'bottom';
-            app.axesTool_Waterfall.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Layers_18.png');
+            app.axesTool_Waterfall.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Waterfall_24.png');
+
+            % Create axesTool_PlotSource
+            app.axesTool_PlotSource = uidropdown(app.play_axesToolbar);
+            app.axesTool_PlotSource.Items = {'Nível', 'Azimute', 'Máscara'};
+            app.axesTool_PlotSource.ValueChangedFcn = createCallbackFcn(app, @axesTool_PlotSourceValueChanged, true);
+            app.axesTool_PlotSource.Tooltip = {'Fonte de dados'};
+            app.axesTool_PlotSource.FontSize = 11;
+            app.axesTool_PlotSource.FontColor = [0.129411764705882 0.129411764705882 0.129411764705882];
+            app.axesTool_PlotSource.BackgroundColor = [1 1 1];
+            app.axesTool_PlotSource.Layout.Row = [1 3];
+            app.axesTool_PlotSource.Layout.Column = 4;
+            app.axesTool_PlotSource.Value = 'Nível';
+
+            % Create axesTool_MinHold_2
+            app.axesTool_MinHold_2 = uiimage(app.play_axesToolbar);
+            app.axesTool_MinHold_2.ImageClickedFcn = createCallbackFcn(app, @axesTool_MinHold_2ImageClicked, true);
+            app.axesTool_MinHold_2.Tag = 'MinHold';
+            app.axesTool_MinHold_2.Tooltip = {'RestoreView'};
+            app.axesTool_MinHold_2.Layout.Row = 2;
+            app.axesTool_MinHold_2.Layout.Column = 1;
+            app.axesTool_MinHold_2.VerticalAlignment = 'bottom';
+            app.axesTool_MinHold_2.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Home_18.png');
+
+            % Create axesTool_MinHold_3
+            app.axesTool_MinHold_3 = uiimage(app.play_axesToolbar);
+            app.axesTool_MinHold_3.ImageClickedFcn = createCallbackFcn(app, @axesTool_MinHold_3ImageClicked, true);
+            app.axesTool_MinHold_3.Tag = 'MinHold';
+            app.axesTool_MinHold_3.Tooltip = {'RegionZoom'};
+            app.axesTool_MinHold_3.Layout.Row = 2;
+            app.axesTool_MinHold_3.Layout.Column = 2;
+            app.axesTool_MinHold_3.VerticalAlignment = 'bottom';
+            app.axesTool_MinHold_3.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'ZoomRegion_20.png');
 
             % Create TabGroup2
             app.TabGroup2 = uitabgroup(app.task_docGrid);
@@ -2814,6 +2750,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create tool_LeftPanel
             app.tool_LeftPanel = uiimage(app.task_toolGrid);
             app.tool_LeftPanel.ImageClickedFcn = createCallbackFcn(app, @menu_LayoutPanelVisibility, true);
+            app.tool_LeftPanel.Tooltip = {'Visibilidade do painel à esquerda'};
             app.tool_LeftPanel.Layout.Row = 2;
             app.tool_LeftPanel.Layout.Column = 1;
             app.tool_LeftPanel.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'ArrowLeft_32.png');
@@ -2848,6 +2785,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.tool_ButtonLOG = uiimage(app.task_toolGrid);
             app.tool_ButtonLOG.ImageClickedFcn = createCallbackFcn(app, @menu_PushButtonPushed_logTask, true);
             app.tool_ButtonLOG.Enable = 'off';
+            app.tool_ButtonLOG.Tooltip = {'LOG tarefa'};
             app.tool_ButtonLOG.Layout.Row = 2;
             app.tool_ButtonLOG.Layout.Column = 5;
             app.tool_ButtonLOG.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LOG_32.png');

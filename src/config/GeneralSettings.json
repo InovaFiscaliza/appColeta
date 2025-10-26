@@ -1,15 +1,20 @@
 {
-    "version": 0.02,
+    "version": 0.04,
     "operationMode": {
         "Debug": false,
         "Dock": true,
-        "Simulation": false
+        "Simulation": false,
+        "DevTools": {
+            "login": "admin",
+            "password": "admin"
+        }
     },
     "computerName": {
         "deskopApp": "",
         "webServer": "WIMATLABPDIN01"
     },
     "fileFolder": {
+        "MFilePath": "",
         "userPath": "",
         "tempPath": "",
         "pythonPath": "",
@@ -73,7 +78,6 @@
         "Latitude": -1,
         "Longitude": -1
     },
-    "openGL": "hardware",
     "startupInfo": false,
     "tcpServer": {
         "Status": 0,

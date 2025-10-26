@@ -3,7 +3,7 @@
     "Family": "GPS",
     "Name": "GPS USB/Serial",
     "Tag": "GPS",
-    "Logo": "Instr_Global.png",
+    "Logo": "",
     "Image": "Instr_gpsGarmin62sc.png",
     "connectType": [
       "Serial"
@@ -14,7 +14,7 @@
     "Family": "GPS",
     "Name": "GPS TCPIP",
     "Tag": "GPS",
-    "Logo": "Instr_Global.png",
+    "Logo": "",
     "Image": "Instr_gpsGarmin62sc.png",
     "connectType": [
       "TCPIP Socket"
