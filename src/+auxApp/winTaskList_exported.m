@@ -7,8 +7,11 @@ classdef winTaskList_exported < matlab.apps.AppBase
         DockModuleGroup            matlab.ui.container.GridLayout
         dockModule_Undock          matlab.ui.control.Image
         dockModule_Close           matlab.ui.control.Image
+        TabGroup                   matlab.ui.container.TabGroup
+        Tab                        matlab.ui.container.Tab
+        TabGrid                    matlab.ui.container.GridLayout
         Panel                      matlab.ui.container.Panel
-        GridLayout2                matlab.ui.container.GridLayout
+        PanelGrid                  matlab.ui.container.GridLayout
         BandSpecificInfo_Grid      matlab.ui.container.GridLayout
         FindPeaks_Panel            matlab.ui.container.Panel
         FindPeaks_Grid             matlab.ui.container.GridLayout
@@ -89,9 +92,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
         NameLabel                  matlab.ui.control.Label
         PanelLabel                 matlab.ui.control.Label
         TreeGrid                   matlab.ui.container.GridLayout
-        ButtonGroupPanel           matlab.ui.container.ButtonGroup
-        ButtonGroup_Edit           matlab.ui.control.RadioButton
-        ButtonGroup_View           matlab.ui.control.RadioButton
         Image_downArrow            matlab.ui.control.Image
         Image_upArrow              matlab.ui.control.Image
         Image_del                  matlab.ui.control.Image
@@ -99,10 +99,14 @@ classdef winTaskList_exported < matlab.apps.AppBase
         Image_addTask              matlab.ui.control.Image
         Tree                       matlab.ui.container.Tree
         TreeLabel                  matlab.ui.control.Label
+        ModePanel                  matlab.ui.container.ButtonGroup
+        ModeButtonEdit             matlab.ui.control.RadioButton
+        ModeButtonView             matlab.ui.control.RadioButton
+        ModePanelLabel             matlab.ui.control.Label
         Toolbar                    matlab.ui.container.GridLayout
-        toolButton_play            matlab.ui.control.Button
-        toolExportFile             matlab.ui.control.Image
-        toolOpenFile               matlab.ui.control.Image
+        toolButton_ok              matlab.ui.control.Button
+        toolButton_export          matlab.ui.control.Image
+        toolButton_open            matlab.ui.control.Image
     end
 
     
@@ -187,15 +191,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     });
                 end
             end
-
-            % Outros elementos:
-            elToModify = {app.ButtonGroupPanel};
-            elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-            if ~isempty(elDataTag)
-                sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                    struct('appName', appName, 'dataTag', elDataTag{1}, 'style', struct('backgroundColor', 'transparent')) ...
-                });
-            end
         end
     end
     
@@ -227,7 +222,12 @@ classdef winTaskList_exported < matlab.apps.AppBase
             drawnow
 
             jsBackDoor_Customizations(app)
+            startup_AppProperties(app)
+            startup_GUIComponents(app)
+        end
 
+        %-----------------------------------------------------------------%
+        function startup_AppProperties(app)
             % Leitura de "taskList.json" - não é "aproveitada" a versão do 
             % winAppColetaV2 porque ela não contém os fluxos desabilitados
             % e, também, porque pode ter ocorridos uma alteração em editor
@@ -237,10 +237,15 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 appUtil.modalWindow(app.UIFigure, "error", msgError);
             end
             app.editedList = app.taskList;
-            
-            % Organização da informação do arquivo em árvore...
+        end
+
+        %-----------------------------------------------------------------%
+        function startup_GUIComponents(app)
+            if ~strcmp(app.mainApp.executionMode, 'webApp')
+                app.dockModule_Undock.Enable = 1;
+            end
+
             TreeBuilding(app, [])
-            focus(app.Tree)
         end
 
         %-----------------------------------------------------------------%
@@ -389,7 +394,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 set(app.DurationUnit, Items={'min', 'hr'}, Value='min')
             end
 
-            if app.ButtonGroup_View.Value
+            if app.ModeButtonView.Value
                 app.DurationUnit.Items = {app.DurationUnit.Value};
             end
         end
@@ -437,7 +442,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function SpecificTimePanel_editable(app)
 
-            if app.ButtonGroup_View.Value
+            if app.ModeButtonView.Value
                 set(app.SpecificTime_Grid.Children, Enable=0, Visible=1)
             else
                 set(app.SpecificTime_Grid.Children, Enable=1, Visible=1)
@@ -448,7 +453,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function FindPeaksPanel_editable(app)
 
-            if app.ButtonGroup_View.Value
+            if app.ModeButtonView.Value
                 set(findobj(app.FindPeaks_Grid, 'Type', 'uispinner'), Enable=0)
             else
                 set(findobj(app.FindPeaks_Grid, 'Type', 'uispinner'), Enable=1)
@@ -511,7 +516,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.mainApp.taskList = class.taskList.file2raw(fullfile(app.mainApp.rootFolder, 'config', 'taskList.json'), 'winAppColetaV2');
 
             % Fecha o módulo auxiliar "auxApp.winAddTask.mlapp", caso aberto.
-            appBackDoor(app.mainApp, app, 'closeFcn', 'TASK:ADD')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
         end
 
         %-----------------------------------------------------------------%
@@ -553,7 +558,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            appBackDoor(app.mainApp, app, 'closeFcn', 'TASK:EDIT')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
             delete(app)
             
         end
@@ -591,7 +596,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 %---------------------------------------------------------%
                 % ## MODO DE VISUALIZAÇÃO ##
                 %---------------------------------------------------------%
-                if app.ButtonGroup_View.Value
+                if app.ModeButtonView.Value
                     if app.editedList(idx1).Band(idx2).Enable; app.Status.Items = {'ON'};
                     else;                                      app.Status.Items = {'OFF'};
                     end
@@ -665,7 +670,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % LAYOUT
             Layout(app)
 
-            if app.ButtonGroup_Edit.Value
+            if app.ModeButtonEdit.Value
                 set(app.BitsPerPoint,    'Items', {'8 bits', '16 bits', '32 bits'})
                 set(app.ObservationType, 'Items', {'Duração', 'Período específico', 'Quantidade específica de amostras'})
                 set(app.DurationUnit,    'Items', {'min', 'hr'})
@@ -747,7 +752,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     app.FindPeaks_Distance.Value   = class.Constants.FindPeaks.Distance;
                     app.FindPeaks_BW.Value         = class.Constants.FindPeaks.BW;
 
-                    if app.ButtonGroup_Edit.Value
+                    if app.ModeButtonEdit.Value
                         app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks = [];
                     end
 
@@ -765,7 +770,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     app.FindPeaks_Distance.Value   = app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.Distance;
                     app.FindPeaks_BW.Value         = app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.BW;
 
-                    if app.ButtonGroup_Edit.Value
+                    if app.ModeButtonEdit.Value
                         app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks = struct('nSweeps',    app.FindPeaks_nSweeps.Value,    ...
                                                                                        'Prominence', app.FindPeaks_Prominence.Value, ...
                                                                                        'Distance',   app.FindPeaks_Distance.Value,   ...
@@ -775,18 +780,18 @@ classdef winTaskList_exported < matlab.apps.AppBase
             
         end
 
-        % Selection changed function: ButtonGroupPanel
+        % Selection changed function: ModePanel
         function OperationModeValueChanged(app, event)
             
             %-------------------------------------------------------------%
             % ## MODO DE VISUALIZAÇÃO ##
             %-------------------------------------------------------------%
-            if app.ButtonGroup_View.Value
+            if app.ModeButtonView.Value
                 % Aspectos relacionados à indicação visual de que se trata 
                 % do modo de visualização:
                 set(findobj(app.TreeGrid, 'Type', 'uiimage'), 'Enable', 'off')
                 app.TreeGrid.ColumnWidth{end} = 0;                
-                app.toolButton_play.Visible  = 0;
+                app.toolButton_ok.Visible  = 0;
                 app.toolButton_open.Enable   = 'on';
                 app.toolButton_export.Enable = 'on';
 
@@ -826,7 +831,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 % do modo de edição:
                 set(app.TreeGrid.Children, 'Enable', 'on')
                 app.TreeGrid.ColumnWidth{end} = 16;                
-                app.toolButton_play.Visible  = 1;
+                app.toolButton_ok.Visible  = 1;
                 app.toolButton_open.Enable   = 'off';
                 app.toolButton_export.Enable = 'off';
 
@@ -864,7 +869,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: toolOpenFile
+        % Image clicked function: toolButton_open
         function toolButton_openPushed(app, event)
             
             [File, Folder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
@@ -886,7 +891,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: toolExportFile
+        % Image clicked function: toolButton_export
         function toolButton_exportPushed(app, event)
             
             Folder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de tarefas');
@@ -962,8 +967,8 @@ atp
 
         end
 
-        % Button pushed function: toolButton_play
-        function toolButton_playPushed(app, event)
+        % Button pushed function: toolButton_ok
+        function toolButton_okPushed(app, event)
             
             % Finalizada a edição, avalia-se se algum parâmetro foi, de fato, 
             % alterado, salvando uma nova versão do arquivo "taskList.json",
@@ -988,7 +993,7 @@ atp
                 update(app)
             end
             
-            app.ButtonGroup_View.Value = 1;
+            app.ModeButtonView.Value = 1;
             OperationModeValueChanged(app)
 
         end
@@ -1213,7 +1218,7 @@ atp
 
         end
 
-        % Image clicked function: dockModule_Undock
+        % Image clicked function: dockModule_Close, dockModule_Undock
         function DockModuleGroup_ButtonPushed(app, event)
             
             [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
@@ -1274,7 +1279,7 @@ atp
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {10, 320, 10, '1x', 48, 8, 2};
+            app.GridLayout.ColumnWidth = {10, '1x', 48, 8, 2};
             app.GridLayout.RowHeight = {2, 8, 24, '1x', 10, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
@@ -1288,57 +1293,108 @@ atp
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.Padding = [10 6 10 6];
             app.Toolbar.Layout.Row = 6;
-            app.Toolbar.Layout.Column = [1 7];
+            app.Toolbar.Layout.Column = [1 5];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
-            % Create toolOpenFile
-            app.toolOpenFile = uiimage(app.Toolbar);
-            app.toolOpenFile.ScaleMethod = 'none';
-            app.toolOpenFile.ImageClickedFcn = createCallbackFcn(app, @toolButton_openPushed, true);
-            app.toolOpenFile.Tooltip = {'Abre arquivo .json com lista de tarefas'};
-            app.toolOpenFile.Layout.Row = 1;
-            app.toolOpenFile.Layout.Column = 1;
-            app.toolOpenFile.ImageSource = 'Import_16.png';
+            % Create toolButton_open
+            app.toolButton_open = uiimage(app.Toolbar);
+            app.toolButton_open.ScaleMethod = 'none';
+            app.toolButton_open.ImageClickedFcn = createCallbackFcn(app, @toolButton_openPushed, true);
+            app.toolButton_open.Tooltip = {'Abre arquivo .json com lista de tarefas'};
+            app.toolButton_open.Layout.Row = 1;
+            app.toolButton_open.Layout.Column = 1;
+            app.toolButton_open.ImageSource = 'Import_16.png';
 
-            % Create toolExportFile
-            app.toolExportFile = uiimage(app.Toolbar);
-            app.toolExportFile.ScaleMethod = 'none';
-            app.toolExportFile.ImageClickedFcn = createCallbackFcn(app, @toolButton_exportPushed, true);
-            app.toolExportFile.Tooltip = {'Exporta arquivo .json com lista de tarefas'};
-            app.toolExportFile.Layout.Row = 1;
-            app.toolExportFile.Layout.Column = 2;
-            app.toolExportFile.ImageSource = 'Export_16.png';
+            % Create toolButton_export
+            app.toolButton_export = uiimage(app.Toolbar);
+            app.toolButton_export.ScaleMethod = 'none';
+            app.toolButton_export.ImageClickedFcn = createCallbackFcn(app, @toolButton_exportPushed, true);
+            app.toolButton_export.Tooltip = {'Exporta arquivo .json com lista de tarefas'};
+            app.toolButton_export.Layout.Row = 1;
+            app.toolButton_export.Layout.Column = 2;
+            app.toolButton_export.ImageSource = 'Export_16.png';
 
-            % Create toolButton_play
-            app.toolButton_play = uibutton(app.Toolbar, 'push');
-            app.toolButton_play.ButtonPushedFcn = createCallbackFcn(app, @toolButton_playPushed, true);
-            app.toolButton_play.Icon = 'Edit_32White.png';
-            app.toolButton_play.IconAlignment = 'right';
-            app.toolButton_play.HorizontalAlignment = 'right';
-            app.toolButton_play.BackgroundColor = [0.6392 0.0784 0.1804];
-            app.toolButton_play.FontSize = 11;
-            app.toolButton_play.FontColor = [1 1 1];
-            app.toolButton_play.Visible = 'off';
-            app.toolButton_play.Layout.Row = 1;
-            app.toolButton_play.Layout.Column = 4;
-            app.toolButton_play.Text = 'Confirma edição';
+            % Create toolButton_ok
+            app.toolButton_ok = uibutton(app.Toolbar, 'push');
+            app.toolButton_ok.ButtonPushedFcn = createCallbackFcn(app, @toolButton_okPushed, true);
+            app.toolButton_ok.Icon = 'Edit_32White.png';
+            app.toolButton_ok.IconAlignment = 'right';
+            app.toolButton_ok.HorizontalAlignment = 'right';
+            app.toolButton_ok.BackgroundColor = [0.6392 0.0784 0.1804];
+            app.toolButton_ok.FontSize = 11;
+            app.toolButton_ok.FontColor = [1 1 1];
+            app.toolButton_ok.Visible = 'off';
+            app.toolButton_ok.Layout.Row = 1;
+            app.toolButton_ok.Layout.Column = 4;
+            app.toolButton_ok.Text = 'Confirma edição';
+
+            % Create TabGroup
+            app.TabGroup = uitabgroup(app.GridLayout);
+            app.TabGroup.AutoResizeChildren = 'off';
+            app.TabGroup.Layout.Row = [3 4];
+            app.TabGroup.Layout.Column = [2 3];
+
+            % Create Tab
+            app.Tab = uitab(app.TabGroup);
+            app.Tab.AutoResizeChildren = 'off';
+            app.Tab.Title = 'LISTA DE TAREFAS';
+
+            % Create TabGrid
+            app.TabGrid = uigridlayout(app.Tab);
+            app.TabGrid.ColumnWidth = {320, '1x'};
+            app.TabGrid.RowHeight = {17, 34, 22, '1x'};
+            app.TabGrid.RowSpacing = 5;
+            app.TabGrid.BackgroundColor = [1 1 1];
+
+            % Create ModePanelLabel
+            app.ModePanelLabel = uilabel(app.TabGrid);
+            app.ModePanelLabel.VerticalAlignment = 'bottom';
+            app.ModePanelLabel.FontSize = 10;
+            app.ModePanelLabel.Layout.Row = 1;
+            app.ModePanelLabel.Layout.Column = 1;
+            app.ModePanelLabel.Text = 'MODO:';
+
+            % Create ModePanel
+            app.ModePanel = uibuttongroup(app.TabGrid);
+            app.ModePanel.AutoResizeChildren = 'off';
+            app.ModePanel.SelectionChangedFcn = createCallbackFcn(app, @OperationModeValueChanged, true);
+            app.ModePanel.BackgroundColor = [1 1 1];
+            app.ModePanel.Layout.Row = 2;
+            app.ModePanel.Layout.Column = 1;
+            app.ModePanel.FontSize = 10;
+
+            % Create ModeButtonView
+            app.ModeButtonView = uiradiobutton(app.ModePanel);
+            app.ModeButtonView.Text = '<font style="color:#0000ff;">VISUALIZAR</font> lista';
+            app.ModeButtonView.FontSize = 11;
+            app.ModeButtonView.Interpreter = 'html';
+            app.ModeButtonView.Position = [6 5 117 22];
+            app.ModeButtonView.Value = true;
+
+            % Create ModeButtonEdit
+            app.ModeButtonEdit = uiradiobutton(app.ModePanel);
+            app.ModeButtonEdit.Text = '<font style="color:#a2142f;"><b>EDITAR</b></font> lista';
+            app.ModeButtonEdit.FontSize = 11;
+            app.ModeButtonEdit.Interpreter = 'html';
+            app.ModeButtonEdit.Position = [150 5 92 22];
 
             % Create TreeLabel
-            app.TreeLabel = uilabel(app.GridLayout);
+            app.TreeLabel = uilabel(app.TabGrid);
+            app.TreeLabel.VerticalAlignment = 'bottom';
             app.TreeLabel.FontSize = 10;
             app.TreeLabel.Layout.Row = 3;
-            app.TreeLabel.Layout.Column = 2;
-            app.TreeLabel.Text = 'TAREFAS';
+            app.TreeLabel.Layout.Column = 1;
+            app.TreeLabel.Text = 'TAREFAS:';
 
             % Create TreeGrid
-            app.TreeGrid = uigridlayout(app.GridLayout);
+            app.TreeGrid = uigridlayout(app.TabGrid);
             app.TreeGrid.ColumnWidth = {2, 146, '1x', 0};
             app.TreeGrid.RowHeight = {16, 5, 16, 5, 16, '1x', 16, 16, 5, 16, 2};
             app.TreeGrid.ColumnSpacing = 5;
             app.TreeGrid.RowSpacing = 0;
             app.TreeGrid.Padding = [0 0 0 0];
             app.TreeGrid.Layout.Row = 4;
-            app.TreeGrid.Layout.Column = 2;
+            app.TreeGrid.Layout.Column = 1;
             app.TreeGrid.BackgroundColor = [1 1 1];
 
             % Create Tree
@@ -1393,52 +1449,28 @@ atp
             app.Image_downArrow.Layout.Column = 4;
             app.Image_downArrow.ImageSource = 'ArrowDown_32.png';
 
-            % Create ButtonGroupPanel
-            app.ButtonGroupPanel = uibuttongroup(app.TreeGrid);
-            app.ButtonGroupPanel.AutoResizeChildren = 'off';
-            app.ButtonGroupPanel.SelectionChangedFcn = createCallbackFcn(app, @OperationModeValueChanged, true);
-            app.ButtonGroupPanel.BorderType = 'none';
-            app.ButtonGroupPanel.BackgroundColor = [1 1 1];
-            app.ButtonGroupPanel.Layout.Row = [7 10];
-            app.ButtonGroupPanel.Layout.Column = 2;
-            app.ButtonGroupPanel.FontSize = 10;
-
-            % Create ButtonGroup_View
-            app.ButtonGroup_View = uiradiobutton(app.ButtonGroupPanel);
-            app.ButtonGroup_View.Text = '<font style="color:#0000ff;">VISUALIZAR</font> lista';
-            app.ButtonGroup_View.FontSize = 11;
-            app.ButtonGroup_View.Interpreter = 'html';
-            app.ButtonGroup_View.Position = [6 25 117 22];
-            app.ButtonGroup_View.Value = true;
-
-            % Create ButtonGroup_Edit
-            app.ButtonGroup_Edit = uiradiobutton(app.ButtonGroupPanel);
-            app.ButtonGroup_Edit.Text = '<font style="color:#a2142f;"><b>EDITAR</b></font> lista';
-            app.ButtonGroup_Edit.FontSize = 11;
-            app.ButtonGroup_Edit.Interpreter = 'html';
-            app.ButtonGroup_Edit.Position = [6 6 92 22];
-
             % Create PanelLabel
-            app.PanelLabel = uilabel(app.GridLayout);
+            app.PanelLabel = uilabel(app.TabGrid);
+            app.PanelLabel.VerticalAlignment = 'bottom';
             app.PanelLabel.FontSize = 10;
-            app.PanelLabel.Layout.Row = 3;
-            app.PanelLabel.Layout.Column = 4;
+            app.PanelLabel.Layout.Row = 1;
+            app.PanelLabel.Layout.Column = 2;
             app.PanelLabel.Text = 'CARACTERÍSTICAS';
 
             % Create Panel
-            app.Panel = uipanel(app.GridLayout);
+            app.Panel = uipanel(app.TabGrid);
             app.Panel.AutoResizeChildren = 'off';
-            app.Panel.Layout.Row = 4;
-            app.Panel.Layout.Column = [4 5];
+            app.Panel.Layout.Row = [2 4];
+            app.Panel.Layout.Column = 2;
 
-            % Create GridLayout2
-            app.GridLayout2 = uigridlayout(app.Panel);
-            app.GridLayout2.ColumnWidth = {320, '1x'};
-            app.GridLayout2.RowHeight = {'1x'};
-            app.GridLayout2.BackgroundColor = [1 1 1];
+            % Create PanelGrid
+            app.PanelGrid = uigridlayout(app.Panel);
+            app.PanelGrid.ColumnWidth = {320, '1x'};
+            app.PanelGrid.RowHeight = {'1x'};
+            app.PanelGrid.BackgroundColor = [1 1 1];
 
             % Create Tab2_PanelGrid
-            app.Tab2_PanelGrid = uigridlayout(app.GridLayout2);
+            app.Tab2_PanelGrid = uigridlayout(app.PanelGrid);
             app.Tab2_PanelGrid.ColumnWidth = {'1x'};
             app.Tab2_PanelGrid.RowHeight = {17, 22, 22, 22, 22, 90, 22, 22, '1x'};
             app.Tab2_PanelGrid.ColumnSpacing = 20;
@@ -1756,7 +1788,7 @@ atp
             app.GPS_RevisitTime.Value = 60;
 
             % Create BandSpecificInfo_Grid
-            app.BandSpecificInfo_Grid = uigridlayout(app.GridLayout2);
+            app.BandSpecificInfo_Grid = uigridlayout(app.PanelGrid);
             app.BandSpecificInfo_Grid.ColumnWidth = {'1x', '1x', '1x', '1x'};
             app.BandSpecificInfo_Grid.RowHeight = {17, 22, 22, 22, 22, 22, 22, 22, 22, 22, 34, 22, '1x'};
             app.BandSpecificInfo_Grid.RowSpacing = 5;
@@ -2191,12 +2223,13 @@ atp
             app.DockModuleGroup.Padding = [5 2 5 2];
             app.DockModuleGroup.Visible = 'off';
             app.DockModuleGroup.Layout.Row = [2 3];
-            app.DockModuleGroup.Layout.Column = [5 6];
+            app.DockModuleGroup.Layout.Column = [3 4];
             app.DockModuleGroup.BackgroundColor = [0.2 0.2 0.2];
 
             % Create dockModule_Close
             app.dockModule_Close = uiimage(app.DockModuleGroup);
             app.dockModule_Close.ScaleMethod = 'none';
+            app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
             app.dockModule_Close.Tag = 'DRIVETEST';
             app.dockModule_Close.Tooltip = {'Fecha módulo'};
             app.dockModule_Close.Layout.Row = 1;
