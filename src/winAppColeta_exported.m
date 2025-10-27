@@ -24,9 +24,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         Tab1_Task            matlab.ui.container.Tab
         Tab1Grid             matlab.ui.container.GridLayout
         task_toolGrid        matlab.ui.container.GridLayout
-        tool_RightPanel      matlab.ui.control.Image
         tool_RevisitTime     matlab.ui.control.Label
-        tool_Status          matlab.ui.control.Label
         tool_ButtonLOG       matlab.ui.control.Image
         tool_Separator       matlab.ui.control.Image
         tool_ButtonDel       matlab.ui.control.Image
@@ -1112,7 +1110,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             while app.Flag_running
                 if app.Flag_editing
                     app.revisitObj = fcn.RevisitFactors(app.specObj);
-                    app.MetaData.HTMLSource = fcn.htmlCode_TaskMetaData(app.specObj, app.revisitObj, app.Table.Selection, app.Tree.SelectedNodes.NodeData);
+                    app.MetaData.Text = util.HtmlTextGenerator.Task(app.specObj, app.revisitObj, app.Table.Selection, app.Tree.SelectedNodes.NodeData);
 
                     if isempty(app.revisitObj.GlobalRevisitTime)
                         app.Flag_running = 0;
@@ -1323,7 +1321,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             start(app.timerObj_task)
 
             app.revisitObj = [];
-            app.MetaData.HTMLSource = fcn.htmlCode_TaskMetaData(app.specObj, app.revisitObj, app.Table.Selection, app.Tree.SelectedNodes.NodeData);
+            app.MetaData.Text = util.HtmlTextGenerator.Task(app.specObj, app.revisitObj, app.Table.Selection, app.Tree.SelectedNodes.NodeData);
         end
 
 
@@ -1557,7 +1555,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 app.tool_ButtonLOG.Enable  = 0;
             end
             Layout_errorCount(app, app.Table.Selection)
-            drawnow nocallbacks
+            drawnow
         
             if ~isempty(app.Tree.SelectedNodes); Layout_treeBuilding(app, app.Tree.SelectedNodes.NodeData)
             else;                                Layout_treeBuilding(app, 1)
@@ -1585,8 +1583,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
                 
                 app.Tree.SelectedNodes = app.Tree.Children(Selection);
+
+                set(app.DropDown, 'Items', {app.Tree.Children.Text}, 'Value', app.Tree.Children(Selection).Text)
             end
-            drawnow nocallbacks
+            drawnow
         end
 
         %-----------------------------------------------------------------%
@@ -1705,32 +1705,35 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
+        function [xArray, downYLim, upYLim, FreqStart, FreqStop, LevelUnit, strUnit] = plot_AxesParameters(app, ii, jj, newArray)
+            % xArray
+            FreqStart = app.specObj(ii).Task.Script.Band(jj).FreqStart / 1e+6;
+            FreqStop  = app.specObj(ii).Task.Script.Band(jj).FreqStop  / 1e+6;
+            LevelUnit = app.specObj(ii).Task.Script.Band(jj).instrLevelUnit;
+            xArray    = linspace(FreqStart, FreqStop, app.specObj(ii).Band(jj).DataPoints);
+    
+            % General settings
+            [~, strUnit] = class.Constants.yAxisUpLimit(app.specObj(ii).Task.Script.Band(jj).instrLevelUnit);
+    
+            [downYLim, upYLim] = bounds(newArray);
+            downYLim  = downYLim - mod(downYLim, 10);
+            upYLim    = upYLim + 10 - mod(upYLim, 10);        
+            diffArray = upYLim - downYLim;
+    
+            if diffArray < class.Constants.yMinLimRange
+                upYLim = downYLim + class.Constants.yMinLimRange;        
+            elseif diffArray > class.Constants.yMaxLimRange
+                downYLim = upYLim - class.Constants.yMaxLimRange;
+            end
+        end
+
+        %-----------------------------------------------------------------%
         function plot_Draw(app, ii, jj)
             idx = app.specObj(ii).Band(jj).Waterfall.idx;
             newArray = app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:);
         
-            if isempty(app.line_ClrWrite)        
-                % xArray
-                FreqStart = app.specObj(ii).Task.Script.Band(jj).FreqStart / 1e+6;
-                FreqStop  = app.specObj(ii).Task.Script.Band(jj).FreqStop  / 1e+6;
-                LevelUnit = app.specObj(ii).Task.Script.Band(jj).instrLevelUnit;
-                xArray    = linspace(FreqStart, FreqStop, app.specObj(ii).Band(jj).DataPoints);
-        
-                % General settings
-                [~, strUnit] = class.Constants.yAxisUpLimit(app.specObj(ii).Task.Script.Band(jj).instrLevelUnit);
-        
-                [downYLim, upYLim] = bounds(newArray);
-                downYLim  = downYLim - mod(downYLim, 10);
-                upYLim    = upYLim + 10 - mod(upYLim, 10);        
-                diffArray = upYLim - downYLim;
-        
-                if diffArray < class.Constants.yMinLimRange
-                    upYLim = downYLim + class.Constants.yMinLimRange;        
-                elseif diffArray > class.Constants.yMaxLimRange
-                    downYLim = upYLim - class.Constants.yMaxLimRange;
-                end
-        
-                set(app.axes2, XLim=[FreqStart, FreqStop], YLim=[1, app.specObj(ii).Band(jj).Waterfall.Depth], View=[0, 90], CLim=[downYLim, upYLim])
+            if isempty(app.line_ClrWrite)
+                [xArray, downYLim, upYLim, FreqStart, FreqStop, LevelUnit, strUnit] = plot_AxesParameters(app, ii, jj, newArray);
 
                 switch app.axesTool_PlotSource.UserData.type
                     case 'Nível'
@@ -1746,19 +1749,19 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         % ClearWrite, MinHold, Average and MaxHold
                         app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, newArray, LevelUnit, 'ClrWrite', app.General);
                         
-                        if app.Button_MinHold.Value
+                        if app.axesTool_MinHold.UserData.status
                             app.line_MinHold  = plot.draw2D.minHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
                         end
                 
-                        if app.Button_Average.Value
+                        if app.axesTool_Average.UserData.status
                             app.line_Average  = plot.draw2D.Average(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
                         end
                 
-                        if app.Button_MaxHold.Value
+                        if app.axesTool_MaxHold.UserData.status
                             app.line_MaxHold  = plot.draw2D.maxHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
                         end
             
-                        if app.Button_peakExcursion.Value
+                        if app.axesTool_Peak.UserData.status
                             app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
                         end
 
@@ -1777,10 +1780,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
                         app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, '%%', 'MaskPlot', app.General);
                 end
-        
-                % Waterfall
-                app.surface_WFall = plot.draw3D.Waterfall(app.axes2, app.specObj(ii), jj, xArray);
-        
             else
                 switch app.axesTool_PlotSource.UserData.type
                     case 'Nível'
@@ -1809,18 +1808,20 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
                         plot.draw2D.update(app.line_ClrWrite, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, app.General)
                 end
-                
-                app.surface_WFall.CData = circshift(app.specObj(ii).Band(jj).Waterfall.Matrix, -idx);
             end
-        end
 
-        %-----------------------------------------------------------------%
-        % ToDo: Migrar p/ util.Html...
-        function logMsg = Misc_logMsg(app, idx)
-            logMsg = '';
-            if ~isempty(app.specObj(idx).LOG)
-                logTable = struct2table(app.specObj(idx).LOG);
-                logMsg   = strjoin("<b>" + logTable.time + " - " + upper(logTable.type) + "</b>" + newline + logTable.msg, '\n\n');
+            % Waterfall
+            if app.axesTool_Waterfall.UserData.status
+                if isempty(app.surface_WFall)
+                    if ~exist('xArray', 'var')
+                        [xArray, downYLim, upYLim] = plot_AxesParameters(app, ii, jj, newArray);
+                    end
+                    set(app.axes2, 'YLim', [1, app.specObj(ii).Band(jj).Waterfall.Depth], 'View', [0, 90], 'CLim', [downYLim, upYLim])
+
+                    app.surface_WFall = plot.draw3D.Waterfall(app.axes2, app.specObj(ii), jj, xArray);
+                else
+                    app.surface_WFall.CData = circshift(app.specObj(ii).Band(jj).Waterfall.Matrix, -idx);
+                end
             end
         end
     end
@@ -2076,34 +2077,23 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             idx = app.Table.Selection;
             if idx
-                appUtil.modalWindow(app.UIFigure, 'warning', Misc_logMsg(app, idx));
+                log = util.HtmlTextGenerator.LOG(app.specObj, idx);
+                appUtil.modalWindow(app.UIFigure, 'warning', log);
             end
 
         end
 
-        % Image clicked function: tool_LeftPanel, tool_RightPanel
+        % Image clicked function: tool_LeftPanel
         function menu_LayoutPanelVisibility(app, event)
             
-            switch event.Source
-                case app.tool_LeftPanel
-                    if app.task_docGrid.ColumnWidth{1}
-                        app.tool_LeftPanel.ImageSource = 'ArrowRight_32.png';
-                        app.task_docGrid.ColumnWidth(1:2) = {0,0};
-                        app.TabGroup2.Visible = 0;
-                    else
-                        app.tool_LeftPanel.ImageSource = 'ArrowLeft_32.png';
-                        app.task_docGrid.ColumnWidth(1:2) = {320,10};
-                        app.TabGroup2.Visible = 1;
-                    end
-
-                case app.tool_RightPanel
-                    if app.task_docGrid.ColumnWidth{end}
-                        app.tool_RightPanel.ImageSource = 'ArrowLeft_32.png';
-                        app.task_docGrid.ColumnWidth(end-1:end) = {0,0};
-                    else
-                        app.tool_RightPanel.ImageSource = 'ArrowRight_32.png';
-                        app.task_docGrid.ColumnWidth(end-1:end) = {10,130};
-                    end
+            if app.task_docGrid.ColumnWidth{1}
+                app.tool_LeftPanel.ImageSource = 'ArrowRight_32.png';
+                app.task_docGrid.ColumnWidth(1:2) = {0,0};
+                app.TabGroup2.Visible = 0;
+            else
+                app.tool_LeftPanel.ImageSource = 'ArrowLeft_32.png';
+                app.task_docGrid.ColumnWidth(1:2) = {320,10};
+                app.TabGroup2.Visible = 1;
             end
             
         end
@@ -2144,7 +2134,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
     
                 % TASK INFO THAT ARE UPDATED IN REAL TIME
                 % (LEFT PANEL)
-                app.MetaData.Text = fcn.htmlCode_TaskMetaData(app.specObj, app.revisitObj, app.Table.Selection, app.Tree.SelectedNodes.NodeData);
+                app.MetaData.Text = util.HtmlTextGenerator.Task(app.specObj, app.revisitObj, app.Table.Selection, app.Tree.SelectedNodes.NodeData);
 
     
                 % (RIGHT PANEL)
@@ -2177,9 +2167,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                 % PLAY BUTTON
                 switch app.specObj(ii).Status
-                    case 'Na fila';      set(app.tool_ButtonPlay, 'Enable', 'off', 'Icon', 'play_32.png')
-                    case 'Em andamento'; set(app.tool_ButtonPlay, 'Enable', 'on',  'Icon', 'stop_32.png')
-                    otherwise;           set(app.tool_ButtonPlay, 'Enable', 'on',  'Icon', 'play_32.png')
+                    case 'Na fila';      set(app.tool_ButtonPlay, 'Enable', 'off', 'ImageSource', 'play_32.png')
+                    case 'Em andamento'; set(app.tool_ButtonPlay, 'Enable', 'on',  'ImageSource', 'stop_32.png')
+                    otherwise;           set(app.tool_ButtonPlay, 'Enable', 'on',  'ImageSource', 'play_32.png')
                 end
 
             catch ME
@@ -2189,9 +2179,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 % Return to initial layout aspect...
                 plot_Startup(app)
 
-                app.MetaData.HTMLSource   = ' ';
-                app.Sweeps.Text           = '-1';
-                app.Sweeps_REC.Visible    = 0;
+                app.MetaData.Text      = ' ';
+                app.Sweeps.Text        = '-1';
+                app.Sweeps_REC.Visible = 0;
                 Layout_errorCount(app, [])
                 
                 app.axesTool_PlotSource.Items = {'Nível'};
@@ -2247,7 +2237,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                 app.line_MinHold  = [];
                             end
 
-                        case app.Button_Average
+                        case app.axesTool_Average
                             if event.Source.UserData.status
                                 app.line_Average  = plot.draw2D.Average(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
                             else
@@ -2255,7 +2245,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                 app.line_Average  = [];
                             end
 
-                        case app.Button_MaxHold
+                        case app.axesTool_MaxHold
                             if event.Source.UserData.status
                                 app.line_MaxHold  = plot.draw2D.maxHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
                             else
@@ -2263,7 +2253,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                 app.line_MaxHold  = [];
                             end
 
-                        case app.Button_peakExcursion
+                        case app.axesTool_Peak
                             if event.Source.UserData.status
                                 app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
                             else
@@ -2283,24 +2273,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             event.Source.UserData.status = ~event.Source.UserData.status;
             plot_Layout(app)
 
-        end
-
-        % Callback function
-        function task_ButtonPushed_MaskPlot(app, event)
-            
-            event.Source.UserData.status = ~event.Source.UserData.status;
-            
-            if isempty(app.Table.Selection) || isempty(app.Tree.SelectedNodes)
-                return
-            end
-
-            ii = app.Table.Selection;
-            jj = app.Tree.SelectedNodes.NodeData;
-    
-            plot_Startup(app)
-            plot_Draw(app, ii, jj)
-            drawnow
-            
         end
 
         % Selection change function: TabGroup2
@@ -2737,6 +2709,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create DropDown
             app.DropDown = uidropdown(app.GridLayout3);
             app.DropDown.Items = {};
+            app.DropDown.FontSize = 11;
             app.DropDown.BackgroundColor = [1 1 1];
             app.DropDown.Layout.Row = 1;
             app.DropDown.Layout.Column = 1;
@@ -2744,11 +2717,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % Create task_toolGrid
             app.task_toolGrid = uigridlayout(app.Tab1Grid);
-            app.task_toolGrid.ColumnWidth = {22, 22, 22, 5, 22, '1x', '1x', 22};
-            app.task_toolGrid.RowHeight = {'1x', 17, '1x'};
+            app.task_toolGrid.ColumnWidth = {22, 22, 22, 5, 22, '1x'};
+            app.task_toolGrid.RowHeight = {4, 17, 2};
             app.task_toolGrid.ColumnSpacing = 5;
             app.task_toolGrid.RowSpacing = 0;
-            app.task_toolGrid.Padding = [5 6 6 6];
+            app.task_toolGrid.Padding = [5 6 10 6];
             app.task_toolGrid.Layout.Row = 2;
             app.task_toolGrid.Layout.Column = 1;
 
@@ -2795,30 +2768,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.tool_ButtonLOG.Layout.Column = 5;
             app.tool_ButtonLOG.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LOG_32.png');
 
-            % Create tool_Status
-            app.tool_Status = uilabel(app.task_toolGrid);
-            app.tool_Status.WordWrap = 'on';
-            app.tool_Status.FontSize = 10;
-            app.tool_Status.Layout.Row = [1 3];
-            app.tool_Status.Layout.Column = 6;
-            app.tool_Status.Text = '';
-
             % Create tool_RevisitTime
             app.tool_RevisitTime = uilabel(app.task_toolGrid);
             app.tool_RevisitTime.HorizontalAlignment = 'right';
             app.tool_RevisitTime.WordWrap = 'on';
             app.tool_RevisitTime.FontSize = 10;
             app.tool_RevisitTime.Layout.Row = [1 3];
-            app.tool_RevisitTime.Layout.Column = 7;
+            app.tool_RevisitTime.Layout.Column = 6;
             app.tool_RevisitTime.Text = '';
-
-            % Create tool_RightPanel
-            app.tool_RightPanel = uiimage(app.task_toolGrid);
-            app.tool_RightPanel.ImageClickedFcn = createCallbackFcn(app, @menu_LayoutPanelVisibility, true);
-            app.tool_RightPanel.Tooltip = {'Visibilidade do painel à direita'};
-            app.tool_RightPanel.Layout.Row = 2;
-            app.tool_RightPanel.Layout.Column = 8;
-            app.tool_RightPanel.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'ArrowRight_32.png');
 
             % Create Tab2_InstrumentList
             app.Tab2_InstrumentList = uitab(app.TabGroup);

@@ -16,7 +16,7 @@ function [instrHandle, gpsData, msgError] = ConnectivityTest_GPS(app, instrSelec
             gpsData = fcn.gpsExternalReader(instrHandle, 1);
 
             if gpsData.Status
-                [City, Distance] = fcn.geoFindCity(gpsData);
+                [cityName, cityDistance] = gpsLib.findNearestCity(gpsData);
     
                 if isempty(gpsData.TimeStamp)
                     gpsData.TimeStamp = 'NA';
@@ -27,7 +27,7 @@ function [instrHandle, gpsData, msgError] = ConnectivityTest_GPS(app, instrSelec
                                'Longitude: %.6f\n' ...
                                'Timestamp: %s\n\n' ...
                                'Nota:\nCoordenadas geográficas distam <b>%.1f km</b> da sede do município <b>%s</b>.'], ...
-                               gpsData.Status, gpsData.Latitude, gpsData.Longitude, gpsData.TimeStamp, Distance, City);
+                               gpsData.Status, gpsData.Latitude, gpsData.Longitude, gpsData.TimeStamp, cityDistance, cityName);
             else
                 msg = sprintf('<b>Não recebida informação válida do instrumento acerca das coordenadas geográficas do local de monitoração.</b>\n%s', jsonencode(gpsData));
             end
