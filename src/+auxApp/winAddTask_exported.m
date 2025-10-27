@@ -1421,7 +1421,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 end
     
                 if gps.Status
-                    [City, Distance] = fcn.geoFindCity(gps);
+                    [cityName, cityDistance] = gpsLib.findNearestCity(gps);
 
                     if isempty(gps.TimeStamp); gps.TimeStamp = 'NA';
                     end
@@ -1431,7 +1431,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                                    'Longitude: %.6f\n' ...
                                    'Timestamp: %s\n\n' ...
                                    'Nota:\nCoordenadas geográficas distam <b>%.1f km</b> da sede do município <b>%s</b>.'], ...
-                                   gps.Status, gps.Latitude, gps.Longitude, gps.TimeStamp, Distance, City);
+                                   gps.Status, gps.Latitude, gps.Longitude, gps.TimeStamp, cityDistance, cityName);
                     
                     appUtil.modalWindow(app.UIFigure, 'warning', msg);
                     

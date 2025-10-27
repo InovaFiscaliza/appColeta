@@ -46,6 +46,7 @@ classdef winConfig_exported < matlab.apps.AppBase
         general_FileLabel              matlab.ui.control.Label
         Tab3                           matlab.ui.container.Tab
         plot_Grid                      matlab.ui.container.GridLayout
+        configPlotRefresh              matlab.ui.control.Image
         plot_IntegrationPanel          matlab.ui.container.Panel
         plot_IntegrationGrid           matlab.ui.container.GridLayout
         plot_IntegrationTime           matlab.ui.control.NumericEditField
@@ -73,20 +74,6 @@ classdef winConfig_exported < matlab.apps.AppBase
         plot_colorsLabel               matlab.ui.control.Label
         plot_TiledSpacing              matlab.ui.control.DropDown
         plot_TiledSpacingLabel         matlab.ui.control.Label
-        plot_InteractionsPanel         matlab.ui.container.Panel
-        plot_InteractionsGrid          matlab.ui.container.GridLayout
-        plot_RestoreViewVisibility     matlab.ui.control.Image
-        plot_RestoreView               matlab.ui.control.Image
-        plot_ZoomOutVisibility         matlab.ui.control.Image
-        plot_ZoomOut                   matlab.ui.control.Image
-        plot_ZoomInVisibility          matlab.ui.control.Image
-        plot_ZoomIn                    matlab.ui.control.Image
-        plot_PanVisibility             matlab.ui.control.Image
-        plot_Pan                       matlab.ui.control.Image
-        plot_DatatipVisibility         matlab.ui.control.Image
-        plot_Datatip                   matlab.ui.control.Image
-        configPlotRefresh              matlab.ui.control.Image
-        plot_InteractionsLabel         matlab.ui.control.Label
         Tab5                           matlab.ui.container.Tab
         Tab5Grid                       matlab.ui.container.GridLayout
         userPathButton                 matlab.ui.control.Image
@@ -314,23 +301,7 @@ classdef winConfig_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function updatePanel_Plot(app)
-            set(findobj(app.plot_InteractionsGrid, Tag='InteractionVisibility'), Visible=0)
-
-            for ii = 1:numel(app.mainApp.axes1.Toolbar.Children)
-                switch app.mainApp.axes1.Toolbar.Children(ii).Tag
-                    case 'datacursor';  h = app.plot_DatatipVisibility;
-                    case 'pan';         h = app.plot_PanVisibility;
-                    case 'zoomin';      h = app.plot_ZoomInVisibility;
-                    case 'zoomout';     h = app.plot_ZoomOutVisibility;
-                    case 'restoreview'; h = app.plot_RestoreViewVisibility;
-                end
-
-                if app.mainApp.axes1.Toolbar.Children(ii).Visible
-                    h.Visible = 1;
-                end
-            end
-
-            app.plot_TiledSpacing.Value = app.mainApp.axes1.Parent.TileSpacing;
+            app.plot_TiledSpacing.Value      = app.mainApp.axes1.Parent.TileSpacing;
 
             app.plot_colorsMinHold.Value     = app.mainApp.General.Plot.MinHold.Color;
             app.plot_colorsAverage.Value     = app.mainApp.General.Plot.Average.Color;
@@ -1019,127 +990,15 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create plot_Grid
             app.plot_Grid = uigridlayout(app.Tab3);
             app.plot_Grid.ColumnWidth = {150, '1x', 16};
-            app.plot_Grid.RowHeight = {17, 38, 22, 22, 22, 62, 22, 63, 22, '1x'};
+            app.plot_Grid.RowHeight = {17, 22, 22, 62, 22, 63, 22, '1x'};
             app.plot_Grid.RowSpacing = 5;
             app.plot_Grid.BackgroundColor = [1 1 1];
-
-            % Create plot_InteractionsLabel
-            app.plot_InteractionsLabel = uilabel(app.plot_Grid);
-            app.plot_InteractionsLabel.VerticalAlignment = 'bottom';
-            app.plot_InteractionsLabel.FontSize = 10;
-            app.plot_InteractionsLabel.Layout.Row = 1;
-            app.plot_InteractionsLabel.Layout.Column = 1;
-            app.plot_InteractionsLabel.Text = 'INTERAÇÕES:';
-
-            % Create configPlotRefresh
-            app.configPlotRefresh = uiimage(app.plot_Grid);
-            app.configPlotRefresh.ScaleMethod = 'none';
-            app.configPlotRefresh.Layout.Row = 1;
-            app.configPlotRefresh.Layout.Column = 3;
-            app.configPlotRefresh.HorizontalAlignment = 'left';
-            app.configPlotRefresh.VerticalAlignment = 'bottom';
-            app.configPlotRefresh.ImageSource = 'Refresh_18.png';
-
-            % Create plot_InteractionsPanel
-            app.plot_InteractionsPanel = uipanel(app.plot_Grid);
-            app.plot_InteractionsPanel.AutoResizeChildren = 'off';
-            app.plot_InteractionsPanel.BackgroundColor = [1 1 1];
-            app.plot_InteractionsPanel.Layout.Row = 2;
-            app.plot_InteractionsPanel.Layout.Column = [1 3];
-
-            % Create plot_InteractionsGrid
-            app.plot_InteractionsGrid = uigridlayout(app.plot_InteractionsPanel);
-            app.plot_InteractionsGrid.ColumnWidth = {16, 16, 16, 16, 16, '1x'};
-            app.plot_InteractionsGrid.RowHeight = {'1x', 3};
-            app.plot_InteractionsGrid.RowSpacing = 0;
-            app.plot_InteractionsGrid.Padding = [5 5 10 2];
-            app.plot_InteractionsGrid.BackgroundColor = [1 1 1];
-
-            % Create plot_Datatip
-            app.plot_Datatip = uiimage(app.plot_InteractionsGrid);
-            app.plot_Datatip.Tooltip = {'Datatip'};
-            app.plot_Datatip.Layout.Row = 1;
-            app.plot_Datatip.Layout.Column = 1;
-            app.plot_Datatip.ImageSource = 'AxesToolbar_Datatip.png';
-
-            % Create plot_DatatipVisibility
-            app.plot_DatatipVisibility = uiimage(app.plot_InteractionsGrid);
-            app.plot_DatatipVisibility.ScaleMethod = 'fill';
-            app.plot_DatatipVisibility.Tag = 'InteractionVisibility';
-            app.plot_DatatipVisibility.Tooltip = {'Datatip'};
-            app.plot_DatatipVisibility.Layout.Row = 2;
-            app.plot_DatatipVisibility.Layout.Column = 1;
-            app.plot_DatatipVisibility.ImageSource = 'LineH.png';
-
-            % Create plot_Pan
-            app.plot_Pan = uiimage(app.plot_InteractionsGrid);
-            app.plot_Pan.Tooltip = {'Pan'};
-            app.plot_Pan.Layout.Row = 1;
-            app.plot_Pan.Layout.Column = 2;
-            app.plot_Pan.ImageSource = 'AxesToolbar_Pan.png';
-
-            % Create plot_PanVisibility
-            app.plot_PanVisibility = uiimage(app.plot_InteractionsGrid);
-            app.plot_PanVisibility.ScaleMethod = 'fill';
-            app.plot_PanVisibility.Tag = 'InteractionVisibility';
-            app.plot_PanVisibility.Tooltip = {'Datatip'};
-            app.plot_PanVisibility.Layout.Row = 2;
-            app.plot_PanVisibility.Layout.Column = 2;
-            app.plot_PanVisibility.ImageSource = 'LineH.png';
-
-            % Create plot_ZoomIn
-            app.plot_ZoomIn = uiimage(app.plot_InteractionsGrid);
-            app.plot_ZoomIn.Tooltip = {'Zoom in'};
-            app.plot_ZoomIn.Layout.Row = 1;
-            app.plot_ZoomIn.Layout.Column = 3;
-            app.plot_ZoomIn.ImageSource = 'AxesToolbar_ZoomIn.png';
-
-            % Create plot_ZoomInVisibility
-            app.plot_ZoomInVisibility = uiimage(app.plot_InteractionsGrid);
-            app.plot_ZoomInVisibility.ScaleMethod = 'fill';
-            app.plot_ZoomInVisibility.Tag = 'InteractionVisibility';
-            app.plot_ZoomInVisibility.Tooltip = {'Datatip'};
-            app.plot_ZoomInVisibility.Layout.Row = 2;
-            app.plot_ZoomInVisibility.Layout.Column = 3;
-            app.plot_ZoomInVisibility.ImageSource = 'LineH.png';
-
-            % Create plot_ZoomOut
-            app.plot_ZoomOut = uiimage(app.plot_InteractionsGrid);
-            app.plot_ZoomOut.Tooltip = {'Zoom out'};
-            app.plot_ZoomOut.Layout.Row = 1;
-            app.plot_ZoomOut.Layout.Column = 4;
-            app.plot_ZoomOut.ImageSource = 'AxesToolbar_ZoomOut.png';
-
-            % Create plot_ZoomOutVisibility
-            app.plot_ZoomOutVisibility = uiimage(app.plot_InteractionsGrid);
-            app.plot_ZoomOutVisibility.ScaleMethod = 'fill';
-            app.plot_ZoomOutVisibility.Tag = 'InteractionVisibility';
-            app.plot_ZoomOutVisibility.Tooltip = {'Datatip'};
-            app.plot_ZoomOutVisibility.Layout.Row = 2;
-            app.plot_ZoomOutVisibility.Layout.Column = 4;
-            app.plot_ZoomOutVisibility.ImageSource = 'LineH.png';
-
-            % Create plot_RestoreView
-            app.plot_RestoreView = uiimage(app.plot_InteractionsGrid);
-            app.plot_RestoreView.Tooltip = {'Restore view'};
-            app.plot_RestoreView.Layout.Row = 1;
-            app.plot_RestoreView.Layout.Column = 5;
-            app.plot_RestoreView.ImageSource = 'AxesToolbar_RestoreView.png';
-
-            % Create plot_RestoreViewVisibility
-            app.plot_RestoreViewVisibility = uiimage(app.plot_InteractionsGrid);
-            app.plot_RestoreViewVisibility.ScaleMethod = 'fill';
-            app.plot_RestoreViewVisibility.Tag = 'InteractionVisibility';
-            app.plot_RestoreViewVisibility.Tooltip = {'Datatip'};
-            app.plot_RestoreViewVisibility.Layout.Row = 2;
-            app.plot_RestoreViewVisibility.Layout.Column = 5;
-            app.plot_RestoreViewVisibility.ImageSource = 'LineH.png';
 
             % Create plot_TiledSpacingLabel
             app.plot_TiledSpacingLabel = uilabel(app.plot_Grid);
             app.plot_TiledSpacingLabel.VerticalAlignment = 'bottom';
             app.plot_TiledSpacingLabel.FontSize = 10;
-            app.plot_TiledSpacingLabel.Layout.Row = 3;
+            app.plot_TiledSpacingLabel.Layout.Row = 1;
             app.plot_TiledSpacingLabel.Layout.Column = [1 3];
             app.plot_TiledSpacingLabel.Text = 'ESPAÇAMENTO ENTRE EIXOS:';
 
@@ -1148,7 +1007,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_TiledSpacing.Items = {'loose', 'compact', 'tight', 'none'};
             app.plot_TiledSpacing.FontSize = 11;
             app.plot_TiledSpacing.BackgroundColor = [1 1 1];
-            app.plot_TiledSpacing.Layout.Row = 4;
+            app.plot_TiledSpacing.Layout.Row = 2;
             app.plot_TiledSpacing.Layout.Column = 1;
             app.plot_TiledSpacing.Value = 'loose';
 
@@ -1156,14 +1015,14 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_colorsLabel = uilabel(app.plot_Grid);
             app.plot_colorsLabel.VerticalAlignment = 'bottom';
             app.plot_colorsLabel.FontSize = 10;
-            app.plot_colorsLabel.Layout.Row = 5;
+            app.plot_colorsLabel.Layout.Row = 3;
             app.plot_colorsLabel.Layout.Column = 1;
             app.plot_colorsLabel.Text = 'CORES:';
 
             % Create plot_colorsPanel
             app.plot_colorsPanel = uipanel(app.plot_Grid);
             app.plot_colorsPanel.AutoResizeChildren = 'off';
-            app.plot_colorsPanel.Layout.Row = 6;
+            app.plot_colorsPanel.Layout.Row = 4;
             app.plot_colorsPanel.Layout.Column = [1 3];
 
             % Create plot_colorsGrid
@@ -1231,7 +1090,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_WaterfallLabel = uilabel(app.plot_Grid);
             app.plot_WaterfallLabel.VerticalAlignment = 'bottom';
             app.plot_WaterfallLabel.FontSize = 10;
-            app.plot_WaterfallLabel.Layout.Row = 7;
+            app.plot_WaterfallLabel.Layout.Row = 5;
             app.plot_WaterfallLabel.Layout.Column = 1;
             app.plot_WaterfallLabel.Text = 'WATERFALL:';
 
@@ -1239,7 +1098,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_WaterfallPanel = uipanel(app.plot_Grid);
             app.plot_WaterfallPanel.AutoResizeChildren = 'off';
             app.plot_WaterfallPanel.BackgroundColor = [1 1 1];
-            app.plot_WaterfallPanel.Layout.Row = 8;
+            app.plot_WaterfallPanel.Layout.Row = 6;
             app.plot_WaterfallPanel.Layout.Column = [1 3];
 
             % Create plot_WaterfallGrid
@@ -1289,7 +1148,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationLabel = uilabel(app.plot_Grid);
             app.plot_IntegrationLabel.VerticalAlignment = 'bottom';
             app.plot_IntegrationLabel.FontSize = 10;
-            app.plot_IntegrationLabel.Layout.Row = 9;
+            app.plot_IntegrationLabel.Layout.Row = 7;
             app.plot_IntegrationLabel.Layout.Column = 1;
             app.plot_IntegrationLabel.Text = 'INTEGRAÇÃO:';
 
@@ -1297,7 +1156,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationPanel = uipanel(app.plot_Grid);
             app.plot_IntegrationPanel.AutoResizeChildren = 'off';
             app.plot_IntegrationPanel.BackgroundColor = [1 1 1];
-            app.plot_IntegrationPanel.Layout.Row = 10;
+            app.plot_IntegrationPanel.Layout.Row = 8;
             app.plot_IntegrationPanel.Layout.Column = [1 3];
 
             % Create plot_IntegrationGrid
@@ -1344,6 +1203,16 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationTime.Layout.Row = 2;
             app.plot_IntegrationTime.Layout.Column = 2;
             app.plot_IntegrationTime.Value = 10;
+
+            % Create configPlotRefresh
+            app.configPlotRefresh = uiimage(app.plot_Grid);
+            app.configPlotRefresh.ScaleMethod = 'none';
+            app.configPlotRefresh.Enable = 'off';
+            app.configPlotRefresh.Tooltip = {'Verifica atualizações'};
+            app.configPlotRefresh.Layout.Row = 3;
+            app.configPlotRefresh.Layout.Column = 3;
+            app.configPlotRefresh.VerticalAlignment = 'bottom';
+            app.configPlotRefresh.ImageSource = 'Refresh_18.png';
 
             % Create Tab5
             app.Tab5 = uitab(app.TabGroup);
