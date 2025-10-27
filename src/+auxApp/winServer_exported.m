@@ -2,22 +2,23 @@ classdef winServer_exported < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        UIFigure              matlab.ui.Figure
-        GridLayout            matlab.ui.container.GridLayout
-        MainPanelGrid         matlab.ui.container.GridLayout
-        UITable               matlab.ui.control.Table
-        general_refresh       matlab.ui.control.Image
-        general_versionPanel  matlab.ui.container.Panel
-        general_versionGrid   matlab.ui.container.GridLayout
-        general_version       matlab.ui.control.HTML
-        Tab1_GridTitle        matlab.ui.container.GridLayout
-        Tab1_Title            matlab.ui.control.Label
-        Tab1_Image            matlab.ui.control.Image
-        toolGrid              matlab.ui.container.GridLayout
-        jsBackDoor            matlab.ui.control.HTML
-        toolButton_edit       matlab.ui.control.Button
-        toolLampLabel         matlab.ui.control.Label
-        toolLamp              matlab.ui.control.Lamp
+        UIFigure                   matlab.ui.Figure
+        GridLayout                 matlab.ui.container.GridLayout
+        DockModuleGroup            matlab.ui.container.GridLayout
+        dockModule_Undock          matlab.ui.control.Image
+        dockModule_Close           matlab.ui.control.Image
+        TabGroup                   matlab.ui.container.TabGroup
+        TabGroupGrid               matlab.ui.container.Tab
+        Document                   matlab.ui.container.GridLayout
+        communicationTable         matlab.ui.control.Table
+        communicationTableRefresh  matlab.ui.control.Image
+        communicationTableLabel    matlab.ui.control.Label
+        serverInfo                 matlab.ui.control.TextArea
+        serverInfoLabel            matlab.ui.control.Label
+        Toolbar                    matlab.ui.container.GridLayout
+        toolButton_edit            matlab.ui.control.Button
+        toolLampLabel              matlab.ui.control.Label
+        toolLamp                   matlab.ui.control.Lamp
     end
 
     
@@ -27,37 +28,73 @@ classdef winServer_exported < matlab.apps.AppBase
         isDocked = false
         
         mainApp
-        rootFolder
 
+        % A função do timer é executada uma única vez após a renderização
+        % da figura, lendo arquivos de configuração, iniciando modo de operação
+        % paralelo etc. A ideia é deixar o MATLAB focar apenas na criação dos 
+        % componentes essenciais da GUI (especificados em "createComponents"), 
+        % mostrando a GUI para o usuário o mais rápido possível.
         timerObj
+        jsBackDoor
 
-        tcpServer
+        % Janela de progresso já criada no DOM. Dessa forma, controla-se 
+        % apenas a sua visibilidade - e tornando desnecessário criá-la a
+        % cada chamada (usando uiprogressdlg, por exemplo).
+        progressDialog
+    end
+
+
+    methods
+        %-----------------------------------------------------------------%
+        % IPC: COMUNICAÇÃO ENTRE PROCESSOS
+        %-----------------------------------------------------------------%
+        function ipcSecundaryJSEventsHandler(app, event)
+            try
+                switch event.HTMLEventName
+                    case 'renderer'
+                        startup_Controller(app)
+
+                    otherwise
+                        error('UnexpectedEvent')
+                end
+
+            catch ME
+                appUtil.modalWindow(app.UIFigure, 'error', ME.message);
+            end
+        end
     end
 
 
     methods (Access = private)
         %-----------------------------------------------------------------%
-        % JSBACKDOOR: CUSTOMIZAÇÃO GUI (ESTÉTICA/COMPORTAMENTAL)
+        % JSBACKDOOR
         %-----------------------------------------------------------------%
         function jsBackDoor_Initialization(app)
-            if app.isDocked
-                delete(app.jsBackDoor)
-                app.jsBackDoor = app.mainApp.jsBackDoor;
-            else
-                app.jsBackDoor.HTMLSource = appUtil.jsBackDoorHTMLSource();
-            end            
+            app.jsBackDoor = uihtml(app.UIFigure, "HTMLSource",           appUtil.jsBackDoorHTMLSource(),                 ...
+                                                  "HTMLEventReceivedFcn", @(~, evt)ipcSecundaryJSEventsHandler(app, evt), ...
+                                                  "Visible",              "off");
         end
 
         %-----------------------------------------------------------------%
         function jsBackDoor_Customizations(app)
-            if ~app.isDocked
-                sendEventToHTMLSource(app.jsBackDoor, 'htmlClassCustomization', struct('className',        '.mw-theme-light',                                                   ...
-                                                                                       'classAttributes', ['--mw-backgroundColor-dataWidget-selected: rgb(180 222 255 / 45%); ' ...
-                                                                                                           '--mw-backgroundColor-selected: rgb(180 222 255 / 45%); '            ...
-                                                                                                           '--mw-backgroundColor-selectedFocus: rgb(180 222 255 / 45%);']));
-    
-                sendEventToHTMLSource(app.jsBackDoor, 'htmlClassCustomization', struct('className',        '.mw-default-header-cell', ...
-                                                                                       'classAttributes',  'font-size: 10px; white-space: pre-wrap; margin-bottom: 5px;'));
+            if app.isDocked
+                app.progressDialog = app.mainApp.progressDialog;
+            else
+                sendEventToHTMLSource(app.jsBackDoor, 'startup', app.mainApp.executionMode);
+                app.progressDialog = ccTools.ProgressDialog(app.jsBackDoor);
+            end
+
+            appName = class(app);
+
+            % Grid botões "dock":
+            if app.isDocked
+                elToModify = {app.DockModuleGroup};
+                elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
+                if ~isempty(elDataTag)
+                    sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                        struct('appName', appName, 'dataTag', elDataTag{1}, 'style', struct('transition', 'opacity 2s ease', 'opacity', '0.5')), ...
+                    });
+                end
             end
         end
     end
@@ -67,12 +104,7 @@ classdef winServer_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         % INICIALIZAÇÃO
         %-----------------------------------------------------------------%
-        function startup_timerCreation(app)            
-            % A criação desse timer tem como objetivo garantir uma renderização 
-            % mais rápida dos componentes principais da GUI, possibilitando a 
-            % visualização da sua tela inicialpelo usuário. Trata-se de aspecto 
-            % essencial quando o app é compilado como webapp.
-
+        function startup_timerCreation(app)
             app.timerObj = timer("ExecutionMode", "fixedSpacing", ...
                                  "StartDelay",    1.5,            ...
                                  "Period",        .1,             ...
@@ -86,68 +118,55 @@ classdef winServer_exported < matlab.apps.AppBase
                 stop(app.timerObj)
                 delete(app.timerObj)
 
-                startup_Controller(app)
+                jsBackDoor_Initialization(app)
             end
         end
 
         %-----------------------------------------------------------------%
         function startup_Controller(app)
             drawnow
-
-            % Customiza as aspectos estéticos de alguns dos componentes da GUI 
-            % (diretamente em JS).
             jsBackDoor_Customizations(app)
-            
-            Layout(app)
+
+            if ~strcmp(app.mainApp.executionMode, 'webApp')
+                app.dockModule_Undock.Enable = 1;
+            end
+
+            updateLayout(app)
         end
 
         %-----------------------------------------------------------------%
-        function Layout(app)
-            app.tcpServer = app.mainApp.tcpServer;
-
-            if isempty(app.tcpServer)
-                app.general_version.HTMLSource = ' ';
-                app.general_refresh.Visible = 0;
+        function updateLayout(app)
+            if isempty(app.mainApp.tcpServer)
+                app.serverInfo.Value = '';
+                app.communicationTableRefresh.Visible = 0;
 
                 app.toolLamp.Color = [.64 .08 .18];
                 app.toolLampLabel.Text = 'Servidor não está em execução.';
 
-                app.UITable.Data = table('Size', [0, 8],                                                                                    ...
+                app.communicationTable.Data = table('Size', [0, 8],                                                                                    ...
                                                'VariableTypes', {'string', 'string', 'double', 'string', 'string', 'string', 'double', 'string'}, ...
                                                'VariableNames', {'Timestamp', 'ClientAddress', 'ClientPort', 'Message', 'ClientName', 'Request', 'NumBytesWritten', 'Status'});
-                set(app.toolButton_edit, Text='Iniciar servidor', Icon='play_32.png')
+                set(app.toolButton_edit, 'Text', 'Iniciar servidor', 'Icon', 'play_32.png')
 
-            elseif isempty(app.tcpServer.Server)
-                app.general_version.HTMLSource = ' ';
-                app.general_refresh.Visible = 0;
+            elseif isempty(app.mainApp.tcpServer.Server)
+                app.serverInfo.Value = '';
+                app.communicationTableRefresh.Visible = 0;
 
                 app.toolLamp.Color = [.5 .5 .5];
                 app.toolLampLabel.Text = sprintf('Servidor ainda não está em execução, apesar do objeto "class.tcpServerLib" já ter sido criado. Será realizada uma nova tentativa para executá-lo a cada %d segundos.', class.Constants.tcpServerPeriod);
 
-                app.UITable.Data = app.tcpServer.LOG;
-                set(app.toolButton_edit, Text='Excluir objeto', Icon='Delete_32Red.png')
+                app.communicationTable.Data = app.mainApp.tcpServer.LOG;
+                set(app.toolButton_edit, 'Text', 'Excluir objeto', 'Icon', 'Delete_32Red.png')
 
             else
-                verMetaData(1).group = 'CARACTERÍSTICAS';
-                verMetaData(1).value = struct('ServerAddress',     app.tcpServer.Server.ServerAddress,     ...
-                                              'ServerPort',        app.tcpServer.Server.ServerPort,        ...
-                                              'Connected',         app.tcpServer.Server.Connected,         ...
-                                              'ClientAddress',     app.tcpServer.Server.ClientAddress,     ...
-                                              'ClientPort',        app.tcpServer.Server.ClientPort,        ...
-                                              'NumBytesAvailable', app.tcpServer.Server.NumBytesAvailable, ...
-                                              'Timeout',           app.tcpServer.Server.Timeout,           ...
-                                              'ByteOrder',         app.tcpServer.Server.ByteOrder,         ...
-                                              'Terminator',        app.tcpServer.Server.Terminator,        ...
-                                              'NumBytesWritten',   app.tcpServer.Server.NumBytesWritten);
-
-                app.general_version.HTMLSource = textFormatGUI.struct2PrettyPrintList(verMetaData);
-                app.general_refresh.Visible = 1;
+                app.serverInfo.Value = util.HtmlTextGenerator.Server(app.mainApp.tcpServer);
+                app.communicationTableRefresh.Visible = 1;
 
                 app.toolLamp.Color = [.47 .67 .19];
-                app.toolLampLabel.Text = sprintf('Servidor em execução desde %s.', char(app.tcpServer.Time));
+                app.toolLampLabel.Text = sprintf('Servidor em execução desde %s.', char(app.mainApp.tcpServer.Time));
 
-                app.UITable.Data = app.tcpServer.LOG;
-                set(app.toolButton_edit, Text='Parar servidor', Icon='stop_32.png')
+                app.communicationTable.Data = app.mainApp.tcpServer.LOG;
+                set(app.toolButton_edit, 'Text', 'Parar servidor', 'Icon', 'stop_32.png')
             end
         end
     end
@@ -158,14 +177,13 @@ classdef winServer_exported < matlab.apps.AppBase
 
         % Code that executes after component creation
         function startupFcn(app, mainApp)
-            
-            app.mainApp    = mainApp;
-            app.rootFolder = mainApp.rootFolder;
 
-            jsBackDoor_Initialization(app)
+            app.mainApp = mainApp;
 
             if app.isDocked
-                app.GridLayout.Padding(4) = 21;
+                app.GridLayout.Padding(4) = 30;
+                app.DockModuleGroup.Visible = 1;
+                app.jsBackDoor = mainApp.jsBackDoor;
                 startup_Controller(app)
             else
                 appUtil.winPosition(app.UIFigure)
@@ -177,7 +195,7 @@ classdef winServer_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
 
-            appBackDoor(app.mainApp, app, 'closeFcn', 'SERVER')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'SERVER')
             delete(app)
             
         end
@@ -196,14 +214,38 @@ classdef winServer_exported < matlab.apps.AppBase
                 app.mainApp.tcpServer = [];
             end
 
-            Layout(app)
+            updateLayout(app)
 
         end
 
-        % Image clicked function: general_refresh
-        function general_refreshImageClicked(app, event)
+        % Image clicked function: communicationTableRefresh
+        function communicationTableRefreshImageClicked(app, event)
             
-            Layout(app)
+            updateLayout(app)
+
+        end
+
+        % Image clicked function: dockModule_Close, dockModule_Undock
+        function DockModuleGroup_ButtonPushed(app, event)
+            
+            [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
+
+            switch event.Source
+                case app.dockModule_Undock
+                    appGeneral = app.mainApp.General;
+                    appGeneral.operationMode.Dock = false;
+
+                    inputArguments = ipcMainMatlabCallsHandler(app.mainApp, app, 'dockButtonPushed', auxAppTag);
+                    app.mainApp.tabGroupController.Components.appHandle{idx} = [];
+                    
+                    openModule(app.mainApp.tabGroupController, relatedButton, false, appGeneral, inputArguments{:})
+                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General, 'undock')
+                    
+                    delete(app)
+
+                case app.dockModule_Close
+                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General)
+            end
 
         end
     end
@@ -244,37 +286,38 @@ classdef winServer_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {'1x'};
-            app.GridLayout.RowHeight = {'1x', 34};
+            app.GridLayout.ColumnWidth = {10, '1x', 48, 8, 2};
+            app.GridLayout.RowHeight = {2, 8, 24, '1x', 10, 34};
+            app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
             app.GridLayout.BackgroundColor = [1 1 1];
 
-            % Create toolGrid
-            app.toolGrid = uigridlayout(app.GridLayout);
-            app.toolGrid.ColumnWidth = {18, '1x', 22, 110};
-            app.toolGrid.RowHeight = {'1x'};
-            app.toolGrid.ColumnSpacing = 5;
-            app.toolGrid.Padding = [5 6 5 6];
-            app.toolGrid.Layout.Row = 2;
-            app.toolGrid.Layout.Column = 1;
-            app.toolGrid.BackgroundColor = [0.9412 0.9412 0.9412];
+            % Create Toolbar
+            app.Toolbar = uigridlayout(app.GridLayout);
+            app.Toolbar.ColumnWidth = {18, '1x', 110};
+            app.Toolbar.RowHeight = {'1x'};
+            app.Toolbar.ColumnSpacing = 5;
+            app.Toolbar.Padding = [10 6 10 6];
+            app.Toolbar.Layout.Row = 6;
+            app.Toolbar.Layout.Column = [1 5];
+            app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
             % Create toolLamp
-            app.toolLamp = uilamp(app.toolGrid);
+            app.toolLamp = uilamp(app.Toolbar);
             app.toolLamp.Layout.Row = 1;
             app.toolLamp.Layout.Column = 1;
             app.toolLamp.Color = [0.4706 0.6706 0.1882];
 
             % Create toolLampLabel
-            app.toolLampLabel = uilabel(app.toolGrid);
+            app.toolLampLabel = uilabel(app.Toolbar);
             app.toolLampLabel.FontSize = 11;
             app.toolLampLabel.Layout.Row = 1;
             app.toolLampLabel.Layout.Column = 2;
             app.toolLampLabel.Text = 'Desconectado';
 
             % Create toolButton_edit
-            app.toolButton_edit = uibutton(app.toolGrid, 'push');
+            app.toolButton_edit = uibutton(app.Toolbar, 'push');
             app.toolButton_edit.ButtonPushedFcn = createCallbackFcn(app, @toolButtonPushed_edit, true);
             app.toolButton_edit.Icon = 'play_32.png';
             app.toolButton_edit.IconAlignment = 'right';
@@ -282,88 +325,99 @@ classdef winServer_exported < matlab.apps.AppBase
             app.toolButton_edit.BackgroundColor = [1 1 1];
             app.toolButton_edit.FontSize = 11;
             app.toolButton_edit.Layout.Row = 1;
-            app.toolButton_edit.Layout.Column = 4;
+            app.toolButton_edit.Layout.Column = 3;
             app.toolButton_edit.Text = 'Iniciar servidor';
 
-            % Create jsBackDoor
-            app.jsBackDoor = uihtml(app.toolGrid);
-            app.jsBackDoor.Layout.Row = 1;
-            app.jsBackDoor.Layout.Column = 3;
+            % Create TabGroup
+            app.TabGroup = uitabgroup(app.GridLayout);
+            app.TabGroup.AutoResizeChildren = 'off';
+            app.TabGroup.Layout.Row = [3 4];
+            app.TabGroup.Layout.Column = [2 3];
 
-            % Create MainPanelGrid
-            app.MainPanelGrid = uigridlayout(app.GridLayout);
-            app.MainPanelGrid.ColumnWidth = {325, '1x', 16};
-            app.MainPanelGrid.RowHeight = {22, 128, 22, '1x'};
-            app.MainPanelGrid.RowSpacing = 5;
-            app.MainPanelGrid.Padding = [5 5 5 5];
-            app.MainPanelGrid.Layout.Row = 1;
-            app.MainPanelGrid.Layout.Column = 1;
-            app.MainPanelGrid.BackgroundColor = [1 1 1];
+            % Create TabGroupGrid
+            app.TabGroupGrid = uitab(app.TabGroup);
+            app.TabGroupGrid.AutoResizeChildren = 'off';
+            app.TabGroupGrid.Title = 'SERVIDOR';
 
-            % Create Tab1_GridTitle
-            app.Tab1_GridTitle = uigridlayout(app.MainPanelGrid);
-            app.Tab1_GridTitle.ColumnWidth = {18, '1x'};
-            app.Tab1_GridTitle.RowHeight = {'1x'};
-            app.Tab1_GridTitle.ColumnSpacing = 5;
-            app.Tab1_GridTitle.RowSpacing = 5;
-            app.Tab1_GridTitle.Padding = [2 2 2 2];
-            app.Tab1_GridTitle.Tag = 'COLORLOCKED';
-            app.Tab1_GridTitle.Layout.Row = 1;
-            app.Tab1_GridTitle.Layout.Column = 1;
-            app.Tab1_GridTitle.BackgroundColor = [0.749 0.749 0.749];
+            % Create Document
+            app.Document = uigridlayout(app.TabGroupGrid);
+            app.Document.ColumnWidth = {320, '1x', 18};
+            app.Document.RowHeight = {17, 128, 22, '1x'};
+            app.Document.RowSpacing = 5;
+            app.Document.BackgroundColor = [1 1 1];
 
-            % Create Tab1_Image
-            app.Tab1_Image = uiimage(app.Tab1_GridTitle);
-            app.Tab1_Image.Layout.Row = 1;
-            app.Tab1_Image.Layout.Column = 1;
-            app.Tab1_Image.HorizontalAlignment = 'left';
-            app.Tab1_Image.ImageSource = 'Server_36.png';
+            % Create serverInfoLabel
+            app.serverInfoLabel = uilabel(app.Document);
+            app.serverInfoLabel.VerticalAlignment = 'bottom';
+            app.serverInfoLabel.FontSize = 10;
+            app.serverInfoLabel.Layout.Row = 1;
+            app.serverInfoLabel.Layout.Column = 1;
+            app.serverInfoLabel.Text = 'CARACTERÍSTICAS:';
 
-            % Create Tab1_Title
-            app.Tab1_Title = uilabel(app.Tab1_GridTitle);
-            app.Tab1_Title.FontSize = 11;
-            app.Tab1_Title.Layout.Row = 1;
-            app.Tab1_Title.Layout.Column = 2;
-            app.Tab1_Title.Text = 'SERVIDOR';
+            % Create serverInfo
+            app.serverInfo = uitextarea(app.Document);
+            app.serverInfo.Editable = 'off';
+            app.serverInfo.FontSize = 11;
+            app.serverInfo.Layout.Row = 2;
+            app.serverInfo.Layout.Column = [1 3];
 
-            % Create general_versionPanel
-            app.general_versionPanel = uipanel(app.MainPanelGrid);
-            app.general_versionPanel.AutoResizeChildren = 'off';
-            app.general_versionPanel.BackgroundColor = [1 1 1];
-            app.general_versionPanel.Layout.Row = [2 3];
-            app.general_versionPanel.Layout.Column = 1;
+            % Create communicationTableLabel
+            app.communicationTableLabel = uilabel(app.Document);
+            app.communicationTableLabel.VerticalAlignment = 'bottom';
+            app.communicationTableLabel.FontSize = 10;
+            app.communicationTableLabel.Layout.Row = 3;
+            app.communicationTableLabel.Layout.Column = 1;
+            app.communicationTableLabel.Text = 'COMUNICAÇÃO:';
 
-            % Create general_versionGrid
-            app.general_versionGrid = uigridlayout(app.general_versionPanel);
-            app.general_versionGrid.ColumnWidth = {'1x'};
-            app.general_versionGrid.RowHeight = {'1x'};
-            app.general_versionGrid.ColumnSpacing = 0;
-            app.general_versionGrid.RowSpacing = 0;
-            app.general_versionGrid.Padding = [0 0 0 0];
-            app.general_versionGrid.BackgroundColor = [1 1 1];
+            % Create communicationTableRefresh
+            app.communicationTableRefresh = uiimage(app.Document);
+            app.communicationTableRefresh.ScaleMethod = 'none';
+            app.communicationTableRefresh.ImageClickedFcn = createCallbackFcn(app, @communicationTableRefreshImageClicked, true);
+            app.communicationTableRefresh.Tooltip = {'Atualiza registro de comunicação'};
+            app.communicationTableRefresh.Layout.Row = 3;
+            app.communicationTableRefresh.Layout.Column = 3;
+            app.communicationTableRefresh.HorizontalAlignment = 'left';
+            app.communicationTableRefresh.VerticalAlignment = 'bottom';
+            app.communicationTableRefresh.ImageSource = 'Refresh_18.png';
 
-            % Create general_version
-            app.general_version = uihtml(app.general_versionGrid);
-            app.general_version.Layout.Row = 1;
-            app.general_version.Layout.Column = 1;
+            % Create communicationTable
+            app.communicationTable = uitable(app.Document);
+            app.communicationTable.ColumnName = {'INSTANTE'; 'IP'; 'PORTA'; 'MENSAGEM'; 'CLIENTE'; 'REQUISIÇÃO'; 'BYTES'; 'ESTADO'};
+            app.communicationTable.RowName = {};
+            app.communicationTable.Layout.Row = 4;
+            app.communicationTable.Layout.Column = [1 3];
+            app.communicationTable.FontSize = 10;
 
-            % Create general_refresh
-            app.general_refresh = uiimage(app.MainPanelGrid);
-            app.general_refresh.ScaleMethod = 'none';
-            app.general_refresh.ImageClickedFcn = createCallbackFcn(app, @general_refreshImageClicked, true);
-            app.general_refresh.Layout.Row = 3;
-            app.general_refresh.Layout.Column = 3;
-            app.general_refresh.HorizontalAlignment = 'left';
-            app.general_refresh.VerticalAlignment = 'bottom';
-            app.general_refresh.ImageSource = 'Refresh_18.png';
+            % Create DockModuleGroup
+            app.DockModuleGroup = uigridlayout(app.GridLayout);
+            app.DockModuleGroup.RowHeight = {'1x'};
+            app.DockModuleGroup.ColumnSpacing = 2;
+            app.DockModuleGroup.Padding = [5 2 5 2];
+            app.DockModuleGroup.Visible = 'off';
+            app.DockModuleGroup.Layout.Row = [2 3];
+            app.DockModuleGroup.Layout.Column = [3 4];
+            app.DockModuleGroup.BackgroundColor = [0.2 0.2 0.2];
 
-            % Create UITable
-            app.UITable = uitable(app.MainPanelGrid);
-            app.UITable.ColumnName = {'INSTANTE'; 'IP'; 'PORTA'; 'MENSAGEM'; 'CLIENTE'; 'REQUISIÇÃO'; 'BYTES'; 'ESTADO'};
-            app.UITable.RowName = {};
-            app.UITable.Layout.Row = 4;
-            app.UITable.Layout.Column = [1 3];
-            app.UITable.FontSize = 10;
+            % Create dockModule_Close
+            app.dockModule_Close = uiimage(app.DockModuleGroup);
+            app.dockModule_Close.ScaleMethod = 'none';
+            app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
+            app.dockModule_Close.Tag = 'DRIVETEST';
+            app.dockModule_Close.Tooltip = {'Fecha módulo'};
+            app.dockModule_Close.Layout.Row = 1;
+            app.dockModule_Close.Layout.Column = 2;
+            app.dockModule_Close.ImageSource = 'Delete_12SVG_white.svg';
+
+            % Create dockModule_Undock
+            app.dockModule_Undock = uiimage(app.DockModuleGroup);
+            app.dockModule_Undock.ScaleMethod = 'none';
+            app.dockModule_Undock.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
+            app.dockModule_Undock.Tag = 'DRIVETEST';
+            app.dockModule_Undock.Enable = 'off';
+            app.dockModule_Undock.Tooltip = {'Reabre módulo em outra janela'};
+            app.dockModule_Undock.Layout.Row = 1;
+            app.dockModule_Undock.Layout.Column = 1;
+            app.dockModule_Undock.ImageSource = 'Undock_18White.png';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
