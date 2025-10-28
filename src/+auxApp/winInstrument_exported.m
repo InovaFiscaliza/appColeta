@@ -20,6 +20,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         TreeNode_GPS            matlab.ui.container.TreeNode
         Panel                   matlab.ui.container.Panel
         Tab2_PanelGrid          matlab.ui.container.GridLayout
+        AspectostcnicosLabel    matlab.ui.control.Label
         instrImage              matlab.ui.control.Image
         instrMetadata           matlab.ui.control.Label
         ParametersPanel         matlab.ui.container.Panel
@@ -1143,7 +1144,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create TabGrid
             app.TabGrid = uigridlayout(app.Tab);
-            app.TabGrid.ColumnWidth = {320, '1x'};
+            app.TabGrid.ColumnWidth = {310, '1x'};
             app.TabGrid.RowHeight = {17, 34, 22, '1x'};
             app.TabGrid.RowSpacing = 5;
             app.TabGrid.BackgroundColor = [1 1 1];
@@ -1194,7 +1195,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.PanelLabel.FontSize = 10;
             app.PanelLabel.Layout.Row = 1;
             app.PanelLabel.Layout.Column = 2;
-            app.PanelLabel.Text = 'CARACTERÍSTICAS';
+            app.PanelLabel.Text = 'CARACTERÍSTICAS:';
 
             % Create Panel
             app.Panel = uipanel(app.TabGrid);
@@ -1204,7 +1205,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create Tab2_PanelGrid
             app.Tab2_PanelGrid = uigridlayout(app.Panel);
-            app.Tab2_PanelGrid.ColumnWidth = {110, 200, '1x', 100, 17};
+            app.Tab2_PanelGrid.ColumnWidth = {110, 190, '1x', 140, 22};
             app.Tab2_PanelGrid.RowHeight = {17, 22, 22, 22, 22, '1x', 22, 22, 150};
             app.Tab2_PanelGrid.RowSpacing = 5;
             app.Tab2_PanelGrid.BackgroundColor = [1 1 1];
@@ -1370,7 +1371,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TimeoutLabel.FontSize = 10;
             app.TimeoutLabel.Layout.Row = 1;
             app.TimeoutLabel.Layout.Column = 4;
-            app.TimeoutLabel.Text = 'Timeout (s):';
+            app.TimeoutLabel.Text = 'Timeout:';
 
             % Create Timeout
             app.Timeout = uieditfield(app.ParametersGrid, 'numeric');
@@ -1443,18 +1444,26 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.instrMetadata.VerticalAlignment = 'top';
             app.instrMetadata.WordWrap = 'on';
             app.instrMetadata.FontSize = 11;
-            app.instrMetadata.Layout.Row = [1 9];
+            app.instrMetadata.Layout.Row = [2 9];
             app.instrMetadata.Layout.Column = [3 5];
             app.instrMetadata.Interpreter = 'html';
             app.instrMetadata.Text = '';
 
             % Create instrImage
             app.instrImage = uiimage(app.Tab2_PanelGrid);
-            app.instrImage.Layout.Row = [2 3];
+            app.instrImage.Layout.Row = [3 5];
             app.instrImage.Layout.Column = 4;
             app.instrImage.HorizontalAlignment = 'right';
             app.instrImage.VerticalAlignment = 'top';
             app.instrImage.ImageSource = 'Instr_R&S_FSL.png';
+
+            % Create AspectostcnicosLabel
+            app.AspectostcnicosLabel = uilabel(app.Tab2_PanelGrid);
+            app.AspectostcnicosLabel.VerticalAlignment = 'bottom';
+            app.AspectostcnicosLabel.FontSize = 10;
+            app.AspectostcnicosLabel.Layout.Row = 1;
+            app.AspectostcnicosLabel.Layout.Column = 3;
+            app.AspectostcnicosLabel.Text = 'Aspectos técnicos:';
 
             % Create Tab1_Grid
             app.Tab1_Grid = uigridlayout(app.TabGrid);

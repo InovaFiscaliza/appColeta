@@ -2120,7 +2120,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
             app.GridLayout.ColumnWidth = {10, 320, 10, 320, 10, '1x', 48, 8, 2};
-            app.GridLayout.RowHeight = {2, 8, 24, '1x', 10, 34};
+            app.GridLayout.RowHeight = {2, 8, 24, 10, '1x', 10, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
@@ -2130,7 +2130,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.TaskControl = uitabgroup(app.GridLayout);
             app.TaskControl.AutoResizeChildren = 'off';
             app.TaskControl.SelectionChangedFcn = createCallbackFcn(app, @TaskControlSelectionChanged, true);
-            app.TaskControl.Layout.Row = [3 4];
+            app.TaskControl.Layout.Row = [3 5];
             app.TaskControl.Layout.Column = 2;
 
             % Create TAREFATab
@@ -2792,7 +2792,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.BandsInfo.RowHeight = {17, 272, 22, '1x'};
             app.BandsInfo.RowSpacing = 5;
             app.BandsInfo.Padding = [0 0 0 0];
-            app.BandsInfo.Layout.Row = [3 4];
+            app.BandsInfo.Layout.Row = 5;
             app.BandsInfo.Layout.Column = 4;
             app.BandsInfo.BackgroundColor = [1 1 1];
 
@@ -2838,7 +2838,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.BandCustomizable.RowHeight = {17, 22, 22, 218, 22, 68, 22, '1x'};
             app.BandCustomizable.RowSpacing = 5;
             app.BandCustomizable.Padding = [0 0 0 0];
-            app.BandCustomizable.Layout.Row = [3 4];
+            app.BandCustomizable.Layout.Row = 5;
             app.BandCustomizable.Layout.Column = [6 7];
             app.BandCustomizable.BackgroundColor = [1 1 1];
 
@@ -3272,7 +3272,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Toolbar.RowHeight = {'1x'};
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.Padding = [10 6 10 6];
-            app.Toolbar.Layout.Row = 6;
+            app.Toolbar.Layout.Row = 7;
             app.Toolbar.Layout.Column = [1 9];
 
             % Create okBtn

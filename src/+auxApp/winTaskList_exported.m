@@ -152,11 +152,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 appUtil.modalWindow(app.UIFigure, 'error', ME.message);
             end
         end
-
-        %-----------------------------------------------------------------%
-        % function ipcSecundaryMatlabCallsHandler(app, callingApp, varargin)
-        %     % ...
-        % end
     end
 
 
@@ -288,19 +283,15 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function nodeText = TreeBuilding_nodeText(app, idx1, idx2)
-
             nodeText = sprintf('ID %d: %.3f - %.3f MHz', app.editedList(idx1).Band(idx2).ID,                ...
                                                          app.editedList(idx1).Band(idx2).FreqStart ./ 1e+6, ...
                                                          app.editedList(idx1).Band(idx2).FreqStop  ./ 1e+6);
         end
 
-
         %-----------------------------------------------------------------%
         function TreeBuilding_addStyle(app)
-
             if ~isempty(app.Tree.StyleConfigurations)
                 removeStyle(app.Tree)
             end
@@ -320,10 +311,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function Layout(app)
-
             if isempty(app.Tree.SelectedNodes)
                 set(app.Tab2_PanelGrid.Children,        'Enable', 0)
                 set(app.BandSpecificInfo_Grid.Children, 'Enable', 0)
@@ -346,7 +335,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 end
             end
         end
-
 
         %-----------------------------------------------------------------%
         function ObservationTimeLayout(app)
@@ -377,10 +365,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function updateDuration(app, idx1)
-
             Duration_sec = app.editedList(idx1).Observation.Duration;
             if isempty(Duration_sec)
                 Duration_sec = 600;
@@ -399,10 +385,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function updateObservationTime(app, idx1)
-
             BeginTime = datetime(app.editedList(idx1).Observation.BeginTime, "InputFormat", "dd/MM/yyyy HH:mm:ss", "Format", "dd/MM/yyyy HH:mm:ss");
             EndTime   = datetime(app.editedList(idx1).Observation.EndTime,   "InputFormat", "dd/MM/yyyy HH:mm:ss", "Format", "dd/MM/yyyy HH:mm:ss");
 
@@ -438,10 +422,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function SpecificTimePanel_editable(app)
-
             if app.ModeButtonView.Value
                 set(app.SpecificTime_Grid.Children, Enable=0, Visible=1)
             else
@@ -449,10 +431,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function FindPeaksPanel_editable(app)
-
             if app.ModeButtonView.Value
                 set(findobj(app.FindPeaks_Grid, 'Type', 'uispinner'), Enable=0)
             else
@@ -460,10 +440,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function SpanCheck(app)
-
             span = (app.FreqStop.Value - app.FreqStart.Value)*1e+6;
 
             if span <= 0
@@ -477,10 +455,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function IntegrationFactorCheck(app)
-
             switch app.TraceMode.Value
                 case 'ClearWrite'
                     set(app.IntegrationFactor, 'Enable', 0, 'Value', 1)
@@ -494,10 +470,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function newID(app)
-
             idx1 = app.Tree.SelectedNodes.NodeData;
 
             for ii = 1:numel(app.editedList(idx1).Band)
@@ -521,7 +495,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function saveNewFile(app, Folder, ShowAlert)
-
             msgError = class.taskList.raw2file(Folder, app.taskList);
 
             if ShowAlert
@@ -1256,7 +1229,7 @@ atp
             if isempty(Container)
                 app.UIFigure = uifigure('Visible', 'off');
                 app.UIFigure.AutoResizeChildren = 'off';
-                app.UIFigure.Position = [100 100 1146 540];
+                app.UIFigure.Position = [100 100 1244 660];
                 app.UIFigure.Name = 'appColeta';
                 app.UIFigure.Icon = 'icon_48.png';
                 app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @closeFcn, true);
@@ -1341,7 +1314,7 @@ atp
 
             % Create TabGrid
             app.TabGrid = uigridlayout(app.Tab);
-            app.TabGrid.ColumnWidth = {320, '1x'};
+            app.TabGrid.ColumnWidth = {310, '1x'};
             app.TabGrid.RowHeight = {17, 34, 22, '1x'};
             app.TabGrid.RowSpacing = 5;
             app.TabGrid.BackgroundColor = [1 1 1];
@@ -1455,7 +1428,7 @@ atp
             app.PanelLabel.FontSize = 10;
             app.PanelLabel.Layout.Row = 1;
             app.PanelLabel.Layout.Column = 2;
-            app.PanelLabel.Text = 'CARACTERÍSTICAS';
+            app.PanelLabel.Text = 'CARACTERÍSTICAS:';
 
             % Create Panel
             app.Panel = uipanel(app.TabGrid);
@@ -1465,7 +1438,7 @@ atp
 
             % Create PanelGrid
             app.PanelGrid = uigridlayout(app.Panel);
-            app.PanelGrid.ColumnWidth = {320, '1x'};
+            app.PanelGrid.ColumnWidth = {310, '1x'};
             app.PanelGrid.RowHeight = {'1x'};
             app.PanelGrid.BackgroundColor = [1 1 1];
 
@@ -1558,7 +1531,7 @@ atp
 
             % Create Duration_Grid
             app.Duration_Grid = uigridlayout(app.ObservationPanel_Grid);
-            app.Duration_Grid.ColumnWidth = {116, 116};
+            app.Duration_Grid.ColumnWidth = {139, 139};
             app.Duration_Grid.RowHeight = {'1x'};
             app.Duration_Grid.RowSpacing = 5;
             app.Duration_Grid.Padding = [0 0 0 0];
@@ -1591,7 +1564,7 @@ atp
 
             % Create SpecificTime_Grid
             app.SpecificTime_Grid = uigridlayout(app.ObservationPanel_Grid);
-            app.SpecificTime_Grid.ColumnWidth = {55, 5, 56, 10, 55, 5, 56};
+            app.SpecificTime_Grid.ColumnWidth = {67, 5, 67, 10, 67, 5, 67};
             app.SpecificTime_Grid.RowHeight = {22, 22};
             app.SpecificTime_Grid.ColumnSpacing = 0;
             app.SpecificTime_Grid.RowSpacing = 5;
@@ -1721,7 +1694,7 @@ atp
 
             % Create GPS_Grid
             app.GPS_Grid = uigridlayout(app.GPS_Panel);
-            app.GPS_Grid.ColumnWidth = {116, '1x'};
+            app.GPS_Grid.ColumnWidth = {139, 139};
             app.GPS_Grid.RowHeight = {25, 22, 17, 22};
             app.GPS_Grid.RowSpacing = 5;
             app.GPS_Grid.BackgroundColor = [1 1 1];
@@ -1789,7 +1762,7 @@ atp
 
             % Create BandSpecificInfo_Grid
             app.BandSpecificInfo_Grid = uigridlayout(app.PanelGrid);
-            app.BandSpecificInfo_Grid.ColumnWidth = {'1x', '1x', '1x', '1x'};
+            app.BandSpecificInfo_Grid.ColumnWidth = {110, 110, 110, 110, '1x'};
             app.BandSpecificInfo_Grid.RowHeight = {17, 22, 22, 22, 22, 22, 22, 22, 22, 22, 34, 22, '1x'};
             app.BandSpecificInfo_Grid.RowSpacing = 5;
             app.BandSpecificInfo_Grid.Padding = [0 0 0 0];
@@ -2110,11 +2083,11 @@ atp
             app.FindPeaks_Panel = uipanel(app.BandSpecificInfo_Grid);
             app.FindPeaks_Panel.AutoResizeChildren = 'off';
             app.FindPeaks_Panel.Layout.Row = [12 13];
-            app.FindPeaks_Panel.Layout.Column = [1 4];
+            app.FindPeaks_Panel.Layout.Column = [1 5];
 
             % Create FindPeaks_Grid
             app.FindPeaks_Grid = uigridlayout(app.FindPeaks_Panel);
-            app.FindPeaks_Grid.ColumnWidth = {'1x', '1x', '1x', '1x'};
+            app.FindPeaks_Grid.ColumnWidth = {100, 110, 110, 110};
             app.FindPeaks_Grid.RowHeight = {22, 34, 22};
             app.FindPeaks_Grid.RowSpacing = 5;
             app.FindPeaks_Grid.BackgroundColor = [1 1 1];

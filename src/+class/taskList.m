@@ -266,5 +266,18 @@ classdef taskList
                 d = char(d(varargin{1}));
             end
         end
+
+
+        %-----------------------------------------------------------------%
+        function info = maskTriggerStatus(id)
+            names  = 0:3;
+            values = ["Informação coletada será escrita em arquivo, não sendo avaliado rompimento da máscara", ...
+                      "Apenas avaliado rompimento da máscara", ...
+                      "Avaliado rompimento da máscara e realizada escrita em arquivo apenas se evidenciado rompimento", ...
+                      "Avaliado rompimento da máscara e realizada escrita em arquivo"];
+        
+            d = dictionary(names, values);
+            info = d(id);
+        end
     end
 end

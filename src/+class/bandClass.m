@@ -15,6 +15,7 @@ classdef bandClass
         LastTimeStamp
         RevisitTime
         Waterfall
+        Azimuth
         Mask
         File
         Antenna
@@ -49,18 +50,14 @@ classdef bandClass
     % (l) 'Waterfall'      - Estrutura que armazena informações da última linha preenchida
     %                        ('idx'), da quantidade de traços que será armazenada ('Depth') 
     %                        e da matriz de níveis ('Matrix').
-    % (m) 'Mask'           - Estrutura que armazena informações da máscara ('Table', 'Array'), 
-    %                        do contador de validações ('Validations'), do contador violações 
-    %                        por bin ('BrokenArray'), do contador de vezes em que a máscara 
-    %                        foi violada ('BrokenCount'), das principais emissões ('MainPeaks') 
-    %                        e do instante em que foi registrada a última violação de máscara 
-    %                       ('TimeStamp')
-    % (n) 'File'           - Estrutura que armazena informações da versão do arquivo
+    % (m) 'Waterfall'      - Estrutura que armazena informações da última linha preenchida
+    % (n) 'Azimuth'
+    % (o) 'File'           - Estrutura que armazena informações da versão do arquivo
     %                        ('Fileversion'), do nome base do arquivo a ser criado ('Basename'), 
     %                        do contador de arquivos ('Filecount'), do número de traços escritos 
     %                        em arquivos ('WritedSamples') e do atual arquivo('CurrentFile')
-    % (o) 'Antenna'        - Estrutura com nome da antena e seus parâmetros de configuração 
+    % (p) 'Antenna'        - Estrutura com nome da antena e seus parâmetros de configuração 
     %                        (altura, azimute, elevação e polarização).
-    % (p) 'Status'         - true | false
-    % (q) 'uuid'           - Identificador único.
+    % (q) 'Status'         - true | false
+    % (r) 'uuid'           - Identificador único.
 end
