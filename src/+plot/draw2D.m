@@ -16,8 +16,8 @@ classdef (Abstract) draw2D
         end
 
         %-----------------------------------------------------------------%
-        function hPlot = clearWrite(hAxes, xArray, newArray, levelUnit, plotTag, generalSettings)
-            hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.ClearWrite.Color, 'Tag', plotTag);
+        function hPlot = clearWrite(hAxes, xArray, newArray, levelUnit, plotTag, generalSettings, varargin)
+            hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.ClearWrite.Color, 'Tag', plotTag, varargin{:});
             plot.datatipModel(hPlot, levelUnit)
         end
 

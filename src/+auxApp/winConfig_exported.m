@@ -84,7 +84,6 @@ classdef winConfig_exported < matlab.apps.AppBase
         DATAHUBPOSTLabel               matlab.ui.control.Label
         Toolbar                        matlab.ui.container.GridLayout
         tool_openDevTools              matlab.ui.control.Image
-        tool_simulationMode            matlab.ui.control.Image
     end
 
     
@@ -429,21 +428,6 @@ classdef winConfig_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: tool_simulationMode
-        function Toolbar_SimulationModeButtonPushed(app, event)
-            
-            msgQuestion   = 'Deseja abrir arquivos de <b>simulação</b>?';
-            userSelection = appUtil.modalWindow(app.UIFigure, 'uiconfirm', msgQuestion, {'Sim', 'Não'}, 2, 2);
-            
-            if strcmp(userSelection, 'Não')
-                return
-            end
-
-            app.mainApp.General.operationMode.Simulation = true;
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'simulationModeChanged')
-
-        end
-
         % Image clicked function: tool_openDevTools
         function Toolbar_OpenDevToolsClicked(app, event)
             
@@ -596,6 +580,18 @@ classdef winConfig_exported < matlab.apps.AppBase
             general_updateLayout(app)
 
         end
+
+        % Image clicked function: general_FileLock, general_versionLock
+        function general_FileLockImageClicked(app, event)
+            
+            switch event.Source
+                case app.general_FileLock
+
+                case app.general_versionLock
+
+            end
+
+        end
     end
 
     % Component initialization
@@ -643,7 +639,7 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create Toolbar
             app.Toolbar = uigridlayout(app.GridLayout);
-            app.Toolbar.ColumnWidth = {22, '1x', 22, 22};
+            app.Toolbar.ColumnWidth = {'1x', 22, 22};
             app.Toolbar.RowHeight = {4, 17, '1x'};
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.RowSpacing = 0;
@@ -652,15 +648,6 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.Toolbar.Layout.Column = [1 5];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
-            % Create tool_simulationMode
-            app.tool_simulationMode = uiimage(app.Toolbar);
-            app.tool_simulationMode.ScaleMethod = 'none';
-            app.tool_simulationMode.ImageClickedFcn = createCallbackFcn(app, @Toolbar_SimulationModeButtonPushed, true);
-            app.tool_simulationMode.Tooltip = {'Leitura arquivos de simulação'};
-            app.tool_simulationMode.Layout.Row = 2;
-            app.tool_simulationMode.Layout.Column = 1;
-            app.tool_simulationMode.ImageSource = 'Import_16.png';
-
             % Create tool_openDevTools
             app.tool_openDevTools = uiimage(app.Toolbar);
             app.tool_openDevTools.ScaleMethod = 'none';
@@ -668,7 +655,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.tool_openDevTools.Enable = 'off';
             app.tool_openDevTools.Tooltip = {'Abre DevTools'};
             app.tool_openDevTools.Layout.Row = 2;
-            app.tool_openDevTools.Layout.Column = 4;
+            app.tool_openDevTools.Layout.Column = 3;
             app.tool_openDevTools.ImageSource = 'Debug_18.png';
 
             % Create TabGroup
@@ -765,6 +752,7 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create general_FileLock
             app.general_FileLock = uiimage(app.general_Grid);
+            app.general_FileLock.ImageClickedFcn = createCallbackFcn(app, @general_FileLockImageClicked, true);
             app.general_FileLock.Layout.Row = 1;
             app.general_FileLock.Layout.Column = 2;
             app.general_FileLock.VerticalAlignment = 'bottom';
@@ -876,6 +864,7 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create general_versionLock
             app.general_versionLock = uiimage(app.general_Grid);
+            app.general_versionLock.ImageClickedFcn = createCallbackFcn(app, @general_FileLockImageClicked, true);
             app.general_versionLock.Layout.Row = 3;
             app.general_versionLock.Layout.Column = 2;
             app.general_versionLock.VerticalAlignment = 'bottom';
