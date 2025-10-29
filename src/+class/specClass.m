@@ -55,6 +55,15 @@ classdef specClass < matlab.mixin.Copyable                                  % ab
             obj.startup_lastGPS(idx, newTask.Script.GPS);
             errorMsg = obj.startup_ReceiverTest(idx, EMSatObj, ERMxObj);
         end
+
+        %-----------------------------------------------------------------%
+        function instr = Instrument(obj)
+            instr = struct( ...
+                'Type', obj.Task.Receiver.Selection.Type{1}, ...
+                'Tag', obj.Task.Receiver.Config.Tag{1}, ...
+                'Parameters', jsondecode(obj.Task.Receiver.Selection.Parameters{1}) ...
+            );
+        end
     end
 
 

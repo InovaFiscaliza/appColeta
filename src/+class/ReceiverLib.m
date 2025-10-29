@@ -53,6 +53,11 @@ classdef ReceiverLib < handle
         function obj = ReceiverLib(RootFolder)
             obj.Config = struct2table(jsondecode(fileread(fullfile(RootFolder, 'config', 'ReceiverLib.json'))));
             obj.List   = FileRead(obj, RootFolder);
+
+            if ~isdeployed()
+                arrayfun(@(x) delete(x), tcpclientfind())
+                arrayfun(@(x) delete(x), udpportfind())
+            end
         end
 
 

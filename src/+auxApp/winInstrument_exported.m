@@ -390,10 +390,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function Layout_InstrumentSpecifications(app)            
             idx1 = app.Tree.SelectedNodes.NodeData;
-            [htmlContent, imgSource]   = util.HtmlTextGenerator.Instrument(app.receiverObj, app.gpsObj, app.editedList, idx1);
+            [htmlContent, imgSource] = util.HtmlTextGenerator.Instrument(app.receiverObj, app.gpsObj, app.editedList, idx1);
 
-            app.instrMetadata.Text     = htmlContent;
-            app.instrImage.ImageSource = imgSource;
+            app.instrMetadata.Text   = htmlContent;
+            set(app.instrImage, 'ImageSource', imgSource, 'Visible', 'on')
         end
 
         %-----------------------------------------------------------------%
@@ -1042,7 +1042,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 app.UIFigure.AutoResizeChildren = 'off';
                 app.UIFigure.Position = [100 100 1146 540];
                 app.UIFigure.Name = 'appColeta';
-                app.UIFigure.Icon = 'icon_48.png';
+                app.UIFigure.Icon = 'icon_32.png';
                 app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @closeFcn, true);
 
                 app.Container = app.UIFigure;
@@ -1451,11 +1451,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create instrImage
             app.instrImage = uiimage(app.Tab2_PanelGrid);
+            app.instrImage.Visible = 'off';
             app.instrImage.Layout.Row = [3 5];
             app.instrImage.Layout.Column = 4;
             app.instrImage.HorizontalAlignment = 'right';
             app.instrImage.VerticalAlignment = 'top';
-            app.instrImage.ImageSource = 'Instr_R&S_FSL.png';
 
             % Create AspectostcnicosLabel
             app.AspectostcnicosLabel = uilabel(app.Tab2_PanelGrid);
