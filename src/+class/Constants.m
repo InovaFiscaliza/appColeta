@@ -4,23 +4,14 @@ classdef (Abstract) Constants
         %-----------------------------------------------------------------%
         appName    = 'appColeta'
         appRelease = 'R2024a'
-        appVersion = '1.62.0'
+        appVersion = '1.63.0'
 
         windowSize = [1244, 660]
         windowMinSize = [ 750, 660]
 
-        gps2locAPI = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=<Latitude>&longitude=<Longitude>&localityLanguage=pt'
-        gps2loc_City = 'city'
-        gps2loc_Unit = 'principalSubdivisionCode'
-
         userPaths = { ...
             fullfile(getenv('USERPROFILE'), 'Documents'); ...
             fullfile(getenv('USERPROFILE'), 'Downloads') ...
-        }
-        Interactions = { ...
-            'datacursor', ...
-            'zoomin', ...
-            'restoreview' ...
         }
 
         yMinLimRange = 30                                                   % Minimum y-Axis limit range

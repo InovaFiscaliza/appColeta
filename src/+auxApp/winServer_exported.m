@@ -265,7 +265,7 @@ classdef winServer_exported < matlab.apps.AppBase
                 app.UIFigure.AutoResizeChildren = 'off';
                 app.UIFigure.Position = [100 100 940 540];
                 app.UIFigure.Name = 'appColeta';
-                app.UIFigure.Icon = 'icon_48.png';
+                app.UIFigure.Icon = 'icon_32.png';
                 app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @closeFcn, true);
 
                 app.Container = app.UIFigure;

@@ -873,7 +873,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             if Folder
                 saveNewFile(app, Folder, true)
             end
-atp
+            
         end
 
         % Image clicked function: Image_addTask
@@ -1231,7 +1231,7 @@ atp
                 app.UIFigure.AutoResizeChildren = 'off';
                 app.UIFigure.Position = [100 100 1244 660];
                 app.UIFigure.Name = 'appColeta';
-                app.UIFigure.Icon = 'icon_48.png';
+                app.UIFigure.Icon = 'icon_32.png';
                 app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @closeFcn, true);
 
                 app.Container = app.UIFigure;

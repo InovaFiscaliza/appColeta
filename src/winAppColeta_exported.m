@@ -31,12 +31,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         tool_ButtonPlay        matlab.ui.control.Image
         tool_LeftPanel         matlab.ui.control.Image
         task_docGrid           matlab.ui.container.GridLayout
-        TabGroup2              matlab.ui.container.TabGroup
-        ASPECTOSGERAISTab      matlab.ui.container.Tab
-        GridLayout2            matlab.ui.container.GridLayout
-        FAIXADEFREQUNCIALabel  matlab.ui.control.Label
         MetaData               matlab.ui.control.Label
         DropDown               matlab.ui.control.DropDown
+        FAIXADEFREQUNCIALabel  matlab.ui.control.Label
         play_axesToolbar       matlab.ui.container.GridLayout
         axesTool_MinHold_2     matlab.ui.control.Image
         axesTool_PlotSource    matlab.ui.control.DropDown
@@ -115,6 +112,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         Flag_running = 0
         Flag_editing = 0
+        plotStyleEditing = 0
 
         %-----------------------------------------------------------------%
         % PLOT
@@ -281,6 +279,20 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         catch ME
                             struct2table(ME.stack)
                         end
+
+                    case 'AxesTileSpacingChanged'
+                        tileSpacing = varargin{1};
+                        app.axes1.Parent.TileSpacing = tileSpacing;
+
+                    case 'PlotColorChanged'
+                        plotTag = varargin{1};
+                        if ~isempty(eval(['app.line_' plotTag]))
+                            app.plotStyleEditing = 1;
+                        end
+
+                    case 'WaterfallColormapChanged'
+                        waterfallColormap = varargin{1};
+                        colormap(app.axes2, waterfallColormap)
 
                     otherwise
                         error('Unexpected call "%s" from %s', operationType, class(callingApp))
@@ -568,16 +580,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             linkaxes([app.axes1, app.axes2], 'x')
 
             % Axes interactions:
-            plot.axesInteractivity.DefaultCreation([app.axes1, app.axes2], [dataTipInteraction, regionZoomInteraction])
+            plot.axesInteractivity.DefaultCreation([app.axes1, app.axes2], [dataTipInteraction, regionZoomInteraction, rulerPanInteraction ])
         end
 
         %-----------------------------------------------------------------%
         function startup_specObjRead(app)
-
-            if isfile(fullfile(app.rootFolder, 'config', 'startupInfo.mat'))
+            [~, programDataFolder] = appUtil.Path(class.Constants.appName, app.rootFolder);
+            if isfile(fullfile(programDataFolder, 'startupInfo.mat'))
                 app.progressDialog.Visible = 'visible';
 
-                load(fullfile(app.rootFolder, 'config', 'startupInfo.mat'), 'SpecObj');
+                load(fullfile(programDataFolder, 'startupInfo.mat'), 'SpecObj');
 
                 % É possível que o MATLAB não consiga instancionar o objeto
                 % "class.specClass", lendo-o como "uint32", o que inviabiliza 
@@ -612,21 +624,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function [SpecObj, msgError] = startup_specObjRead_Receiver(app, SpecObj)
-
             % Função funcionalmente idêntica à fcn.ConnectivityTest_Receiver.
             % A "duplicação" garante que seja usado a informação constante
             % no objeto SpecObj, ao invés da informação constante no arquivo 
             % "instrumentList.json", que pode ter sido editado.
 
-            idx1 = find(strcmp(app.receiverObj.Config.Name, SpecObj.Task.Receiver.Selection.Name{1}), 1);
-            instrSelected = struct('Type',       SpecObj.Task.Receiver.Selection.Type{1}, ...
-                                   'Tag',        app.receiverObj.Config.Tag{idx1},        ...
-                                   'Parameters', jsondecode(SpecObj.Task.Receiver.Selection.Parameters{1}));
-            
-            [idx2, msgError] = app.receiverObj.Connect(instrSelected);            
+            instrSelected = Instrument(SpecObj);
+            [idx, msgError] = Connect(app.receiverObj ,instrSelected);
             
             if isempty(msgError)
-                SpecObj.Task.Receiver.Handle = app.receiverObj.Table.Handle{idx2};
+                SpecObj.Task.Receiver.Handle = app.receiverObj.Table.Handle{idx};
                 SpecObj.hReceiver            = SpecObj.Task.Receiver.Handle;
             end
         end
@@ -749,7 +756,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         % REGULAR TASK
         %-----------------------------------------------------------------%
         function RegularTask_specObjSave(app)
-
             % Ao salvar "app.specObj" em um arquivo .MAT, reabrindo-o
             % posteriormente, os objetos de comunicação (tcpclient, por
             % exemplo) não retém o valor da propriedade "UserData".
@@ -769,7 +775,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 SpecObj(ii).Task.GPS.Handle       = [];
             end
 
-            save(fullfile(app.rootFolder, 'config', 'startupInfo.mat'), 'SpecObj')
+            [~, programDataFolder] = appUtil.Path(class.Constants.appName, app.rootFolder);
+            save(fullfile(programDataFolder, 'startupInfo.mat'), 'SpecObj')
         end
 
 
@@ -947,7 +954,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             Task = app.specObj(idx).Task;
             
             % RECEIVER
-            msgError = app.receiverObj.ReconnectAttempt(app.specObj(idx).hReceiver.UserData.instrSelected, ...
+            msgError = app.receiverObj.ReconnectAttempt(Instrument(app.specObj(idx)),                      ...
                                                         app.specObj(idx).Task.Receiver.Config.connectFlag, ...
                                                         app.specObj(idx).Task.Receiver.Config.StartUp{1},  ...
                                                         app.specObj(idx).Band(1).SpecificSCPI);
@@ -1559,9 +1566,19 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
                 
                 set(app.DropDown, 'Items', ids, 'ItemsData', 1:numBands, 'Value', Selection)
-            end
-
-            task_TreeSelectionChanged(app)
+                task_TreeSelectionChanged(app)
+            else
+                app.DropDown.Items = {};
+                app.MetaData.Text = '';                
+                plot_Startup(app)
+                set(app.axesTool_PlotSource, 'Items', plot_PlotSource(app, -1, -1), 'Enable', false)                
+                app.Sweeps.Text = '-1';
+                app.Sweeps_REC.Visible = 0;
+                Layout_errorCount(app, [])                
+                Layout_lastMaskInitialState(app)
+                app.lastGPS_text.Text = {'<b style="color: #a2142f; font-size: 14;">-1.000</b> LAT '; '<b style="color: #a2142f; font-size: 14;">-1.000</b> LON '; 'dd-mmm-yyyy '; 'HH:MM:SS '};
+                app.tool_RevisitTime.Text = '';
+            end            
             drawnow
         end
 
@@ -1675,12 +1692,20 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function sources = plot_PlotSource(app, ii, jj)
             sources = {'Nível'};
-            if contains(app.specObj(ii).Task.Type, 'Drive-test (Level+Azimuth)')
-                sources{end+1} = 'Azimute';
-            end
 
-            if ~isempty(app.specObj(ii).Band(jj).Mask)
-                sources{end+1} = 'Máscara';
+            if ii > 0 && jj > 0
+                if contains(app.specObj(ii).Task.Type, 'Drive-test (Level+Azimuth)')
+                    sources{end+1} = 'Azimute';
+                end
+    
+                % Se a tarefa for "Rompimento de Máscara Espectral" e o Status for 
+                % maior do que zero, então o campo "Mask" será diferente de vazio.
+                % A validação abaixo é idêntica (funcionalmente) à:
+                
+              % if contains(app.specObj(ii).Task.Type, 'Rompimento de Máscara Espectral') && app.specObj(ii).Task.Script.Band(jj).MaskTrigger.Status
+                if ~isempty(app.specObj(ii).Band(jj).Mask)
+                    sources{end+1} = 'Máscara';
+                end
             end
         end
 
@@ -1688,6 +1713,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function plot_Startup(app)
             cla(app.axes1)
             cla(app.axes2)
+            ysecondarylabel(app.axes1, sprintf('\n\n'))
         
             app.line_ClrWrite = [];
             app.line_MinHold  = [];
@@ -1724,6 +1750,13 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function plot_Draw(app, ii, jj)
             idx = app.specObj(ii).Band(jj).Waterfall.idx;
             newArray = app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:);
+
+            if app.plotStyleEditing
+                app.plotStyleEditing = 0;
+
+                cla(app.axes1)
+                app.line_ClrWrite = [];
+            end
         
             if isempty(app.line_ClrWrite)
                 [xArray, downYLim, upYLim, FreqStart, FreqStop, LevelUnit, strUnit] = plot_AxesParameters(app, ii, jj, newArray);
@@ -1913,8 +1946,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             if app.General.startupInfo
                 RegularTask_specObjSave(app)
             else
-                if isfile(fullfile(app.rootFolder, 'config', 'startupInfo.mat'))
-                    delete(fullfile(app.rootFolder, 'config', 'startupInfo.mat'))
+                [~, programDataFolder] = appUtil.Path(class.Constants.appName, app.rootFolder);
+                if isfile(fullfile(programDataFolder, 'startupInfo.mat'))
+                    delete(fullfile(programDataFolder, 'startupInfo.mat'))
                 end
             end
 
@@ -2054,8 +2088,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                     otherwise
                         if ~app.Flag_running
-                            app.specObj(idx) = [];
-    
+                            app.specObj(idx) = [];    
                             Layout_tableBuilding(app, 1)
                         else
                             appUtil.modalWindow(app.UIFigure, 'warning', 'Uma tarefa poderá ser excluída, sendo eliminada da lista de tarefas, somente se não estiver sendo executada nenhuma tarefa.');
@@ -2082,11 +2115,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             if app.task_docGrid.ColumnWidth{1}
                 app.tool_LeftPanel.ImageSource = 'ArrowRight_32.png';
                 app.task_docGrid.ColumnWidth(1:2) = {0,0};
-                app.TabGroup2.Visible = 0;
+                % app.TabGroup2.Visible = 0;
             else
                 app.tool_LeftPanel.ImageSource = 'ArrowLeft_32.png';
                 app.task_docGrid.ColumnWidth(1:2) = {320,10};
-                app.TabGroup2.Visible = 1;
+                % app.TabGroup2.Visible = 1;
             end
             
         end
@@ -2112,12 +2145,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function task_TreeSelectionChanged(app, event)
 
             try
-                if isempty(app.Table.Data) || isempty(app.DropDown.Items)
-                    error('UnexpectedEmptyTableOrDropDown')
-                end
-
                 ii = app.Table.Selection;
                 jj = app.DropDown.Value;
+
+                app.axesTool_PlotSource.Items  = plot_PlotSource(app, ii, jj);
+                app.axesTool_PlotSource.Enable = numel(app.axesTool_PlotSource.Items) > 1;
     
                 plot_Startup(app)
                 if ~isempty(app.specObj(ii).Band(jj).Waterfall)
@@ -2143,9 +2175,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 else
                     app.Sweeps_REC.Visible = 0;
                 end
-
-                app.axesTool_PlotSource.Items  = plot_PlotSource(app, ii, jj);
-                app.axesTool_PlotSource.Enable = numel(app.axesTool_PlotSource.Items) > 1;
                 
                 if ~isempty(app.specObj(ii).Band(jj).Mask)                    
                     app.lastMask_text.Enable = 1;
@@ -2169,23 +2198,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
 
             catch ME
-                % Return to initial layout aspect...
-                plot_Startup(app)
+                if exist('event', 'var')
+                    event.Source.Value = event.Source.PreviousValue;
+                    task_TreeSelectionChanged(app)
+                end
 
-                app.DropDown.Items = {};
-                app.MetaData.Text = '';
-                app.Sweeps.Text = '-1';
-                app.Sweeps_REC.Visible = 0;
-                Layout_errorCount(app, [])
-                
-                app.axesTool_PlotSource.Items = {'Nível'};
-                Layout_lastMaskInitialState(app)
-
-                ysecondarylabel(app.axes1, sprintf('\n\n'))
-                app.tool_RevisitTime.Text = '';
-
-                app.lastGPS_color.Color   = [0.502 0.502 0.502];
-                app.lastGPS_text.Text     = {'<b style="color: #a2142f; font-size: 14;">-1.000</b> LAT '; '<b style="color: #a2142f; font-size: 14;">-1.000</b> LON '; ''; 'dd-mmm-yyyy '; 'HH:MM:SS '};
+                appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));
             end
             drawnow
 
@@ -2267,6 +2285,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             event.Source.UserData.status = ~event.Source.UserData.status;
             plot_Layout(app)
 
+            if ~app.Flag_running
+                axesTool_PlotSourceValueChanged(app)
+            end
+
         end
 
         % Image clicked function: axesTool_MinHold_2
@@ -2285,9 +2307,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         % Value changed function: axesTool_PlotSource
         function axesTool_PlotSourceValueChanged(app, event)
             
-            cla(app.axes1)
-            app.line_ClrWrite = [];
-
             ii = app.Table.Selection;
             jj = app.DropDown.Value;
 
@@ -2295,6 +2314,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 idx = app.specObj(ii).Band(jj).Waterfall.idx;
 
                 if idx
+                    app.plotStyleEditing = 1;
                     plot_Draw(app, ii, jj)
                 end
             end
@@ -2351,7 +2371,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create task_docGrid
             app.task_docGrid = uigridlayout(app.Tab1Grid);
             app.task_docGrid.ColumnWidth = {320, 10, '1x', 258, 5, 10, 130};
-            app.task_docGrid.RowHeight = {140, 10, 24, '1x'};
+            app.task_docGrid.RowHeight = {140, 10, 17, 5, 2, 20, 5, '1x'};
             app.task_docGrid.ColumnSpacing = 0;
             app.task_docGrid.RowSpacing = 0;
             app.task_docGrid.Padding = [10 10 10 40];
@@ -2369,14 +2389,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Table.Multiselect = 'off';
             app.Table.Layout.Row = 1;
             app.Table.Layout.Column = [1 7];
-            app.Table.FontSize = 10;
+            app.Table.FontSize = 11;
 
             % Create Plot_Panel
             app.Plot_Panel = uipanel(app.task_docGrid);
             app.Plot_Panel.AutoResizeChildren = 'off';
             app.Plot_Panel.BorderType = 'none';
             app.Plot_Panel.BackgroundColor = [0 0 0];
-            app.Plot_Panel.Layout.Row = [3 4];
+            app.Plot_Panel.Layout.Row = [3 8];
             app.Plot_Panel.Layout.Column = [3 5];
 
             % Create TaskInfo_Panel
@@ -2384,7 +2404,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.TaskInfo_Panel.ColumnWidth = {'1x'};
             app.TaskInfo_Panel.RowHeight = {82, '1x', '1x'};
             app.TaskInfo_Panel.Padding = [0 0 0 0];
-            app.TaskInfo_Panel.Layout.Row = [3 4];
+            app.TaskInfo_Panel.Layout.Row = [3 8];
             app.TaskInfo_Panel.Layout.Column = 7;
             app.TaskInfo_Panel.BackgroundColor = [1 1 1];
 
@@ -2572,7 +2592,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.play_axesToolbar.ColumnSpacing = 0;
             app.play_axesToolbar.RowSpacing = 0;
             app.play_axesToolbar.Padding = [2 2 2 0];
-            app.play_axesToolbar.Layout.Row = 3;
+            app.play_axesToolbar.Layout.Row = [3 5];
             app.play_axesToolbar.Layout.Column = 4;
             app.play_axesToolbar.BackgroundColor = [1 1 1];
 
@@ -2652,51 +2672,34 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axesTool_MinHold_2.VerticalAlignment = 'bottom';
             app.axesTool_MinHold_2.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Home_18.png');
 
-            % Create TabGroup2
-            app.TabGroup2 = uitabgroup(app.task_docGrid);
-            app.TabGroup2.AutoResizeChildren = 'off';
-            app.TabGroup2.Layout.Row = [3 4];
-            app.TabGroup2.Layout.Column = 1;
-
-            % Create ASPECTOSGERAISTab
-            app.ASPECTOSGERAISTab = uitab(app.TabGroup2);
-            app.ASPECTOSGERAISTab.AutoResizeChildren = 'off';
-            app.ASPECTOSGERAISTab.Title = 'ASPECTOS GERAIS';
-
-            % Create GridLayout2
-            app.GridLayout2 = uigridlayout(app.ASPECTOSGERAISTab);
-            app.GridLayout2.ColumnWidth = {'1x'};
-            app.GridLayout2.RowHeight = {17, 22, '1x'};
-            app.GridLayout2.RowSpacing = 5;
-            app.GridLayout2.BackgroundColor = [1 1 1];
+            % Create FAIXADEFREQUNCIALabel
+            app.FAIXADEFREQUNCIALabel = uilabel(app.task_docGrid);
+            app.FAIXADEFREQUNCIALabel.VerticalAlignment = 'bottom';
+            app.FAIXADEFREQUNCIALabel.FontSize = 10;
+            app.FAIXADEFREQUNCIALabel.Layout.Row = 3;
+            app.FAIXADEFREQUNCIALabel.Layout.Column = 1;
+            app.FAIXADEFREQUNCIALabel.Text = 'FAIXA DE FREQUÊNCIA:';
 
             % Create DropDown
-            app.DropDown = uidropdown(app.GridLayout2);
+            app.DropDown = uidropdown(app.task_docGrid);
             app.DropDown.Items = {};
             app.DropDown.ValueChangedFcn = createCallbackFcn(app, @task_TreeSelectionChanged, true);
             app.DropDown.FontSize = 11;
             app.DropDown.BackgroundColor = [1 1 1];
-            app.DropDown.Layout.Row = 2;
+            app.DropDown.Layout.Row = [5 6];
             app.DropDown.Layout.Column = 1;
             app.DropDown.Value = {};
 
             % Create MetaData
-            app.MetaData = uilabel(app.GridLayout2);
+            app.MetaData = uilabel(app.task_docGrid);
+            app.MetaData.BackgroundColor = [1 1 1];
             app.MetaData.VerticalAlignment = 'top';
             app.MetaData.WordWrap = 'on';
             app.MetaData.FontSize = 11;
-            app.MetaData.Layout.Row = 3;
+            app.MetaData.Layout.Row = 8;
             app.MetaData.Layout.Column = 1;
             app.MetaData.Interpreter = 'html';
             app.MetaData.Text = '';
-
-            % Create FAIXADEFREQUNCIALabel
-            app.FAIXADEFREQUNCIALabel = uilabel(app.GridLayout2);
-            app.FAIXADEFREQUNCIALabel.VerticalAlignment = 'bottom';
-            app.FAIXADEFREQUNCIALabel.FontSize = 10;
-            app.FAIXADEFREQUNCIALabel.Layout.Row = 1;
-            app.FAIXADEFREQUNCIALabel.Layout.Column = 1;
-            app.FAIXADEFREQUNCIALabel.Text = 'FAIXA DE FREQUÊNCIA';
 
             % Create task_toolGrid
             app.task_toolGrid = uigridlayout(app.Tab1Grid);
@@ -2872,7 +2875,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.menu_Button5 = uibutton(app.menu_Grid, 'state');
             app.menu_Button5.ValueChangedFcn = createCallbackFcn(app, @menu_mainButtonPushed, true);
             app.menu_Button5.Tag = 'SERVER';
-            app.menu_Button5.Tooltip = {'Servidor'};
+            app.menu_Button5.Tooltip = {'API'};
             app.menu_Button5.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Server_36White.png');
             app.menu_Button5.IconAlignment = 'right';
             app.menu_Button5.Text = '';
@@ -2907,13 +2910,13 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.menu_AppName.Layout.Row = [1 5];
             app.menu_AppName.Layout.Column = [2 3];
             app.menu_AppName.Interpreter = 'html';
-            app.menu_AppName.Text = {'appColeta v. 1.62.0'; '<font style="font-size: 9px;">R2024a</font>'};
+            app.menu_AppName.Text = {'appColeta v. 1.63.0'; '<font style="font-size: 9px;">R2024a</font>'};
 
             % Create menu_AppIcon
             app.menu_AppIcon = uiimage(app.menu_Grid);
             app.menu_AppIcon.Layout.Row = [1 5];
             app.menu_AppIcon.Layout.Column = 1;
-            app.menu_AppIcon.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Occupancy_32Gray.png');
+            app.menu_AppIcon.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Playback_32White.png');
 
             % Create AppInfo
             app.AppInfo = uiimage(app.menu_Grid);

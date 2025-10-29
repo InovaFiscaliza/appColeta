@@ -232,5 +232,43 @@ classdef (Abstract) HtmlTextGenerator
 
             htmlContent = jsonencode(dataStruct);
         end
+
+        %-----------------------------------------------------------------%
+        function htmlContent = checkUpdate(appGeneral, rootFolder)
+            try
+                % Versão instalada no computador:
+                appName          = class.Constants.appName;
+                presentVersion   = struct(appName, appGeneral.AppVersion.application.version); 
+                
+                % Versão estável, indicada nos arquivos de referência (na nuvem):
+                generalURL       = util.publicLink(appName, rootFolder);
+                generalVersions  = webread(generalURL, weboptions("ContentType", "json"));        
+                stableVersion    = struct(appName, generalVersions.(appName).Version);
+                
+                % Validação:
+                if isequal(presentVersion, stableVersion)
+                    msgWarning   = 'O appColeta está atualizado';
+                else
+                    updatedModule    = {};
+                    nonUpdatedModule = {};
+                    if strcmp(presentVersion.(appName), stableVersion.(appName))
+                        updatedModule(end+1)    = {appName};
+                    else
+                        nonUpdatedModule(end+1) = {appName};
+                    end
+        
+                    dataStruct    = struct('group', 'VERSÃO INSTALADA', 'value', presentVersion);
+                    dataStruct(2) = struct('group', 'VERSÃO ESTÁVEL',   'value', stableVersion);
+                    dataStruct(3) = struct('group', 'SITUAÇÃO',         'value', struct('updated', strjoin(updatedModule, ', '), 'nonupdated', strjoin(nonUpdatedModule, ', ')));
+        
+                    msgWarning    = textFormatGUI.struct2PrettyPrintList(dataStruct, "print -1", '', 'popup');
+                end
+                
+            catch ME
+                msgWarning = ME.message;
+            end
+        
+            htmlContent = msgWarning;
+        end
     end
 end

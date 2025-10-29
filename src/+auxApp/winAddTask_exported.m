@@ -4,13 +4,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
     properties (Access = public)
         UIFigure                   matlab.ui.Figure
         GridLayout                 matlab.ui.container.GridLayout
-        dockModuleGrid             matlab.ui.container.GridLayout
+        DockModule                 matlab.ui.container.GridLayout
         dockModule_Undock          matlab.ui.control.Image
         dockModule_Close           matlab.ui.control.Image
-        Toolbar                    matlab.ui.container.GridLayout
-        okBtn                      matlab.ui.control.Button
-        BandCustomizable           matlab.ui.container.GridLayout
-        Band_Refresh               matlab.ui.control.Image
+        Document                   matlab.ui.container.GridLayout
         Band_AntennaPanel          matlab.ui.container.Panel
         Band_AntennaGrid           matlab.ui.container.GridLayout
         Band_TargetListRefresh     matlab.ui.control.Image
@@ -52,25 +49,20 @@ classdef winAddTask_exported < matlab.apps.AppBase
         Band_StepWidth2            matlab.ui.control.DropDown
         Band_StepWidth1            matlab.ui.control.NumericEditField
         Band_StepWidthLabel        matlab.ui.control.Label
+        Band_Refresh               matlab.ui.control.Image
         Band_ReceiverLabel         matlab.ui.control.Label
-        Band_Samples               matlab.ui.control.NumericEditField
-        Band_SamplesLabel          matlab.ui.control.Label
-        BandsInfo                  matlab.ui.container.GridLayout
         MetaData                   matlab.ui.control.Label
         MetaDataLabel              matlab.ui.control.Label
+        Band_Samples               matlab.ui.control.NumericEditField
+        Band_SamplesLabel          matlab.ui.control.Label
         Band_Tree                  matlab.ui.container.Tree
         Band_TreeLabel             matlab.ui.control.Label
-        TaskControl                matlab.ui.container.TabGroup
-        TAREFATab                  matlab.ui.container.Tab
-        Tab1_Panel                 matlab.ui.container.GridLayout
-        TaskType                   matlab.ui.control.DropDown
-        TaskTypeLabel              matlab.ui.control.Label
-        PreviewTaskCheckbox        matlab.ui.control.CheckBox
-        AddMaskFile_Button         matlab.ui.control.Button
-        MaskFile_Button            matlab.ui.control.Button
-        TaskName                   matlab.ui.control.DropDown
-        TaskNameLabel              matlab.ui.control.Label
-        BitsPerPointLabel          matlab.ui.control.Label
+        DocumentLabel              matlab.ui.control.Label
+        Toolbar                    matlab.ui.container.GridLayout
+        okBtn                      matlab.ui.control.Button
+        TabGroup                   matlab.ui.container.TabGroup
+        Tab1                       matlab.ui.container.Tab
+        Tab1Grid                   matlab.ui.container.GridLayout
         ObservationPanel           matlab.ui.container.Panel
         ObservationPanel_Grid      matlab.ui.container.GridLayout
         SpecificTime_Grid          matlab.ui.container.GridLayout
@@ -89,33 +81,39 @@ classdef winAddTask_exported < matlab.apps.AppBase
         ObservationTypeLabel       matlab.ui.control.Label
         ObservationLabel           matlab.ui.control.Label
         BitsPerPoint               matlab.ui.control.DropDown
-        INSTRUMENTOSTab            matlab.ui.container.Tab
-        Tab2_Panel                 matlab.ui.container.GridLayout
-        GPS_List                   matlab.ui.control.DropDown
-        GPS_ListLabel              matlab.ui.control.Label
-        GPS_FixedStation           matlab.ui.control.Button
-        Receiver_ListLabel         matlab.ui.control.Label
-        Receiver_List              matlab.ui.control.DropDown
-        Receiver_Connectivity      matlab.ui.control.Button
-        GPS_Connectivity           matlab.ui.control.Button
+        BitsPerPointLabel          matlab.ui.control.Label
+        PreviewTaskCheckbox        matlab.ui.control.CheckBox
+        MaskFile_Button            matlab.ui.control.Button
+        AddMaskFile_Button         matlab.ui.control.Button
+        TaskType                   matlab.ui.control.DropDown
+        TaskTypeLabel              matlab.ui.control.Label
+        TaskName                   matlab.ui.control.DropDown
+        TaskNameLabel              matlab.ui.control.Label
+        Tab2                       matlab.ui.container.Tab
+        Tab2Grid                   matlab.ui.container.GridLayout
         GPS_Panel                  matlab.ui.container.Panel
         GPS_Grid                   matlab.ui.container.GridLayout
-        GPS_manualLongitudeLabel   matlab.ui.control.Label
-        GPS_manualLatitudeLabel    matlab.ui.control.Label
-        GPS_RevisitTimeLabel       matlab.ui.control.Label
         GPS_RevisitTime            matlab.ui.control.NumericEditField
+        GPS_RevisitTimeLabel       matlab.ui.control.Label
         GPS_manualLongitude        matlab.ui.control.NumericEditField
+        GPS_manualLongitudeLabel   matlab.ui.control.Label
         GPS_manualLatitude         matlab.ui.control.NumericEditField
+        GPS_manualLatitudeLabel    matlab.ui.control.Label
+        GPS_Connectivity           matlab.ui.control.Button
+        GPS_FixedStation           matlab.ui.control.Button
+        GPS_List                   matlab.ui.control.DropDown
+        GPS_ListLabel              matlab.ui.control.Label
         Receiver_Panel             matlab.ui.container.Panel
         Receiver_Grid              matlab.ui.container.GridLayout
         Receiver_SyncRef           matlab.ui.control.DropDown
         Receiver_SyncRefLabel      matlab.ui.control.Label
         Receiver_RstCommand        matlab.ui.control.DropDown
         Receiver_RstCommandLabel   matlab.ui.control.Label
-        ANTENASTab                 matlab.ui.container.Tab
-        Tab3_Panel                 matlab.ui.container.GridLayout
-        AntennaSwitch_Name         matlab.ui.control.EditField
-        AntennaSwitch_Mode         matlab.ui.control.CheckBox
+        Receiver_Connectivity      matlab.ui.control.Button
+        Receiver_List              matlab.ui.control.DropDown
+        Receiver_ListLabel         matlab.ui.control.Label
+        Tab3                       matlab.ui.container.Tab
+        Tab3Grid                   matlab.ui.container.GridLayout
         AntennaList_Tree           matlab.ui.container.Tree
         AddAntenna_Image           matlab.ui.control.Image
         Antenna_Panel              matlab.ui.container.Panel
@@ -134,6 +132,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
         Antenna_TrackingModeLabel  matlab.ui.control.Label
         AntennaName                matlab.ui.control.DropDown
         AntennaNameLabel           matlab.ui.control.Label
+        AntennaSwitch_Name         matlab.ui.control.EditField
+        AntennaSwitch_Mode         matlab.ui.control.CheckBox
         ContextMenu                matlab.ui.container.ContextMenu
         delAntennaEntry            matlab.ui.container.Menu
     end
@@ -236,7 +236,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         case 1
                             % Grid botões "dock":
                             if app.isDocked
-                                elToModify = {app.dockModuleGrid};
+                                elToModify = {app.DockModule};
                                 elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
                                 if ~isempty(elDataTag)                                    
                                     sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
@@ -246,10 +246,16 @@ classdef winAddTask_exported < matlab.apps.AppBase
                             end
 
                             % Outros elementos:
-                            elToModify = {app.MetaData};
+                            elToModify = { ...
+                                app.Document, ...
+                                app.MetaData ...
+                            };
                             elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
                             if ~isempty(elDataTag)
-                                ui.TextView.startup(app.jsBackDoor, elToModify{1}, appName);
+                                    sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                                        struct('appName', appName, 'dataTag', elDataTag{1}, 'styleImportant', struct('border', '1px solid #7d7d7d', 'borderRadius', '0')) ...
+                                    });
+                                ui.TextView.startup(app.jsBackDoor, elToModify{2}, appName);
                             end
 
                         case 2
@@ -293,6 +299,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function startup_Controller(app)
+            checkStackingOrder(app)
             drawnow
 
             jsBackDoor_Customizations(app, 0)
@@ -313,6 +320,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.EB500Map    = app.mainApp.EB500Obj.SelectivityMap;            
             app.switchList  = struct2table(jsondecode(fileread(fullfile(app.mainApp.rootFolder, 'config', 'switchList.json'))));
             app.EMSatObj    = app.mainApp.EMSatObj;
+            
             startup_tgtList(app)
             startup_Layout(app)
 
@@ -448,12 +456,24 @@ classdef winAddTask_exported < matlab.apps.AppBase
             if strcmp(app.mainApp.General.stationInfo.Type, 'Fixed')  && ...
                     (app.mainApp.General.stationInfo.Latitude  ~= -1) && ...
                     (app.mainApp.General.stationInfo.Longitude ~= -1)
-                app.Tab2_Panel.ColumnWidth{2} = 22;
+                app.GPS_List.Layout.Column   = 1;
+                app.GPS_FixedStation.Visible = true;
             else
-                app.Tab2_Panel.ColumnWidth{2} = 0;
+                app.GPS_List.Layout.Column   = [1,2];
+                app.GPS_FixedStation.Visible = false;
             end
         end
 
+        %-----------------------------------------------------------------%
+        function checkStackingOrder(app)
+            currentOrder   = arrayfun(@(x) str2double(x.Tag), app.GridLayout.Children);
+            referenceOrder = (1:numel(currentOrder))';
+
+            if ~isequal(currentOrder, referenceOrder)
+                [~, newOrderIndex] = sort(currentOrder);        
+                app.GridLayout.Children  = app.GridLayout.Children(newOrderIndex);
+            end
+        end
 
         %-----------------------------------------------------------------%
         function instrumentSocket = InstrumentSocket(app, instrumentParameters)
@@ -589,7 +609,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             switch app.receiverObj.Config.connectFlag(idx3)
                 % Anritsu MS2720T, Keysight N9344C, Keysight N9936B, R&S FSL, R&S FSVR, R&S FSW, and Tektronix SA2500
                 case 1
-                    app.Band_ReceiverGrid.RowHeight(2:3)        = {22,0};
+                    app.Band_ReceiverGrid.RowHeight(2:3)   = {22,0};
                     set(findobj(groot, 'Parent', app.Band_ReceiverGrid, 'Tag', 'task_Set1'), 'Enable', 1)
                     set(findobj(groot, 'Parent', app.Band_ReceiverGrid, 'Tag', 'task_Set2'), 'Enable', 0)
 
@@ -612,7 +632,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
                 % R&S EB500
                 case {2, 3}
-                    app.Band_ReceiverGrid.RowHeight(2:3)        = {0,22};
+                    app.Band_ReceiverGrid.RowHeight(2:3)   = {0,22};
                     set(findobj(groot, 'Parent', app.Band_ReceiverGrid, 'Tag', 'task_Set1'), 'Enable', 0)
                     set(findobj(groot, 'Parent', app.Band_ReceiverGrid, 'Tag', 'task_Set2'), 'Enable', 1)
 
@@ -1015,7 +1035,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     end
                 
                 case 'Rompimento de Máscara Espectral'
-                    if isempty(app.MaskFile_Button.Tooltip{1})
+                    if ~isfile(app.MaskFile_Button.Tag)
                         error('Não selecionado o arquivo de máscara espectral.')
                     end
             end
@@ -1126,7 +1146,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             
             if app.isDocked
                 app.GridLayout.Padding(4)  = 30;
-                app.dockModuleGrid.Visible = 1;
+                app.DockModule.Visible = 1;
                 app.jsBackDoor = mainApp.jsBackDoor;
                 startup_Controller(app)
             else
@@ -1200,14 +1220,14 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             switch app.TaskType.Value
                 case 'Rompimento de Máscara Espectral'
-                    app.Tab1_Panel.ColumnWidth(2:3) = {22, 22};
-                    if ~isempty(app.MaskFile_Button.Tooltip{1})
-                        app.MaskFile_Button.Enable     = 1;
-                    end
+                    app.TaskType.Layout.Column = 1;
+                    app.AddMaskFile_Button.Visible = true;
+                    set(app.MaskFile_Button, 'Visible', true, 'Enable', isfile(app.MaskFile_Button.Tag))
 
                 otherwise
-                    app.Tab1_Panel.ColumnWidth(2:3) = {0, 0};
-                    app.MaskFile_Button.Enable         = 0;
+                    app.TaskType.Layout.Column = [1,3];
+                    app.AddMaskFile_Button.Visible = false;
+                    set(app.MaskFile_Button, 'Visible', false, 'Enable', false)
             end
 
             switch app.TaskType.Value
@@ -1237,12 +1257,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             figure(app.UIFigure)
             
             if Filename
-                try
-                    set(app.MaskFile_Button, 'Enable', 1, 'Tooltip', {fullfile(Filepath, Filename)})
-                catch ME
-                    set(app.MaskFile_Button, 'Enable', 0, 'Tooltip', {''})
-                    appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));                    
-                end
+                set(app.MaskFile_Button, 'Enable', true, 'Tag', fullfile(Filepath, Filename))
             end
 
         end
@@ -1251,9 +1266,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
         function General_SpectralMask_View(app, event)
             
             try
-                msg = fileread(app.MaskFile_Button.Tooltip{1});
+                msg = textFormatGUI.cellstr2TextField(splitlines(fileread(app.MaskFile_Button.Tag)), '\n');
                 appUtil.modalWindow(app.UIFigure, 'warning', msg);
-
             catch ME
                 appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));
             end
@@ -2025,7 +2039,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             newTask                     = class.taskClass;
             newTask.Type                = taskType;
             newTask.Script              = app.taskList(idx1);
-            newTask.MaskFile            = app.MaskFile_Button.Tooltip{1};            
+            newTask.MaskFile            = app.MaskFile_Button.Tag;            
             newTask.Receiver(1).Handle  = hReceiver;
             newTask.Receiver.Selection  = sReceiver;
             newTask.Receiver.Config     = app.receiverObj.Config(idx2,:);
@@ -2076,9 +2090,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         end
 
-        % Selection change function: TaskControl
-        function TaskControlSelectionChanged(app, event)
-            selectedTab = app.TaskControl.SelectedTab;
+        % Selection change function: TabGroup
+        function TabGroupSelectionChanged(app, event)
+            selectedTab = app.TabGroup.SelectedTab;
             
         end
     end
@@ -2098,7 +2112,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 app.UIFigure.AutoResizeChildren = 'off';
                 app.UIFigure.Position = [300 180 1244 660];
                 app.UIFigure.Name = 'appColeta';
-                app.UIFigure.Icon = 'icon_48.png';
+                app.UIFigure.Icon = 'icon_32.png';
                 app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @closeFcn, true);
 
                 app.Container = app.UIFigure;
@@ -2119,37 +2133,111 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {10, 320, 10, 320, 10, '1x', 48, 8, 2};
-            app.GridLayout.RowHeight = {2, 8, 24, 10, '1x', 10, 34};
+            app.GridLayout.ColumnWidth = {10, 320, 11, 320, 10, '1x', 37, 11, 8, 2};
+            app.GridLayout.RowHeight = {2, 8, 24, 12, 17, 5, '1x', 11, 10, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
             app.GridLayout.BackgroundColor = [1 1 1];
 
-            % Create TaskControl
-            app.TaskControl = uitabgroup(app.GridLayout);
-            app.TaskControl.AutoResizeChildren = 'off';
-            app.TaskControl.SelectionChangedFcn = createCallbackFcn(app, @TaskControlSelectionChanged, true);
-            app.TaskControl.Layout.Row = [3 5];
-            app.TaskControl.Layout.Column = 2;
+            % Create TabGroup
+            app.TabGroup = uitabgroup(app.GridLayout);
+            app.TabGroup.AutoResizeChildren = 'off';
+            app.TabGroup.SelectionChangedFcn = createCallbackFcn(app, @TabGroupSelectionChanged, true);
+            app.TabGroup.Tag = '1';
+            app.TabGroup.Layout.Row = [3 8];
+            app.TabGroup.Layout.Column = [2 8];
 
-            % Create TAREFATab
-            app.TAREFATab = uitab(app.TaskControl);
-            app.TAREFATab.AutoResizeChildren = 'off';
-            app.TAREFATab.Title = 'TAREFA';
+            % Create Tab1
+            app.Tab1 = uitab(app.TabGroup);
+            app.Tab1.AutoResizeChildren = 'off';
+            app.Tab1.Title = 'TAREFA';
 
-            % Create Tab1_Panel
-            app.Tab1_Panel = uigridlayout(app.TAREFATab);
-            app.Tab1_Panel.ColumnWidth = {'1x', 0, 0};
-            app.Tab1_Panel.RowHeight = {17, 22, 22, 22, 22, 22, 22, 22, '1x'};
-            app.Tab1_Panel.ColumnSpacing = 5;
-            app.Tab1_Panel.RowSpacing = 5;
-            app.Tab1_Panel.BackgroundColor = [1 1 1];
+            % Create Tab1Grid
+            app.Tab1Grid = uigridlayout(app.Tab1);
+            app.Tab1Grid.ColumnWidth = {256, 22, 22};
+            app.Tab1Grid.RowHeight = {17, 22, 22, 22, 22, 22, 22, 22, '1x'};
+            app.Tab1Grid.ColumnSpacing = 5;
+            app.Tab1Grid.RowSpacing = 5;
+            app.Tab1Grid.BackgroundColor = [1 1 1];
+
+            % Create TaskNameLabel
+            app.TaskNameLabel = uilabel(app.Tab1Grid);
+            app.TaskNameLabel.VerticalAlignment = 'bottom';
+            app.TaskNameLabel.FontSize = 10;
+            app.TaskNameLabel.Layout.Row = 1;
+            app.TaskNameLabel.Layout.Column = 1;
+            app.TaskNameLabel.Text = 'NOME:';
+
+            % Create TaskName
+            app.TaskName = uidropdown(app.Tab1Grid);
+            app.TaskName.Items = {};
+            app.TaskName.ValueChangedFcn = createCallbackFcn(app, @General_Task, true);
+            app.TaskName.FontSize = 11;
+            app.TaskName.BackgroundColor = [1 1 1];
+            app.TaskName.Layout.Row = 2;
+            app.TaskName.Layout.Column = [1 3];
+            app.TaskName.Value = {};
+
+            % Create TaskTypeLabel
+            app.TaskTypeLabel = uilabel(app.Tab1Grid);
+            app.TaskTypeLabel.VerticalAlignment = 'bottom';
+            app.TaskTypeLabel.FontSize = 10;
+            app.TaskTypeLabel.Layout.Row = 3;
+            app.TaskTypeLabel.Layout.Column = 1;
+            app.TaskTypeLabel.Text = 'TIPO:';
+
+            % Create TaskType
+            app.TaskType = uidropdown(app.Tab1Grid);
+            app.TaskType.Items = {'Monitoração regular', 'Drive-test', 'Drive-test (Level+Azimuth)', 'Rompimento de Máscara Espectral'};
+            app.TaskType.ValueChangedFcn = createCallbackFcn(app, @General_TaskType, true);
+            app.TaskType.FontSize = 11;
+            app.TaskType.BackgroundColor = [1 1 1];
+            app.TaskType.Layout.Row = 4;
+            app.TaskType.Layout.Column = [1 3];
+            app.TaskType.Value = 'Monitoração regular';
+
+            % Create AddMaskFile_Button
+            app.AddMaskFile_Button = uibutton(app.Tab1Grid, 'push');
+            app.AddMaskFile_Button.ButtonPushedFcn = createCallbackFcn(app, @General_SpectralMask_Add, true);
+            app.AddMaskFile_Button.Icon = 'OpenFile_36x36.png';
+            app.AddMaskFile_Button.BackgroundColor = [0.9804 0.9804 0.9804];
+            app.AddMaskFile_Button.Visible = 'off';
+            app.AddMaskFile_Button.Tooltip = {'Seleciona arquivo de máscara espectral'};
+            app.AddMaskFile_Button.Layout.Row = 4;
+            app.AddMaskFile_Button.Layout.Column = 2;
+            app.AddMaskFile_Button.Text = '';
+
+            % Create MaskFile_Button
+            app.MaskFile_Button = uibutton(app.Tab1Grid, 'push');
+            app.MaskFile_Button.ButtonPushedFcn = createCallbackFcn(app, @General_SpectralMask_View, true);
+            app.MaskFile_Button.Icon = 'Mask_32.png';
+            app.MaskFile_Button.BackgroundColor = [0.9804 0.9804 0.9804];
+            app.MaskFile_Button.Enable = 'off';
+            app.MaskFile_Button.Visible = 'off';
+            app.MaskFile_Button.Tooltip = {'Visualiza conteúdo do arquivo'};
+            app.MaskFile_Button.Layout.Row = 4;
+            app.MaskFile_Button.Layout.Column = 3;
+            app.MaskFile_Button.Text = '';
+
+            % Create PreviewTaskCheckbox
+            app.PreviewTaskCheckbox = uicheckbox(app.Tab1Grid);
+            app.PreviewTaskCheckbox.Text = 'PRÉVIA (não registra monitoração em arquivo)';
+            app.PreviewTaskCheckbox.FontSize = 10;
+            app.PreviewTaskCheckbox.Layout.Row = 5;
+            app.PreviewTaskCheckbox.Layout.Column = [1 3];
+
+            % Create BitsPerPointLabel
+            app.BitsPerPointLabel = uilabel(app.Tab1Grid);
+            app.BitsPerPointLabel.VerticalAlignment = 'bottom';
+            app.BitsPerPointLabel.FontSize = 10;
+            app.BitsPerPointLabel.Layout.Row = 6;
+            app.BitsPerPointLabel.Layout.Column = 1;
+            app.BitsPerPointLabel.Text = 'CODIFICAÇÃO:';
 
             % Create BitsPerPoint
-            app.BitsPerPoint = uidropdown(app.Tab1_Panel);
+            app.BitsPerPoint = uidropdown(app.Tab1Grid);
             app.BitsPerPoint.Items = {'8 bits', '16 bits', '32 bits'};
-            app.BitsPerPoint.Tag = 'task_Editable';
             app.BitsPerPoint.FontSize = 11;
             app.BitsPerPoint.BackgroundColor = [1 1 1];
             app.BitsPerPoint.Layout.Row = 7;
@@ -2157,7 +2245,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.BitsPerPoint.Value = '8 bits';
 
             % Create ObservationLabel
-            app.ObservationLabel = uilabel(app.Tab1_Panel);
+            app.ObservationLabel = uilabel(app.Tab1Grid);
             app.ObservationLabel.VerticalAlignment = 'bottom';
             app.ObservationLabel.FontSize = 10;
             app.ObservationLabel.Layout.Row = 8;
@@ -2165,7 +2253,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.ObservationLabel.Text = 'PERÍODO DE OBSERVAÇÃO:';
 
             % Create ObservationPanel
-            app.ObservationPanel = uipanel(app.Tab1_Panel);
+            app.ObservationPanel = uipanel(app.Tab1Grid);
             app.ObservationPanel.AutoResizeChildren = 'off';
             app.ObservationPanel.Layout.Row = 9;
             app.ObservationPanel.Layout.Column = [1 3];
@@ -2191,7 +2279,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.ObservationType = uidropdown(app.ObservationPanel_Grid);
             app.ObservationType.Items = {'Duração', 'Período específico', 'Quantidade específica de amostras'};
             app.ObservationType.ValueChangedFcn = createCallbackFcn(app, @General_ObservationType, true);
-            app.ObservationType.Tag = 'task_Editable';
             app.ObservationType.FontSize = 11;
             app.ObservationType.BackgroundColor = [1 1 1];
             app.ObservationType.Layout.Row = 2;
@@ -2211,7 +2298,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Duration = uieditfield(app.Duration_Grid, 'numeric');
             app.Duration.Limits = [1 Inf];
             app.Duration.ValueDisplayFormat = '%.3f';
-            app.Duration.Tag = 'task_Editable';
             app.Duration.FontSize = 11;
             app.Duration.Layout.Row = 1;
             app.Duration.Layout.Column = 1;
@@ -2220,7 +2306,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create DurationUnit
             app.DurationUnit = uidropdown(app.Duration_Grid);
             app.DurationUnit.Items = {'min', 'hr'};
-            app.DurationUnit.Tag = 'task_Editable';
             app.DurationUnit.FontSize = 11;
             app.DurationUnit.BackgroundColor = [1 1 1];
             app.DurationUnit.Layout.Row = 1;
@@ -2326,96 +2411,49 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.SpecificTime_Mark2.Layout.Column = 6;
             app.SpecificTime_Mark2.Text = ':';
 
-            % Create BitsPerPointLabel
-            app.BitsPerPointLabel = uilabel(app.Tab1_Panel);
-            app.BitsPerPointLabel.VerticalAlignment = 'bottom';
-            app.BitsPerPointLabel.FontSize = 10;
-            app.BitsPerPointLabel.Layout.Row = 6;
-            app.BitsPerPointLabel.Layout.Column = 1;
-            app.BitsPerPointLabel.Text = 'CODIFICAÇÃO:';
+            % Create Tab2
+            app.Tab2 = uitab(app.TabGroup);
+            app.Tab2.AutoResizeChildren = 'off';
+            app.Tab2.Title = 'INSTRUMENTOS';
 
-            % Create TaskNameLabel
-            app.TaskNameLabel = uilabel(app.Tab1_Panel);
-            app.TaskNameLabel.VerticalAlignment = 'bottom';
-            app.TaskNameLabel.FontSize = 10;
-            app.TaskNameLabel.Layout.Row = 1;
-            app.TaskNameLabel.Layout.Column = 1;
-            app.TaskNameLabel.Text = 'NOME:';
+            % Create Tab2Grid
+            app.Tab2Grid = uigridlayout(app.Tab2);
+            app.Tab2Grid.ColumnWidth = {256, 22, 22};
+            app.Tab2Grid.RowHeight = {17, 22, 60, 22, 22, '1x'};
+            app.Tab2Grid.ColumnSpacing = 5;
+            app.Tab2Grid.RowSpacing = 5;
+            app.Tab2Grid.BackgroundColor = [1 1 1];
 
-            % Create TaskName
-            app.TaskName = uidropdown(app.Tab1_Panel);
-            app.TaskName.Items = {};
-            app.TaskName.ValueChangedFcn = createCallbackFcn(app, @General_Task, true);
-            app.TaskName.Tag = 'task_Editable';
-            app.TaskName.FontSize = 11;
-            app.TaskName.BackgroundColor = [1 1 1];
-            app.TaskName.Layout.Row = 2;
-            app.TaskName.Layout.Column = [1 3];
-            app.TaskName.Value = {};
+            % Create Receiver_ListLabel
+            app.Receiver_ListLabel = uilabel(app.Tab2Grid);
+            app.Receiver_ListLabel.VerticalAlignment = 'bottom';
+            app.Receiver_ListLabel.FontSize = 10;
+            app.Receiver_ListLabel.Layout.Row = 1;
+            app.Receiver_ListLabel.Layout.Column = 1;
+            app.Receiver_ListLabel.Text = 'RECEPTOR:';
 
-            % Create MaskFile_Button
-            app.MaskFile_Button = uibutton(app.Tab1_Panel, 'push');
-            app.MaskFile_Button.ButtonPushedFcn = createCallbackFcn(app, @General_SpectralMask_View, true);
-            app.MaskFile_Button.Icon = 'Mask_32.png';
-            app.MaskFile_Button.BackgroundColor = [0.9804 0.9804 0.9804];
-            app.MaskFile_Button.Enable = 'off';
-            app.MaskFile_Button.Tooltip = {''};
-            app.MaskFile_Button.Layout.Row = 4;
-            app.MaskFile_Button.Layout.Column = 3;
-            app.MaskFile_Button.Text = '';
+            % Create Receiver_List
+            app.Receiver_List = uidropdown(app.Tab2Grid);
+            app.Receiver_List.Items = {};
+            app.Receiver_List.ValueChangedFcn = createCallbackFcn(app, @Receiver_instrSelection, true);
+            app.Receiver_List.FontSize = 11;
+            app.Receiver_List.BackgroundColor = [1 1 1];
+            app.Receiver_List.Layout.Row = 2;
+            app.Receiver_List.Layout.Column = [1 2];
+            app.Receiver_List.Value = {};
 
-            % Create AddMaskFile_Button
-            app.AddMaskFile_Button = uibutton(app.Tab1_Panel, 'push');
-            app.AddMaskFile_Button.ButtonPushedFcn = createCallbackFcn(app, @General_SpectralMask_Add, true);
-            app.AddMaskFile_Button.Tag = 'task_Editable';
-            app.AddMaskFile_Button.Icon = 'OpenFile_36x36.png';
-            app.AddMaskFile_Button.BackgroundColor = [0.9804 0.9804 0.9804];
-            app.AddMaskFile_Button.Tooltip = {'Máscara espectral'};
-            app.AddMaskFile_Button.Layout.Row = 4;
-            app.AddMaskFile_Button.Layout.Column = 2;
-            app.AddMaskFile_Button.Text = '';
-
-            % Create PreviewTaskCheckbox
-            app.PreviewTaskCheckbox = uicheckbox(app.Tab1_Panel);
-            app.PreviewTaskCheckbox.Text = 'PRÉVIA (não registra monitoração em arquivo)';
-            app.PreviewTaskCheckbox.FontSize = 10;
-            app.PreviewTaskCheckbox.Layout.Row = 5;
-            app.PreviewTaskCheckbox.Layout.Column = [1 3];
-
-            % Create TaskTypeLabel
-            app.TaskTypeLabel = uilabel(app.Tab1_Panel);
-            app.TaskTypeLabel.VerticalAlignment = 'bottom';
-            app.TaskTypeLabel.FontSize = 10;
-            app.TaskTypeLabel.Layout.Row = 3;
-            app.TaskTypeLabel.Layout.Column = 1;
-            app.TaskTypeLabel.Text = 'TIPO:';
-
-            % Create TaskType
-            app.TaskType = uidropdown(app.Tab1_Panel);
-            app.TaskType.Items = {'Monitoração regular', 'Drive-test', 'Drive-test (Level+Azimuth)', 'Rompimento de Máscara Espectral'};
-            app.TaskType.ValueChangedFcn = createCallbackFcn(app, @General_TaskType, true);
-            app.TaskType.Tag = 'task_Editable';
-            app.TaskType.FontSize = 11;
-            app.TaskType.BackgroundColor = [1 1 1];
-            app.TaskType.Layout.Row = 4;
-            app.TaskType.Layout.Column = 1;
-            app.TaskType.Value = 'Monitoração regular';
-
-            % Create INSTRUMENTOSTab
-            app.INSTRUMENTOSTab = uitab(app.TaskControl);
-            app.INSTRUMENTOSTab.AutoResizeChildren = 'off';
-            app.INSTRUMENTOSTab.Title = 'INSTRUMENTOS';
-
-            % Create Tab2_Panel
-            app.Tab2_Panel = uigridlayout(app.INSTRUMENTOSTab);
-            app.Tab2_Panel.ColumnWidth = {'1x', 22, 22};
-            app.Tab2_Panel.RowHeight = {17, 22, 60, 22, 22, '1x'};
-            app.Tab2_Panel.ColumnSpacing = 5;
-            app.Tab2_Panel.RowSpacing = 5;
-            app.Tab2_Panel.BackgroundColor = [1 1 1];
+            % Create Receiver_Connectivity
+            app.Receiver_Connectivity = uibutton(app.Tab2Grid, 'push');
+            app.Receiver_Connectivity.ButtonPushedFcn = createCallbackFcn(app, @Receiver_ConnectivityTest, true);
+            app.Receiver_Connectivity.Icon = 'Connectivity_32.png';
+            app.Receiver_Connectivity.BackgroundColor = [0.9804 0.9804 0.9804];
+            app.Receiver_Connectivity.Tooltip = {'Teste de conectividade'};
+            app.Receiver_Connectivity.Layout.Row = 2;
+            app.Receiver_Connectivity.Layout.Column = 3;
+            app.Receiver_Connectivity.Text = '';
 
             % Create Receiver_Panel
-            app.Receiver_Panel = uipanel(app.Tab2_Panel);
+            app.Receiver_Panel = uipanel(app.Tab2Grid);
             app.Receiver_Panel.AutoResizeChildren = 'off';
             app.Receiver_Panel.Layout.Row = 3;
             app.Receiver_Panel.Layout.Column = [1 3];
@@ -2438,7 +2476,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Receiver_RstCommand
             app.Receiver_RstCommand = uidropdown(app.Receiver_Grid);
             app.Receiver_RstCommand.Items = {'On', 'Off'};
-            app.Receiver_RstCommand.Tag = 'task_Editable';
             app.Receiver_RstCommand.FontSize = 11;
             app.Receiver_RstCommand.BackgroundColor = [1 1 1];
             app.Receiver_RstCommand.Layout.Row = 2;
@@ -2456,15 +2493,53 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Receiver_SyncRef
             app.Receiver_SyncRef = uidropdown(app.Receiver_Grid);
             app.Receiver_SyncRef.Items = {'Single Sweep', 'Continuous Sweep', 'Streaming'};
-            app.Receiver_SyncRef.Tag = 'task_Editable';
             app.Receiver_SyncRef.FontSize = 11;
             app.Receiver_SyncRef.BackgroundColor = [1 1 1];
             app.Receiver_SyncRef.Layout.Row = 2;
             app.Receiver_SyncRef.Layout.Column = 2;
             app.Receiver_SyncRef.Value = 'Single Sweep';
 
+            % Create GPS_ListLabel
+            app.GPS_ListLabel = uilabel(app.Tab2Grid);
+            app.GPS_ListLabel.VerticalAlignment = 'bottom';
+            app.GPS_ListLabel.FontSize = 10;
+            app.GPS_ListLabel.Layout.Row = 4;
+            app.GPS_ListLabel.Layout.Column = 1;
+            app.GPS_ListLabel.Text = 'GPS:';
+
+            % Create GPS_List
+            app.GPS_List = uidropdown(app.Tab2Grid);
+            app.GPS_List.Items = {'ID 0: Manual'};
+            app.GPS_List.ValueChangedFcn = createCallbackFcn(app, @GPS_instrSelection, true);
+            app.GPS_List.FontSize = 11;
+            app.GPS_List.BackgroundColor = [1 1 1];
+            app.GPS_List.Layout.Row = 5;
+            app.GPS_List.Layout.Column = [1 2];
+            app.GPS_List.Value = 'ID 0: Manual';
+
+            % Create GPS_FixedStation
+            app.GPS_FixedStation = uibutton(app.Tab2Grid, 'push');
+            app.GPS_FixedStation.ButtonPushedFcn = createCallbackFcn(app, @GPS_FixedStationButtonPushed, true);
+            app.GPS_FixedStation.Icon = 'Pin_18.png';
+            app.GPS_FixedStation.BackgroundColor = [0.9804 0.9804 0.9804];
+            app.GPS_FixedStation.Visible = 'off';
+            app.GPS_FixedStation.Tooltip = {'Importa coordenadas geográficas da estação'};
+            app.GPS_FixedStation.Layout.Row = 5;
+            app.GPS_FixedStation.Layout.Column = 2;
+            app.GPS_FixedStation.Text = '';
+
+            % Create GPS_Connectivity
+            app.GPS_Connectivity = uibutton(app.Tab2Grid, 'push');
+            app.GPS_Connectivity.ButtonPushedFcn = createCallbackFcn(app, @GPS_ConnectivityTest, true);
+            app.GPS_Connectivity.Icon = 'Connectivity_32.png';
+            app.GPS_Connectivity.BackgroundColor = [0.9804 0.9804 0.9804];
+            app.GPS_Connectivity.Tooltip = {'Teste de conectividade'};
+            app.GPS_Connectivity.Layout.Row = 5;
+            app.GPS_Connectivity.Layout.Column = 3;
+            app.GPS_Connectivity.Text = '';
+
             % Create GPS_Panel
-            app.GPS_Panel = uipanel(app.Tab2_Panel);
+            app.GPS_Panel = uipanel(app.Tab2Grid);
             app.GPS_Panel.AutoResizeChildren = 'off';
             app.GPS_Panel.Layout.Row = 6;
             app.GPS_Panel.Layout.Column = [1 3];
@@ -2475,42 +2550,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_Grid.RowSpacing = 5;
             app.GPS_Grid.BackgroundColor = [1 1 1];
 
-            % Create GPS_manualLatitude
-            app.GPS_manualLatitude = uieditfield(app.GPS_Grid, 'numeric');
-            app.GPS_manualLatitude.ValueDisplayFormat = '%.6f';
-            app.GPS_manualLatitude.Tag = 'task_Editable';
-            app.GPS_manualLatitude.FontSize = 11;
-            app.GPS_manualLatitude.Layout.Row = 2;
-            app.GPS_manualLatitude.Layout.Column = 1;
-            app.GPS_manualLatitude.Value = -1;
-
-            % Create GPS_manualLongitude
-            app.GPS_manualLongitude = uieditfield(app.GPS_Grid, 'numeric');
-            app.GPS_manualLongitude.ValueDisplayFormat = '%.6f';
-            app.GPS_manualLongitude.Tag = 'task_Editable';
-            app.GPS_manualLongitude.FontSize = 11;
-            app.GPS_manualLongitude.Layout.Row = 2;
-            app.GPS_manualLongitude.Layout.Column = 2;
-            app.GPS_manualLongitude.Value = -1;
-
-            % Create GPS_RevisitTime
-            app.GPS_RevisitTime = uieditfield(app.GPS_Grid, 'numeric');
-            app.GPS_RevisitTime.Limits = [1 Inf];
-            app.GPS_RevisitTime.ValueDisplayFormat = '%.3f';
-            app.GPS_RevisitTime.Tag = 'task_Editable';
-            app.GPS_RevisitTime.FontSize = 11;
-            app.GPS_RevisitTime.Layout.Row = 4;
-            app.GPS_RevisitTime.Layout.Column = 1;
-            app.GPS_RevisitTime.Value = 60;
-
-            % Create GPS_RevisitTimeLabel
-            app.GPS_RevisitTimeLabel = uilabel(app.GPS_Grid);
-            app.GPS_RevisitTimeLabel.VerticalAlignment = 'bottom';
-            app.GPS_RevisitTimeLabel.FontSize = 10;
-            app.GPS_RevisitTimeLabel.Layout.Row = 3;
-            app.GPS_RevisitTimeLabel.Layout.Column = 1;
-            app.GPS_RevisitTimeLabel.Text = {'Tempo revisita:'; '(segundos)'};
-
             % Create GPS_manualLatitudeLabel
             app.GPS_manualLatitudeLabel = uilabel(app.GPS_Grid);
             app.GPS_manualLatitudeLabel.VerticalAlignment = 'bottom';
@@ -2518,6 +2557,14 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_manualLatitudeLabel.Layout.Row = 1;
             app.GPS_manualLatitudeLabel.Layout.Column = 1;
             app.GPS_manualLatitudeLabel.Text = {'Latitude:'; '(graus decimais)'};
+
+            % Create GPS_manualLatitude
+            app.GPS_manualLatitude = uieditfield(app.GPS_Grid, 'numeric');
+            app.GPS_manualLatitude.ValueDisplayFormat = '%.6f';
+            app.GPS_manualLatitude.FontSize = 11;
+            app.GPS_manualLatitude.Layout.Row = 2;
+            app.GPS_manualLatitude.Layout.Column = 1;
+            app.GPS_manualLatitude.Value = -1;
 
             % Create GPS_manualLongitudeLabel
             app.GPS_manualLongitudeLabel = uilabel(app.GPS_Grid);
@@ -2527,91 +2574,61 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_manualLongitudeLabel.Layout.Column = 2;
             app.GPS_manualLongitudeLabel.Text = {'Longitude:'; '(graus decimais)'};
 
-            % Create GPS_Connectivity
-            app.GPS_Connectivity = uibutton(app.Tab2_Panel, 'push');
-            app.GPS_Connectivity.ButtonPushedFcn = createCallbackFcn(app, @GPS_ConnectivityTest, true);
-            app.GPS_Connectivity.Tag = 'task_Editable';
-            app.GPS_Connectivity.Icon = 'Connectivity_32.png';
-            app.GPS_Connectivity.BackgroundColor = [0.9804 0.9804 0.9804];
-            app.GPS_Connectivity.Tooltip = {'Teste de conectividade'};
-            app.GPS_Connectivity.Layout.Row = 5;
-            app.GPS_Connectivity.Layout.Column = 3;
-            app.GPS_Connectivity.Text = '';
+            % Create GPS_manualLongitude
+            app.GPS_manualLongitude = uieditfield(app.GPS_Grid, 'numeric');
+            app.GPS_manualLongitude.ValueDisplayFormat = '%.6f';
+            app.GPS_manualLongitude.FontSize = 11;
+            app.GPS_manualLongitude.Layout.Row = 2;
+            app.GPS_manualLongitude.Layout.Column = 2;
+            app.GPS_manualLongitude.Value = -1;
 
-            % Create Receiver_Connectivity
-            app.Receiver_Connectivity = uibutton(app.Tab2_Panel, 'push');
-            app.Receiver_Connectivity.ButtonPushedFcn = createCallbackFcn(app, @Receiver_ConnectivityTest, true);
-            app.Receiver_Connectivity.Tag = 'task_Editable';
-            app.Receiver_Connectivity.Icon = 'Connectivity_32.png';
-            app.Receiver_Connectivity.BackgroundColor = [0.9804 0.9804 0.9804];
-            app.Receiver_Connectivity.Tooltip = {'Teste de conectividade'};
-            app.Receiver_Connectivity.Layout.Row = 2;
-            app.Receiver_Connectivity.Layout.Column = 3;
-            app.Receiver_Connectivity.Text = '';
+            % Create GPS_RevisitTimeLabel
+            app.GPS_RevisitTimeLabel = uilabel(app.GPS_Grid);
+            app.GPS_RevisitTimeLabel.VerticalAlignment = 'bottom';
+            app.GPS_RevisitTimeLabel.FontSize = 10;
+            app.GPS_RevisitTimeLabel.Layout.Row = 3;
+            app.GPS_RevisitTimeLabel.Layout.Column = 1;
+            app.GPS_RevisitTimeLabel.Text = {'Tempo revisita:'; '(segundos)'};
 
-            % Create Receiver_List
-            app.Receiver_List = uidropdown(app.Tab2_Panel);
-            app.Receiver_List.Items = {};
-            app.Receiver_List.ValueChangedFcn = createCallbackFcn(app, @Receiver_instrSelection, true);
-            app.Receiver_List.Tag = 'task_Editable';
-            app.Receiver_List.FontSize = 11;
-            app.Receiver_List.BackgroundColor = [1 1 1];
-            app.Receiver_List.Layout.Row = 2;
-            app.Receiver_List.Layout.Column = [1 2];
-            app.Receiver_List.Value = {};
+            % Create GPS_RevisitTime
+            app.GPS_RevisitTime = uieditfield(app.GPS_Grid, 'numeric');
+            app.GPS_RevisitTime.Limits = [1 Inf];
+            app.GPS_RevisitTime.ValueDisplayFormat = '%.3f';
+            app.GPS_RevisitTime.FontSize = 11;
+            app.GPS_RevisitTime.Layout.Row = 4;
+            app.GPS_RevisitTime.Layout.Column = 1;
+            app.GPS_RevisitTime.Value = 60;
 
-            % Create Receiver_ListLabel
-            app.Receiver_ListLabel = uilabel(app.Tab2_Panel);
-            app.Receiver_ListLabel.VerticalAlignment = 'bottom';
-            app.Receiver_ListLabel.FontSize = 10;
-            app.Receiver_ListLabel.Layout.Row = 1;
-            app.Receiver_ListLabel.Layout.Column = 1;
-            app.Receiver_ListLabel.Text = 'RECEPTOR:';
+            % Create Tab3
+            app.Tab3 = uitab(app.TabGroup);
+            app.Tab3.AutoResizeChildren = 'off';
+            app.Tab3.Title = 'ANTENAS';
 
-            % Create GPS_FixedStation
-            app.GPS_FixedStation = uibutton(app.Tab2_Panel, 'push');
-            app.GPS_FixedStation.ButtonPushedFcn = createCallbackFcn(app, @GPS_FixedStationButtonPushed, true);
-            app.GPS_FixedStation.Tag = 'task_Editable';
-            app.GPS_FixedStation.Icon = 'Pin_18.png';
-            app.GPS_FixedStation.BackgroundColor = [0.9804 0.9804 0.9804];
-            app.GPS_FixedStation.Tooltip = {'Importa coordenadas geográficas da estação'};
-            app.GPS_FixedStation.Layout.Row = 5;
-            app.GPS_FixedStation.Layout.Column = 2;
-            app.GPS_FixedStation.Text = '';
+            % Create Tab3Grid
+            app.Tab3Grid = uigridlayout(app.Tab3);
+            app.Tab3Grid.ColumnWidth = {288, 12};
+            app.Tab3Grid.RowHeight = {17, 22, 22, 22, 172, 10, '1x'};
+            app.Tab3Grid.RowSpacing = 5;
+            app.Tab3Grid.BackgroundColor = [1 1 1];
 
-            % Create GPS_ListLabel
-            app.GPS_ListLabel = uilabel(app.Tab2_Panel);
-            app.GPS_ListLabel.VerticalAlignment = 'bottom';
-            app.GPS_ListLabel.FontSize = 10;
-            app.GPS_ListLabel.Layout.Row = 4;
-            app.GPS_ListLabel.Layout.Column = 1;
-            app.GPS_ListLabel.Text = 'GPS:';
+            % Create AntennaSwitch_Mode
+            app.AntennaSwitch_Mode = uicheckbox(app.Tab3Grid);
+            app.AntennaSwitch_Mode.ValueChangedFcn = createCallbackFcn(app, @AntennaSwitch_ModeSelection, true);
+            app.AntennaSwitch_Mode.Text = 'Comutador de antenas:';
+            app.AntennaSwitch_Mode.FontSize = 11;
+            app.AntennaSwitch_Mode.Layout.Row = 1;
+            app.AntennaSwitch_Mode.Layout.Column = 1;
 
-            % Create GPS_List
-            app.GPS_List = uidropdown(app.Tab2_Panel);
-            app.GPS_List.Items = {'ID 0: Manual'};
-            app.GPS_List.ValueChangedFcn = createCallbackFcn(app, @GPS_instrSelection, true);
-            app.GPS_List.Tag = 'task_Editable';
-            app.GPS_List.FontSize = 11;
-            app.GPS_List.BackgroundColor = [1 1 1];
-            app.GPS_List.Layout.Row = 5;
-            app.GPS_List.Layout.Column = 1;
-            app.GPS_List.Value = 'ID 0: Manual';
-
-            % Create ANTENASTab
-            app.ANTENASTab = uitab(app.TaskControl);
-            app.ANTENASTab.AutoResizeChildren = 'off';
-            app.ANTENASTab.Title = 'ANTENAS';
-
-            % Create Tab3_Panel
-            app.Tab3_Panel = uigridlayout(app.ANTENASTab);
-            app.Tab3_Panel.ColumnWidth = {'1x', 12};
-            app.Tab3_Panel.RowHeight = {17, 22, 22, 22, 172, 10, '1x'};
-            app.Tab3_Panel.RowSpacing = 5;
-            app.Tab3_Panel.BackgroundColor = [1 1 1];
+            % Create AntennaSwitch_Name
+            app.AntennaSwitch_Name = uieditfield(app.Tab3Grid, 'text');
+            app.AntennaSwitch_Name.Editable = 'off';
+            app.AntennaSwitch_Name.FontSize = 11;
+            app.AntennaSwitch_Name.Enable = 'off';
+            app.AntennaSwitch_Name.Layout.Row = 2;
+            app.AntennaSwitch_Name.Layout.Column = [1 2];
 
             % Create AntennaNameLabel
-            app.AntennaNameLabel = uilabel(app.Tab3_Panel);
+            app.AntennaNameLabel = uilabel(app.Tab3Grid);
             app.AntennaNameLabel.VerticalAlignment = 'bottom';
             app.AntennaNameLabel.FontSize = 10;
             app.AntennaNameLabel.Layout.Row = 3;
@@ -2619,10 +2636,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaNameLabel.Text = 'ANTENA';
 
             % Create AntennaName
-            app.AntennaName = uidropdown(app.Tab3_Panel);
+            app.AntennaName = uidropdown(app.Tab3Grid);
             app.AntennaName.Items = {'', 'CRFS Low Band (10 MHz - 1.2 GHz)', 'CRFS High Band (750 MHz - 6 GHz)', 'Rohde & Schwarz ADDx07 (EB500 GUI Auto)', 'Rohde & Schwarz ADD107 (20 MHz - 1.3 GHz)', 'Rohde & Schwarz ADD207 (600 MHz - 6 GHz)', 'Rohde & Schwarz ADD295 (20 MHz - 3 GHz)', 'Telescopic', 'Unlisted (Omni)', 'Unlisted (Directional)'};
             app.AntennaName.ValueChangedFcn = createCallbackFcn(app, @AntennaConfig_Selection, true);
-            app.AntennaName.Tag = 'task_Editable';
             app.AntennaName.FontSize = 11;
             app.AntennaName.BackgroundColor = [1 1 1];
             app.AntennaName.Layout.Row = 4;
@@ -2630,7 +2646,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaName.Value = '';
 
             % Create Antenna_Panel
-            app.Antenna_Panel = uipanel(app.Tab3_Panel);
+            app.Antenna_Panel = uipanel(app.Tab3Grid);
             app.Antenna_Panel.AutoResizeChildren = 'off';
             app.Antenna_Panel.Layout.Row = 5;
             app.Antenna_Panel.Layout.Column = [1 2];
@@ -2673,7 +2689,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaHeight.Limits = [0 127];
             app.AntennaHeight.RoundFractionalValues = 'on';
             app.AntennaHeight.ValueDisplayFormat = '%.0f';
-            app.AntennaHeight.Tag = 'task_Editable';
             app.AntennaHeight.FontSize = 11;
             app.AntennaHeight.Enable = 'off';
             app.AntennaHeight.Layout.Row = 4;
@@ -2703,7 +2718,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaAzimuth = uieditfield(app.AntennaAzimuth_Grid, 'numeric');
             app.AntennaAzimuth.Limits = [0 360];
             app.AntennaAzimuth.ValueDisplayFormat = '%.3f';
-            app.AntennaAzimuth.Tag = 'task_Editable';
             app.AntennaAzimuth.FontSize = 11;
             app.AntennaAzimuth.Enable = 'off';
             app.AntennaAzimuth.Layout.Row = 2;
@@ -2731,7 +2745,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaElevation = uieditfield(app.Antenna_Grid, 'numeric');
             app.AntennaElevation.Limits = [0 90];
             app.AntennaElevation.ValueDisplayFormat = '%.3f';
-            app.AntennaElevation.Tag = 'task_Editable';
             app.AntennaElevation.FontSize = 11;
             app.AntennaElevation.Enable = 'off';
             app.AntennaElevation.Layout.Row = 6;
@@ -2749,14 +2762,13 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaPolarization = uieditfield(app.Antenna_Grid, 'numeric');
             app.AntennaPolarization.Limits = [0 360];
             app.AntennaPolarization.ValueDisplayFormat = '%.1f';
-            app.AntennaPolarization.Tag = 'task_Editable';
             app.AntennaPolarization.FontSize = 11;
             app.AntennaPolarization.Enable = 'off';
             app.AntennaPolarization.Layout.Row = 6;
             app.AntennaPolarization.Layout.Column = 2;
 
             % Create AddAntenna_Image
-            app.AddAntenna_Image = uiimage(app.Tab3_Panel);
+            app.AddAntenna_Image = uiimage(app.Tab3Grid);
             app.AddAntenna_Image.ImageClickedFcn = createCallbackFcn(app, @AntennaConfig_Add, true);
             app.AddAntenna_Image.Layout.Row = 6;
             app.AddAntenna_Image.Layout.Column = 2;
@@ -2765,120 +2777,136 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AddAntenna_Image.ImageSource = 'addSymbol_32.png';
 
             % Create AntennaList_Tree
-            app.AntennaList_Tree = uitree(app.Tab3_Panel);
+            app.AntennaList_Tree = uitree(app.Tab3Grid);
             app.AntennaList_Tree.FontSize = 10.5;
             app.AntennaList_Tree.Layout.Row = 7;
             app.AntennaList_Tree.Layout.Column = [1 2];
 
-            % Create AntennaSwitch_Mode
-            app.AntennaSwitch_Mode = uicheckbox(app.Tab3_Panel);
-            app.AntennaSwitch_Mode.ValueChangedFcn = createCallbackFcn(app, @AntennaSwitch_ModeSelection, true);
-            app.AntennaSwitch_Mode.Text = 'Comutador de antenas:';
-            app.AntennaSwitch_Mode.FontSize = 11;
-            app.AntennaSwitch_Mode.Layout.Row = 1;
-            app.AntennaSwitch_Mode.Layout.Column = 1;
+            % Create Toolbar
+            app.Toolbar = uigridlayout(app.GridLayout);
+            app.Toolbar.ColumnWidth = {'1x', 110};
+            app.Toolbar.RowHeight = {'1x'};
+            app.Toolbar.ColumnSpacing = 5;
+            app.Toolbar.Padding = [10 6 10 6];
+            app.Toolbar.Tag = '2';
+            app.Toolbar.Layout.Row = 10;
+            app.Toolbar.Layout.Column = [1 10];
 
-            % Create AntennaSwitch_Name
-            app.AntennaSwitch_Name = uieditfield(app.Tab3_Panel, 'text');
-            app.AntennaSwitch_Name.Editable = 'off';
-            app.AntennaSwitch_Name.FontSize = 11;
-            app.AntennaSwitch_Name.Enable = 'off';
-            app.AntennaSwitch_Name.Layout.Row = 2;
-            app.AntennaSwitch_Name.Layout.Column = [1 2];
+            % Create okBtn
+            app.okBtn = uibutton(app.Toolbar, 'push');
+            app.okBtn.ButtonPushedFcn = createCallbackFcn(app, @okBtnPushed, true);
+            app.okBtn.Icon = 'Add_24.png';
+            app.okBtn.IconAlignment = 'rightmargin';
+            app.okBtn.BackgroundColor = [0.9412 0.9412 0.9412];
+            app.okBtn.FontSize = 11;
+            app.okBtn.Tooltip = {''};
+            app.okBtn.Layout.Row = 1;
+            app.okBtn.Layout.Column = 2;
+            app.okBtn.Text = 'Inclui tarefa';
 
-            % Create BandsInfo
-            app.BandsInfo = uigridlayout(app.GridLayout);
-            app.BandsInfo.ColumnWidth = {'1x'};
-            app.BandsInfo.RowHeight = {17, 272, 22, '1x'};
-            app.BandsInfo.RowSpacing = 5;
-            app.BandsInfo.Padding = [0 0 0 0];
-            app.BandsInfo.Layout.Row = 5;
-            app.BandsInfo.Layout.Column = 4;
-            app.BandsInfo.BackgroundColor = [1 1 1];
+            % Create DocumentLabel
+            app.DocumentLabel = uilabel(app.GridLayout);
+            app.DocumentLabel.Tag = '3';
+            app.DocumentLabel.VerticalAlignment = 'bottom';
+            app.DocumentLabel.FontSize = 10;
+            app.DocumentLabel.Layout.Row = 5;
+            app.DocumentLabel.Layout.Column = 4;
+            app.DocumentLabel.Text = 'CARACTERÍSTICAS:';
+
+            % Create Document
+            app.Document = uigridlayout(app.GridLayout);
+            app.Document.ColumnWidth = {310, 120, '1x', 22};
+            app.Document.RowHeight = {17, 22, 19, 208, 19, 62, 19, 22, '1x'};
+            app.Document.RowSpacing = 5;
+            app.Document.Tag = '4';
+            app.Document.Layout.Row = 7;
+            app.Document.Layout.Column = [4 7];
+            app.Document.BackgroundColor = [1 1 1];
 
             % Create Band_TreeLabel
-            app.Band_TreeLabel = uilabel(app.BandsInfo);
+            app.Band_TreeLabel = uilabel(app.Document);
             app.Band_TreeLabel.VerticalAlignment = 'bottom';
             app.Band_TreeLabel.WordWrap = 'on';
             app.Band_TreeLabel.FontSize = 10;
             app.Band_TreeLabel.Layout.Row = 1;
             app.Band_TreeLabel.Layout.Column = 1;
-            app.Band_TreeLabel.Text = 'FAIXA(S) DE FREQUÊNCIA RELACIONADA(S) À TAREFA:';
+            app.Band_TreeLabel.Text = 'Faixas de frequência relacionadas à tarefa:';
 
             % Create Band_Tree
-            app.Band_Tree = uitree(app.BandsInfo);
+            app.Band_Tree = uitree(app.Document);
             app.Band_Tree.SelectionChangedFcn = createCallbackFcn(app, @BandView_TreeSelectionChanged, true);
             app.Band_Tree.FontSize = 10;
-            app.Band_Tree.Layout.Row = 2;
+            app.Band_Tree.Layout.Row = [2 4];
             app.Band_Tree.Layout.Column = 1;
 
-            % Create MetaDataLabel
-            app.MetaDataLabel = uilabel(app.BandsInfo);
-            app.MetaDataLabel.VerticalAlignment = 'bottom';
-            app.MetaDataLabel.WordWrap = 'on';
-            app.MetaDataLabel.FontSize = 10;
-            app.MetaDataLabel.FontColor = [0.149 0.149 0.149];
-            app.MetaDataLabel.Layout.Row = 3;
-            app.MetaDataLabel.Layout.Column = 1;
-            app.MetaDataLabel.Text = 'PARÂMETROS DE CONFIGURAÇÃO:';
-
-            % Create MetaData
-            app.MetaData = uilabel(app.BandsInfo);
-            app.MetaData.VerticalAlignment = 'top';
-            app.MetaData.WordWrap = 'on';
-            app.MetaData.FontSize = 11;
-            app.MetaData.Layout.Row = 4;
-            app.MetaData.Layout.Column = 1;
-            app.MetaData.Interpreter = 'html';
-            app.MetaData.Text = '';
-
-            % Create BandCustomizable
-            app.BandCustomizable = uigridlayout(app.GridLayout);
-            app.BandCustomizable.ColumnWidth = {120, '1x', 16};
-            app.BandCustomizable.RowHeight = {17, 22, 22, 218, 22, 68, 22, '1x'};
-            app.BandCustomizable.RowSpacing = 5;
-            app.BandCustomizable.Padding = [0 0 0 0];
-            app.BandCustomizable.Layout.Row = 5;
-            app.BandCustomizable.Layout.Column = [6 7];
-            app.BandCustomizable.BackgroundColor = [1 1 1];
-
             % Create Band_SamplesLabel
-            app.Band_SamplesLabel = uilabel(app.BandCustomizable);
+            app.Band_SamplesLabel = uilabel(app.Document);
             app.Band_SamplesLabel.VerticalAlignment = 'bottom';
             app.Band_SamplesLabel.FontSize = 10;
             app.Band_SamplesLabel.Layout.Row = 1;
-            app.Band_SamplesLabel.Layout.Column = [1 2];
-            app.Band_SamplesLabel.Text = 'AMOSTRAS A COLETAR:';
+            app.Band_SamplesLabel.Layout.Column = 2;
+            app.Band_SamplesLabel.Text = 'Amostras a coletar:';
 
             % Create Band_Samples
-            app.Band_Samples = uieditfield(app.BandCustomizable, 'numeric');
+            app.Band_Samples = uieditfield(app.Document, 'numeric');
             app.Band_Samples.Limits = [-1 Inf];
             app.Band_Samples.RoundFractionalValues = 'on';
             app.Band_Samples.ValueDisplayFormat = '%.0f';
             app.Band_Samples.ValueChangedFcn = createCallbackFcn(app, @BandView_EditedParameters, true);
             app.Band_Samples.FontSize = 11;
             app.Band_Samples.Layout.Row = 2;
-            app.Band_Samples.Layout.Column = 1;
+            app.Band_Samples.Layout.Column = 2;
             app.Band_Samples.Value = -1;
 
+            % Create MetaDataLabel
+            app.MetaDataLabel = uilabel(app.Document);
+            app.MetaDataLabel.VerticalAlignment = 'bottom';
+            app.MetaDataLabel.WordWrap = 'on';
+            app.MetaDataLabel.FontSize = 10;
+            app.MetaDataLabel.FontColor = [0.149 0.149 0.149];
+            app.MetaDataLabel.Layout.Row = 5;
+            app.MetaDataLabel.Layout.Column = 1;
+            app.MetaDataLabel.Text = 'Parâmetros de configuração:';
+
+            % Create MetaData
+            app.MetaData = uilabel(app.Document);
+            app.MetaData.VerticalAlignment = 'top';
+            app.MetaData.WordWrap = 'on';
+            app.MetaData.FontSize = 11;
+            app.MetaData.Layout.Row = [6 9];
+            app.MetaData.Layout.Column = 1;
+            app.MetaData.Interpreter = 'html';
+            app.MetaData.Text = '';
+
             % Create Band_ReceiverLabel
-            app.Band_ReceiverLabel = uilabel(app.BandCustomizable);
+            app.Band_ReceiverLabel = uilabel(app.Document);
             app.Band_ReceiverLabel.VerticalAlignment = 'bottom';
             app.Band_ReceiverLabel.FontSize = 10;
             app.Band_ReceiverLabel.Layout.Row = 3;
-            app.Band_ReceiverLabel.Layout.Column = [1 2];
+            app.Band_ReceiverLabel.Layout.Column = [2 3];
             app.Band_ReceiverLabel.Text = 'RECEPTOR';
 
+            % Create Band_Refresh
+            app.Band_Refresh = uiimage(app.Document);
+            app.Band_Refresh.ScaleMethod = 'none';
+            app.Band_Refresh.ImageClickedFcn = createCallbackFcn(app, @BandView_Refresh, true);
+            app.Band_Refresh.Tooltip = {'Retorna às configurações iniciais'};
+            app.Band_Refresh.Layout.Row = 3;
+            app.Band_Refresh.Layout.Column = 4;
+            app.Band_Refresh.HorizontalAlignment = 'right';
+            app.Band_Refresh.VerticalAlignment = 'bottom';
+            app.Band_Refresh.ImageSource = 'Refresh_18.png';
+
             % Create Band_ReceiverPanel
-            app.Band_ReceiverPanel = uipanel(app.BandCustomizable);
+            app.Band_ReceiverPanel = uipanel(app.Document);
             app.Band_ReceiverPanel.AutoResizeChildren = 'off';
             app.Band_ReceiverPanel.Layout.Row = 4;
-            app.Band_ReceiverPanel.Layout.Column = [1 3];
+            app.Band_ReceiverPanel.Layout.Column = [2 4];
 
             % Create Band_ReceiverGrid
             app.Band_ReceiverGrid = uigridlayout(app.Band_ReceiverPanel);
             app.Band_ReceiverGrid.ColumnWidth = {110, 110, 110};
-            app.Band_ReceiverGrid.RowHeight = {17, 22, 0, 22, 22, 17, 22, 22, 22};
+            app.Band_ReceiverGrid.RowHeight = {17, 22, 0, 17, 22, 17, 22, 17, 22};
             app.Band_ReceiverGrid.RowSpacing = 5;
             app.Band_ReceiverGrid.Padding = [10 10 10 5];
             app.Band_ReceiverGrid.BackgroundColor = [1 1 1];
@@ -3098,18 +3126,18 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_IntegrationTime.Value = -1;
 
             % Create Band_DFLabel
-            app.Band_DFLabel = uilabel(app.BandCustomizable);
+            app.Band_DFLabel = uilabel(app.Document);
             app.Band_DFLabel.VerticalAlignment = 'bottom';
             app.Band_DFLabel.FontSize = 10;
             app.Band_DFLabel.Layout.Row = 5;
-            app.Band_DFLabel.Layout.Column = [1 2];
+            app.Band_DFLabel.Layout.Column = [2 3];
             app.Band_DFLabel.Text = 'DIRECTION FINDER (DF):';
 
             % Create Band_DFPanel
-            app.Band_DFPanel = uipanel(app.BandCustomizable);
+            app.Band_DFPanel = uipanel(app.Document);
             app.Band_DFPanel.AutoResizeChildren = 'off';
             app.Band_DFPanel.Layout.Row = 6;
-            app.Band_DFPanel.Layout.Column = [1 3];
+            app.Band_DFPanel.Layout.Column = [2 4];
 
             % Create Band_DFGrid
             app.Band_DFGrid = uigridlayout(app.Band_DFPanel);
@@ -3185,18 +3213,18 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_DFMeasTime.Value = 1000;
 
             % Create Band_AntenaLabel
-            app.Band_AntenaLabel = uilabel(app.BandCustomizable);
+            app.Band_AntenaLabel = uilabel(app.Document);
             app.Band_AntenaLabel.VerticalAlignment = 'bottom';
             app.Band_AntenaLabel.FontSize = 10;
             app.Band_AntenaLabel.Layout.Row = 7;
-            app.Band_AntenaLabel.Layout.Column = 1;
+            app.Band_AntenaLabel.Layout.Column = 2;
             app.Band_AntenaLabel.Text = 'ANTENA';
 
             % Create Band_AntennaPanel
-            app.Band_AntennaPanel = uipanel(app.BandCustomizable);
+            app.Band_AntennaPanel = uipanel(app.Document);
             app.Band_AntennaPanel.AutoResizeChildren = 'off';
-            app.Band_AntennaPanel.Layout.Row = 8;
-            app.Band_AntennaPanel.Layout.Column = [1 3];
+            app.Band_AntennaPanel.Layout.Row = [8 9];
+            app.Band_AntennaPanel.Layout.Column = [2 4];
 
             % Create Band_AntennaGrid
             app.Band_AntennaGrid = uigridlayout(app.Band_AntennaPanel);
@@ -3255,50 +3283,19 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_TargetListRefresh.VerticalAlignment = 'bottom';
             app.Band_TargetListRefresh.ImageSource = 'Refresh_18.png';
 
-            % Create Band_Refresh
-            app.Band_Refresh = uiimage(app.BandCustomizable);
-            app.Band_Refresh.ScaleMethod = 'none';
-            app.Band_Refresh.ImageClickedFcn = createCallbackFcn(app, @BandView_Refresh, true);
-            app.Band_Refresh.Tooltip = {'Retorna às configurações iniciais'};
-            app.Band_Refresh.Layout.Row = 3;
-            app.Band_Refresh.Layout.Column = 3;
-            app.Band_Refresh.HorizontalAlignment = 'right';
-            app.Band_Refresh.VerticalAlignment = 'bottom';
-            app.Band_Refresh.ImageSource = 'Refresh_18.png';
-
-            % Create Toolbar
-            app.Toolbar = uigridlayout(app.GridLayout);
-            app.Toolbar.ColumnWidth = {'1x', 110};
-            app.Toolbar.RowHeight = {'1x'};
-            app.Toolbar.ColumnSpacing = 5;
-            app.Toolbar.Padding = [10 6 10 6];
-            app.Toolbar.Layout.Row = 7;
-            app.Toolbar.Layout.Column = [1 9];
-
-            % Create okBtn
-            app.okBtn = uibutton(app.Toolbar, 'push');
-            app.okBtn.ButtonPushedFcn = createCallbackFcn(app, @okBtnPushed, true);
-            app.okBtn.Icon = 'Add_24.png';
-            app.okBtn.IconAlignment = 'rightmargin';
-            app.okBtn.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.okBtn.FontSize = 11;
-            app.okBtn.Tooltip = {''};
-            app.okBtn.Layout.Row = 1;
-            app.okBtn.Layout.Column = 2;
-            app.okBtn.Text = 'Inclui tarefa';
-
-            % Create dockModuleGrid
-            app.dockModuleGrid = uigridlayout(app.GridLayout);
-            app.dockModuleGrid.RowHeight = {'1x'};
-            app.dockModuleGrid.ColumnSpacing = 2;
-            app.dockModuleGrid.Padding = [5 2 5 2];
-            app.dockModuleGrid.Visible = 'off';
-            app.dockModuleGrid.Layout.Row = [2 3];
-            app.dockModuleGrid.Layout.Column = [7 8];
-            app.dockModuleGrid.BackgroundColor = [0.2 0.2 0.2];
+            % Create DockModule
+            app.DockModule = uigridlayout(app.GridLayout);
+            app.DockModule.RowHeight = {'1x'};
+            app.DockModule.ColumnSpacing = 2;
+            app.DockModule.Padding = [5 2 5 2];
+            app.DockModule.Tag = '5';
+            app.DockModule.Visible = 'off';
+            app.DockModule.Layout.Row = [2 3];
+            app.DockModule.Layout.Column = [7 9];
+            app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
             % Create dockModule_Close
-            app.dockModule_Close = uiimage(app.dockModuleGrid);
+            app.dockModule_Close = uiimage(app.DockModule);
             app.dockModule_Close.ScaleMethod = 'none';
             app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
             app.dockModule_Close.Tag = 'DRIVETEST';
@@ -3308,7 +3305,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.dockModule_Close.ImageSource = 'Delete_12SVG_white.svg';
 
             % Create dockModule_Undock
-            app.dockModule_Undock = uiimage(app.dockModuleGrid);
+            app.dockModule_Undock = uiimage(app.DockModule);
             app.dockModule_Undock.ScaleMethod = 'none';
             app.dockModule_Undock.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
             app.dockModule_Undock.Tag = 'DRIVETEST';

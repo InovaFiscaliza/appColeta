@@ -1,6 +1,6 @@
 <deployment-project plugin="plugin.webdeploy" plugin-version="1.0">
-  <configuration file="C:\InovaFiscaliza\monitorSPED\deploy\webapp.prj" location="C:\InovaFiscaliza\monitorSPED\deploy" name="webapp" target="target.webdeploy" target-name="Web App Compiler">
-    <param.appname>monitorSPED</param.appname>
+  <configuration file="C:\InovaFiscaliza\appColeta\deploy\webapp.prj" location="C:\InovaFiscaliza\appColeta\deploy" name="webapp" target="target.webdeploy" target-name="Web App Compiler">
+    <param.appname>appColeta</param.appname>
     <param.intermediate>${PROJECT_ROOT}\webapp</param.intermediate>
     <param.files.only>${PROJECT_ROOT}\webapp</param.files.only>
     <param.output />
@@ -20,23 +20,22 @@
       <param.support.packages />
     </unset>
     <fileset.web.main>
-      <file>C:\InovaFiscaliza\monitorSPED\src\winMonitorSPED.mlapp</file>
+      <file>C:\InovaFiscaliza\appColeta\src\winAppColeta.mlapp</file>
     </fileset.web.main>
     <fileset.resources>
-      <file>C:\InovaFiscaliza\monitorSPED\src\+auxApp</file>
-      <file>C:\InovaFiscaliza\monitorSPED\src\+class</file>
-      <file>C:\InovaFiscaliza\monitorSPED\src\+model</file>
-      <file>C:\InovaFiscaliza\monitorSPED\src\+reportLibConnection</file>
-      <file>C:\InovaFiscaliza\monitorSPED\src\+util</file>
-      <file>C:\InovaFiscaliza\monitorSPED\src\config</file>
-      <file>C:\InovaFiscaliza\monitorSPED\src\resources</file>
-      <file>C:\SupportPackages\src\Anatel</file>
+      <file>C:\InovaFiscaliza\appColeta\src\+auxApp</file>
+      <file>C:\InovaFiscaliza\appColeta\src\+class</file>
+      <file>C:\InovaFiscaliza\appColeta\src\+fcn</file>
+      <file>C:\InovaFiscaliza\appColeta\src\+plot</file>
+      <file>C:\InovaFiscaliza\appColeta\src\+util</file>
+      <file>C:\InovaFiscaliza\appColeta\src\config</file>
+      <file>C:\InovaFiscaliza\appColeta\src\resources</file>
       <file>C:\SupportPackages\src\General</file>
     </fileset.resources>
     <fileset.depfun />
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\webapp" name="monitorSPED.ctf" optional="false">C:\InovaFiscaliza\monitorSPED\deploy\webapp\monitorSPED.ctf</file>
+      <file location="${PROJECT_ROOT}\webapp" name="appColeta.ctf" optional="false">C:\InovaFiscaliza\appColeta\deploy\webapp\appColeta.ctf</file>
     </build-deliverables>
     <workflow />
     <matlab>

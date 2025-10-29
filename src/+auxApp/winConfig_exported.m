@@ -46,6 +46,7 @@ classdef winConfig_exported < matlab.apps.AppBase
         general_FileLabel              matlab.ui.control.Label
         Tab3                           matlab.ui.container.Tab
         plot_Grid                      matlab.ui.container.GridLayout
+        plot_WaterfallLabel            matlab.ui.control.Label
         configPlotRefresh              matlab.ui.control.Image
         plot_IntegrationPanel          matlab.ui.container.Panel
         plot_IntegrationGrid           matlab.ui.container.GridLayout
@@ -60,7 +61,6 @@ classdef winConfig_exported < matlab.apps.AppBase
         plot_WaterfallDepthLabel       matlab.ui.control.Label
         plot_WaterfallColormap         matlab.ui.control.DropDown
         plot_WaterfallColormapLabel    matlab.ui.control.Label
-        plot_WaterfallLabel            matlab.ui.control.Label
         plot_colorsPanel               matlab.ui.container.Panel
         plot_colorsGrid                matlab.ui.container.GridLayout
         plot_colorsClearWrite          matlab.ui.control.ColorPicker
@@ -106,8 +106,6 @@ classdef winConfig_exported < matlab.apps.AppBase
         % apenas a sua visibilidade - e tornando desnecessário criá-la a
         % cada chamada (usando uiprogressdlg, por exemplo).
         progressDialog
-
-        stableVersion
     end
 
 
@@ -263,6 +261,9 @@ classdef winConfig_exported < matlab.apps.AppBase
             if ~isdeployed
                 app.openAuxiliarApp2Debug.Enable = 1;
             end
+
+            app.general_FileLock.UserData    = struct('status', false);
+            app.general_versionLock.UserData = struct('status', false);
 
             updatePanel_General(app)
         end
@@ -421,7 +422,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             
             app.progressDialog.Visible = 'visible';
 
-            [htmlContent, app.stableVersion] = util.HtmlTextGenerator.checkAvailableUpdate(app.mainApp.General, app.mainApp.rootFolder);
+            htmlContent = util.HtmlTextGenerator.checkUpdate(app.mainApp.General, app.mainApp.rootFolder);
             appUtil.modalWindow(app.UIFigure, "info", htmlContent);
 
             app.progressDialog.Visible = 'hidden';
@@ -509,6 +510,8 @@ classdef winConfig_exported < matlab.apps.AppBase
         % ...and 9 other components
         function general_ParameterChanged(app, event)
             
+            closeAddTaskModuleFlag = false;
+
             switch event.Source
                 case app.general_stationName
                     if isempty(regexp(app.general_stationName.Value, '^EMSat$|^UMS.*|^ERMx-[A-Z]{2}-[0-9][1-9]$', 'once'))
@@ -529,10 +532,12 @@ classdef winConfig_exported < matlab.apps.AppBase
                     app.mainApp.General.stationInfo.Type      = app.general_stationType.Value;
 
                 case app.general_stationLatitude
+                    closeAddTaskModuleFlag = true;
                     app.mainApp.General.stationInfo.Latitude  = app.general_stationLatitude.Value;
 
                 case app.general_stationLongitude
-                    app.mainApp.General.stationInfo.Longitude = app.general_stationLongitude.Value;
+                    closeAddTaskModuleFlag = true;
+                    app.mainApp.General.stationInfo.Longitude = app.general_stationLongitude.Value;                    
 
                 case app.general_lastSessionInfo
                     app.mainApp.General.startupInfo           = app.general_lastSessionInfo.Value;                    
@@ -571,24 +576,127 @@ classdef winConfig_exported < matlab.apps.AppBase
                 case app.server_Port
                     app.mainApp.General.tcpServer.Port = app.server_Port.Value;
             end
+
+            if closeAddTaskModuleFlag
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
+            end
             
             app.mainApp.General_I.stationInfo   = app.mainApp.General.stationInfo;
             app.mainApp.General_I.startupInfo   = app.mainApp.General.startupInfo;
             app.mainApp.General_I.tcpServer     = app.mainApp.General.tcpServer;
 
             saveGeneralSettings(app)
-            general_updateLayout(app)
 
         end
 
         % Image clicked function: general_FileLock, general_versionLock
-        function general_FileLockImageClicked(app, event)
+        function general_PanelLockControl(app, event)
             
             switch event.Source
                 case app.general_FileLock
-
+                    gridContainer = app.general_stationGrid;
                 case app.general_versionLock
+                    gridContainer = app.server_Grid;
+            end
 
+            event.Source.UserData.status = ~event.Source.UserData.status;
+            if event.Source.UserData.status
+                event.Source.ImageSource = 'lockOpen_32.png';
+                set(findobj(gridContainer.Children, '-not', 'Type', 'uilabel'), 'Enable', 1)
+            else
+                event.Source.ImageSource = 'lockClose_32.png';
+                set(findobj(gridContainer.Children, '-not', 'Type', 'uilabel'), 'Enable', 0)
+            end
+
+        end
+
+        % Value changed function: plot_TiledSpacing
+        function plot_TiledSpacingValueChanged(app, event)
+            
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'AxesTileSpacingChanged', app.plot_TiledSpacing.Value)
+
+        end
+
+        % Callback function: plot_colorsAverage, plot_colorsClearWrite, 
+        % ...and 2 other components
+        function plot_colorsMinHoldValueChanged(app, event)
+            
+            initialColor  = event.PreviousValue;
+            selectedColor = event.Value;
+
+            if ~isequal(initialColor, selectedColor)
+                selectedColor = rgb2hex(selectedColor);
+    
+                switch event.Source
+                    case app.plot_colorsMinHold
+                        plotTag = 'MinHold';
+                        app.mainApp.General.Plot.MinHold.Color    = selectedColor;
+                    case app.plot_colorsAverage
+                        plotTag = 'Average';
+                        app.mainApp.General.Plot.Average.Color    = selectedColor;
+                    case app.plot_colorsMaxHold
+                        plotTag = 'MaxHold';
+                        app.mainApp.General.Plot.MaxHold.Color    = selectedColor;
+                    case app.plot_colorsClearWrite
+                        plotTag = 'ClrWrite';
+                        app.mainApp.General.Plot.ClearWrite.Color = selectedColor;
+                end
+
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'PlotColorChanged', plotTag)
+            end
+
+            app.mainApp.General_I.Plot = app.mainApp.General.Plot;
+            saveGeneralSettings(app)
+            
+            updatePanel_Plot(app)
+
+        end
+
+        % Value changed function: plot_IntegrationTime, 
+        % ...and 3 other components
+        function plot_WaterfallColormapValueChanged(app, event)
+            
+            switch event.Source
+                case app.plot_WaterfallColormap
+                    ipcMainMatlabCallsHandler(app.mainApp, app, 'WaterfallColormapChanged', app.plot_WaterfallColormap.Value)
+                    app.mainApp.General.Plot.Waterfall.Colormap = app.plot_WaterfallColormap.Value;
+
+                case app.plot_WaterfallDepth
+                    app.mainApp.General.Plot.Waterfall.Depth    = str2double(app.plot_WaterfallDepth.Value);
+                
+                case app.plot_IntegrationTrace
+                    app.mainApp.General.Integration.Trace       = app.plot_IntegrationTrace.Value;
+
+                case app.plot_IntegrationTime
+                    app.mainApp.General.Integration.SampleTime  = app.plot_IntegrationTime.Value;
+            end
+
+            app.mainApp.General_I.Plot        = app.mainApp.General.Plot;
+            app.mainApp.General_I.Integration = app.mainApp.General.Integration;
+            saveGeneralSettings(app)
+
+            updatePanel_Plot(app)
+
+        end
+
+        % Image clicked function: configPlotRefresh
+        function configPlotRefreshImageClicked(app, event)
+            
+            if ~checkEdition(app, 'PLOT')
+                app.configPlotRefresh.Visible = 0;
+                return
+            
+            else                
+                app.mainApp.General.Plot          = app.defaultValues.Plot;
+                app.mainApp.General.Integration   = app.defaultValues.Integration;
+
+                app.mainApp.General_I.Plot        = app.mainApp.General.Plot;
+                app.mainApp.General_I.Integration = app.mainApp.General.Integration;
+                
+                updatePanel_Plot(app)
+                saveGeneralSettings(app)
+    
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'PlotColorChanged', 'ClrWrite')
             end
 
         end
@@ -609,7 +717,7 @@ classdef winConfig_exported < matlab.apps.AppBase
                 app.UIFigure.AutoResizeChildren = 'off';
                 app.UIFigure.Position = [100 100 1244 660];
                 app.UIFigure.Name = 'appColeta';
-                app.UIFigure.Icon = 'icon_48.png';
+                app.UIFigure.Icon = 'icon_32.png';
                 app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @closeFcn, true);
 
                 app.Container = app.UIFigure;
@@ -752,7 +860,7 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create general_FileLock
             app.general_FileLock = uiimage(app.general_Grid);
-            app.general_FileLock.ImageClickedFcn = createCallbackFcn(app, @general_FileLockImageClicked, true);
+            app.general_FileLock.ImageClickedFcn = createCallbackFcn(app, @general_PanelLockControl, true);
             app.general_FileLock.Layout.Row = 1;
             app.general_FileLock.Layout.Column = 2;
             app.general_FileLock.VerticalAlignment = 'bottom';
@@ -860,11 +968,11 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.general_versionLabel.FontSize = 10;
             app.general_versionLabel.Layout.Row = 3;
             app.general_versionLabel.Layout.Column = 1;
-            app.general_versionLabel.Text = 'WEBSERVICE';
+            app.general_versionLabel.Text = 'API';
 
             % Create general_versionLock
             app.general_versionLock = uiimage(app.general_Grid);
-            app.general_versionLock.ImageClickedFcn = createCallbackFcn(app, @general_FileLockImageClicked, true);
+            app.general_versionLock.ImageClickedFcn = createCallbackFcn(app, @general_PanelLockControl, true);
             app.general_versionLock.Layout.Row = 3;
             app.general_versionLock.Layout.Column = 2;
             app.general_versionLock.VerticalAlignment = 'bottom';
@@ -978,8 +1086,8 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create plot_Grid
             app.plot_Grid = uigridlayout(app.Tab3);
-            app.plot_Grid.ColumnWidth = {150, '1x', 16};
-            app.plot_Grid.RowHeight = {17, 22, 22, 62, 22, 63, 22, '1x'};
+            app.plot_Grid.ColumnWidth = {104, '1x', 16};
+            app.plot_Grid.RowHeight = {17, 22, 22, 60, 22, 63, 22, '1x'};
             app.plot_Grid.RowSpacing = 5;
             app.plot_Grid.BackgroundColor = [1 1 1];
 
@@ -994,6 +1102,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create plot_TiledSpacing
             app.plot_TiledSpacing = uidropdown(app.plot_Grid);
             app.plot_TiledSpacing.Items = {'loose', 'compact', 'tight', 'none'};
+            app.plot_TiledSpacing.ValueChangedFcn = createCallbackFcn(app, @plot_TiledSpacingValueChanged, true);
             app.plot_TiledSpacing.FontSize = 11;
             app.plot_TiledSpacing.BackgroundColor = [1 1 1];
             app.plot_TiledSpacing.Layout.Row = 2;
@@ -1016,72 +1125,77 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create plot_colorsGrid
             app.plot_colorsGrid = uigridlayout(app.plot_colorsPanel);
-            app.plot_colorsGrid.ColumnWidth = {150, 150, 150, 150};
-            app.plot_colorsGrid.RowHeight = {17, 22};
-            app.plot_colorsGrid.ColumnSpacing = 20;
+            app.plot_colorsGrid.ColumnWidth = {42, 42, 42, 42, 42};
+            app.plot_colorsGrid.RowHeight = {22, 22};
             app.plot_colorsGrid.RowSpacing = 5;
-            app.plot_colorsGrid.Padding = [10 10 10 5];
             app.plot_colorsGrid.BackgroundColor = [1 1 1];
 
             % Create plot_colorsMinHoldLabel
             app.plot_colorsMinHoldLabel = uilabel(app.plot_colorsGrid);
-            app.plot_colorsMinHoldLabel.VerticalAlignment = 'bottom';
+            app.plot_colorsMinHoldLabel.VerticalAlignment = 'top';
             app.plot_colorsMinHoldLabel.FontSize = 10;
-            app.plot_colorsMinHoldLabel.Layout.Row = 1;
-            app.plot_colorsMinHoldLabel.Layout.Column = 1;
-            app.plot_colorsMinHoldLabel.Text = 'MinHold:';
+            app.plot_colorsMinHoldLabel.Layout.Row = 2;
+            app.plot_colorsMinHoldLabel.Layout.Column = [1 2];
+            app.plot_colorsMinHoldLabel.Text = 'MinHold';
 
             % Create plot_colorsMinHold
             app.plot_colorsMinHold = uicolorpicker(app.plot_colorsGrid);
-            app.plot_colorsMinHold.Layout.Row = 2;
+            app.plot_colorsMinHold.Value = [0.2902 0.5647 0.8863];
+            app.plot_colorsMinHold.ValueChangedFcn = createCallbackFcn(app, @plot_colorsMinHoldValueChanged, true);
+            app.plot_colorsMinHold.Layout.Row = 1;
             app.plot_colorsMinHold.Layout.Column = 1;
+            app.plot_colorsMinHold.BackgroundColor = [1 1 1];
 
             % Create plot_colorsAverageLabel
             app.plot_colorsAverageLabel = uilabel(app.plot_colorsGrid);
-            app.plot_colorsAverageLabel.VerticalAlignment = 'bottom';
+            app.plot_colorsAverageLabel.HorizontalAlignment = 'center';
+            app.plot_colorsAverageLabel.VerticalAlignment = 'top';
             app.plot_colorsAverageLabel.FontSize = 10;
-            app.plot_colorsAverageLabel.Layout.Row = 1;
-            app.plot_colorsAverageLabel.Layout.Column = 2;
-            app.plot_colorsAverageLabel.Text = 'Average:';
+            app.plot_colorsAverageLabel.Layout.Row = 2;
+            app.plot_colorsAverageLabel.Layout.Column = [1 3];
+            app.plot_colorsAverageLabel.Text = 'Average';
 
             % Create plot_colorsAverage
             app.plot_colorsAverage = uicolorpicker(app.plot_colorsGrid);
-            app.plot_colorsAverage.Layout.Row = 2;
+            app.plot_colorsAverage.Value = [0 0.8 0.4];
+            app.plot_colorsAverage.ValueChangedFcn = createCallbackFcn(app, @plot_colorsMinHoldValueChanged, true);
+            app.plot_colorsAverage.Layout.Row = 1;
             app.plot_colorsAverage.Layout.Column = 2;
+            app.plot_colorsAverage.BackgroundColor = [1 1 1];
 
             % Create plot_colorsMaxHoldLabel
             app.plot_colorsMaxHoldLabel = uilabel(app.plot_colorsGrid);
-            app.plot_colorsMaxHoldLabel.VerticalAlignment = 'bottom';
+            app.plot_colorsMaxHoldLabel.HorizontalAlignment = 'center';
+            app.plot_colorsMaxHoldLabel.VerticalAlignment = 'top';
             app.plot_colorsMaxHoldLabel.FontSize = 10;
-            app.plot_colorsMaxHoldLabel.Layout.Row = 1;
-            app.plot_colorsMaxHoldLabel.Layout.Column = 3;
-            app.plot_colorsMaxHoldLabel.Text = 'MaxHold:';
+            app.plot_colorsMaxHoldLabel.Layout.Row = 2;
+            app.plot_colorsMaxHoldLabel.Layout.Column = [2 4];
+            app.plot_colorsMaxHoldLabel.Text = 'MaxHold';
 
             % Create plot_colorsMaxHold
             app.plot_colorsMaxHold = uicolorpicker(app.plot_colorsGrid);
-            app.plot_colorsMaxHold.Layout.Row = 2;
+            app.plot_colorsMaxHold.Value = [1 0.3608 0.6784];
+            app.plot_colorsMaxHold.ValueChangedFcn = createCallbackFcn(app, @plot_colorsMinHoldValueChanged, true);
+            app.plot_colorsMaxHold.Layout.Row = 1;
             app.plot_colorsMaxHold.Layout.Column = 3;
+            app.plot_colorsMaxHold.BackgroundColor = [1 1 1];
 
             % Create plot_colorsClearWriteLabel
             app.plot_colorsClearWriteLabel = uilabel(app.plot_colorsGrid);
-            app.plot_colorsClearWriteLabel.VerticalAlignment = 'bottom';
+            app.plot_colorsClearWriteLabel.HorizontalAlignment = 'center';
+            app.plot_colorsClearWriteLabel.VerticalAlignment = 'top';
             app.plot_colorsClearWriteLabel.FontSize = 10;
-            app.plot_colorsClearWriteLabel.Layout.Row = 1;
-            app.plot_colorsClearWriteLabel.Layout.Column = 4;
-            app.plot_colorsClearWriteLabel.Text = 'ClearWrite:';
+            app.plot_colorsClearWriteLabel.Layout.Row = 2;
+            app.plot_colorsClearWriteLabel.Layout.Column = [3 5];
+            app.plot_colorsClearWriteLabel.Text = 'ClearWrite';
 
             % Create plot_colorsClearWrite
             app.plot_colorsClearWrite = uicolorpicker(app.plot_colorsGrid);
-            app.plot_colorsClearWrite.Layout.Row = 2;
+            app.plot_colorsClearWrite.Value = [1 1 0.0706];
+            app.plot_colorsClearWrite.ValueChangedFcn = createCallbackFcn(app, @plot_colorsMinHoldValueChanged, true);
+            app.plot_colorsClearWrite.Layout.Row = 1;
             app.plot_colorsClearWrite.Layout.Column = 4;
-
-            % Create plot_WaterfallLabel
-            app.plot_WaterfallLabel = uilabel(app.plot_Grid);
-            app.plot_WaterfallLabel.VerticalAlignment = 'bottom';
-            app.plot_WaterfallLabel.FontSize = 10;
-            app.plot_WaterfallLabel.Layout.Row = 5;
-            app.plot_WaterfallLabel.Layout.Column = 1;
-            app.plot_WaterfallLabel.Text = 'WATERFALL:';
+            app.plot_colorsClearWrite.BackgroundColor = [1 1 1];
 
             % Create plot_WaterfallPanel
             app.plot_WaterfallPanel = uipanel(app.plot_Grid);
@@ -1092,9 +1206,8 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create plot_WaterfallGrid
             app.plot_WaterfallGrid = uigridlayout(app.plot_WaterfallPanel);
-            app.plot_WaterfallGrid.ColumnWidth = {150, 150};
+            app.plot_WaterfallGrid.ColumnWidth = {94, 94};
             app.plot_WaterfallGrid.RowHeight = {17, 22};
-            app.plot_WaterfallGrid.ColumnSpacing = 20;
             app.plot_WaterfallGrid.RowSpacing = 5;
             app.plot_WaterfallGrid.Padding = [10 10 10 5];
             app.plot_WaterfallGrid.BackgroundColor = [1 1 1];
@@ -1110,6 +1223,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create plot_WaterfallColormap
             app.plot_WaterfallColormap = uidropdown(app.plot_WaterfallGrid);
             app.plot_WaterfallColormap.Items = {'gray', 'hot', 'jet', 'summer', 'turbo', 'winter'};
+            app.plot_WaterfallColormap.ValueChangedFcn = createCallbackFcn(app, @plot_WaterfallColormapValueChanged, true);
             app.plot_WaterfallColormap.FontSize = 11;
             app.plot_WaterfallColormap.BackgroundColor = [1 1 1];
             app.plot_WaterfallColormap.Layout.Row = 2;
@@ -1127,6 +1241,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create plot_WaterfallDepth
             app.plot_WaterfallDepth = uidropdown(app.plot_WaterfallGrid);
             app.plot_WaterfallDepth.Items = {'64', '128', '256', '512'};
+            app.plot_WaterfallDepth.ValueChangedFcn = createCallbackFcn(app, @plot_WaterfallColormapValueChanged, true);
             app.plot_WaterfallDepth.FontSize = 11;
             app.plot_WaterfallDepth.BackgroundColor = [1 1 1];
             app.plot_WaterfallDepth.Layout.Row = 2;
@@ -1150,9 +1265,8 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create plot_IntegrationGrid
             app.plot_IntegrationGrid = uigridlayout(app.plot_IntegrationPanel);
-            app.plot_IntegrationGrid.ColumnWidth = {150, 150};
+            app.plot_IntegrationGrid.ColumnWidth = {94, 94, 94};
             app.plot_IntegrationGrid.RowHeight = {17, 22};
-            app.plot_IntegrationGrid.ColumnSpacing = 20;
             app.plot_IntegrationGrid.RowSpacing = 5;
             app.plot_IntegrationGrid.Padding = [10 10 10 5];
             app.plot_IntegrationGrid.BackgroundColor = [1 1 1];
@@ -1170,6 +1284,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationTrace.Limits = [3 100];
             app.plot_IntegrationTrace.RoundFractionalValues = 'on';
             app.plot_IntegrationTrace.ValueDisplayFormat = '%d';
+            app.plot_IntegrationTrace.ValueChangedFcn = createCallbackFcn(app, @plot_WaterfallColormapValueChanged, true);
             app.plot_IntegrationTrace.FontSize = 11;
             app.plot_IntegrationTrace.Layout.Row = 2;
             app.plot_IntegrationTrace.Layout.Column = 1;
@@ -1180,7 +1295,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationTimeLabel.VerticalAlignment = 'bottom';
             app.plot_IntegrationTimeLabel.FontSize = 10;
             app.plot_IntegrationTimeLabel.Layout.Row = 1;
-            app.plot_IntegrationTimeLabel.Layout.Column = 2;
+            app.plot_IntegrationTimeLabel.Layout.Column = [2 3];
             app.plot_IntegrationTimeLabel.Text = 'Tempo médio escrita:';
 
             % Create plot_IntegrationTime
@@ -1188,6 +1303,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationTime.Limits = [3 100];
             app.plot_IntegrationTime.RoundFractionalValues = 'on';
             app.plot_IntegrationTime.ValueDisplayFormat = '%d';
+            app.plot_IntegrationTime.ValueChangedFcn = createCallbackFcn(app, @plot_WaterfallColormapValueChanged, true);
             app.plot_IntegrationTime.FontSize = 11;
             app.plot_IntegrationTime.Layout.Row = 2;
             app.plot_IntegrationTime.Layout.Column = 2;
@@ -1196,12 +1312,21 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create configPlotRefresh
             app.configPlotRefresh = uiimage(app.plot_Grid);
             app.configPlotRefresh.ScaleMethod = 'none';
-            app.configPlotRefresh.Enable = 'off';
+            app.configPlotRefresh.ImageClickedFcn = createCallbackFcn(app, @configPlotRefreshImageClicked, true);
+            app.configPlotRefresh.Visible = 'off';
             app.configPlotRefresh.Tooltip = {'Verifica atualizações'};
             app.configPlotRefresh.Layout.Row = 3;
             app.configPlotRefresh.Layout.Column = 3;
             app.configPlotRefresh.VerticalAlignment = 'bottom';
             app.configPlotRefresh.ImageSource = 'Refresh_18.png';
+
+            % Create plot_WaterfallLabel
+            app.plot_WaterfallLabel = uilabel(app.plot_Grid);
+            app.plot_WaterfallLabel.VerticalAlignment = 'bottom';
+            app.plot_WaterfallLabel.FontSize = 10;
+            app.plot_WaterfallLabel.Layout.Row = 5;
+            app.plot_WaterfallLabel.Layout.Column = 1;
+            app.plot_WaterfallLabel.Text = 'WATERFALL:';
 
             % Create Tab5
             app.Tab5 = uitab(app.TabGroup);
