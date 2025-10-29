@@ -482,8 +482,8 @@ classdef winConfig_exported < matlab.apps.AppBase
                             return
                         else
                             selectedFolderFiles = dir(selectedFolder);
-                            if ~ismember('.monitorrni_post', {selectedFolderFiles.name})
-                                appUtil.modalWindow(app.UIFigure, 'error', 'Não se trata da pasta "DataHub - POST", do monitorRNI.');
+                            if ~ismember('.appcoleta_post', {selectedFolderFiles.name})
+                                appUtil.modalWindow(app.UIFigure, 'error', 'Não se trata da pasta "DataHub - POST", do appColeta.');
                                 return
                             end
 
