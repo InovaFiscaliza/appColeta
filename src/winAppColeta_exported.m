@@ -567,6 +567,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axes2.Layout.Tile = 4;
 
             colormap(app.axes2, app.General.Plot.Waterfall.Colormap);
+            plot.axesColorbar(app.axes2, "eastoutside", {'Visible', false})
 
             % Axes fixed labels:
             xlabel(app.axes1, 'Frequência (MHz)')
@@ -1569,9 +1570,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 task_TreeSelectionChanged(app)
             else
                 app.DropDown.Items = {};
-                app.MetaData.Text = '';                
+                app.MetaData.Text = '';
+
                 plot_Startup(app)
-                set(app.axesTool_PlotSource, 'Items', plot_PlotSource(app, -1, -1), 'Enable', false)                
+                plot_PlotSource(app, -1, -1)
+
                 app.Sweeps.Text = '-1';
                 app.Sweeps_REC.Visible = 0;
                 Layout_errorCount(app, [])                
@@ -1687,10 +1690,15 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 app.axes2.Layout.Tile     = 4;
                 app.axes2.Layout.TileSpan = [1 1];
             end
+
+            cb = findobj(app.axes2.Parent.Children, 'Type', 'colorbar');
+            if ~isempty(cb)
+                cb.Visible = app.axesTool_Waterfall.UserData.status;
+            end
         end
 
         %-----------------------------------------------------------------%
-        function sources = plot_PlotSource(app, ii, jj)
+        function plot_PlotSource(app, ii, jj)
             sources = {'Nível'};
 
             if ii > 0 && jj > 0
@@ -1707,6 +1715,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     sources{end+1} = 'Máscara';
                 end
             end
+
+            set(app.axesTool_PlotSource, 'Items', sources, 'Enable', numel(sources) > 1)
+            set([app.axesTool_MinHold, app.axesTool_Average, app.axesTool_MaxHold, app.axesTool_Peak], 'Enable', strcmp(app.axesTool_PlotSource.Value, 'Nível'))
         end
 
         %-----------------------------------------------------------------%
@@ -1795,14 +1806,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         ylabel(app.axes1, 'Azimute (º)');
                         set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[0, 360], YScale='linear')
 
-                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, app.specObj(ii).Band(jj).Azimuth, LevelUnit, 'ClrWrite', app.General, 'Marker', 'o');
+                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, app.specObj(ii).Band(jj).Azimuth, LevelUnit, 'ClrWrite', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
 
                     case 'Máscara'
                         ylabel(app.axes1, 'Rompimento (%)');
                         set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[.1, 100], YScale='log')
             
                         KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
-                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, '%%', 'MaskPlot', app.General, 'Marker', 'o');
+                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, '%%', 'MaskPlot', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
                 end
                 app.restoreView(1) = struct('ID', 'app.axes1', 'xLim', app.axes1.XLim, 'yLim', app.axes1.YLim,  'cLim', 'auto');
 
@@ -2148,10 +2159,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 ii = app.Table.Selection;
                 jj = app.DropDown.Value;
 
-                app.axesTool_PlotSource.Items  = plot_PlotSource(app, ii, jj);
-                app.axesTool_PlotSource.Enable = numel(app.axesTool_PlotSource.Items) > 1;
-    
                 plot_Startup(app)
+                plot_PlotSource(app, ii, jj);
+                
                 if ~isempty(app.specObj(ii).Band(jj).Waterfall)
                     idx = app.specObj(ii).Band(jj).Waterfall.idx;
     
@@ -2285,7 +2295,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             event.Source.UserData.status = ~event.Source.UserData.status;
             plot_Layout(app)
 
-            if ~app.Flag_running
+            if ~isempty(app.Table.Selection) && ~app.Flag_running
                 axesTool_PlotSourceValueChanged(app)
             end
 
@@ -2307,9 +2317,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         % Value changed function: axesTool_PlotSource
         function axesTool_PlotSourceValueChanged(app, event)
             
+            set([app.axesTool_MinHold, app.axesTool_Average, app.axesTool_MaxHold, app.axesTool_Peak], 'Enable', strcmp(app.axesTool_PlotSource.Value, 'Nível'))
+            
             ii = app.Table.Selection;
             jj = app.DropDown.Value;
-
+            
             if ~isempty(app.specObj(ii).Band(jj).Waterfall)
                 idx = app.specObj(ii).Band(jj).Waterfall.idx;
 

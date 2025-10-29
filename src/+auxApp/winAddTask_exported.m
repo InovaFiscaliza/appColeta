@@ -389,7 +389,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 General_TaskType(app)
 
                 if strcmp(app.TaskType.Value, 'Rompimento de Máscara Espectral')
-                    set(app.MaskFile_Button, 'Enable', 1, 'Tooltip', {app.mainApp.specObj(app.infoEdition.idx).Task.MaskFile})
+                    set(app.MaskFile_Button, 'Enable', 1, 'Tag', app.mainApp.specObj(app.infoEdition.idx).Task.MaskFile)
                 end
             end
 
