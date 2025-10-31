@@ -544,6 +544,12 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 app.gpsObj.List(:,:) = [];
             end
 
+            % Atualiza as propriedades (app.instrumentList e app.editedList
+            % pois podem estar desatualizadas, no caso da edição excluir
+            % todos os instrumentos, ou desabilitar todos):
+            startup_AppProperties(app)
+            TreeBuilding(app, [])
+
             % Fecha o módulo auxiliar "auxApp.winAddTask.mlapp", caso aberto.
             ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
         end
@@ -928,8 +934,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
                         app.instrumentList = [app.instrumentList; tempList];
                         app.editedList     = app.instrumentList;
                         update(app)
-    
-                        TreeBuilding(app, [])
                     end
 
                 catch ME

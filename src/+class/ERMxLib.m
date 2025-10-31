@@ -41,12 +41,13 @@ classdef ERMxLib < handle
                         break
                     else
                         if ii == class.Constants.switchTimes
-                            error('ERMxLib:MatrixSwitch', 'Unexpected value')
+                            error('Unexpected value (ERMxLib:MatrixSwitch)')
                         end
                     end
                 end
-            catch
-                msgError = 'ERMxLib:MatrixSwitch';
+                
+            catch ME
+                msgError = ME.message;
                 return
             end
         end
