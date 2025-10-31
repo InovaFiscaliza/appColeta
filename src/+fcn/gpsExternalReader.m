@@ -110,7 +110,7 @@ function checksum = Fcn_gpsReader_CheckSum(nmeaData)
     end
     
     checksum = dec2hex(checksum);
-    if numel(checksum) == 1
+    if isscalar(checksum)
         checksum = ['0' checksum];
     end    
 end

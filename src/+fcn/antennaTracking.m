@@ -55,13 +55,13 @@ function targetPos = antennaTracking(app, antennaMetaData, progressDialog)
                                 continue
                             end
     
-                            refApp = app.CallingApp;
+                            refApp = app.mainApp;
     
                         otherwise % winAppColeta | winAppColeta_exported
                             refApp = app;
                     end
     
-                    appOpenPopUpSecundaryApp(refApp, 'Tracking', antennaPos, targetPos)
+                    ipcMainMatlabOpenPopupApp(refApp, 'Tracking', antennaPos, targetPos)
                 end
     
             case 'Manual'

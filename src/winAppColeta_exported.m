@@ -158,6 +158,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         %   comunicação entre apps secundários e, também, redirecionando os 
         %   eventos JS quando o app secundário é executado em modo DOCK (e, 
         %   por essa razão, usa o "jsBackDoor" do app principal).
+        %
+        % • ipcMainMatlabOpenPopupApp
+        %   Abre um app secundário como popup, no mainApp.
         %-----------------------------------------------------------------%
         function ipcMainJSEventsHandler(app, event)
             try
@@ -322,6 +325,38 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         ipcSecundaryJSEventsHandler(hAuxApp, event)
                 end
             end
+        end
+
+        %-----------------------------------------------------------------%
+        function ipcMainMatlabOpenPopupApp(app, auxiliarApp, varargin)
+            arguments
+                app
+                auxiliarApp char {mustBeMember(auxiliarApp, {'Tracking'})}
+            end
+
+            arguments (Repeating)
+                varargin 
+            end
+
+            switch auxAppName
+                case 'Tracking'
+                    screenWidth  = 622;
+                    screenHeight = 302;
+                otherwise
+                    % ...
+            end
+
+            ui.PopUpContainer(app, class.Constants.appName, screenWidth, screenHeight)
+
+            % Executa o app auxiliar.
+            inputArguments = [{app.mainApp}, varargin];
+            
+            if app.General.operationMode.Debug
+                eval(sprintf('auxApp.dock%s(inputArguments{:})', auxiliarApp))
+            else
+                eval(sprintf('auxApp.dock%s_exported(app.popupContainer, inputArguments{:})', auxiliarApp))
+                app.popupContainer.Parent.Visible = 1;
+            end            
         end
     end
 
