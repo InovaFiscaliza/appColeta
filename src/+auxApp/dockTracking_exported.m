@@ -36,8 +36,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
         Container
         isDocked = true
 
-        CallingApp
-        rootFolder
+        mainApp
         EMSatObj
 
         antennaName
@@ -165,11 +164,10 @@ classdef dockTracking_exported < matlab.apps.AppBase
     methods (Access = private)
 
         % Code that executes after component creation
-        function startupFcn(app, mainapp, antennaPos, targetPos)
+        function startupFcn(app, mainApp, antennaPos, targetPos)
             
-            app.CallingApp = mainapp;
-            app.rootFolder = mainapp.rootFolder;
-            app.EMSatObj   = mainapp.EMSatObj;
+            app.mainApp  = mainApp;
+            app.EMSatObj = mainApp.EMSatObj;
 
             screenStartup(app,  antennaPos, targetPos)
             setNewPosition(app, antennaPos, targetPos)
@@ -180,10 +178,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
         % Callback function: UIFigure, btnClose
         function closeFcn(app, event)
             
-            updateFlag = false;
-            returnFlag = false;
-            appBackDoor(app.CallingApp, app, 'TASK:TRACKING', updateFlag, returnFlag)
-            
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcnCallFromPopupApp')
             delete(app)
             
         end

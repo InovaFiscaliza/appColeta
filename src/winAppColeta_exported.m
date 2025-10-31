@@ -250,6 +250,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         auxAppTag    = varargin{1};
                         closeModule(app.tabGroupController, auxAppTag, app.General)
 
+                    case 'closeFcnCallFromPopupApp'
+                        app.popupContainer.Parent.Visible = 0;
+
                     case 'dockButtonPushed'
                         auxAppTag    = varargin{1};
                         varargout{1} = auxAppInputArguments(app, auxAppTag);
@@ -338,7 +341,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 varargin 
             end
 
-            switch auxAppName
+            switch auxiliarApp
                 case 'Tracking'
                     screenWidth  = 622;
                     screenHeight = 302;
@@ -349,7 +352,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             ui.PopUpContainer(app, class.Constants.appName, screenWidth, screenHeight)
 
             % Executa o app auxiliar.
-            inputArguments = [{app.mainApp}, varargin];
+            inputArguments = [{app}, varargin];
             
             if app.General.operationMode.Debug
                 eval(sprintf('auxApp.dock%s(inputArguments{:})', auxiliarApp))
