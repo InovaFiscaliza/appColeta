@@ -1,6 +1,6 @@
 [
   {
-    "Name": "appColeta HOM_1",
+    "Name": "Teste - 3 faixas",
     "BitsPerSample": 8,
     "Observation": {
       "Type": "Duration",
@@ -81,41 +81,192 @@
     ]
   },
   {
-    "Name": "appColeta HOM_2",
-    "BitsPerSample": 16,
+    "Name": "Teste - EMSat",
+    "BitsPerSample": 8,
     "Observation": {
-      "Type": "Samples",
+      "Type": "Duration",
       "BeginTime": "not applicable",
       "EndTime": "not applicable",
-      "Duration": "not applicable"
+      "Duration": "3 min"
     },
     "GPS": {
-      "Type": "manual",
-      "Latitude": -12.5,
-      "Longitude": -38.5,
-      "RevisitTime": []
+      "Type": "auto",
+      "Latitude": [],
+      "Longitude": [],
+      "RevisitTime": 60
+    },
+    "Band": [
+      {
+        "ID": 1,
+        "Description": "Faixa 1 de 2 (C Horizontal)",
+        "ObservationSamples": 3600,
+        "FreqStart": 3.625E+9,
+        "FreqStop": 4.2E+9,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 0.1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 2,
+        "Description": "Faixa 2 de 2 (C Vertical)",
+        "ObservationSamples": 3600,
+        "FreqStart": 3.625E+9,
+        "FreqStop": 4.2E+9,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 0.1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      }
+    ]
+  },
+  {
+    "Name": "Teste - EB500 Level+Azimuth (1)",
+    "BitsPerSample": 8,
+    "Observation": {
+      "Type": "Duration",
+      "BeginTime": "not applicable",
+      "EndTime": "not applicable",
+      "Duration": "10 min"
+    },
+    "GPS": {
+      "Type": "auto",
+      "Latitude": [],
+      "Longitude": [],
+      "RevisitTime": 10
     },
     "Band": {
       "ID": 1,
-      "Description": "Faixa 1 de 1",
-      "ObservationSamples": 1000,
-      "FreqStart": 7.6E+7,
+      "Description": "Faixa 1 de 3",
+      "ObservationSamples": -1,
+      "FreqStart": 8.8E+7,
       "FreqStop": 1.08E+8,
-      "StepWidth": 50000,
-      "Resolution": 100000,
-      "VBW": "auto",
-      "RFMode": "High Sensitivity",
-      "TraceMode": "Average",
+      "StepWidth": 6250,
+      "Resolution": 30000,
+      "VBW": "RBW/10",
+      "RFMode": "Low Distortion",
+      "TraceMode": "ClearWrite",
       "Detector": "Sample",
-      "LevelUnit": "dBµV",
-      "RevisitTime": 1,
-      "IntegrationFactor": 2,
+      "LevelUnit": "dBm",
+      "RevisitTime": 0.1,
+      "IntegrationFactor": 1,
       "MaskTrigger": {
-        "Status": 1,
+        "Status": 2,
         "FindPeaks": []
       },
       "Enable": 1
     }
+  },
+  {
+    "Name": "Teste - EB500 Level+Azimuth (2)",
+    "BitsPerSample": 8,
+    "Observation": {
+      "Type": "Duration",
+      "BeginTime": "not applicable",
+      "EndTime": "not applicable",
+      "Duration": "10 min"
+    },
+    "GPS": {
+      "Type": "auto",
+      "Latitude": [],
+      "Longitude": [],
+      "RevisitTime": 10
+    },
+    "Band": [
+      {
+        "ID": 1,
+        "Description": "Faixa 1 de 3",
+        "ObservationSamples": -1,
+        "FreqStart": 8.8E+7,
+        "FreqStop": 1.08E+8,
+        "StepWidth": 10000,
+        "Resolution": 30000,
+        "VBW": "RBW/10",
+        "RFMode": "Low Distortion",
+        "TraceMode": "ClearWrite",
+        "Detector": "Sample",
+        "LevelUnit": "dBm",
+        "RevisitTime": 0.1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 2,
+        "Description": "Faixa 2 de 3",
+        "ObservationSamples": -1,
+        "FreqStart": 1.27E+8,
+        "FreqStop": 1.37E+8,
+        "StepWidth": 12500,
+        "Resolution": 30000,
+        "VBW": "RBW",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 0.1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 3,
+        "Description": "Faixa 3 de 3",
+        "ObservationSamples": -1,
+        "FreqStart": 4.5E+8,
+        "FreqStop": 4.55E+8,
+        "StepWidth": 25000,
+        "Resolution": 100000,
+        "VBW": "RBW/10",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 0.1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      }
+    ]
   },
   {
     "Name": "PMRD/PMEC (Fixed Station)",
@@ -738,7 +889,7 @@
           "FindPeaks": []
         },
         "Enable": 1
-      },   
+      },
       {
         "ID": 10,
         "Description": "PMEC (Faixa 7 de 16) (SMP)",
@@ -1342,6 +1493,494 @@
     ]
   },
   {
+    "Name": "PMSAT 2024 - Coleta C Linear",
+    "BitsPerSample": 8,
+    "Observation": {
+      "Type": "Duration",
+      "BeginTime": "not applicable",
+      "EndTime": "not applicable",
+      "Duration": "24 hr"
+    },
+    "GPS": {
+      "Type": "auto",
+      "Latitude": [],
+      "Longitude": [],
+      "RevisitTime": 60
+    },
+    "Band": [
+      {
+        "ID": 1,
+        "Description": "Faixa 1 de 2 (C Horizontal)",
+        "ObservationSamples": 3600,
+        "FreqStart": 3.625E+9,
+        "FreqStop": 4.2E+9,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 2,
+        "Description": "Faixa 2 de 2 (C Vertical)",
+        "ObservationSamples": 3600,
+        "FreqStart": 3.625E+9,
+        "FreqStop": 4.2E+9,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      }
+    ]
+  },
+  {
+    "Name": "PMSAT 2024 - Coleta C Circular",
+    "BitsPerSample": 8,
+    "Observation": {
+      "Type": "Duration",
+      "BeginTime": "not applicable",
+      "EndTime": "not applicable",
+      "Duration": "24 hr"
+    },
+    "GPS": {
+      "Type": "auto",
+      "Latitude": [],
+      "Longitude": [],
+      "RevisitTime": 60
+    },
+    "Band": [
+      {
+        "ID": 1,
+        "Description": "Faixa 1 de 2 (C Esquerda)",
+        "ObservationSamples": 3600,
+        "FreqStart": 3.625E+9,
+        "FreqStop": 4.2E+9,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 2,
+        "Description": "Faixa 2 de 2 (C Direita)",
+        "ObservationSamples": 3600,
+        "FreqStart": 3.625E+9,
+        "FreqStop": 4.2E+9,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      }
+    ]
+  },
+  {
+    "Name": "PMSAT 2024 - Coleta Ku",
+    "BitsPerSample": 8,
+    "Observation": {
+      "Type": "Duration",
+      "BeginTime": "not applicable",
+      "EndTime": "not applicable",
+      "Duration": "24 hr"
+    },
+    "GPS": {
+      "Type": "auto",
+      "Latitude": [],
+      "Longitude": [],
+      "RevisitTime": 60
+    },
+    "Band": [
+      {
+        "ID": 1,
+        "Description": "Faixa 1 de 4 (OSC_baixa Ku Horizontal)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.07E+10,
+        "FreqStop": 1.17E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 2,
+        "Description": "Faixa 2 de 4 (OSC_alta Ku Horizontal)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.17E+10,
+        "FreqStop": 1.275E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 3,
+        "Description": "Faixa 3 de 4 (OSC_baixa Ku Vertical)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.07E+10,
+        "FreqStop": 1.17E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 4,
+        "Description": "Faixa 4 de 4 (OSC_alta Ku Vertical)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.17E+10,
+        "FreqStop": 1.275E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      }
+    ]
+  },
+  {
+    "Name": "PMSAT 2024 - Coleta Ka",
+    "BitsPerSample": 8,
+    "Observation": {
+      "Type": "Duration",
+      "BeginTime": "not applicable",
+      "EndTime": "not applicable",
+      "Duration": "24 hr"
+    },
+    "GPS": {
+      "Type": "auto",
+      "Latitude": [],
+      "Longitude": [],
+      "RevisitTime": 60
+    },
+    "Band": [
+      {
+        "ID": 1,
+        "Description": "Faixa 1 de 8 (OSC_1 Ka Circular Direita)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.77E+10,
+        "FreqStop": 1.82E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 2,
+        "Description": "Faixa 2 de 8 (OSC_2 Ka Circular Direita)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.82E+10,
+        "FreqStop": 1.92E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 3,
+        "Description": "Faixa 3 de 8 (OSC_3 Ka Circular Direita)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.92E+10,
+        "FreqStop": 2.02E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 4,
+        "Description": "Faixa 4 de 8 (OSC_4 Ka Circular Direita)",
+        "ObservationSamples": 3600,
+        "FreqStart": 2.02E+10,
+        "FreqStop": 2.12E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 5,
+        "Description": "Faixa 5 de 8 (OSC_1 Ka Circular Esquerda)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.77E+10,
+        "FreqStop": 1.82E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 6,
+        "Description": "Faixa 6 de 8 (OSC_2 Ka Circular Esquerda)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.82E+10,
+        "FreqStop": 1.92E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 7,
+        "Description": "Faixa 7 de 8 (OSC_3 Ka Circular Esquerda)",
+        "ObservationSamples": 3600,
+        "FreqStart": 1.92E+10,
+        "FreqStop": 2.02E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 8,
+        "Description": "Faixa 8 de 8 (OSC_4 Ka Circular Esquerda)",
+        "ObservationSamples": 3600,
+        "FreqStart": 2.02E+10,
+        "FreqStop": 2.12E+10,
+        "StepWidth": 10000,
+        "Resolution": 10000,
+        "VBW": "RBW/100",
+        "RFMode": "High Sensitivity",
+        "TraceMode": "ClearWrite",
+        "Detector": "Positive Peak",
+        "LevelUnit": "dBm",
+        "RevisitTime": 24,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 0,
+          "FindPeaks": {
+            "nSweeps": 10,
+            "Prominence": 30,
+            "Distance": 25,
+            "BW": 10
+          }
+        },
+        "Enable": 1
+      }
+    ]
+  },
+  {
     "Name": "Eventos UTE (Itinerant Station)",
     "BitsPerSample": 8,
     "Observation": {
@@ -1822,268 +2461,13 @@
     ]
   },
   {
-    "Name": "MSAT_HOM_1",
-    "BitsPerSample": 8,
-    "Observation": {
-      "Type": "Samples",
-      "BeginTime": "not applicable",
-      "EndTime": "not applicable",
-      "Duration": "not applicable"
-    },
-    "GPS": {
-      "Type": "manual",
-      "Latitude": -22.8250942,
-      "Longitude": -43.1785755,
-      "RevisitTime": []
-    },
-    "Band": [
-      {
-        "ID": 1,
-        "Description": "Faixa 1 de 4 (MCL-1 H)",
-        "ObservationSamples": 3600,
-        "FreqStart": 3.625E+9,
-        "FreqStop": 4.2E+9,
-        "StepWidth": 10000,
-        "Resolution": 10000,
-        "VBW": "RBW/100",
-        "RFMode": "High Sensitivity",
-        "TraceMode": "ClearWrite",
-        "Detector": "Average/RMS",
-        "LevelUnit": "dBm",
-        "RevisitTime": 0.001,
-        "IntegrationFactor": 1,
-        "MaskTrigger": {
-          "Status": 1,
-          "FindPeaks": {
-            "nSweeps": 10,
-            "Prominence": 30,
-            "Distance": 25,
-            "BW": 10
-          }
-        },
-        "Enable": 1
-      },
-      {
-        "ID": 2,
-        "Description": "Faixa 2 de 4 (MCL-1 V)",
-        "ObservationSamples": 3600,
-        "FreqStart": 3.625E+9,
-        "FreqStop": 4.2E+9,
-        "StepWidth": 10000,
-        "Resolution": 10000,
-        "VBW": "RBW/100",
-        "RFMode": "High Sensitivity",
-        "TraceMode": "ClearWrite",
-        "Detector": "Average/RMS",
-        "LevelUnit": "dBm",
-        "RevisitTime": 0.001,
-        "IntegrationFactor": 1,
-        "MaskTrigger": {
-          "Status": 1,
-          "FindPeaks": {
-            "nSweeps": 10,
-            "Prominence": 30,
-            "Distance": 25,
-            "BW": 10
-          }
-        },
-        "Enable": 1
-      },
-      {
-        "ID": 3,
-        "Description": "Faixa 3 de 4 (MKU-2 LO_H)",
-        "ObservationSamples": 3600,
-        "FreqStart": 1.095E+10,
-        "FreqStop": 1.12E+10,
-        "StepWidth": 10000,
-        "Resolution": 10000,
-        "VBW": "RBW/100",
-        "RFMode": "High Sensitivity",
-        "TraceMode": "ClearWrite",
-        "Detector": "Average/RMS",
-        "LevelUnit": "dBm",
-        "RevisitTime": 0.001,
-        "IntegrationFactor": 1,
-        "MaskTrigger": {
-          "Status": 1,
-          "FindPeaks": {
-            "nSweeps": 10,
-            "Prominence": 30,
-            "Distance": 25,
-            "BW": 10
-          }
-        },
-        "Enable": 0
-      },
-      {
-        "ID": 4,
-        "Description": "Faixa 4 de 4 (MKU-2 HI_H)",
-        "ObservationSamples": 3600,
-        "FreqStart": 1.17E+10,
-        "FreqStop": 1.22E+10,
-        "StepWidth": 10000,
-        "Resolution": 10000,
-        "VBW": "RBW/100",
-        "RFMode": "High Sensitivity",
-        "TraceMode": "ClearWrite",
-        "Detector": "Average/RMS",
-        "LevelUnit": "dBm",
-        "RevisitTime": 0.001,
-        "IntegrationFactor": 1,
-        "MaskTrigger": {
-          "Status": 1,
-          "FindPeaks": {
-            "nSweeps": 10,
-            "Prominence": 30,
-            "Distance": 25,
-            "BW": 10
-          }
-        },
-        "Enable": 1
-      }
-    ]
-  },
-  {
-    "Name": "MSAT_HOM_2",
-    "BitsPerSample": 8,
-    "Observation": {
-      "Type": "Samples",
-      "BeginTime": "not applicable",
-      "EndTime": "not applicable",
-      "Duration": "not applicable"
-    },
-    "GPS": {
-      "Type": "manual",
-      "Latitude": -22.8250942,
-      "Longitude": -43.1785755,
-      "RevisitTime": []
-    },
-    "Band": [
-      {
-        "ID": 1,
-        "Description": "Faixa 1 de 3",
-        "ObservationSamples": 3600,
-        "FreqStart": 4.49E+9,
-        "FreqStop": 4.81E+9,
-        "StepWidth": 10000,
-        "Resolution": 10000,
-        "VBW": "RBW/100",
-        "RFMode": "Low Distortion",
-        "TraceMode": "Average",
-        "Detector": "Positive Peak",
-        "LevelUnit": "dBm",
-        "RevisitTime": 10,
-        "IntegrationFactor": 3,
-        "MaskTrigger": {
-          "Status": 1,
-          "FindPeaks": {
-            "nSweeps": 10,
-            "Prominence": 30,
-            "Distance": 25,
-            "BW": 10
-          }
-        },
-        "Enable": 1
-      },
-      {
-        "ID": 2,
-        "Description": "Faixa 2 de 3",
-        "ObservationSamples": 3600,
-        "FreqStart": 1.12E+10,
-        "FreqStop": 1.144E+10,
-        "StepWidth": 10000,
-        "Resolution": 10000,
-        "VBW": "RBW/100",
-        "RFMode": "Low Distortion",
-        "TraceMode": "Average",
-        "Detector": "Positive Peak",
-        "LevelUnit": "dBm",
-        "RevisitTime": 10,
-        "IntegrationFactor": 3,
-        "MaskTrigger": {
-          "Status": 1,
-          "FindPeaks": {
-            "nSweeps": 10,
-            "Prominence": 30,
-            "Distance": 25,
-            "BW": 10
-          }
-        },
-        "Enable": 1
-      },
-      {
-        "ID": 3,
-        "Description": "Faixa 3 de 3",
-        "ObservationSamples": 3600,
-        "FreqStart": 1.144E+10,
-        "FreqStop": 1.17E+10,
-        "StepWidth": 10000,
-        "Resolution": 10000,
-        "VBW": "RBW/100",
-        "RFMode": "Low Distortion",
-        "TraceMode": "Average",
-        "Detector": "Positive Peak",
-        "LevelUnit": "dBm",
-        "RevisitTime": 10,
-        "IntegrationFactor": 3,
-        "MaskTrigger": {
-          "Status": 1,
-          "FindPeaks": {
-            "nSweeps": 10,
-            "Prominence": 30,
-            "Distance": 25,
-            "BW": 10
-          }
-        },
-        "Enable": 1
-      }
-    ]
-  },
-  {
-    "Name": "EM500_LevelAzimuthTask_HOM_1",
+    "Name": "Eventos UTE (COP30)",
     "BitsPerSample": 8,
     "Observation": {
       "Type": "Duration",
       "BeginTime": "not applicable",
       "EndTime": "not applicable",
-      "Duration": "10 min"
-    },
-    "GPS": {
-      "Type": "auto",
-      "Latitude": [],
-      "Longitude": [],
-      "RevisitTime": 10
-    },
-    "Band": {
-      "ID": 1,
-      "Description": "Faixa 1 de 3",
-      "ObservationSamples": -1,
-      "FreqStart": 8.8E+7,
-      "FreqStop": 1.08E+8,
-      "StepWidth": 6250,
-      "Resolution": 30000,
-      "VBW": "RBW/10",
-      "RFMode": "Low Distortion",
-      "TraceMode": "ClearWrite",
-      "Detector": "Sample",
-      "LevelUnit": "dBm",
-      "RevisitTime": 0.1,
-      "IntegrationFactor": 1,
-      "MaskTrigger": {
-        "Status": 2,
-        "FindPeaks": []
-      },
-      "Enable": 1
-    }
-  },
-  {
-    "Name": "EM500_LevelAzimuthTask_HOM_2",
-    "BitsPerSample": 8,
-    "Observation": {
-      "Type": "Duration",
-      "BeginTime": "not applicable",
-      "EndTime": "not applicable",
-      "Duration": "10 min"
+      "Duration": "8 hr"
     },
     "GPS": {
       "Type": "auto",
@@ -2094,39 +2478,39 @@
     "Band": [
       {
         "ID": 1,
-        "Description": "Faixa 1 de 3",
+        "Description": "Faixa UTE (1 de 23)",
         "ObservationSamples": -1,
-        "FreqStart": 8.8E+7,
-        "FreqStop": 1.08E+8,
-        "StepWidth": 10000,
+        "FreqStart": 1.52E+8,
+        "FreqStop": 1.56E+8,
+        "StepWidth": 25000,
         "Resolution": 30000,
-        "VBW": "RBW/10",
-        "RFMode": "Low Distortion",
-        "TraceMode": "ClearWrite",
-        "Detector": "Sample",
-        "LevelUnit": "dBm",
-        "RevisitTime": 0.1,
-        "IntegrationFactor": 1,
-        "MaskTrigger": {
-          "Status": 2,
-          "FindPeaks": []
-        },
-        "Enable": 1
-      },
-      {
-        "ID": 2,
-        "Description": "Faixa 2 de 3",
-        "ObservationSamples": -1,
-        "FreqStart": 1.27E+8,
-        "FreqStop": 1.37E+8,
-        "StepWidth": 12500,
-        "Resolution": 30000,
-        "VBW": "RBW",
+        "VBW": "auto",
         "RFMode": "Normal",
         "TraceMode": "ClearWrite",
         "Detector": "Average/RMS",
         "LevelUnit": "dBm",
-        "RevisitTime": 0.1,
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 2,
+        "Description": "Faixa UTE (2 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.61E+8,
+        "FreqStop": 1.65E+8,
+        "StepWidth": 25000,
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
         "IntegrationFactor": 1,
         "MaskTrigger": {
           "Status": 2,
@@ -2136,21 +2520,942 @@
       },
       {
         "ID": 3,
-        "Description": "Faixa 3 de 3",
+        "Description": "Faixa UTE + Faixa de Proteção Serviços Públicos (3 de 23)",
         "ObservationSamples": -1,
-        "FreqStart": 4.5E+8,
-        "FreqStop": 4.55E+8,
+        "FreqStart": 3.78E+8,
+        "FreqStop": 3.95E+8,
         "StepWidth": 25000,
-        "Resolution": 100000,
-        "VBW": "RBW/10",
-        "RFMode": "High Sensitivity",
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
         "TraceMode": "ClearWrite",
-        "Detector": "Positive Peak",
+        "Detector": "Average/RMS",
         "LevelUnit": "dBm",
-        "RevisitTime": 0.1,
+        "RevisitTime": 1,
         "IntegrationFactor": 1,
         "MaskTrigger": {
-          "Status": 0,
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 4,
+        "Description": "Faixa UTE (4 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 4.5E+8,
+        "FreqStop": 4.7E+8,
+        "StepWidth": 25000,
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 5,
+        "Description": "Faixa UTE (5 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 4.7E+8,
+        "FreqStop": 6.98E+8,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 6,
+        "Description": "Faixa de Proteção SMP (6 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 7.03E+8,
+        "FreqStop": 8.03E+8,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 7,
+        "Description": "Faixa de Proteção Serviços Públicos (7 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 8.09E+8,
+        "FreqStop": 8.19E+8,
+        "StepWidth": 25000,
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 8,
+        "Description": "Faixa de Proteção SMP (8 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 8.24E+8,
+        "FreqStop": 9.15E+8,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 9,
+        "Description": "Faixa de Proteção SMP (9 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 9.43E+8,
+        "FreqStop": 9.6E+8,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 10,
+        "Description": "Faixa de Proteção SMP (10 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.71E+9,
+        "FreqStop": 1.785E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 11,
+        "Description": "Faixa de Proteção SMP (11 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.805E+9,
+        "FreqStop": 1.895E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 12,
+        "Description": "Faixa de Proteção SMP (12 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.92E+9,
+        "FreqStop": 1.98E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 13,
+        "Description": "Faixa UTE (13 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.025E+9,
+        "FreqStop": 2.11E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 14,
+        "Description": "Faixa de Proteção SMP (14 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.11E+9,
+        "FreqStop": 2.17E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 15,
+        "Description": "Faixa UTE (15 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.2E+9,
+        "FreqStop": 2.3E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 16,
+        "Description": "Faixa de Proteção SMP (16 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.3E+9,
+        "FreqStop": 2.39E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 17,
+        "Description": "Faixa de Proteção SMP (17 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.5E+9,
+        "FreqStop": 2.57E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 18,
+        "Description": "Faixa de Proteção SMP (18 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.69E+9,
+        "FreqStop": 2.9E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 19,
+        "Description": "Faixa de Proteção Serviços Públicos (19 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 4.91E+9,
+        "FreqStop": 4.99E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 20,
+        "Description": "Radios FM (Faixa 20 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 7.6E+7,
+        "FreqStop": 1.08E+8,
+        "StepWidth": 25000,
+        "Resolution": 50000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 60,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 21,
+        "Description": "SMA (Faixa 21 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.08E+8,
+        "FreqStop": 1.37E+8,
+        "StepWidth": 12500,
+        "Resolution": 25000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 22,
+        "Description": "GNSS (Faixa 22 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 9.6E+8,
+        "FreqStop": 1.427E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 23,
+        "Description": "GNSS (Faixa 23 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.53E+9,
+        "FreqStop": 1.647E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 5,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      }
+    ]
+  },
+  {
+    "Name": "Eventos UTE (COP30) (Drive-Test)",
+    "BitsPerSample": 8,
+    "Observation": {
+      "Type": "Duration",
+      "BeginTime": "not applicable",
+      "EndTime": "not applicable",
+      "Duration": "2 hr"
+    },
+    "GPS": {
+      "Type": "auto",
+      "Latitude": [],
+      "Longitude": [],
+      "RevisitTime": 1
+    },
+    "Band": [
+      {
+        "ID": 1,
+        "Description": "Faixa UTE (1 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.52E+8,
+        "FreqStop": 1.56E+8,
+        "StepWidth": 25000,
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 2,
+        "Description": "Faixa UTE (2 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.61E+8,
+        "FreqStop": 1.65E+8,
+        "StepWidth": 25000,
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 3,
+        "Description": "Faixa UTE + Faixa de Proteção Serviços Públicos (3 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 3.78E+8,
+        "FreqStop": 3.95E+8,
+        "StepWidth": 25000,
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 4,
+        "Description": "Faixa UTE (4 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 4.5E+8,
+        "FreqStop": 4.7E+8,
+        "StepWidth": 25000,
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 5,
+        "Description": "Faixa UTE (5 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 4.7E+8,
+        "FreqStop": 6.98E+8,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 6,
+        "Description": "Faixa de Proteção SMP (6 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 7.03E+8,
+        "FreqStop": 8.03E+8,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 7,
+        "Description": "Faixa de Proteção Serviços Públicos (7 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 8.09E+8,
+        "FreqStop": 8.19E+8,
+        "StepWidth": 25000,
+        "Resolution": 30000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 8,
+        "Description": "Faixa de Proteção SMP (8 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 8.24E+8,
+        "FreqStop": 9.15E+8,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 9,
+        "Description": "Faixa de Proteção SMP (9 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 9.43E+8,
+        "FreqStop": 9.6E+8,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 10,
+        "Description": "Faixa de Proteção SMP (10 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.71E+9,
+        "FreqStop": 1.785E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 11,
+        "Description": "Faixa de Proteção SMP (11 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.805E+9,
+        "FreqStop": 1.895E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 12,
+        "Description": "Faixa de Proteção SMP (12 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.92E+9,
+        "FreqStop": 1.98E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 13,
+        "Description": "Faixa UTE (13 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.025E+9,
+        "FreqStop": 2.11E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 14,
+        "Description": "Faixa de Proteção SMP (14 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.11E+9,
+        "FreqStop": 2.17E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 15,
+        "Description": "Faixa UTE (15 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.2E+9,
+        "FreqStop": 2.3E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 16,
+        "Description": "Faixa de Proteção SMP (16 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.3E+9,
+        "FreqStop": 2.39E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 17,
+        "Description": "Faixa de Proteção SMP (17 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.5E+9,
+        "FreqStop": 2.57E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 18,
+        "Description": "Faixa de Proteção SMP (18 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 2.69E+9,
+        "FreqStop": 2.9E+9,
+        "StepWidth": 100000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 19,
+        "Description": "Faixa de Proteção Serviços Públicos (19 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 4.91E+9,
+        "FreqStop": 4.99E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 20,
+        "Description": "Radios FM (Faixa 20 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 7.6E+7,
+        "FreqStop": 1.08E+8,
+        "StepWidth": 25000,
+        "Resolution": 50000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 21,
+        "Description": "SMA (Faixa 21 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.08E+8,
+        "FreqStop": 1.37E+8,
+        "StepWidth": 12500,
+        "Resolution": 25000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 22,
+        "Description": "GNSS (Faixa 22 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 9.6E+8,
+        "FreqStop": 1.427E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
+          "FindPeaks": []
+        },
+        "Enable": 1
+      },
+      {
+        "ID": 23,
+        "Description": "GNSS (Faixa 23 de 23)",
+        "ObservationSamples": -1,
+        "FreqStart": 1.53E+9,
+        "FreqStop": 1.647E+9,
+        "StepWidth": 50000,
+        "Resolution": 100000,
+        "VBW": "auto",
+        "RFMode": "Normal",
+        "TraceMode": "ClearWrite",
+        "Detector": "Average/RMS",
+        "LevelUnit": "dBm",
+        "RevisitTime": 1,
+        "IntegrationFactor": 1,
+        "MaskTrigger": {
+          "Status": 2,
           "FindPeaks": []
         },
         "Enable": 1

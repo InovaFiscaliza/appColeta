@@ -241,11 +241,11 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
 
             TreeBuilding(app, [])
+            focus(app.Tree)
         end
 
         %-----------------------------------------------------------------%
         function TreeBuilding(app, SelectedNode)
-
             if ~isempty(app.Tree.Children)
                 delete(app.Tree.Children)
             end
@@ -267,7 +267,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     idx2 = SelectedNode(2);
                 else
                     idx1 = 1;
-                    idx2 = 1;
+                    idx2 = -1;
                 end
                 
                 if idx2 == -1
@@ -541,9 +541,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             
             idx1 = app.Tree.SelectedNodes.NodeData;
             
-            collapse(app.Tree)
-            expand(app.Tree.Children(idx1))
-
+            if exist('event', 'var') && ~isequal(event.SelectedNodes.NodeData, event.PreviousSelectedNodes.NodeData)
+                collapse(app.Tree)
+                expand(app.Tree.Children(idx1))
+            end
 
             % Painel "ASPECTOS GERAIS"
             app.Name.Value            = app.editedList(idx1).Name;
@@ -1783,6 +1784,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Status = uidropdown(app.BandSpecificInfo_Grid);
             app.Status.Items = {'ON', 'OFF'};
             app.Status.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
+            app.Status.Enable = 'off';
             app.Status.FontSize = 11;
             app.Status.BackgroundColor = [0.9412 0.9412 0.9412];
             app.Status.Layout.Row = 2;
@@ -1802,6 +1804,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.MaskTrigger = uidropdown(app.BandSpecificInfo_Grid);
             app.MaskTrigger.Items = {'OFF', 'ON - Apenas afere rompimento', 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)', 'ON - Afere rompimento e salva em arquivo'};
             app.MaskTrigger.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
+            app.MaskTrigger.Enable = 'off';
             app.MaskTrigger.FontSize = 11;
             app.MaskTrigger.BackgroundColor = [0.9412 0.9412 0.9412];
             app.MaskTrigger.Layout.Row = 2;
@@ -1823,6 +1826,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.ID.ValueDisplayFormat = '%.0f';
             app.ID.Editable = 'off';
             app.ID.FontSize = 11;
+            app.ID.Enable = 'off';
             app.ID.Layout.Row = 4;
             app.ID.Layout.Column = 1;
             app.ID.Value = 1;
@@ -1840,6 +1844,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Description.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.Description.Editable = 'off';
             app.Description.FontSize = 11;
+            app.Description.Enable = 'off';
             app.Description.Layout.Row = 4;
             app.Description.Layout.Column = [2 3];
 
@@ -1880,6 +1885,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FreqStart.Editable = 'off';
             app.FreqStart.HorizontalAlignment = 'left';
             app.FreqStart.FontSize = 11;
+            app.FreqStart.Enable = 'off';
             app.FreqStart.Layout.Row = 6;
             app.FreqStart.Layout.Column = 1;
             app.FreqStart.Value = 108;
@@ -1900,6 +1906,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FreqStop.Editable = 'off';
             app.FreqStop.HorizontalAlignment = 'left';
             app.FreqStop.FontSize = 11;
+            app.FreqStop.Enable = 'off';
             app.FreqStop.Layout.Row = 6;
             app.FreqStop.Layout.Column = 2;
             app.FreqStop.Value = 108;
@@ -1919,6 +1926,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.StepWidth.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.StepWidth.Editable = 'off';
             app.StepWidth.FontSize = 11;
+            app.StepWidth.Enable = 'off';
             app.StepWidth.Layout.Row = 6;
             app.StepWidth.Layout.Column = 3;
             app.StepWidth.Value = 1;
@@ -1938,6 +1946,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Resolution.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.Resolution.Editable = 'off';
             app.Resolution.FontSize = 11;
+            app.Resolution.Enable = 'off';
             app.Resolution.Layout.Row = 6;
             app.Resolution.Layout.Column = 4;
             app.Resolution.Value = 1;
@@ -1954,6 +1963,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TraceMode = uidropdown(app.BandSpecificInfo_Grid);
             app.TraceMode.Items = {'ClearWrite', 'Average', 'MaxHold', 'MinHold'};
             app.TraceMode.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
+            app.TraceMode.Enable = 'off';
             app.TraceMode.FontSize = 11;
             app.TraceMode.BackgroundColor = [1 1 1];
             app.TraceMode.Layout.Row = 8;
@@ -1976,6 +1986,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.IntegrationFactor.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.IntegrationFactor.Editable = 'off';
             app.IntegrationFactor.FontSize = 11;
+            app.IntegrationFactor.Enable = 'off';
             app.IntegrationFactor.Layout.Row = 8;
             app.IntegrationFactor.Layout.Column = 2;
             app.IntegrationFactor.Value = 1;
@@ -1992,6 +2003,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.RFMode = uidropdown(app.BandSpecificInfo_Grid);
             app.RFMode.Items = {'High Sensitivity', 'Low Distortion', 'Normal'};
             app.RFMode.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
+            app.RFMode.Enable = 'off';
             app.RFMode.FontSize = 11;
             app.RFMode.BackgroundColor = [1 1 1];
             app.RFMode.Layout.Row = 8;
@@ -2010,6 +2022,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.VBW = uidropdown(app.BandSpecificInfo_Grid);
             app.VBW.Items = {'auto', 'RBW', 'RBW/10', 'RBW/100'};
             app.VBW.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
+            app.VBW.Enable = 'off';
             app.VBW.FontSize = 11;
             app.VBW.BackgroundColor = [1 1 1];
             app.VBW.Layout.Row = 8;
@@ -2028,6 +2041,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Detector = uidropdown(app.BandSpecificInfo_Grid);
             app.Detector.Items = {'Sample', 'Average/RMS', 'Positive Peak', 'Negative Peak'};
             app.Detector.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
+            app.Detector.Enable = 'off';
             app.Detector.FontSize = 11;
             app.Detector.BackgroundColor = [1 1 1];
             app.Detector.Layout.Row = 10;
@@ -2046,6 +2060,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.LevelUnit = uidropdown(app.BandSpecificInfo_Grid);
             app.LevelUnit.Items = {'dBm', 'dBµV'};
             app.LevelUnit.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
+            app.LevelUnit.Enable = 'off';
             app.LevelUnit.FontSize = 11;
             app.LevelUnit.BackgroundColor = [1 1 1];
             app.LevelUnit.Layout.Row = 10;
@@ -2067,6 +2082,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.RevisitTime.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.RevisitTime.Editable = 'off';
             app.RevisitTime.FontSize = 11;
+            app.RevisitTime.Enable = 'off';
             app.RevisitTime.Layout.Row = 10;
             app.RevisitTime.Layout.Column = 4;
             app.RevisitTime.Value = 1;
@@ -2103,6 +2119,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_Type = uidropdown(app.FindPeaks_Grid);
             app.FindPeaks_Type.Items = {'Valores padrão (appColeta)', 'Valores customizados'};
             app.FindPeaks_Type.ValueChangedFcn = createCallbackFcn(app, @FindPeaksDropDownValueChanged, true);
+            app.FindPeaks_Type.Enable = 'off';
             app.FindPeaks_Type.FontSize = 11;
             app.FindPeaks_Type.BackgroundColor = [1 1 1];
             app.FindPeaks_Type.Layout.Row = 1;
@@ -2122,6 +2139,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_nSweeps.Limits = [1 100];
             app.FindPeaks_nSweeps.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.FindPeaks_nSweeps.FontSize = 11;
+            app.FindPeaks_nSweeps.Enable = 'off';
             app.FindPeaks_nSweeps.Layout.Row = 3;
             app.FindPeaks_nSweeps.Layout.Column = 1;
             app.FindPeaks_nSweeps.Value = 10;
@@ -2143,6 +2161,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_Prominence.ValueDisplayFormat = '%.0f';
             app.FindPeaks_Prominence.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.FindPeaks_Prominence.FontSize = 11;
+            app.FindPeaks_Prominence.Enable = 'off';
             app.FindPeaks_Prominence.Layout.Row = 3;
             app.FindPeaks_Prominence.Layout.Column = 2;
             app.FindPeaks_Prominence.Value = 30;
@@ -2164,6 +2183,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_Distance.ValueDisplayFormat = '%.0f';
             app.FindPeaks_Distance.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.FindPeaks_Distance.FontSize = 11;
+            app.FindPeaks_Distance.Enable = 'off';
             app.FindPeaks_Distance.Layout.Row = 3;
             app.FindPeaks_Distance.Layout.Column = 3;
             app.FindPeaks_Distance.Value = 25;
@@ -2185,6 +2205,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_BW.ValueDisplayFormat = '%.0f';
             app.FindPeaks_BW.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.FindPeaks_BW.FontSize = 11;
+            app.FindPeaks_BW.Enable = 'off';
             app.FindPeaks_BW.Layout.Row = 3;
             app.FindPeaks_BW.Layout.Column = 4;
             app.FindPeaks_BW.Value = 10;
