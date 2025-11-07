@@ -407,8 +407,16 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 for kk = 1:numel(antennaList)
                     antennaMetaData = antennaList(kk);
 
-                    if ismember(antennaMetaData.Name, app.AntennaName.Items)
-                        app.AntennaName.Value = antennaMetaData.Name;
+                    % add new value
+                    switch app.AntennaSwitch_Name.Value
+                        case 'EMSat'; antennaNameList = extractBefore(app.AntennaName.Items, ' ');
+                        otherwise;    antennaNameList = app.AntennaName.Items;
+                    end
+
+                    [~, antennaIndex] = ismember(antennaMetaData.Name, antennaNameList);
+
+                    if antennaIndex
+                        app.AntennaName.Value = app.AntennaName.Items{antennaIndex};
                         AntennaNameValueChanged(app)
 
                         app.Antenna_TrackingMode.Value = antennaMetaData.TrackingMode;
@@ -1687,10 +1695,12 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         set(app.AntennaName,     'Enable', 0, 'Items', app.switchList.Antennas{idxSwitch})
                         set(app.Band_TargetList, 'Items', [{''}, app.targetList], 'Value', '')
 
-                        if ismember(app.taskList(idxTask).Band(idxBand).instrTarget, app.Band_TargetList.Items)
-                            app.Band_TargetList.Value = app.taskList(idxTask).Band(idxBand).instrTarget;
+                        if isfield(app.taskList(idxTask).Band(idxBand), 'instrTarget')
+                            if ismember(app.taskList(idxTask).Band(idxBand).instrTarget, app.Band_TargetList.Items)
+                                app.Band_TargetList.Value = app.taskList(idxTask).Band(idxBand).instrTarget;
+                            end
+                            BandView_SatelliteList(app)
                         end
-                        BandView_SatelliteList(app)
 
                     case 'ERMx'
                         set(app.AntennaName,     'Enable', 0, 'Items', app.switchList.Antennas{idxSwitch})
@@ -1699,7 +1709,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         app.Band_TargetListRefresh.Enable = 0;
                 end
 
-                if ismember(app.taskList(idxTask).Band(idxBand).instrAntenna, app.Band_Antenna.Items)
+                if isfield(app.taskList(idxTask).Band(idxBand), 'instrAntenna') && ismember(app.taskList(idxTask).Band(idxBand).instrAntenna, app.Band_Antenna.Items)
                     app.Band_Antenna.Value = app.taskList(idxTask).Band(idxBand).instrAntenna;
                 end
 

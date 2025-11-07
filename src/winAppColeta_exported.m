@@ -1562,6 +1562,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 app.Table.Data      = tempTable;
                 app.Table.Selection = max([1, idx]);
                 app.Table.UserData  = app.Table.Selection;
+                pause(.100)
         
                 app.tool_ButtonPlay.Enable = 1;
                 app.tool_ButtonDel.Enable  = 1;
