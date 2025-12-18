@@ -171,7 +171,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 app.progressDialog = app.mainApp.progressDialog;
             else
                 sendEventToHTMLSource(app.jsBackDoor, 'startup', app.mainApp.executionMode);
-                app.progressDialog = ccTools.ProgressDialog(app.jsBackDoor);
+                app.progressDialog = ui.ProgressDialog(app.jsBackDoor);
             end
 
             appName = class(app);
@@ -204,7 +204,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function startup_timerFcn(app)
-            if ccTools.fcn.UIFigureRenderStatus(app.UIFigure)
+            if ui.FigureRenderStatus(app.UIFigure)
                 stop(app.timerObj)
                 delete(app.timerObj)
 
