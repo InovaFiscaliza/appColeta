@@ -181,6 +181,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             end
 
                             closeModule(app.tabGroupController, ["INSTRUMENT", "TASK:EDIT", "TASK:ADD", "SERVER", "CONFIG"], app.General)
+
+                            if ~isempty(app.popupContainer)
+                                delete(app.popupContainer)
+                            end
     
                             if ~isempty(app.AppInfo.Tag)
                                 app.AppInfo.Tag = '';
