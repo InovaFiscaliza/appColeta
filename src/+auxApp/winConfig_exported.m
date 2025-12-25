@@ -300,6 +300,21 @@ classdef winConfig_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
+        function status = IPv4Validation(app, ipAddress)
+            status   = true;
+            ipString = regexp(ipAddress, '\d*[.]{1}\d{1,3}[.]{1}\d{1,3}[.]{1}\d*', 'match');
+            
+            if isempty(ipString)
+                status = false;
+            else
+                ipArray = cellfun(@(x) str2double(x), strsplit(char(ipString), '.'));
+                if any(ipArray > 255) || any(isnan(ipArray))
+                    status = false;
+                end                    
+            end
+        end
+
+        %-----------------------------------------------------------------%
         function saveGeneralSettings(app)
             appEngine.util.generalSettingsSave(class.Constants.appName, app.mainApp.rootFolder, app.mainApp.General_I, app.mainApp.executionMode)
         end

@@ -143,19 +143,19 @@ classdef (Abstract) axesInteractivity
             end
 
             for jj = 1:numel(interaction2Customize)
-                [~, hInteraction] = plot.axes.Interactivity.FindInteractionObject(hAxes, 'Toolbar', interaction2Customize{jj});
+                [~, hInteraction] = plot.axesInteractivity.FindInteractionObject(hAxes, 'Toolbar', interaction2Customize{jj});
 
                 if ~isempty(hInteraction)
                     switch interaction2Customize{jj}
                         case 'pan'
                             if isprop(hInteraction, 'ValueChangedFcn')
-                                hInteraction.ValueChangedFcn = @(~, evt)plot.axes.Interactivity.CustomPanFcn(evt, hAxes, hRelatedAxes);
+                                hInteraction.ValueChangedFcn = @(~, evt)plot.axesInteractivity.CustomPanFcn(evt, hAxes, hRelatedAxes);
                             end
         
                         case 'restoreview'
                             if isprop(hInteraction, 'ButtonPushedFcn')
                                 callingApp = varargin{1};
-                                hInteraction.ButtonPushedFcn = @(~, ~)plot.axes.Interactivity.CustomRestoreViewFcn(hAxes, hRelatedAxes, callingApp);
+                                hInteraction.ButtonPushedFcn = @(~, ~)plot.axesInteractivity.CustomRestoreViewFcn(hAxes, hRelatedAxes, callingApp);
                             end
                     end
                 end
@@ -194,7 +194,7 @@ classdef (Abstract) axesInteractivity
             for ii = 1:numel(hMultiAxes)
                 try
                     if evt.Value
-                        idx = plot.axes.Interactivity.FindInteractionObject(hMultiAxes(ii), 'Interaction', 'matlab.graphics.interaction.interactions.RegionZoomInteraction');
+                        idx = plot.axesInteractivity.FindInteractionObject(hMultiAxes(ii), 'Interaction', 'matlab.graphics.interaction.interactions.RegionZoomInteraction');
                         if ~isempty(idx)
                             hMultiAxes(ii).Interactions(idx) = panInteraction;
                         else
@@ -206,7 +206,7 @@ classdef (Abstract) axesInteractivity
                         end
     
                     else
-                        idx = plot.axes.Interactivity.FindInteractionObject(hMultiAxes(ii), 'Interaction', 'matlab.graphics.interaction.interactions.PanInteraction');
+                        idx = plot.axesInteractivity.FindInteractionObject(hMultiAxes(ii), 'Interaction', 'matlab.graphics.interaction.interactions.PanInteraction');
                         if ~isempty(idx)
                             hMultiAxes(ii).Interactions(idx) = regionZoomInteraction;
                         else
@@ -222,7 +222,7 @@ classdef (Abstract) axesInteractivity
                 end
             end
 
-            plot.axes.Interactivity.DefaultEnable(hMultiAxes)
+            plot.axesInteractivity.DefaultEnable(hMultiAxes)
         end
 
         %-----------------------------------------------------------------%
@@ -261,9 +261,9 @@ classdef (Abstract) axesInteractivity
 
             switch(event.EventName)
                 case 'MovingROI'
-                    plot.axes.Interactivity.DefaultDisable(hMultiAxes)
+                    plot.axesInteractivity.DefaultDisable(hMultiAxes)
                 case 'ROIMoved'
-                    plot.axes.Interactivity.DefaultEnable(hMultiAxes)
+                    plot.axesInteractivity.DefaultEnable(hMultiAxes)
                     CustomFcnHandle()
             end
         end
@@ -278,7 +278,7 @@ classdef (Abstract) axesInteractivity
         
             % addlistener(hROI, 'MovingROI', @ROICallback);
             % addlistener(hROI, 'ROIMoved',  @ROICallback);
-            % addlistener(hROI, 'ObjectBeingDestroyed', @(src, ~)plot.axes.Interactivity.DeleteListeners(src));
+            % addlistener(hROI, 'ObjectBeingDestroyed', @(src, ~)plot.axesInteractivity.DeleteListeners(src));
 
             try
                 listenersList = struct(hROI).AutoListeners__;

@@ -358,7 +358,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             try
                 if timeFlag
-                    eror('timeFlag')
+                    error('timeFlag')
                 end
 
                 app.SpecificTime_Spinner1.Value = hour(BeginTime);
