@@ -4,22 +4,20 @@ classdef winAppColeta_exported < matlab.apps.AppBase
     properties (Access = public)
         UIFigure               matlab.ui.Figure
         GridLayout             matlab.ui.container.GridLayout
-        popupContainerGrid     matlab.ui.container.GridLayout
-        SplashScreen           matlab.ui.control.Image
-        menu_Grid              matlab.ui.container.GridLayout
-        FigurePosition         matlab.ui.control.Image
+        NavBar                 matlab.ui.container.GridLayout
         AppInfo                matlab.ui.control.Image
-        menu_AppIcon           matlab.ui.control.Image
-        menu_AppName           matlab.ui.control.Label
+        FigurePosition         matlab.ui.control.Image
         jsBackDoor             matlab.ui.control.HTML
-        menu_Button6           matlab.ui.control.StateButton
-        menu_Button5           matlab.ui.control.StateButton
-        menu_Separator2        matlab.ui.control.Image
-        menu_Button4           matlab.ui.control.StateButton
-        menu_Button3           matlab.ui.control.StateButton
-        menu_Button2           matlab.ui.control.StateButton
-        menu_Separator1        matlab.ui.control.Image
-        menu_Button1           matlab.ui.control.StateButton
+        Tab6Button             matlab.ui.control.StateButton
+        Tab5Button             matlab.ui.control.StateButton
+        ButtonsSeparator2      matlab.ui.control.Image
+        Tab4Button             matlab.ui.control.StateButton
+        Tab3Button             matlab.ui.control.StateButton
+        Tab2Button             matlab.ui.control.StateButton
+        ButtonsSeparator1      matlab.ui.control.Image
+        Tab1Button             matlab.ui.control.StateButton
+        AppName                matlab.ui.control.Label
+        AppIcon                matlab.ui.control.Image
         TabGroup               matlab.ui.container.TabGroup
         Tab1_Task              matlab.ui.container.Tab
         Tab1Grid               matlab.ui.container.GridLayout
@@ -72,39 +70,25 @@ classdef winAppColeta_exported < matlab.apps.AppBase
     end
 
     
-    properties (Access = public)
+    properties (Access = private)
         %-----------------------------------------------------------------%
-        % PROPRIEDADES COMUNS A TODOS OS APPS
+        Role = 'mainApp'
+    end
+
+
+    properties (Access = public)
         %-----------------------------------------------------------------%
         General
         General_I
 
         rootFolder
-
-        % Essa propriedade registra o tipo de execução da aplicação, podendo
-        % ser: 'built-in', 'desktopApp' ou 'webApp'.
-        executionMode
-
-        % A função do timer é executada uma única vez após a renderização
-        % da figura, lendo arquivos de configuração, iniciando modo de operação
-        % paralelo etc. A ideia é deixar o MATLAB focar apenas na criação dos 
-        % componentes essenciais da GUI (especificados em "createComponents"), 
-        % mostrando a GUI para o usuário o mais rápido possível.
-        timerObj
-
-        % Controla a seleção da TabGroup a partir do menu.
         tabGroupController
         renderCount = 0
 
-        % Janela de progresso já criada no DOM. Dessa forma, controla-se 
-        % apenas a sua visibilidade - e tornando desnecessário criá-la a
-        % cada chamada (usando uiprogressdlg, por exemplo).
+        executionMode
         progressDialog
         popupContainer
 
-        %-----------------------------------------------------------------%
-        % PROPRIEDADES ESPECÍFICAS
-        %-----------------------------------------------------------------%
         specObj
         revisitObj
         timerObj_task
@@ -114,9 +98,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         Flag_editing = 0
         plotStyleEditing = 0
 
-        %-----------------------------------------------------------------%
-        % PLOT
-        %-----------------------------------------------------------------%
         axes1
         axes2
         restoreView = struct('ID', {}, 'xLim', {}, 'yLim', {}, 'cLim', {})
@@ -128,9 +109,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         peakExcursion
         surface_WFall
 
-        %-----------------------------------------------------------------%
-        % COMMUNICATION
-        %-----------------------------------------------------------------%
         tcpServer
         
         receiverObj
@@ -143,7 +121,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
     end
 
 
-    methods
+    methods (Access = public)
         %-----------------------------------------------------------------%
         % COMUNICAÇÃO ENTRE PROCESSOS:
         % • ipcMainJSEventsHandler
@@ -165,34 +143,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function ipcMainJSEventsHandler(app, event)
             try
                 switch event.HTMLEventName
-                    % JSBACKDOOR (compCustomization.js)
+                    % MATLAB-JS BRIDGE (matlabJSBridge.js)
                     case 'renderer'
+                        MFilePath   = fileparts(mfilename('fullpath'));
+                        parpoolFlag = false;
+
                         if ~app.renderCount
-                            startup_Controller(app)
+                            appEngine.activate(app, app.Role, MFilePath, parpoolFlag)
                         else
-                            % Esse fluxo será executado especificamente na
-                            % versão webapp, quando o navegador atualiza a
-                            % página (decorrente de F5 ou CTRL+F5).
-
-                            if ~app.menu_Button1.Value
-                                app.menu_Button1.Value = true;                    
-                                menu_mainButtonPushed(app, struct('Source', app.menu_Button1, 'PreviousValue', false))
-                                drawnow
-                            end
-
-                            closeModule(app.tabGroupController, ["INSTRUMENT", "TASK:EDIT", "TASK:ADD", "SERVER", "CONFIG"], app.General)
-
-                            if ~isempty(app.popupContainer)
-                                delete(app.popupContainer)
-                            end
-    
-                            if ~isempty(app.AppInfo.Tag)
-                                app.AppInfo.Tag = '';
-                            end
-
-                            startup_Controller(app)
-
-                            app.progressDialog.Visible = 'hidden';
+                            appEngine.beforeReload(app, app.Role)
+                            appEngine.activate(app, app.Role, MFilePath, parpoolFlag)
                         end
                         
                         app.renderCount = app.renderCount+1;
@@ -231,8 +191,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         file_ContextMenu_delTreeNodeSelected(app)
 
                     % AUXAPP.WINEXTERNALREQUEST
-                    case 'auxApp.winExternalRequest.TreePoints'
-                        ipcMainMatlabCallAuxiliarApp(app, 'EXTERNALREQUEST', 'JS', event)
+                    case 'auxApp.winAddTask.AntennaList_Tree'
+                        ipcMainMatlabCallAuxiliarApp(app, 'TASK:ADD', 'MATLAB', 'deleteAddedAntenna')
 
                     otherwise
                         error('UnexpectedEvent')
@@ -240,7 +200,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 drawnow
 
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));
+                ui.Dialog(app.UIFigure, 'error', getReport(ME));
             end
         end
 
@@ -284,7 +244,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             if isempty(msgError)
                                 RegularTask_timerFcn(app)                                 % Startup of every task
                             else
-                                appUtil.modalWindow(app.UIFigure, 'warning', msgError);
+                                ui.Dialog(app.UIFigure, 'warning', msgError);
                             end
                         catch ME
                             struct2table(ME.stack)
@@ -304,12 +264,15 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         waterfallColormap = varargin{1};
                         colormap(app.axes2, waterfallColormap)
 
+                    case 'checkDataHubLampStatus'
+                        DataHubWarningLamp(app)
+
                     otherwise
                         error('Unexpected call "%s" from %s', operationType, class(callingApp))
                 end
 
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', ME.message);            
+                ui.Dialog(app.UIFigure, 'error', ME.message);            
             end
 
             % Caso um app auxiliar esteja em modo DOCK, o progressDialog do
@@ -320,16 +283,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function ipcMainMatlabCallAuxiliarApp(app, auxAppName, communicationType, varargin)
-            hAuxApp = auxAppHandle(app, auxAppName);
+            hAuxApp = getAppHandle(app.tabGroupController, auxAppName);
 
             if ~isempty(hAuxApp)
                 switch communicationType
                     case 'MATLAB'
                         operationType = varargin{1};
-                        ipcSecundaryMatlabCallsHandler(hAuxApp, app, operationType, varargin{2:end});
+                        ipcSecondaryMatlabCallsHandler(hAuxApp, app, operationType, varargin{2:end});
                     case 'JS'
                         event = varargin{1};
-                        ipcSecundaryJSEventsHandler(hAuxApp, event)
+                        ipcSecondaryJSEventsHandler(hAuxApp, event)
                 end
             end
         end
@@ -368,17 +331,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
     end
 
 
-    methods (Access = private)
+    methods (Access = public)
         %-----------------------------------------------------------------%
-        % JSBACKDOOR
-        %-----------------------------------------------------------------%
-        function jsBackDoor_Initialization(app)
-            app.jsBackDoor.HTMLSource           = appUtil.jsBackDoorHTMLSource;
-            app.jsBackDoor.HTMLEventReceivedFcn = @(~, evt)ipcMainJSEventsHandler(app, evt);
+        function navigateToTab(app, clickedButton)
+            tabNavigatorButtonPushed(app, struct('Source', clickedButton, 'PreviousValue', false))
         end
 
         %-----------------------------------------------------------------%
-        function jsBackDoor_AppCustomizations(app, tabIndex)
+        function applyJSCustomizations(app, tabIndex)
             persistent customizationStatus
             if isempty(customizationStatus)
                 customizationStatus = [false, false, false, false, false, false];
@@ -398,27 +358,19 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     switch tabIndex
                         case 1
                             elToModify = { ...
-                                app.popupContainerGrid, ...
                                 app.MetaData, ...
                                 app.play_axesToolbar ...
                             };
                             elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
 
                             appName = class(app);
-                            if isvalid(app.popupContainerGrid)
-                                try
-                                    sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', {struct('appName', appName, 'dataTag', elDataTag{1}, 'style', struct('backgroundColor', 'rgba(255,255,255,0.65)'))});
-                                catch
-                                end
-                            end
-
                             try
-                                ui.TextView.startup(app.jsBackDoor, elToModify{2}, appName);
+                                ui.TextView.startup(app.jsBackDoor, elToModify{1}, appName);
                             catch
                             end
 
                             try
-                                sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', {struct('appName', appName, 'dataTag', elDataTag{3}, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0'))});
+                                sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', {struct('appName', appName, 'dataTag', elDataTag{2}, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0'))});
                             catch
                             end
 
@@ -429,89 +381,13 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     end
             end
         end
-    end
-
-    
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        % INICIALIZAÇÃO DO APP
-        %-----------------------------------------------------------------%
-        function startup_timerCreation(app)
-            app.timerObj = timer("ExecutionMode", "fixedSpacing", ...
-                                 "StartDelay",    1.5,            ...
-                                 "Period",        .1,             ...
-                                 "TimerFcn",      @(~,~)app.startup_timerFcn);
-            start(app.timerObj)
-        end
 
         %-----------------------------------------------------------------%
-        function startup_timerFcn(app)
-            if ui.FigureRenderStatus(app.UIFigure)
-                stop(app.timerObj)
-                delete(app.timerObj)
-
-                jsBackDoor_Initialization(app)
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function startup_Controller(app)
-            drawnow
-
-            if ~app.renderCount
-                % Essa propriedade registra o tipo de execução da aplicação, podendo
-                % ser: 'built-in', 'desktopApp' ou 'webApp'.
-                app.executionMode  = appUtil.ExecutionMode(app.UIFigure);
-                if ~strcmp(app.executionMode, 'webApp')
-                    app.FigurePosition.Visible = 1;
-                    appUtil.winMinSize(app.UIFigure, class.Constants.windowMinSize)
-                end
-
-                % Identifica o local deste arquivo .MLAPP, caso se trate das versões 
-                % "built-in" ou "webapp", ou do .EXE relacionado, caso se trate da
-                % versão executável (neste caso, o ctfroot indicará o local do .MLAPP).    
-                appName = class.Constants.appName;
-                MFilePath = fileparts(mfilename('fullpath'));
-                app.rootFolder = appUtil.RootFolder(appName, MFilePath);
-    
-                % Customizações...
-                jsBackDoor_AppCustomizations(app, 0)
-                jsBackDoor_AppCustomizations(app, 1)
-                pause(.100)
-
-                % Cria tela de progresso...
-                app.progressDialog = ui.ProgressDialog(app.jsBackDoor);
-
-                startup_ConfigFileRead(app, appName, MFilePath)
-                startup_AppProperties(app)
-                startup_GUIComponents(app)
-                
-                RegularTask_timerCreation(app)
-                if app.General.startupInfo
-                    startup_specObjRead(app)
-                end
-    
-                % Por fim, exclui-se o splashscreen, um segundo após envio do comando 
-                % para que diminua a transparência do background.
-                sendEventToHTMLSource(app.jsBackDoor, 'turningBackgroundColorInvisible', struct('componentName', 'SplashScreen', 'componentDataTag', struct(app.SplashScreen).Controller.ViewModel.Id));
-                drawnow
-            
-                pause(1)
-                delete(app.popupContainerGrid)
-
-            else
-                jsBackDoor_AppCustomizations(app, 0)
-                jsBackDoor_AppCustomizations(app, 1)
-                pause(.100)
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function startup_ConfigFileRead(app, appName, MFilePath)
+        function loadConfigurationFile(app, appName, MFilePath)
             % "GeneralSettings.json"
-            [app.General_I, msgWarning] = appUtil.generalSettingsLoad(appName, app.rootFolder);
+            [app.General_I, msgWarning] = appEngine.util.generalSettingsLoad(appName, app.rootFolder);
             if ~isempty(msgWarning)
-                appUtil.modalWindow(app.UIFigure, 'error', msgWarning);
+                ui.Dialog(app.UIFigure, 'error', msgWarning);
             end
 
             % Para criação de arquivos temporários, cria-se uma pasta da 
@@ -535,7 +411,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                 otherwise    
                     % Resgata a pasta de trabalho do usuário (configurável).
-                    userPaths = appUtil.UserPaths(app.General_I.fileFolder.userPath);
+                    userPaths = appEngine.util.UserPaths(app.General_I.fileFolder.userPath);
                     app.General_I.fileFolder.userPath = userPaths{end};
 
                     switch app.executionMode
@@ -552,11 +428,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function startup_AppProperties(app)
+        function initializeAppProperties(app)
             % app.taskList
             [app.taskList, msgError] =  class.taskList.file2raw(fullfile(app.rootFolder, 'config', 'taskList.json'), 'winAppColetaV2');
             if ~isempty(msgError)
-                appUtil.modalWindow(app.UIFigure, 'error', msgError);
+                ui.Dialog(app.UIFigure, 'error', msgError);
             end
 
             % Others...
@@ -577,16 +453,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function startup_GUIComponents(app)
-            % Cria o objeto que conecta o TabGroup com o GraphicMenu.
-            app.tabGroupController = tabGroupGraphicMenu(app.menu_Grid, app.TabGroup, app.progressDialog, @app.jsBackDoor_AppCustomizations, '');
-
-            addComponent(app.tabGroupController, "Built-in", "",                     app.menu_Button1, "AlwaysOn", struct('On', 'Playback_32Yellow.png', 'Off', 'Playback_32White.png'), matlab.graphics.GraphicsPlaceholder, 1)
-            addComponent(app.tabGroupController, "External", "auxApp.winInstrument", app.menu_Button2, "AlwaysOn", struct('On', 'Connect_36Yellow.png',  'Off', 'Connect_36White.png'),  app.menu_Button1,                    2)
-            addComponent(app.tabGroupController, "External", "auxApp.winTaskList",   app.menu_Button3, "AlwaysOn", struct('On', 'Task_36Yellow.png',     'Off', 'Task_36White.png'),     app.menu_Button1,                    3)
-            addComponent(app.tabGroupController, "External", "auxApp.winAddTask",    app.menu_Button4, "AlwaysOn", struct('On', 'AddFile_36Yellow.png',  'Off', 'AddFile_36White.png'),  app.menu_Button1,                    4)
-            addComponent(app.tabGroupController, "External", "auxApp.winServer",     app.menu_Button5, "AlwaysOn", struct('On', 'Server_36Yellow.png',   'Off', 'Server_36White.png'),   app.menu_Button1,                    5)
-            addComponent(app.tabGroupController, "External", "auxApp.winConfig",     app.menu_Button6, "AlwaysOn", struct('On', 'Settings_36Yellow.png', 'Off', 'Settings_36White.png'), app.menu_Button1,                    6)
+        function initializeUIComponents(app)
+            app.tabGroupController = ui.TabNavigator(app.NavBar, app.TabGroup, app.progressDialog, @app.applyJSCustomizations, '');
+            addComponent(app.tabGroupController, "Built-in", "",                     app.Tab1Button, "AlwaysOn", struct('On', 'Playback_32Yellow.png', 'Off', 'Playback_32White.png'), matlab.graphics.GraphicsPlaceholder, 1)
+            addComponent(app.tabGroupController, "External", "auxApp.winInstrument", app.Tab2Button, "AlwaysOn", struct('On', 'Connect_36Yellow.png',  'Off', 'Connect_36White.png'),  app.Tab1Button,                    2)
+            addComponent(app.tabGroupController, "External", "auxApp.winTaskList",   app.Tab3Button, "AlwaysOn", struct('On', 'Task_36Yellow.png',     'Off', 'Task_36White.png'),     app.Tab1Button,                    3)
+            addComponent(app.tabGroupController, "External", "auxApp.winAddTask",    app.Tab4Button, "AlwaysOn", struct('On', 'AddFile_36Yellow.png',  'Off', 'AddFile_36White.png'),  app.Tab1Button,                    4)
+            addComponent(app.tabGroupController, "External", "auxApp.winServer",     app.Tab5Button, "AlwaysOn", struct('On', 'Server_36Yellow.png',   'Off', 'Server_36White.png'),   app.Tab1Button,                    5)
+            addComponent(app.tabGroupController, "External", "auxApp.winConfig",     app.Tab6Button, "AlwaysOn", struct('On', 'Settings_36Yellow.png', 'Off', 'Settings_36White.png'), app.Tab1Button,                    6)
 
             app.axesTool_MinHold.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'MinHold_32Filled.png', 'Off', 'MinHold_32.png'));
             app.axesTool_Average.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'Average_32Filled.png', 'Off', 'Average_32.png'));
@@ -596,6 +470,28 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             startup_Axes(app)
         end
+
+        %-----------------------------------------------------------------%
+        function applyInitialLayout(app)
+            RegularTask_timerCreation(app)
+
+            if app.General.startupInfo
+                startup_specObjRead(app)
+            end
+        end
+    end
+
+
+    methods (Access = private)
+        %-----------------------------------------------------------------%
+        function DataHubWarningLamp(app)
+            % if isfolder(app.General.fileFolder.DataHub_POST)
+            %     app.DataHubLamp.Visible = 0;
+            % else
+            %     app.DataHubLamp.Visible = 1;
+            % end
+        end
+
 
         %-----------------------------------------------------------------%
         function startup_Axes(app)
@@ -628,7 +524,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function startup_specObjRead(app)
-            [~, programDataFolder] = appUtil.Path(class.Constants.appName, app.rootFolder);
+            [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
             if isfile(fullfile(programDataFolder, 'startupInfo.mat'))
                 app.progressDialog.Visible = 'visible';
 
@@ -656,14 +552,13 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                     % Ida ao modo de "Execução das tarefas da monitoração"
                     % de forma programática:
-                    app.menu_Button1.Value = 1;
-                    menu_mainButtonPushed(app, struct('Source', app.menu_Button1, 'PreviousValue', 0))
+                    app.Tab1Button.Value = 1;
+                    tabNavigatorButtonPushed(app, struct('Source', app.Tab1Button, 'PreviousValue', 0))
                 end
 
                 app.progressDialog.Visible = 'hidden';
             end
         end
-
 
         %-----------------------------------------------------------------%
         function [SpecObj, msgError] = startup_specObjRead_Receiver(app, SpecObj)
@@ -681,7 +576,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function SpecObj = startup_specObjRead_Streaming(app, SpecObj)
 
@@ -697,7 +591,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
             end
         end
-
 
         %-----------------------------------------------------------------%
         function [SpecObj, msgError] = startup_specObjRead_GPS(app, SpecObj)
@@ -720,12 +613,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
             end
         end
-    end
 
-
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        % CHAVEANDO ENTRE MÓDULOS
         %-----------------------------------------------------------------%
         function inputArguments = menu_auxAppInputArguments(app, auxAppName)
             arguments
@@ -818,7 +706,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 SpecObj(ii).Task.GPS.Handle       = [];
             end
 
-            [~, programDataFolder] = appUtil.Path(class.Constants.appName, app.rootFolder);
+            [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
             save(fullfile(programDataFolder, 'startupInfo.mat'), 'SpecObj')
         end
 
@@ -1905,21 +1793,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
             end
         end
-    end
-
-
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        % TABGROUPCONTROLLER
-        %-----------------------------------------------------------------%
-        function hAuxApp = auxAppHandle(app, auxAppName)
-            arguments
-                app
-                auxAppName string {mustBeMember(auxAppName, ["INSTRUMENT", "TASK:EDIT", "TASK:ADD", "SERVER", "CONFIG"])}
-            end
-
-            hAuxApp = app.tabGroupController.Components.appHandle{app.tabGroupController.Components.Tag == auxAppName};
-        end
 
         %-----------------------------------------------------------------%
         function inputArguments = auxAppInputArguments(app, auxAppName)
@@ -1953,22 +1826,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function startupFcn(app)
             
             try
-                % WARNING MESSAGES
-                appUtil.disablingWarningMessages()
-
-                % <GUI>
-                app.popupContainerGrid.Layout.Row = [1,2];
-                app.GridLayout.RowHeight(end) = [];
-
-                app.menu_AppName.Text = sprintf('%s v. %s\n<font style="font-size: 9px;">%s</font>', ...
-                    class.Constants.appName, class.Constants.appVersion, class.Constants.appRelease);
-                % </GUI>
-
-                appUtil.winPosition(app.UIFigure)
-                startup_timerCreation(app)
-
+                appEngine.boot(app, app.Role)
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
+                ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
             end
             
         end
@@ -1983,14 +1843,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % <EspecificidadeAppColeta1>
             if app.Flag_running
-                appUtil.modalWindow(app.UIFigure, 'warning', 'Existe uma tarefa em execução...');
+                ui.Dialog(app.UIFigure, 'warning', 'Existe uma tarefa em execução...');
                 return
             end
             % </EspecificidadeAppColeta1>
 
             if ~strcmp(app.executionMode, 'webApp') && ~isempty(app.specObj)
                 msgQuestion   = 'Deseja fechar o aplicativo?';
-                userSelection = appUtil.modalWindow(app.UIFigure, 'uiconfirm', msgQuestion, {'Sim', 'Não'}, 1, 2);
+                userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', msgQuestion, {'Sim', 'Não'}, 1, 2);
                 if userSelection == "Não"
                     return
                 end
@@ -2000,7 +1860,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             if app.General.startupInfo
                 RegularTask_specObjSave(app)
             else
-                [~, programDataFolder] = appUtil.Path(class.Constants.appName, app.rootFolder);
+                [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
                 if isfile(fullfile(programDataFolder, 'startupInfo.mat'))
                     delete(fullfile(programDataFolder, 'startupInfo.mat'))
                 end
@@ -2016,14 +1876,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % </EspecificidadeAppColeta2>
 
             % Aspectos gerais (carregar em todos os apps):
-            appUtil.beforeDeleteApp(app.progressDialog, app.General_I.fileFolder.tempPath, app.tabGroupController, app.executionMode)
+            appEngine.beforeDeleteApp(app.progressDialog, app.General_I.fileFolder.tempPath, app.tabGroupController, app.executionMode)
             delete(app)
             
         end
 
-        % Value changed function: menu_Button1, menu_Button2, 
-        % ...and 4 other components
-        function menu_mainButtonPushed(app, event)
+        % Value changed function: Tab1Button, Tab2Button, Tab3Button, 
+        % ...and 3 other components
+        function tabNavigatorButtonPushed(app, event)
 
             % em sendo o ADICIONAR TAREFA, verificar se existe alguma
             % tarefa selecionado em tabela. Caso sim, pergunta se se deseja
@@ -2034,29 +1894,29 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             auxAppTag      = clickedButton.Tag;
             inputArguments = menu_auxAppInputArguments(app, auxAppTag);
 
-            if event.Source == app.menu_Button4
-                % A operação padrão, ao clicar em app.menu_Button4, é criar uma 
+            if event.Source == app.Tab4Button
+                % A operação padrão, ao clicar em app.Tab4Button, é criar uma 
                 % nova tarefa. Caso esteja selecionado o módulo de visualização 
                 % de tarefas, e esteja selecionada uma tarefa, questiona-se se 
                 % deve ser feito a inclusão de uma nova tarefa ou a edição da 
                 % selecionada. 
                 idx = app.Table.Selection;
 
-                if  ~checkStatusModule(app.tabGroupController, 'TASK:ADD') && app.menu_Button1.Value && ~isempty(idx)
+                if  ~checkStatusModule(app.tabGroupController, 'TASK:ADD') && app.Tab1Button.Value && ~isempty(idx)
                     msgQuestion   = 'Deseja criar uma nova tarefa, ou editar a tarefa selecionada em tabela?';
-                    userSelection = appUtil.modalWindow(app.UIFigure, 'uiconfirm', msgQuestion, {'Criar nova', 'Editar selecionada', 'Cancelar'}, 1, 3);
+                    userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', msgQuestion, {'Criar nova', 'Editar selecionada', 'Cancelar'}, 1, 3);
                     switch userSelection
                         case 'Editar selecionada'
                             if ismember(app.specObj(idx).Status, {'Na fila', 'Em andamento'})
-                                appUtil.modalWindow(app.UIFigure, 'warning', 'Uma tarefa no estado "Na fila" ou "Em andamento" não poderá ser editada.');
-                                app.menu_Button4.Value = 0;
+                                ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Na fila" ou "Em andamento" não poderá ser editada.');
+                                app.Tab4Button.Value = 0;
                                 return
                             end
 
                             inputArguments = {app, struct('type', 'edit', 'idx', idx)};
 
                         case 'Cancelar'
-                            app.menu_Button4.Value = 0;
+                            app.Tab4Button.Value = 0;
                             return
                     end
                 end
@@ -2067,22 +1927,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         % Image clicked function: AppInfo, FigurePosition
-        function menu_ToolbarImageCliced(app, event)
-            
+        function menuImageClicked(app, event)
+
             switch event.Source
                 case app.FigurePosition
                     app.UIFigure.Position(3:4) = class.Constants.windowSize;
-                    appUtil.winPosition(app.UIFigure)
+                    appEngine.util.setWindowPosition(app.UIFigure)
 
                 case app.AppInfo
-                    if isempty(app.AppInfo.Tag)
-                        app.progressDialog.Visible = 'visible';
-                        app.AppInfo.Tag = util.HtmlTextGenerator.AppInfo(app.General, app.rootFolder, app.executionMode, app.renderCount, "popup");
-                        app.progressDialog.Visible = 'hidden';
-                    end
-
-                    msgInfo = app.AppInfo.Tag;
-                    appUtil.modalWindow(app.UIFigure, 'info', msgInfo);
+                    appInfo = util.HtmlTextGenerator.AppInfo(app.General, app.rootFolder, app.executionMode, app.renderCount, "popup");
+                    ui.Dialog(app.UIFigure, 'info', appInfo);
             end
 
         end
@@ -2106,7 +1960,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             
                             case 'Time'
                                 if strcmp(app.specObj(idx).Status, 'Concluída')
-                                    appUtil.modalWindow(app.UIFigure, 'warning', 'Uma tarefa no estado "Concluída" somente poderá ser executada novamente se o tipo do período de observação for "Duração" ou "Quantidade específica de amostras".');
+                                    ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Concluída" somente poderá ser executada novamente se o tipo do período de observação for "Duração" ou "Quantidade específica de amostras".');
                                     return
                                 end
             
@@ -2138,14 +1992,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             if idx
                 switch app.specObj(idx).Status
                     case 'Em andamento'
-                        appUtil.modalWindow(app.UIFigure, 'warning', 'A tarefa precisa ser interrompida antes da tentativa de exclusão.');
+                        ui.Dialog(app.UIFigure, 'warning', 'A tarefa precisa ser interrompida antes da tentativa de exclusão.');
 
                     otherwise
                         if ~app.Flag_running
                             app.specObj(idx) = [];    
                             Layout_tableBuilding(app, 1)
                         else
-                            appUtil.modalWindow(app.UIFigure, 'warning', 'Uma tarefa poderá ser excluída, sendo eliminada da lista de tarefas, somente se não estiver sendo executada nenhuma tarefa.');
+                            ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa poderá ser excluída, sendo eliminada da lista de tarefas, somente se não estiver sendo executada nenhuma tarefa.');
                         end
                 end
             end
@@ -2158,7 +2012,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             idx = app.Table.Selection;
             if idx
                 log = util.HtmlTextGenerator.LOG(app.specObj, idx);
-                appUtil.modalWindow(app.UIFigure, 'warning', log);
+                ui.Dialog(app.UIFigure, 'warning', log);
             end
 
         end
@@ -2256,7 +2110,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     task_TreeSelectionChanged(app)
                 end
 
-                appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));
+                ui.Dialog(app.UIFigure, 'error', getReport(ME));
             end
             drawnow
 
@@ -2397,7 +2251,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create GridLayout
             app.GridLayout = uigridlayout(app.UIFigure);
             app.GridLayout.ColumnWidth = {'1x'};
-            app.GridLayout.RowHeight = {54, '1x', 44};
+            app.GridLayout.RowHeight = {54, '1x'};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
@@ -2843,169 +2697,152 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab6_Config.AutoResizeChildren = 'off';
             app.Tab6_Config.Title = 'CONFIG';
 
-            % Create menu_Grid
-            app.menu_Grid = uigridlayout(app.GridLayout);
-            app.menu_Grid.ColumnWidth = {22, 74, '1x', 34, 5, 34, 34, 34, 5, 34, 34, '1x', 20, 20, 20, 0, 0};
-            app.menu_Grid.RowHeight = {5, 7, 20, 7, 5};
-            app.menu_Grid.ColumnSpacing = 5;
-            app.menu_Grid.RowSpacing = 0;
-            app.menu_Grid.Padding = [10 5 5 5];
-            app.menu_Grid.Tag = 'COLORLOCKED';
-            app.menu_Grid.Layout.Row = 1;
-            app.menu_Grid.Layout.Column = 1;
-            app.menu_Grid.BackgroundColor = [0.2 0.2 0.2];
+            % Create NavBar
+            app.NavBar = uigridlayout(app.GridLayout);
+            app.NavBar.ColumnWidth = {22, 74, '1x', 34, 5, 34, 34, 34, 5, 34, 34, '1x', 20, 20, 20, 0, 0};
+            app.NavBar.RowHeight = {5, 7, 20, 7, 5};
+            app.NavBar.ColumnSpacing = 5;
+            app.NavBar.RowSpacing = 0;
+            app.NavBar.Padding = [10 5 5 5];
+            app.NavBar.Tag = 'COLORLOCKED';
+            app.NavBar.Layout.Row = 1;
+            app.NavBar.Layout.Column = 1;
+            app.NavBar.BackgroundColor = [0.2 0.2 0.2];
 
-            % Create menu_Button1
-            app.menu_Button1 = uibutton(app.menu_Grid, 'state');
-            app.menu_Button1.ValueChangedFcn = createCallbackFcn(app, @menu_mainButtonPushed, true);
-            app.menu_Button1.Tag = 'TASK:VIEW';
-            app.menu_Button1.Tooltip = {'Acompanha execução de tarefas'};
-            app.menu_Button1.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Playback_32Yellow.png');
-            app.menu_Button1.IconAlignment = 'top';
-            app.menu_Button1.Text = '';
-            app.menu_Button1.BackgroundColor = [0.2 0.2 0.2];
-            app.menu_Button1.FontSize = 11;
-            app.menu_Button1.Layout.Row = [2 4];
-            app.menu_Button1.Layout.Column = 4;
-            app.menu_Button1.Value = true;
+            % Create AppIcon
+            app.AppIcon = uiimage(app.NavBar);
+            app.AppIcon.Layout.Row = [1 5];
+            app.AppIcon.Layout.Column = 1;
+            app.AppIcon.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Playback_32White.png');
 
-            % Create menu_Separator1
-            app.menu_Separator1 = uiimage(app.menu_Grid);
-            app.menu_Separator1.ScaleMethod = 'none';
-            app.menu_Separator1.Enable = 'off';
-            app.menu_Separator1.Layout.Row = [2 4];
-            app.menu_Separator1.Layout.Column = 5;
-            app.menu_Separator1.VerticalAlignment = 'bottom';
-            app.menu_Separator1.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV_White.svg');
+            % Create AppName
+            app.AppName = uilabel(app.NavBar);
+            app.AppName.WordWrap = 'on';
+            app.AppName.FontSize = 11;
+            app.AppName.FontColor = [1 1 1];
+            app.AppName.Layout.Row = [1 5];
+            app.AppName.Layout.Column = [2 3];
+            app.AppName.Interpreter = 'html';
+            app.AppName.Text = {'appColeta v. 1.63.0'; '<font style="font-size: 9px;">R2024a</font>'};
 
-            % Create menu_Button2
-            app.menu_Button2 = uibutton(app.menu_Grid, 'state');
-            app.menu_Button2.ValueChangedFcn = createCallbackFcn(app, @menu_mainButtonPushed, true);
-            app.menu_Button2.Tag = 'INSTRUMENT';
-            app.menu_Button2.Tooltip = {'Edita lista de instrumentos'};
-            app.menu_Button2.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Connect_36White.png');
-            app.menu_Button2.IconAlignment = 'right';
-            app.menu_Button2.Text = '';
-            app.menu_Button2.BackgroundColor = [0.2 0.2 0.2];
-            app.menu_Button2.FontSize = 11;
-            app.menu_Button2.Layout.Row = [2 4];
-            app.menu_Button2.Layout.Column = 6;
+            % Create Tab1Button
+            app.Tab1Button = uibutton(app.NavBar, 'state');
+            app.Tab1Button.ValueChangedFcn = createCallbackFcn(app, @tabNavigatorButtonPushed, true);
+            app.Tab1Button.Tag = 'TASK:VIEW';
+            app.Tab1Button.Tooltip = {'Acompanha execução de tarefas'};
+            app.Tab1Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Playback_32Yellow.png');
+            app.Tab1Button.IconAlignment = 'top';
+            app.Tab1Button.Text = '';
+            app.Tab1Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab1Button.FontSize = 11;
+            app.Tab1Button.Layout.Row = [2 4];
+            app.Tab1Button.Layout.Column = 4;
+            app.Tab1Button.Value = true;
 
-            % Create menu_Button3
-            app.menu_Button3 = uibutton(app.menu_Grid, 'state');
-            app.menu_Button3.ValueChangedFcn = createCallbackFcn(app, @menu_mainButtonPushed, true);
-            app.menu_Button3.Tag = 'TASK:EDIT';
-            app.menu_Button3.Tooltip = {'Edita lista de tarefas'};
-            app.menu_Button3.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Task_36White.png');
-            app.menu_Button3.IconAlignment = 'right';
-            app.menu_Button3.Text = '';
-            app.menu_Button3.BackgroundColor = [0.2 0.2 0.2];
-            app.menu_Button3.FontSize = 11;
-            app.menu_Button3.Layout.Row = [2 4];
-            app.menu_Button3.Layout.Column = 7;
+            % Create ButtonsSeparator1
+            app.ButtonsSeparator1 = uiimage(app.NavBar);
+            app.ButtonsSeparator1.ScaleMethod = 'none';
+            app.ButtonsSeparator1.Enable = 'off';
+            app.ButtonsSeparator1.Layout.Row = [2 4];
+            app.ButtonsSeparator1.Layout.Column = 5;
+            app.ButtonsSeparator1.VerticalAlignment = 'bottom';
+            app.ButtonsSeparator1.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV_White.svg');
 
-            % Create menu_Button4
-            app.menu_Button4 = uibutton(app.menu_Grid, 'state');
-            app.menu_Button4.ValueChangedFcn = createCallbackFcn(app, @menu_mainButtonPushed, true);
-            app.menu_Button4.Tag = 'TASK:ADD';
-            app.menu_Button4.Tooltip = {'Adiciona nova tarefa'};
-            app.menu_Button4.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'AddFile_36White.png');
-            app.menu_Button4.IconAlignment = 'right';
-            app.menu_Button4.Text = '';
-            app.menu_Button4.BackgroundColor = [0.2 0.2 0.2];
-            app.menu_Button4.FontSize = 11;
-            app.menu_Button4.Layout.Row = [2 4];
-            app.menu_Button4.Layout.Column = 8;
+            % Create Tab2Button
+            app.Tab2Button = uibutton(app.NavBar, 'state');
+            app.Tab2Button.ValueChangedFcn = createCallbackFcn(app, @tabNavigatorButtonPushed, true);
+            app.Tab2Button.Tag = 'INSTRUMENT';
+            app.Tab2Button.Tooltip = {'Edita lista de instrumentos'};
+            app.Tab2Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Connect_36White.png');
+            app.Tab2Button.IconAlignment = 'right';
+            app.Tab2Button.Text = '';
+            app.Tab2Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab2Button.FontSize = 11;
+            app.Tab2Button.Layout.Row = [2 4];
+            app.Tab2Button.Layout.Column = 6;
 
-            % Create menu_Separator2
-            app.menu_Separator2 = uiimage(app.menu_Grid);
-            app.menu_Separator2.ScaleMethod = 'none';
-            app.menu_Separator2.Enable = 'off';
-            app.menu_Separator2.Layout.Row = [2 4];
-            app.menu_Separator2.Layout.Column = 9;
-            app.menu_Separator2.VerticalAlignment = 'bottom';
-            app.menu_Separator2.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV_White.svg');
+            % Create Tab3Button
+            app.Tab3Button = uibutton(app.NavBar, 'state');
+            app.Tab3Button.ValueChangedFcn = createCallbackFcn(app, @tabNavigatorButtonPushed, true);
+            app.Tab3Button.Tag = 'TASK:EDIT';
+            app.Tab3Button.Tooltip = {'Edita lista de tarefas'};
+            app.Tab3Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Task_36White.png');
+            app.Tab3Button.IconAlignment = 'right';
+            app.Tab3Button.Text = '';
+            app.Tab3Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab3Button.FontSize = 11;
+            app.Tab3Button.Layout.Row = [2 4];
+            app.Tab3Button.Layout.Column = 7;
 
-            % Create menu_Button5
-            app.menu_Button5 = uibutton(app.menu_Grid, 'state');
-            app.menu_Button5.ValueChangedFcn = createCallbackFcn(app, @menu_mainButtonPushed, true);
-            app.menu_Button5.Tag = 'SERVER';
-            app.menu_Button5.Tooltip = {'API'};
-            app.menu_Button5.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Server_36White.png');
-            app.menu_Button5.IconAlignment = 'right';
-            app.menu_Button5.Text = '';
-            app.menu_Button5.BackgroundColor = [0.2 0.2 0.2];
-            app.menu_Button5.FontSize = 11;
-            app.menu_Button5.Layout.Row = [2 4];
-            app.menu_Button5.Layout.Column = 10;
+            % Create Tab4Button
+            app.Tab4Button = uibutton(app.NavBar, 'state');
+            app.Tab4Button.ValueChangedFcn = createCallbackFcn(app, @tabNavigatorButtonPushed, true);
+            app.Tab4Button.Tag = 'TASK:ADD';
+            app.Tab4Button.Tooltip = {'Adiciona nova tarefa'};
+            app.Tab4Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'AddFile_36White.png');
+            app.Tab4Button.IconAlignment = 'right';
+            app.Tab4Button.Text = '';
+            app.Tab4Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab4Button.FontSize = 11;
+            app.Tab4Button.Layout.Row = [2 4];
+            app.Tab4Button.Layout.Column = 8;
 
-            % Create menu_Button6
-            app.menu_Button6 = uibutton(app.menu_Grid, 'state');
-            app.menu_Button6.ValueChangedFcn = createCallbackFcn(app, @menu_mainButtonPushed, true);
-            app.menu_Button6.Tag = 'CONFIG';
-            app.menu_Button6.Tooltip = {'Configurações gerais'};
-            app.menu_Button6.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Settings_36White.png');
-            app.menu_Button6.IconAlignment = 'right';
-            app.menu_Button6.Text = '';
-            app.menu_Button6.BackgroundColor = [0.2 0.2 0.2];
-            app.menu_Button6.FontSize = 11;
-            app.menu_Button6.Layout.Row = [2 4];
-            app.menu_Button6.Layout.Column = 11;
+            % Create ButtonsSeparator2
+            app.ButtonsSeparator2 = uiimage(app.NavBar);
+            app.ButtonsSeparator2.ScaleMethod = 'none';
+            app.ButtonsSeparator2.Enable = 'off';
+            app.ButtonsSeparator2.Layout.Row = [2 4];
+            app.ButtonsSeparator2.Layout.Column = 9;
+            app.ButtonsSeparator2.VerticalAlignment = 'bottom';
+            app.ButtonsSeparator2.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV_White.svg');
+
+            % Create Tab5Button
+            app.Tab5Button = uibutton(app.NavBar, 'state');
+            app.Tab5Button.ValueChangedFcn = createCallbackFcn(app, @tabNavigatorButtonPushed, true);
+            app.Tab5Button.Tag = 'SERVER';
+            app.Tab5Button.Tooltip = {'API'};
+            app.Tab5Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Server_36White.png');
+            app.Tab5Button.IconAlignment = 'right';
+            app.Tab5Button.Text = '';
+            app.Tab5Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab5Button.FontSize = 11;
+            app.Tab5Button.Layout.Row = [2 4];
+            app.Tab5Button.Layout.Column = 10;
+
+            % Create Tab6Button
+            app.Tab6Button = uibutton(app.NavBar, 'state');
+            app.Tab6Button.ValueChangedFcn = createCallbackFcn(app, @tabNavigatorButtonPushed, true);
+            app.Tab6Button.Tag = 'CONFIG';
+            app.Tab6Button.Tooltip = {'Configurações gerais'};
+            app.Tab6Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'Settings_36White.png');
+            app.Tab6Button.IconAlignment = 'right';
+            app.Tab6Button.Text = '';
+            app.Tab6Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab6Button.FontSize = 11;
+            app.Tab6Button.Layout.Row = [2 4];
+            app.Tab6Button.Layout.Column = 11;
 
             % Create jsBackDoor
-            app.jsBackDoor = uihtml(app.menu_Grid);
+            app.jsBackDoor = uihtml(app.NavBar);
             app.jsBackDoor.Layout.Row = 3;
             app.jsBackDoor.Layout.Column = 13;
 
-            % Create menu_AppName
-            app.menu_AppName = uilabel(app.menu_Grid);
-            app.menu_AppName.WordWrap = 'on';
-            app.menu_AppName.FontSize = 11;
-            app.menu_AppName.FontColor = [1 1 1];
-            app.menu_AppName.Layout.Row = [1 5];
-            app.menu_AppName.Layout.Column = [2 3];
-            app.menu_AppName.Interpreter = 'html';
-            app.menu_AppName.Text = {'appColeta v. 1.63.0'; '<font style="font-size: 9px;">R2024a</font>'};
-
-            % Create menu_AppIcon
-            app.menu_AppIcon = uiimage(app.menu_Grid);
-            app.menu_AppIcon.Layout.Row = [1 5];
-            app.menu_AppIcon.Layout.Column = 1;
-            app.menu_AppIcon.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Playback_32White.png');
-
-            % Create AppInfo
-            app.AppInfo = uiimage(app.menu_Grid);
-            app.AppInfo.ImageClickedFcn = createCallbackFcn(app, @menu_ToolbarImageCliced, true);
-            app.AppInfo.Tooltip = {'Informações gerais'};
-            app.AppInfo.Layout.Row = 3;
-            app.AppInfo.Layout.Column = 15;
-            app.AppInfo.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Dots_32White.png');
-
             % Create FigurePosition
-            app.FigurePosition = uiimage(app.menu_Grid);
-            app.FigurePosition.ImageClickedFcn = createCallbackFcn(app, @menu_ToolbarImageCliced, true);
+            app.FigurePosition = uiimage(app.NavBar);
+            app.FigurePosition.ImageClickedFcn = createCallbackFcn(app, @menuImageClicked, true);
             app.FigurePosition.Visible = 'off';
             app.FigurePosition.Tooltip = {'Reposiciona janela'};
             app.FigurePosition.Layout.Row = 3;
             app.FigurePosition.Layout.Column = 14;
             app.FigurePosition.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'layout1_32White.png');
 
-            % Create popupContainerGrid
-            app.popupContainerGrid = uigridlayout(app.GridLayout);
-            app.popupContainerGrid.ColumnWidth = {'1x', 880, '1x'};
-            app.popupContainerGrid.RowHeight = {'1x', 90, 300, 90, '1x'};
-            app.popupContainerGrid.ColumnSpacing = 0;
-            app.popupContainerGrid.RowSpacing = 0;
-            app.popupContainerGrid.Padding = [13 10 0 10];
-            app.popupContainerGrid.Layout.Row = 3;
-            app.popupContainerGrid.Layout.Column = 1;
-            app.popupContainerGrid.BackgroundColor = [1 1 1];
-
-            % Create SplashScreen
-            app.SplashScreen = uiimage(app.popupContainerGrid);
-            app.SplashScreen.Layout.Row = 3;
-            app.SplashScreen.Layout.Column = 2;
-            app.SplashScreen.ImageSource = 'SplashScreen.gif';
+            % Create AppInfo
+            app.AppInfo = uiimage(app.NavBar);
+            app.AppInfo.ImageClickedFcn = createCallbackFcn(app, @menuImageClicked, true);
+            app.AppInfo.Tooltip = {'Informações gerais'};
+            app.AppInfo.Layout.Row = 3;
+            app.AppInfo.Layout.Column = 15;
+            app.AppInfo.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Dots_32White.png');
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

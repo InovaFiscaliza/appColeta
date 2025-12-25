@@ -31,16 +31,26 @@ classdef dockTracking_exported < matlab.apps.AppBase
     end
 
     
-    properties
+    properties (Access = private)
+        %-----------------------------------------------------------------%
+        Role = 'secondaryDockApp'
+    end
+
+
+    properties (Access = public)
         %-----------------------------------------------------------------%
         Container
-        isDocked = true
-
+        isDocked = true        
         mainApp
-        EMSatObj
+        callingApp
+    end
 
+
+    properties (Access = private)
+        %-----------------------------------------------------------------%
+        EMSatObj
         antennaName
-        LOG          = struct('type', {}, 'time', {}, 'msg',  {})
+        LOG = struct('type', {}, 'time', {}, 'msg',  {})
         UpdateStatus = true
     end
     
@@ -113,7 +123,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
             while app.UpdateStatus
                 if toc(trackTic) > 10
                     if isequal(refPos, antennaPos)
-                        appUtil.modalWindow(app.UIFigure, 'warning', 'Não alterado o apontamento da antena mesmo após decorridos 10 segundos...');
+                        ui.Dialog(app.UIFigure, 'warning', 'Não alterado o apontamento da antena mesmo após decorridos 10 segundos...');
                     else
                         refPos = updateReference(app, refPos, antennaPos);
                     end
@@ -166,12 +176,17 @@ classdef dockTracking_exported < matlab.apps.AppBase
         % Code that executes after component creation
         function startupFcn(app, mainApp, antennaPos, targetPos)
             
-            app.mainApp  = mainApp;
-            app.EMSatObj = mainApp.EMSatObj;
+            try
+                appEngine.boot(app, app.Role, mainApp, [])
 
-            screenStartup(app,  antennaPos, targetPos)
-            setNewPosition(app, antennaPos, targetPos)
-            updatePosition(app, antennaPos, targetPos)
+                app.EMSatObj = mainApp.EMSatObj;
+                screenStartup(app,  antennaPos, targetPos)
+                setNewPosition(app, antennaPos, targetPos)
+                updatePosition(app, antennaPos, targetPos)
+                
+            catch ME
+                ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
+            end
 
         end
 
@@ -193,7 +208,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
                 logMsg = 'Não há registro de erro.';
             end
 
-            appUtil.modalWindow(app.UIFigure, 'warning', logMsg);
+            ui.Dialog(app.UIFigure, 'warning', logMsg);
 
         end
     end

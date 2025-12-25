@@ -4,7 +4,7 @@ classdef winServer_exported < matlab.apps.AppBase
     properties (Access = public)
         UIFigure                   matlab.ui.Figure
         GridLayout                 matlab.ui.container.GridLayout
-        DockModuleGroup            matlab.ui.container.GridLayout
+        DockModule                 matlab.ui.container.GridLayout
         dockModule_Undock          matlab.ui.control.Image
         dockModule_Close           matlab.ui.control.Image
         TabGroup                   matlab.ui.container.TabGroup
@@ -22,61 +22,46 @@ classdef winServer_exported < matlab.apps.AppBase
     end
 
     
-    properties
+    properties (Access = private)
+        %-----------------------------------------------------------------%
+        Role = 'secondaryApp'
+    end
+
+
+    properties (Access = public)
         %-----------------------------------------------------------------%
         Container
         isDocked = false
-        
         mainApp
-
-        % A função do timer é executada uma única vez após a renderização
-        % da figura, lendo arquivos de configuração, iniciando modo de operação
-        % paralelo etc. A ideia é deixar o MATLAB focar apenas na criação dos 
-        % componentes essenciais da GUI (especificados em "createComponents"), 
-        % mostrando a GUI para o usuário o mais rápido possível.
-        timerObj
         jsBackDoor
-
-        % Janela de progresso já criada no DOM. Dessa forma, controla-se 
-        % apenas a sua visibilidade - e tornando desnecessário criá-la a
-        % cada chamada (usando uiprogressdlg, por exemplo).
         progressDialog
     end
 
 
-    methods
+    methods (Access = public)
         %-----------------------------------------------------------------%
-        % IPC: COMUNICAÇÃO ENTRE PROCESSOS
-        %-----------------------------------------------------------------%
-        function ipcSecundaryJSEventsHandler(app, event)
+        function ipcSecondaryJSEventsHandler(app, event)
             try
                 switch event.HTMLEventName
                     case 'renderer'
-                        startup_Controller(app)
+                        appEngine.activate(app, app.Role)
 
                     otherwise
                         error('UnexpectedEvent')
                 end
 
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', ME.message);
+                ui.Dialog(app.UIFigure, 'error', ME.message);
             end
         end
-    end
-
-
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        % JSBACKDOOR
-        %-----------------------------------------------------------------%
-        function jsBackDoor_Initialization(app)
-            app.jsBackDoor = uihtml(app.UIFigure, "HTMLSource",           appUtil.jsBackDoorHTMLSource(),                 ...
-                                                  "HTMLEventReceivedFcn", @(~, evt)ipcSecundaryJSEventsHandler(app, evt), ...
-                                                  "Visible",              "off");
-        end
 
         %-----------------------------------------------------------------%
-        function jsBackDoor_Customizations(app)
+        function applyJSCustomizations(app, tabIndex)
+            arguments
+                app
+                tabIndex = 0
+            end
+
             if app.isDocked
                 app.progressDialog = app.mainApp.progressDialog;
             else
@@ -88,7 +73,7 @@ classdef winServer_exported < matlab.apps.AppBase
 
             % Grid botões "dock":
             if app.isDocked
-                elToModify = {app.DockModuleGroup};
+                elToModify = {app.DockModule};
                 elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
                 if ~isempty(elDataTag)
                     sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
@@ -97,43 +82,27 @@ classdef winServer_exported < matlab.apps.AppBase
                 end
             end
         end
-    end
-    
 
-    methods (Access = private)
         %-----------------------------------------------------------------%
-        % INICIALIZAÇÃO
-        %-----------------------------------------------------------------%
-        function startup_timerCreation(app)
-            app.timerObj = timer("ExecutionMode", "fixedSpacing", ...
-                                 "StartDelay",    1.5,            ...
-                                 "Period",        .1,             ...
-                                 "TimerFcn",      @(~,~)app.startup_timerFcn);
-            start(app.timerObj)
+        function initializeAppProperties(app)
+            % ...
         end
 
         %-----------------------------------------------------------------%
-        function startup_timerFcn(app)
-            if ui.FigureRenderStatus(app.UIFigure)
-                stop(app.timerObj)
-                delete(app.timerObj)
-
-                jsBackDoor_Initialization(app)
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function startup_Controller(app)
-            drawnow
-            jsBackDoor_Customizations(app)
-
+        function initializeUIComponents(app)
             if ~strcmp(app.mainApp.executionMode, 'webApp')
                 app.dockModule_Undock.Enable = 1;
             end
-
-            updateLayout(app)
         end
 
+        %-----------------------------------------------------------------%
+        function applyInitialLayout(app)
+            updateLayout(app)
+        end
+    end
+
+
+    methods (Access = private)
         %-----------------------------------------------------------------%
         function updateLayout(app)
             if isempty(app.mainApp.tcpServer)
@@ -178,16 +147,10 @@ classdef winServer_exported < matlab.apps.AppBase
         % Code that executes after component creation
         function startupFcn(app, mainApp)
 
-            app.mainApp = mainApp;
-
-            if app.isDocked
-                app.GridLayout.Padding(4) = 30;
-                app.DockModuleGroup.Visible = 1;
-                app.jsBackDoor = mainApp.jsBackDoor;
-                startup_Controller(app)
-            else
-                appUtil.winPosition(app.UIFigure)
-                startup_timerCreation(app)
+            try
+                appEngine.boot(app, app.Role, mainApp)
+            catch ME
+                ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
             end
             
         end
@@ -322,7 +285,7 @@ classdef winServer_exported < matlab.apps.AppBase
             app.toolButton_edit.Icon = 'play_32.png';
             app.toolButton_edit.IconAlignment = 'right';
             app.toolButton_edit.HorizontalAlignment = 'right';
-            app.toolButton_edit.BackgroundColor = [1 1 1];
+            app.toolButton_edit.BackgroundColor = [0.9412 0.9412 0.9412];
             app.toolButton_edit.FontSize = 11;
             app.toolButton_edit.Layout.Row = 1;
             app.toolButton_edit.Layout.Column = 3;
@@ -388,18 +351,18 @@ classdef winServer_exported < matlab.apps.AppBase
             app.communicationTable.Layout.Column = [1 3];
             app.communicationTable.FontSize = 10;
 
-            % Create DockModuleGroup
-            app.DockModuleGroup = uigridlayout(app.GridLayout);
-            app.DockModuleGroup.RowHeight = {'1x'};
-            app.DockModuleGroup.ColumnSpacing = 2;
-            app.DockModuleGroup.Padding = [5 2 5 2];
-            app.DockModuleGroup.Visible = 'off';
-            app.DockModuleGroup.Layout.Row = [2 3];
-            app.DockModuleGroup.Layout.Column = [3 4];
-            app.DockModuleGroup.BackgroundColor = [0.2 0.2 0.2];
+            % Create DockModule
+            app.DockModule = uigridlayout(app.GridLayout);
+            app.DockModule.RowHeight = {'1x'};
+            app.DockModule.ColumnSpacing = 2;
+            app.DockModule.Padding = [5 2 5 2];
+            app.DockModule.Visible = 'off';
+            app.DockModule.Layout.Row = [2 3];
+            app.DockModule.Layout.Column = [3 4];
+            app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
             % Create dockModule_Close
-            app.dockModule_Close = uiimage(app.DockModuleGroup);
+            app.dockModule_Close = uiimage(app.DockModule);
             app.dockModule_Close.ScaleMethod = 'none';
             app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
             app.dockModule_Close.Tag = 'DRIVETEST';
@@ -409,7 +372,7 @@ classdef winServer_exported < matlab.apps.AppBase
             app.dockModule_Close.ImageSource = 'Delete_12SVG_white.svg';
 
             % Create dockModule_Undock
-            app.dockModule_Undock = uiimage(app.DockModuleGroup);
+            app.dockModule_Undock = uiimage(app.DockModule);
             app.dockModule_Undock.ScaleMethod = 'none';
             app.dockModule_Undock.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
             app.dockModule_Undock.Tag = 'DRIVETEST';

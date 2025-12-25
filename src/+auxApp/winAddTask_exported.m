@@ -2,169 +2,159 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        UIFigure                   matlab.ui.Figure
-        GridLayout                 matlab.ui.container.GridLayout
-        DockModule                 matlab.ui.container.GridLayout
-        dockModule_Undock          matlab.ui.control.Image
-        dockModule_Close           matlab.ui.control.Image
-        Document                   matlab.ui.container.GridLayout
-        Band_AntennaPanel          matlab.ui.container.Panel
-        Band_AntennaGrid           matlab.ui.container.GridLayout
-        Band_TargetListRefresh     matlab.ui.control.Image
-        Band_Antenna               matlab.ui.control.DropDown
-        Band_AntennaLabel          matlab.ui.control.Label
-        Band_TargetList            matlab.ui.control.DropDown
-        Band_TargetListLabel       matlab.ui.control.Label
-        Band_AntenaLabel           matlab.ui.control.Label
-        Band_DFPanel               matlab.ui.container.Panel
-        Band_DFGrid                matlab.ui.container.GridLayout
-        Band_DFMeasTime            matlab.ui.control.Spinner
-        Band_DFMeasTimeLabel       matlab.ui.control.Label
-        Band_DFSquelchValue        matlab.ui.control.Spinner
-        Band_DFSquelchValueLabel   matlab.ui.control.Label
-        Band_DFSquelchMode         matlab.ui.control.DropDown
-        Band_DFSquelchModeLabel    matlab.ui.control.Label
-        Band_DFLabel               matlab.ui.control.Label
-        Band_ReceiverPanel         matlab.ui.container.Panel
-        Band_ReceiverGrid          matlab.ui.container.GridLayout
-        Band_IntegrationTime       matlab.ui.control.NumericEditField
-        Band_IntegrationTimeLabel  matlab.ui.control.Label
-        Band_Detector              matlab.ui.control.DropDown
-        Band_DetectorLabel         matlab.ui.control.Label
-        Band_attValue              matlab.ui.control.DropDown
-        Band_attValueLabel         matlab.ui.control.Label
-        Band_attMode               matlab.ui.control.DropDown
-        Band_attModeLabel          matlab.ui.control.Label
-        Band_Preamp                matlab.ui.control.DropDown
-        Band_PreampLabel           matlab.ui.control.Label
-        Band_VBW                   matlab.ui.control.DropDown
-        Band_VBWLabel              matlab.ui.control.Label
-        Band_Resolution            matlab.ui.control.DropDown
-        Band_ResolutionLabel       matlab.ui.control.Label
-        Band_Selectivity           matlab.ui.control.DropDown
-        Band_SelectivityLabel      matlab.ui.control.Label
-        Band_DataPoints2           matlab.ui.control.NumericEditField
-        Band_DataPoints1           matlab.ui.control.Spinner
-        Band_DataPointsLabel       matlab.ui.control.Label
-        Band_StepWidth2            matlab.ui.control.DropDown
-        Band_StepWidth1            matlab.ui.control.NumericEditField
-        Band_StepWidthLabel        matlab.ui.control.Label
-        Band_Refresh               matlab.ui.control.Image
-        Band_ReceiverLabel         matlab.ui.control.Label
-        MetaData                   matlab.ui.control.Label
-        MetaDataLabel              matlab.ui.control.Label
-        Band_Samples               matlab.ui.control.NumericEditField
-        Band_SamplesLabel          matlab.ui.control.Label
-        Band_Tree                  matlab.ui.container.Tree
-        Band_TreeLabel             matlab.ui.control.Label
-        DocumentLabel              matlab.ui.control.Label
-        Toolbar                    matlab.ui.container.GridLayout
-        okButton                   matlab.ui.control.Button
-        TabGroup                   matlab.ui.container.TabGroup
-        Tab1                       matlab.ui.container.Tab
-        Tab1Grid                   matlab.ui.container.GridLayout
-        ObservationPanel           matlab.ui.container.Panel
-        ObservationPanel_Grid      matlab.ui.container.GridLayout
-        SpecificTime_Grid          matlab.ui.container.GridLayout
-        SpecificTime_Mark2         matlab.ui.control.Label
-        SpecificTime_Mark1         matlab.ui.control.Label
-        SpecificTime_Spinner4      matlab.ui.control.Spinner
-        SpecificTime_Spinner3      matlab.ui.control.Spinner
-        SpecificTime_DatePicker2   matlab.ui.control.DatePicker
-        SpecificTime_Spinner2      matlab.ui.control.Spinner
-        SpecificTime_Spinner1      matlab.ui.control.Spinner
-        SpecificTime_DatePicker1   matlab.ui.control.DatePicker
-        Duration_Grid              matlab.ui.container.GridLayout
-        DurationUnit               matlab.ui.control.DropDown
-        Duration                   matlab.ui.control.NumericEditField
-        ObservationType            matlab.ui.control.DropDown
-        ObservationTypeLabel       matlab.ui.control.Label
-        ObservationLabel           matlab.ui.control.Label
-        BitsPerPoint               matlab.ui.control.DropDown
-        BitsPerPointLabel          matlab.ui.control.Label
-        PreviewTaskCheckbox        matlab.ui.control.CheckBox
-        MaskFile_Button            matlab.ui.control.Button
-        AddMaskFile_Button         matlab.ui.control.Button
-        TaskType                   matlab.ui.control.DropDown
-        TaskTypeLabel              matlab.ui.control.Label
-        TaskName                   matlab.ui.control.DropDown
-        TaskNameLabel              matlab.ui.control.Label
-        Tab2                       matlab.ui.container.Tab
-        Tab2Grid                   matlab.ui.container.GridLayout
-        GPS_Panel                  matlab.ui.container.Panel
-        GPS_Grid                   matlab.ui.container.GridLayout
-        GPS_RevisitTime            matlab.ui.control.NumericEditField
-        GPS_RevisitTimeLabel       matlab.ui.control.Label
-        GPS_manualLongitude        matlab.ui.control.NumericEditField
-        GPS_manualLongitudeLabel   matlab.ui.control.Label
-        GPS_manualLatitude         matlab.ui.control.NumericEditField
-        GPS_manualLatitudeLabel    matlab.ui.control.Label
-        GPS_Connectivity           matlab.ui.control.Button
-        GPS_FixedStation           matlab.ui.control.Button
-        GPS_List                   matlab.ui.control.DropDown
-        GPS_ListLabel              matlab.ui.control.Label
-        Receiver_Panel             matlab.ui.container.Panel
-        Receiver_Grid              matlab.ui.container.GridLayout
-        Receiver_SyncRef           matlab.ui.control.DropDown
-        Receiver_SyncRefLabel      matlab.ui.control.Label
-        Receiver_RstCommand        matlab.ui.control.DropDown
-        Receiver_RstCommandLabel   matlab.ui.control.Label
-        Receiver_Connectivity      matlab.ui.control.Button
-        Receiver_List              matlab.ui.control.DropDown
-        Receiver_ListLabel         matlab.ui.control.Label
-        Tab3                       matlab.ui.container.Tab
-        Tab3Grid                   matlab.ui.container.GridLayout
-        AntennaList_Tree           matlab.ui.container.Tree
-        AddAntenna_Image           matlab.ui.control.Image
-        Antenna_Panel              matlab.ui.container.Panel
-        Antenna_Grid               matlab.ui.container.GridLayout
-        AntennaPolarization        matlab.ui.control.NumericEditField
-        AntennaPolarizationLabel   matlab.ui.control.Label
-        AntennaElevation           matlab.ui.control.NumericEditField
-        AntennaElevationLabel      matlab.ui.control.Label
-        AntennaAzimuth_Grid        matlab.ui.container.GridLayout
-        AntennaAzimuthRef          matlab.ui.control.DropDown
-        AntennaAzimuth             matlab.ui.control.NumericEditField
-        AntennaAzimuthLabel        matlab.ui.control.Label
-        AntennaHeight              matlab.ui.control.NumericEditField
-        AntennaHeightLabel         matlab.ui.control.Label
-        Antenna_TrackingMode       matlab.ui.control.DropDown
-        Antenna_TrackingModeLabel  matlab.ui.control.Label
-        AntennaName                matlab.ui.control.DropDown
-        AntennaNameLabel           matlab.ui.control.Label
-        AntennaSwitch_Name         matlab.ui.control.EditField
-        AntennaSwitch_Mode         matlab.ui.control.CheckBox
-        ContextMenu                matlab.ui.container.ContextMenu
-        delAntennaEntry            matlab.ui.container.Menu
+        UIFigure                     matlab.ui.Figure
+        GridLayout                   matlab.ui.container.GridLayout
+        DockModule                   matlab.ui.container.GridLayout
+        dockModule_Undock            matlab.ui.control.Image
+        dockModule_Close             matlab.ui.control.Image
+        Document                     matlab.ui.container.GridLayout
+        Band_AntennaPanel            matlab.ui.container.Panel
+        Band_AntennaGrid             matlab.ui.container.GridLayout
+        Band_TargetListRefresh       matlab.ui.control.Image
+        Band_Antenna                 matlab.ui.control.DropDown
+        Band_AntennaLabel            matlab.ui.control.Label
+        Band_TargetList              matlab.ui.control.DropDown
+        Band_TargetListLabel         matlab.ui.control.Label
+        Band_AntenaLabel             matlab.ui.control.Label
+        Band_DFPanel                 matlab.ui.container.Panel
+        Band_DFGrid                  matlab.ui.container.GridLayout
+        Band_DFMeasTime              matlab.ui.control.Spinner
+        Band_DFMeasTimeLabel         matlab.ui.control.Label
+        Band_DFSquelchValue          matlab.ui.control.Spinner
+        Band_DFSquelchValueLabel     matlab.ui.control.Label
+        Band_DFSquelchMode           matlab.ui.control.DropDown
+        Band_DFSquelchModeLabel      matlab.ui.control.Label
+        Band_DFLabel                 matlab.ui.control.Label
+        Band_ReceiverPanel           matlab.ui.container.Panel
+        Band_ReceiverGrid            matlab.ui.container.GridLayout
+        Band_IntegrationTime         matlab.ui.control.NumericEditField
+        Band_IntegrationTimeLabel    matlab.ui.control.Label
+        Band_Detector                matlab.ui.control.DropDown
+        Band_DetectorLabel           matlab.ui.control.Label
+        Band_attValue                matlab.ui.control.DropDown
+        Band_attValueLabel           matlab.ui.control.Label
+        Band_attMode                 matlab.ui.control.DropDown
+        Band_attModeLabel            matlab.ui.control.Label
+        Band_Preamp                  matlab.ui.control.DropDown
+        Band_PreampLabel             matlab.ui.control.Label
+        Band_VBW                     matlab.ui.control.DropDown
+        Band_VBWLabel                matlab.ui.control.Label
+        Band_Resolution              matlab.ui.control.DropDown
+        Band_ResolutionLabel         matlab.ui.control.Label
+        Band_Selectivity             matlab.ui.control.DropDown
+        Band_SelectivityLabel        matlab.ui.control.Label
+        Band_DataPoints2             matlab.ui.control.NumericEditField
+        Band_DataPoints1             matlab.ui.control.Spinner
+        Band_DataPointsLabel         matlab.ui.control.Label
+        Band_StepWidth2              matlab.ui.control.DropDown
+        Band_StepWidth1              matlab.ui.control.NumericEditField
+        Band_StepWidthLabel          matlab.ui.control.Label
+        Band_Refresh                 matlab.ui.control.Image
+        Band_ReceiverLabel           matlab.ui.control.Label
+        MetaData                     matlab.ui.control.Label
+        MetaDataLabel                matlab.ui.control.Label
+        Band_Samples                 matlab.ui.control.NumericEditField
+        Band_SamplesLabel            matlab.ui.control.Label
+        Band_Tree                    matlab.ui.container.Tree
+        Band_TreeLabel               matlab.ui.control.Label
+        DocumentLabel                matlab.ui.control.Label
+        Toolbar                      matlab.ui.container.GridLayout
+        okButton                     matlab.ui.control.Button
+        SubTabGroup                  matlab.ui.container.TabGroup
+        SubTab1                      matlab.ui.container.Tab
+        SubGrid1                     matlab.ui.container.GridLayout
+        ObservationPanel             matlab.ui.container.Panel
+        ObservationPanel_Grid        matlab.ui.container.GridLayout
+        SpecificTime_Grid            matlab.ui.container.GridLayout
+        SpecificTime_Mark2           matlab.ui.control.Label
+        SpecificTime_Mark1           matlab.ui.control.Label
+        SpecificTime_Spinner4        matlab.ui.control.Spinner
+        SpecificTime_Spinner3        matlab.ui.control.Spinner
+        SpecificTime_DatePicker2     matlab.ui.control.DatePicker
+        SpecificTime_Spinner2        matlab.ui.control.Spinner
+        SpecificTime_Spinner1        matlab.ui.control.Spinner
+        SpecificTime_DatePicker1     matlab.ui.control.DatePicker
+        Duration_Grid                matlab.ui.container.GridLayout
+        DurationUnit                 matlab.ui.control.DropDown
+        Duration                     matlab.ui.control.NumericEditField
+        ObservationType              matlab.ui.control.DropDown
+        ObservationTypeLabel         matlab.ui.control.Label
+        ObservationLabel             matlab.ui.control.Label
+        BitsPerPoint                 matlab.ui.control.DropDown
+        BitsPerPointLabel            matlab.ui.control.Label
+        PreviewTaskCheckbox          matlab.ui.control.CheckBox
+        MaskFile_Button              matlab.ui.control.Button
+        AddMaskFile_Button           matlab.ui.control.Button
+        TaskType                     matlab.ui.control.DropDown
+        TaskTypeLabel                matlab.ui.control.Label
+        TaskName                     matlab.ui.control.DropDown
+        TaskNameLabel                matlab.ui.control.Label
+        SubTab2                      matlab.ui.container.Tab
+        SubGrid2                     matlab.ui.container.GridLayout
+        GPS_Panel                    matlab.ui.container.Panel
+        GPS_Grid                     matlab.ui.container.GridLayout
+        GPS_RevisitTime              matlab.ui.control.NumericEditField
+        GPS_RevisitTimeLabel         matlab.ui.control.Label
+        GPS_manualLongitude          matlab.ui.control.NumericEditField
+        GPS_manualLongitudeLabel     matlab.ui.control.Label
+        GPS_manualLatitude           matlab.ui.control.NumericEditField
+        GPS_manualLatitudeLabel      matlab.ui.control.Label
+        GPS_Connectivity             matlab.ui.control.Button
+        GPS_FixedStation             matlab.ui.control.Button
+        GPS_List                     matlab.ui.control.DropDown
+        GPS_ListLabel                matlab.ui.control.Label
+        Receiver_Panel               matlab.ui.container.Panel
+        Receiver_Grid                matlab.ui.container.GridLayout
+        Receiver_SyncRef             matlab.ui.control.DropDown
+        Receiver_SyncRefLabel        matlab.ui.control.Label
+        Receiver_RstCommand          matlab.ui.control.DropDown
+        Receiver_RstCommandLabel     matlab.ui.control.Label
+        Receiver_Connectivity        matlab.ui.control.Button
+        Receiver_List                matlab.ui.control.DropDown
+        Receiver_ListLabel           matlab.ui.control.Label
+        SubTab3                      matlab.ui.container.Tab
+        SubGrid3                     matlab.ui.container.GridLayout
+        AntennaList_Tree             matlab.ui.container.Tree
+        AddAntenna_Image             matlab.ui.control.Image
+        Antenna_Panel                matlab.ui.container.Panel
+        Antenna_Grid                 matlab.ui.container.GridLayout
+        AntennaPolarization          matlab.ui.control.NumericEditField
+        AntennaPolarizationLabel     matlab.ui.control.Label
+        AntennaElevation             matlab.ui.control.NumericEditField
+        AntennaElevationLabel        matlab.ui.control.Label
+        AntennaAzimuth_Grid          matlab.ui.container.GridLayout
+        AntennaAzimuthRef            matlab.ui.control.DropDown
+        AntennaAzimuth               matlab.ui.control.NumericEditField
+        AntennaAzimuthLabel          matlab.ui.control.Label
+        AntennaHeight                matlab.ui.control.NumericEditField
+        AntennaHeightLabel           matlab.ui.control.Label
+        Antenna_TrackingMode         matlab.ui.control.DropDown
+        Antenna_TrackingModeLabel    matlab.ui.control.Label
+        AntennaName                  matlab.ui.control.DropDown
+        AntennaNameLabel             matlab.ui.control.Label
+        AntennaSwitch_Name           matlab.ui.control.EditField
+        AntennaSwitch_Mode           matlab.ui.control.CheckBox
+        ContextMenu                  matlab.ui.container.ContextMenu
+        contextmenu_DelAntennaEntry  matlab.ui.container.Menu
     end
 
 
-    properties
+    properties (Access = private)
+        %-----------------------------------------------------------------%
+        Role = 'secondaryApp'
+    end
+
+
+    properties (Access = public)
         %-----------------------------------------------------------------%
         Container
         isDocked = false
-
-        mainApp  
-
-        % A função do timer é executada uma única vez após a renderização
-        % da figura, lendo arquivos de configuração, iniciando modo de operação
-        % paralelo etc. A ideia é deixar o MATLAB focar apenas na criação dos 
-        % componentes essenciais da GUI (especificados em "createComponents"), 
-        % mostrando a GUI para o usuário o mais rápido possível.
-        timerObj
+        mainApp
         jsBackDoor
-
-        % Janela de progresso já criada no DOM. Dessa forma, controla-se 
-        % apenas a sua visibilidade - e tornando desnecessário criá-la a
-        % cada chamada (usando uiprogressdlg, por exemplo).
         progressDialog
 
-        %-----------------------------------------------------------------%
-        % ESPECIFICIDADES AUXAPP.WINADDTASK
-        %-----------------------------------------------------------------%
         taskList
         infoEdition
-
         receiverObj
         gpsObj
         EMSatObj
@@ -174,42 +164,47 @@ classdef winAddTask_exported < matlab.apps.AppBase
     end
 
 
-    methods
+    methods (Access = public)
         %-----------------------------------------------------------------%
-        % IPC: COMUNICAÇÃO ENTRE PROCESSOS
-        %-----------------------------------------------------------------%
-        function ipcSecundaryJSEventsHandler(app, event)
+        function ipcSecondaryJSEventsHandler(app, event)
             try
                 switch event.HTMLEventName
                     case 'renderer'
-                        startup_Controller(app)
-
-                    case 'auxApp.winAddTask.AntennaList_Tree'
-                        % ...
+                        appEngine.activate(app, app.Role)                        
 
                     otherwise
-                        error('UnexpectedEvent')
+                        ipcMainJSEventsHandler(app.mainApp, event)
                 end
 
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', ME.message);
+                ui.Dialog(app.UIFigure, 'error', ME.message);
             end
         end
-    end
 
+        %-----------------------------------------------------------------%
+        function ipcSecondaryMatlabCallsHandler(app, callingApp, operationType, varargin)
+            try
+                switch class(callingApp)
+                    case {'winAppColeta', 'winAppColeta_exported'}
+                        switch operationType
+                            case 'deleteAddedAntenna'
+                                DelAntennaButtonClicked(app)
 
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        % JSBACKDOOR: CUSTOMIZAÇÃO GUI (ESTÉTICA/COMPORTAMENTAL)
-        %-----------------------------------------------------------------%
-        function jsBackDoor_Initialization(app)
-            app.jsBackDoor = uihtml(app.UIFigure, "HTMLSource",           appUtil.jsBackDoorHTMLSource(),                 ...
-                                                  "HTMLEventReceivedFcn", @(~, evt)ipcSecundaryJSEventsHandler(app, evt), ...
-                                                  "Visible",              "off");
+                            otherwise
+                                error('UnexpectedCall')
+                        end
+    
+                    otherwise
+                        error('UnexpectedCall')
+                end
+
+            catch ME
+                ui.Dialog(app.UIFigure, 'error', ME.message);
+            end
         end
 
         %-----------------------------------------------------------------%
-        function jsBackDoor_Customizations(app, tabIndex)
+        function applyJSCustomizations(app, tabIndex)
             persistent customizationStatus
             if isempty(customizationStatus)
                 customizationStatus = [false, false, false];
@@ -272,61 +267,32 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     end
             end
         end
-    end
-
-    
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        % INICIALIZAÇÃO
-        %-----------------------------------------------------------------%
-        function startup_timerCreation(app)
-            app.timerObj = timer("ExecutionMode", "fixedSpacing", ...
-                                 "StartDelay",    1.5,            ...
-                                 "Period",        .1,             ...
-                                 "TimerFcn",      @(~,~)app.startup_timerFcn);
-            start(app.timerObj)
-        end
 
         %-----------------------------------------------------------------%
-        function startup_timerFcn(app)
-            if ui.FigureRenderStatus(app.UIFigure)
-                stop(app.timerObj)
-                delete(app.timerObj)
-
-                jsBackDoor_Initialization(app)
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function startup_Controller(app)
-            checkStackingOrder(app)
-            drawnow
-
-            jsBackDoor_Customizations(app, 0)
-            jsBackDoor_Customizations(app, 1)
-
-            % Define tamanho mínimo do app (não aplicável à versão webapp).
-            if ~strcmp(app.mainApp.executionMode, 'webApp')
-                app.dockModule_Undock.Enable = 1;
-                if ~app.isDocked
-                    appUtil.winMinSize(app.UIFigure, class.Constants.windowMinSize)
-                end
-            end
-
-            app.progressDialog.Visible = 'visible';
-
+        function initializeAppProperties(app)
             app.receiverObj = app.mainApp.receiverObj;
             app.gpsObj      = app.mainApp.gpsObj;
             app.EB500Map    = app.mainApp.EB500Obj.SelectivityMap;            
             app.switchList  = struct2table(jsondecode(fileread(fullfile(app.mainApp.rootFolder, 'config', 'switchList.json'))));
             app.EMSatObj    = app.mainApp.EMSatObj;
-            
-            startup_tgtList(app)
-            startup_Layout(app)
-
-            app.progressDialog.Visible = 'hidden';
         end
 
+        %-----------------------------------------------------------------%
+        function initializeUIComponents(app)
+            if ~strcmp(app.mainApp.executionMode, 'webApp')
+                app.dockModule_Undock.Enable = 1;
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function applyInitialLayout(app)
+            startup_tgtList(app)
+            startup_Layout(app)
+        end
+    end
+
+
+    methods (Access = private)
         %-----------------------------------------------------------------%
         function startup_tgtList(app)
             tgtList = app.EMSatObj.TargetList;
@@ -595,7 +561,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function BandView_SatelliteValues(app)
             idx1 = find(strcmp({app.EMSatObj.Antenna.Name}, extractBefore(app.Band_Antenna.Value, ' ')), 1);
@@ -605,7 +570,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaElevation.Value    = app.EMSatObj.TargetList(idx1).Target(idx2).Elevation;
             app.AntennaPolarization.Value = app.EMSatObj.TargetList(idx1).Target(idx2).Polarization;
         end
-
 
         %-----------------------------------------------------------------%
         function BandView_EditablesParameters_Visibility(app)
@@ -650,7 +614,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     app.Band_Resolution.Layout.Column      = 2;
             end
         end
-
 
         %-----------------------------------------------------------------%
         function instrSettings = BandView_EditablesParameters_GetValues(app, idx1, idx2)
@@ -780,7 +743,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function BandView_EditablesParameters_SaveValues(app, idx1, idx2)
             instrSettings = BandView_EditablesParameters_GetValues(app, idx1, idx2);
@@ -813,7 +775,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             app.Band_Refresh.Visible                              = 0;
         end
-
 
         %-----------------------------------------------------------------%
         function BandView_EditablesParameters_ShowValues(app, idx1, idx2)
@@ -1097,7 +1058,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function MainButtonPushed_ObservationSamples(app)
             idx1 = SelectedTaskIndex(app);
@@ -1115,26 +1075,20 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Code that executes after component creation
         function startupFcn(app, mainApp, editionType)
             
-            app.mainApp = mainApp;
+            try
+                app.infoEdition = editionType;
+                switch app.infoEdition.type
+                    case 'new'
+                        app.taskList   = mainApp.taskList;
+                        app.okButton.Text = 'Inclui tarefa';
+                    case 'edit'
+                        app.taskList   = class.taskList.app2raw(mainApp.specObj(editionType.idx).Task.Script);
+                        app.okButton.Text = 'Edita tarefa';
+                end
 
-            app.infoEdition = editionType;
-            switch app.infoEdition.type
-                case 'new'
-                    app.taskList   = mainApp.taskList;
-                    app.okButton.Text = 'Inclui tarefa';
-                case 'edit'
-                    app.taskList   = class.taskList.app2raw(mainApp.specObj(editionType.idx).Task.Script);
-                    app.okButton.Text = 'Edita tarefa';
-            end
-            
-            if app.isDocked
-                app.GridLayout.Padding(4)  = 30;
-                app.DockModule.Visible = 1;
-                app.jsBackDoor = mainApp.jsBackDoor;
-                startup_Controller(app)
-            else
-                appUtil.winPosition(app.UIFigure)
-                startup_timerCreation(app)
+                appEngine.boot(app, app.Role, mainApp)
+            catch ME
+                ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
             end
 
         end
@@ -1180,7 +1134,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             try
                 MainButtonPushed_Validations(app)
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', ME.message);
+                ui.Dialog(app.UIFigure, 'error', ME.message);
                 app.progressDialog.Visible = 'hidden';
                 return
             end
@@ -1332,7 +1286,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 end
 
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'warning', ME.message);
+                ui.Dialog(app.UIFigure, 'warning', ME.message);
                 app.progressDialog.Visible = 'hidden';
                 return
             end
@@ -1459,9 +1413,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
             
             try
                 msg = textFormatGUI.cellstr2TextField(splitlines(fileread(app.MaskFile_Button.Tag)), '\n');
-                appUtil.modalWindow(app.UIFigure, 'warning', msg);
+                ui.Dialog(app.UIFigure, 'warning', msg);
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));
+                ui.Dialog(app.UIFigure, 'error', getReport(ME));
             end
 
         end
@@ -1617,7 +1571,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
                 case app.GPS_Connectivity
                     if strcmp(app.GPS_List.Value, 'ID 0: Manual') && (app.GPS_manualLatitude.Value == -1) && (app.GPS_manualLongitude.Value == -1)
-                        appUtil.modalWindow(app.UIFigure, 'warning', 'Coordenadas geográficas inválidas.');
+                        ui.Dialog(app.UIFigure, 'warning', 'Coordenadas geográficas inválidas.');
                         return
                     end
         
@@ -1661,7 +1615,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                                            'Nota:\nCoordenadas geográficas distam <b>%.1f km</b> da sede do município <b>%s</b>.'], ...
                                            gps.Status, gps.Latitude, gps.Longitude, gps.TimeStamp, cityDistance, cityName);
                             
-                            appUtil.modalWindow(app.UIFigure, 'warning', msg);
+                            ui.Dialog(app.UIFigure, 'warning', msg);
                             
                             app.GPS_manualLatitude.Value  = round(gps.Latitude,  6);
                             app.GPS_manualLongitude.Value = round(gps.Longitude, 6);
@@ -1671,7 +1625,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         end
         
                     catch ME
-                        appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));
+                        ui.Dialog(app.UIFigure, 'error', getReport(ME));
                     end
         
                     app.progressDialog.Visible = 'hidden';
@@ -1861,7 +1815,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         end
 
-        % Menu selected function: delAntennaEntry
+        % Menu selected function: contextmenu_DelAntennaEntry
         function DelAntennaButtonClicked(app, event)
             
             if ~isempty(app.AntennaList_Tree.SelectedNodes)
@@ -1982,8 +1936,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
         
                     if contains(app.Receiver_List.Value, 'EB500')
                         if app.Band_Selectivity.Visible
-                            ind3 = find(strcmp(app.Band_Resolution.Items, app.Band_Resolution.Value));
-                            app.Band_Selectivity.Value = app.Band_Selectivity.Items{ind3};
+                            idxSelectivity = find(strcmp(app.Band_Resolution.Items, app.Band_Resolution.Value), 1);
+                            app.Band_Selectivity.Value = app.Band_Selectivity.Items{idxSelectivity};
                         end
                         app.taskList(idxTask).Band(idxBand).instrSelectivity = app.Band_Selectivity.Value;
                     end
@@ -2079,11 +2033,11 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         end
 
-        % Selection change function: TabGroup
-        function TabGroupSelectionChanged(app, event)
+        % Selection change function: SubTabGroup
+        function SubTabGroupSelectionChanged(app, event)
             
-            [~, tabIndex] = ismember(app.TabGroup.SelectedTab, app.TabGroup.Children);
-            jsBackDoor_Customizations(app, tabIndex)
+            [~, tabIndex] = ismember(app.SubTabGroup.SelectedTab, app.SubTabGroup.Children);
+            applyJSCustomizations(app, tabIndex)
 
         end
     end
@@ -2131,29 +2085,29 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GridLayout.Padding = [0 0 0 0];
             app.GridLayout.BackgroundColor = [1 1 1];
 
-            % Create TabGroup
-            app.TabGroup = uitabgroup(app.GridLayout);
-            app.TabGroup.AutoResizeChildren = 'off';
-            app.TabGroup.SelectionChangedFcn = createCallbackFcn(app, @TabGroupSelectionChanged, true);
-            app.TabGroup.Tag = '1';
-            app.TabGroup.Layout.Row = [3 8];
-            app.TabGroup.Layout.Column = [2 8];
+            % Create SubTabGroup
+            app.SubTabGroup = uitabgroup(app.GridLayout);
+            app.SubTabGroup.AutoResizeChildren = 'off';
+            app.SubTabGroup.SelectionChangedFcn = createCallbackFcn(app, @SubTabGroupSelectionChanged, true);
+            app.SubTabGroup.Tag = '1';
+            app.SubTabGroup.Layout.Row = [3 8];
+            app.SubTabGroup.Layout.Column = [2 8];
 
-            % Create Tab1
-            app.Tab1 = uitab(app.TabGroup);
-            app.Tab1.AutoResizeChildren = 'off';
-            app.Tab1.Title = 'TAREFA';
+            % Create SubTab1
+            app.SubTab1 = uitab(app.SubTabGroup);
+            app.SubTab1.AutoResizeChildren = 'off';
+            app.SubTab1.Title = 'TAREFA';
 
-            % Create Tab1Grid
-            app.Tab1Grid = uigridlayout(app.Tab1);
-            app.Tab1Grid.ColumnWidth = {256, 22, 22};
-            app.Tab1Grid.RowHeight = {17, 22, 22, 22, 22, 22, 22, 22, '1x'};
-            app.Tab1Grid.ColumnSpacing = 5;
-            app.Tab1Grid.RowSpacing = 5;
-            app.Tab1Grid.BackgroundColor = [1 1 1];
+            % Create SubGrid1
+            app.SubGrid1 = uigridlayout(app.SubTab1);
+            app.SubGrid1.ColumnWidth = {256, 22, 22};
+            app.SubGrid1.RowHeight = {17, 22, 22, 22, 22, 22, 22, 22, '1x'};
+            app.SubGrid1.ColumnSpacing = 5;
+            app.SubGrid1.RowSpacing = 5;
+            app.SubGrid1.BackgroundColor = [1 1 1];
 
             % Create TaskNameLabel
-            app.TaskNameLabel = uilabel(app.Tab1Grid);
+            app.TaskNameLabel = uilabel(app.SubGrid1);
             app.TaskNameLabel.VerticalAlignment = 'bottom';
             app.TaskNameLabel.FontSize = 10;
             app.TaskNameLabel.Layout.Row = 1;
@@ -2161,7 +2115,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.TaskNameLabel.Text = 'NOME:';
 
             % Create TaskName
-            app.TaskName = uidropdown(app.Tab1Grid);
+            app.TaskName = uidropdown(app.SubGrid1);
             app.TaskName.Items = {};
             app.TaskName.ValueChangedFcn = createCallbackFcn(app, @TaskValueChanged, true);
             app.TaskName.FontSize = 11;
@@ -2171,7 +2125,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.TaskName.Value = {};
 
             % Create TaskTypeLabel
-            app.TaskTypeLabel = uilabel(app.Tab1Grid);
+            app.TaskTypeLabel = uilabel(app.SubGrid1);
             app.TaskTypeLabel.VerticalAlignment = 'bottom';
             app.TaskTypeLabel.FontSize = 10;
             app.TaskTypeLabel.Layout.Row = 3;
@@ -2179,7 +2133,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.TaskTypeLabel.Text = 'TIPO:';
 
             % Create TaskType
-            app.TaskType = uidropdown(app.Tab1Grid);
+            app.TaskType = uidropdown(app.SubGrid1);
             app.TaskType.Items = {'Monitoração regular', 'Drive-test', 'Drive-test (Level+Azimuth)', 'Rompimento de Máscara Espectral'};
             app.TaskType.ValueChangedFcn = createCallbackFcn(app, @TaskTypeValueChanged, true);
             app.TaskType.FontSize = 11;
@@ -2189,7 +2143,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.TaskType.Value = 'Monitoração regular';
 
             % Create AddMaskFile_Button
-            app.AddMaskFile_Button = uibutton(app.Tab1Grid, 'push');
+            app.AddMaskFile_Button = uibutton(app.SubGrid1, 'push');
             app.AddMaskFile_Button.ButtonPushedFcn = createCallbackFcn(app, @AddMaskFileButtonPushed, true);
             app.AddMaskFile_Button.Icon = 'OpenFile_36x36.png';
             app.AddMaskFile_Button.BackgroundColor = [0.9804 0.9804 0.9804];
@@ -2200,7 +2154,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AddMaskFile_Button.Text = '';
 
             % Create MaskFile_Button
-            app.MaskFile_Button = uibutton(app.Tab1Grid, 'push');
+            app.MaskFile_Button = uibutton(app.SubGrid1, 'push');
             app.MaskFile_Button.ButtonPushedFcn = createCallbackFcn(app, @ViewMaskFileButtonPushed, true);
             app.MaskFile_Button.Icon = 'Mask_32.png';
             app.MaskFile_Button.BackgroundColor = [0.9804 0.9804 0.9804];
@@ -2212,14 +2166,14 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.MaskFile_Button.Text = '';
 
             % Create PreviewTaskCheckbox
-            app.PreviewTaskCheckbox = uicheckbox(app.Tab1Grid);
+            app.PreviewTaskCheckbox = uicheckbox(app.SubGrid1);
             app.PreviewTaskCheckbox.Text = 'PRÉVIA (não registra monitoração em arquivo)';
             app.PreviewTaskCheckbox.FontSize = 10;
             app.PreviewTaskCheckbox.Layout.Row = 5;
             app.PreviewTaskCheckbox.Layout.Column = [1 3];
 
             % Create BitsPerPointLabel
-            app.BitsPerPointLabel = uilabel(app.Tab1Grid);
+            app.BitsPerPointLabel = uilabel(app.SubGrid1);
             app.BitsPerPointLabel.VerticalAlignment = 'bottom';
             app.BitsPerPointLabel.FontSize = 10;
             app.BitsPerPointLabel.Layout.Row = 6;
@@ -2227,7 +2181,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.BitsPerPointLabel.Text = 'CODIFICAÇÃO:';
 
             % Create BitsPerPoint
-            app.BitsPerPoint = uidropdown(app.Tab1Grid);
+            app.BitsPerPoint = uidropdown(app.SubGrid1);
             app.BitsPerPoint.Items = {'8 bits', '16 bits', '32 bits'};
             app.BitsPerPoint.FontSize = 11;
             app.BitsPerPoint.BackgroundColor = [1 1 1];
@@ -2236,7 +2190,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.BitsPerPoint.Value = '8 bits';
 
             % Create ObservationLabel
-            app.ObservationLabel = uilabel(app.Tab1Grid);
+            app.ObservationLabel = uilabel(app.SubGrid1);
             app.ObservationLabel.VerticalAlignment = 'bottom';
             app.ObservationLabel.FontSize = 10;
             app.ObservationLabel.Layout.Row = 8;
@@ -2244,7 +2198,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.ObservationLabel.Text = 'PERÍODO DE OBSERVAÇÃO:';
 
             % Create ObservationPanel
-            app.ObservationPanel = uipanel(app.Tab1Grid);
+            app.ObservationPanel = uipanel(app.SubGrid1);
             app.ObservationPanel.AutoResizeChildren = 'off';
             app.ObservationPanel.Layout.Row = 9;
             app.ObservationPanel.Layout.Column = [1 3];
@@ -2402,21 +2356,21 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.SpecificTime_Mark2.Layout.Column = 6;
             app.SpecificTime_Mark2.Text = ':';
 
-            % Create Tab2
-            app.Tab2 = uitab(app.TabGroup);
-            app.Tab2.AutoResizeChildren = 'off';
-            app.Tab2.Title = 'INSTRUMENTOS';
+            % Create SubTab2
+            app.SubTab2 = uitab(app.SubTabGroup);
+            app.SubTab2.AutoResizeChildren = 'off';
+            app.SubTab2.Title = 'INSTRUMENTOS';
 
-            % Create Tab2Grid
-            app.Tab2Grid = uigridlayout(app.Tab2);
-            app.Tab2Grid.ColumnWidth = {256, 22, 22};
-            app.Tab2Grid.RowHeight = {17, 22, 60, 22, 22, '1x'};
-            app.Tab2Grid.ColumnSpacing = 5;
-            app.Tab2Grid.RowSpacing = 5;
-            app.Tab2Grid.BackgroundColor = [1 1 1];
+            % Create SubGrid2
+            app.SubGrid2 = uigridlayout(app.SubTab2);
+            app.SubGrid2.ColumnWidth = {256, 22, 22};
+            app.SubGrid2.RowHeight = {17, 22, 60, 22, 22, '1x'};
+            app.SubGrid2.ColumnSpacing = 5;
+            app.SubGrid2.RowSpacing = 5;
+            app.SubGrid2.BackgroundColor = [1 1 1];
 
             % Create Receiver_ListLabel
-            app.Receiver_ListLabel = uilabel(app.Tab2Grid);
+            app.Receiver_ListLabel = uilabel(app.SubGrid2);
             app.Receiver_ListLabel.VerticalAlignment = 'bottom';
             app.Receiver_ListLabel.FontSize = 10;
             app.Receiver_ListLabel.Layout.Row = 1;
@@ -2424,7 +2378,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Receiver_ListLabel.Text = 'RECEPTOR:';
 
             % Create Receiver_List
-            app.Receiver_List = uidropdown(app.Tab2Grid);
+            app.Receiver_List = uidropdown(app.SubGrid2);
             app.Receiver_List.Items = {};
             app.Receiver_List.ValueChangedFcn = createCallbackFcn(app, @ReceiverValueChanged, true);
             app.Receiver_List.FontSize = 11;
@@ -2434,7 +2388,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Receiver_List.Value = {};
 
             % Create Receiver_Connectivity
-            app.Receiver_Connectivity = uibutton(app.Tab2Grid, 'push');
+            app.Receiver_Connectivity = uibutton(app.SubGrid2, 'push');
             app.Receiver_Connectivity.ButtonPushedFcn = createCallbackFcn(app, @ConnectivityTestButtonPushed, true);
             app.Receiver_Connectivity.Icon = 'Connectivity_32.png';
             app.Receiver_Connectivity.BackgroundColor = [0.9804 0.9804 0.9804];
@@ -2444,7 +2398,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Receiver_Connectivity.Text = '';
 
             % Create Receiver_Panel
-            app.Receiver_Panel = uipanel(app.Tab2Grid);
+            app.Receiver_Panel = uipanel(app.SubGrid2);
             app.Receiver_Panel.AutoResizeChildren = 'off';
             app.Receiver_Panel.Layout.Row = 3;
             app.Receiver_Panel.Layout.Column = [1 3];
@@ -2491,7 +2445,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Receiver_SyncRef.Value = 'Single Sweep';
 
             % Create GPS_ListLabel
-            app.GPS_ListLabel = uilabel(app.Tab2Grid);
+            app.GPS_ListLabel = uilabel(app.SubGrid2);
             app.GPS_ListLabel.VerticalAlignment = 'bottom';
             app.GPS_ListLabel.FontSize = 10;
             app.GPS_ListLabel.Layout.Row = 4;
@@ -2499,7 +2453,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_ListLabel.Text = 'GPS:';
 
             % Create GPS_List
-            app.GPS_List = uidropdown(app.Tab2Grid);
+            app.GPS_List = uidropdown(app.SubGrid2);
             app.GPS_List.Items = {'ID 0: Manual'};
             app.GPS_List.ValueChangedFcn = createCallbackFcn(app, @GPSValueChanged, true);
             app.GPS_List.FontSize = 11;
@@ -2509,7 +2463,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_List.Value = 'ID 0: Manual';
 
             % Create GPS_FixedStation
-            app.GPS_FixedStation = uibutton(app.Tab2Grid, 'push');
+            app.GPS_FixedStation = uibutton(app.SubGrid2, 'push');
             app.GPS_FixedStation.ButtonPushedFcn = createCallbackFcn(app, @GPSPinButtonPushed, true);
             app.GPS_FixedStation.Icon = 'Pin_18.png';
             app.GPS_FixedStation.BackgroundColor = [0.9804 0.9804 0.9804];
@@ -2520,7 +2474,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_FixedStation.Text = '';
 
             % Create GPS_Connectivity
-            app.GPS_Connectivity = uibutton(app.Tab2Grid, 'push');
+            app.GPS_Connectivity = uibutton(app.SubGrid2, 'push');
             app.GPS_Connectivity.ButtonPushedFcn = createCallbackFcn(app, @ConnectivityTestButtonPushed, true);
             app.GPS_Connectivity.Icon = 'Connectivity_32.png';
             app.GPS_Connectivity.BackgroundColor = [0.9804 0.9804 0.9804];
@@ -2530,7 +2484,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_Connectivity.Text = '';
 
             % Create GPS_Panel
-            app.GPS_Panel = uipanel(app.Tab2Grid);
+            app.GPS_Panel = uipanel(app.SubGrid2);
             app.GPS_Panel.AutoResizeChildren = 'off';
             app.GPS_Panel.Layout.Row = 6;
             app.GPS_Panel.Layout.Column = [1 3];
@@ -2590,20 +2544,20 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GPS_RevisitTime.Layout.Column = 1;
             app.GPS_RevisitTime.Value = 60;
 
-            % Create Tab3
-            app.Tab3 = uitab(app.TabGroup);
-            app.Tab3.AutoResizeChildren = 'off';
-            app.Tab3.Title = 'ANTENAS';
+            % Create SubTab3
+            app.SubTab3 = uitab(app.SubTabGroup);
+            app.SubTab3.AutoResizeChildren = 'off';
+            app.SubTab3.Title = 'ANTENAS';
 
-            % Create Tab3Grid
-            app.Tab3Grid = uigridlayout(app.Tab3);
-            app.Tab3Grid.ColumnWidth = {288, 12};
-            app.Tab3Grid.RowHeight = {17, 22, 22, 22, 172, 10, '1x'};
-            app.Tab3Grid.RowSpacing = 5;
-            app.Tab3Grid.BackgroundColor = [1 1 1];
+            % Create SubGrid3
+            app.SubGrid3 = uigridlayout(app.SubTab3);
+            app.SubGrid3.ColumnWidth = {288, 12};
+            app.SubGrid3.RowHeight = {17, 22, 22, 22, 172, 10, '1x'};
+            app.SubGrid3.RowSpacing = 5;
+            app.SubGrid3.BackgroundColor = [1 1 1];
 
             % Create AntennaSwitch_Mode
-            app.AntennaSwitch_Mode = uicheckbox(app.Tab3Grid);
+            app.AntennaSwitch_Mode = uicheckbox(app.SubGrid3);
             app.AntennaSwitch_Mode.ValueChangedFcn = createCallbackFcn(app, @AntennaSwitchModeValueChanged, true);
             app.AntennaSwitch_Mode.Text = 'Comutador de antenas:';
             app.AntennaSwitch_Mode.FontSize = 11;
@@ -2611,7 +2565,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaSwitch_Mode.Layout.Column = 1;
 
             % Create AntennaSwitch_Name
-            app.AntennaSwitch_Name = uieditfield(app.Tab3Grid, 'text');
+            app.AntennaSwitch_Name = uieditfield(app.SubGrid3, 'text');
             app.AntennaSwitch_Name.Editable = 'off';
             app.AntennaSwitch_Name.FontSize = 11;
             app.AntennaSwitch_Name.Enable = 'off';
@@ -2619,7 +2573,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaSwitch_Name.Layout.Column = [1 2];
 
             % Create AntennaNameLabel
-            app.AntennaNameLabel = uilabel(app.Tab3Grid);
+            app.AntennaNameLabel = uilabel(app.SubGrid3);
             app.AntennaNameLabel.VerticalAlignment = 'bottom';
             app.AntennaNameLabel.FontSize = 10;
             app.AntennaNameLabel.Layout.Row = 3;
@@ -2627,7 +2581,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaNameLabel.Text = 'ANTENA';
 
             % Create AntennaName
-            app.AntennaName = uidropdown(app.Tab3Grid);
+            app.AntennaName = uidropdown(app.SubGrid3);
             app.AntennaName.Items = {'', 'CRFS Low Band (10 MHz - 1.2 GHz)', 'CRFS High Band (750 MHz - 6 GHz)', 'Rohde & Schwarz ADDx07 (EB500 GUI Auto)', 'Rohde & Schwarz ADD107 (20 MHz - 1.3 GHz)', 'Rohde & Schwarz ADD207 (600 MHz - 6 GHz)', 'Rohde & Schwarz ADD295 (20 MHz - 3 GHz)', 'Telescopic', 'Unlisted (Omni)', 'Unlisted (Directional)'};
             app.AntennaName.ValueChangedFcn = createCallbackFcn(app, @AntennaNameValueChanged, true);
             app.AntennaName.FontSize = 11;
@@ -2637,7 +2591,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaName.Value = '';
 
             % Create Antenna_Panel
-            app.Antenna_Panel = uipanel(app.Tab3Grid);
+            app.Antenna_Panel = uipanel(app.SubGrid3);
             app.Antenna_Panel.AutoResizeChildren = 'off';
             app.Antenna_Panel.Layout.Row = 5;
             app.Antenna_Panel.Layout.Column = [1 2];
@@ -2759,7 +2713,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaPolarization.Layout.Column = 2;
 
             % Create AddAntenna_Image
-            app.AddAntenna_Image = uiimage(app.Tab3Grid);
+            app.AddAntenna_Image = uiimage(app.SubGrid3);
             app.AddAntenna_Image.ImageClickedFcn = createCallbackFcn(app, @AddAntennaButtonClicked, true);
             app.AddAntenna_Image.Layout.Row = 6;
             app.AddAntenna_Image.Layout.Column = 2;
@@ -2768,7 +2722,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AddAntenna_Image.ImageSource = 'addSymbol_32.png';
 
             % Create AntennaList_Tree
-            app.AntennaList_Tree = uitree(app.Tab3Grid);
+            app.AntennaList_Tree = uitree(app.SubGrid3);
             app.AntennaList_Tree.FontSize = 10.5;
             app.AntennaList_Tree.Layout.Row = 7;
             app.AntennaList_Tree.Layout.Column = [1 2];
@@ -3310,10 +3264,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.ContextMenu = uicontextmenu(app.UIFigure);
             app.ContextMenu.Tag = 'auxApp.winAddTask';
 
-            % Create delAntennaEntry
-            app.delAntennaEntry = uimenu(app.ContextMenu);
-            app.delAntennaEntry.MenuSelectedFcn = createCallbackFcn(app, @DelAntennaButtonClicked, true);
-            app.delAntennaEntry.Text = '❌ Excluir';
+            % Create contextmenu_DelAntennaEntry
+            app.contextmenu_DelAntennaEntry = uimenu(app.ContextMenu);
+            app.contextmenu_DelAntennaEntry.MenuSelectedFcn = createCallbackFcn(app, @DelAntennaButtonClicked, true);
+            app.contextmenu_DelAntennaEntry.Text = '❌ Excluir';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

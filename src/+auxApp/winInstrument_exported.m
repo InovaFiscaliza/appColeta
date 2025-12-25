@@ -4,7 +4,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
     properties (Access = public)
         UIFigure                matlab.ui.Figure
         GridLayout              matlab.ui.container.GridLayout
-        DockModuleGroup         matlab.ui.container.GridLayout
+        DockModule              matlab.ui.container.GridLayout
         dockModule_Undock       matlab.ui.control.Image
         dockModule_Close        matlab.ui.control.Image
         TabGroup                matlab.ui.container.TabGroup
@@ -65,71 +65,51 @@ classdef winInstrument_exported < matlab.apps.AppBase
     end
 
     
-    properties
+    properties (Access = private)
+        %-----------------------------------------------------------------%
+        Role = 'secondaryApp'
+    end
+
+
+    properties (Access = public)
         %-----------------------------------------------------------------%
         Container
         isDocked = false
-
         mainApp
-
-        % A função do timer é executada uma única vez após a renderização
-        % da figura, lendo arquivos de configuração, iniciando modo de operação
-        % paralelo etc. A ideia é deixar o MATLAB focar apenas na criação dos 
-        % componentes essenciais da GUI (especificados em "createComponents"), 
-        % mostrando a GUI para o usuário o mais rápido possível.
-        timerObj
         jsBackDoor
-
-        % Janela de progresso já criada no DOM. Dessa forma, controla-se 
-        % apenas a sua visibilidade - e tornando desnecessário criá-la a
-        % cada chamada (usando uiprogressdlg, por exemplo).
         progressDialog
 
         receiverObj
         gpsObj
-
         instrumentList
         editedList
     end
 
 
-    methods
+    methods (Access = public)
         %-----------------------------------------------------------------%
-        % IPC: COMUNICAÇÃO ENTRE PROCESSOS
-        %-----------------------------------------------------------------%
-        function ipcSecundaryJSEventsHandler(app, event)
+        function ipcSecondaryJSEventsHandler(app, event)
             try
                 switch event.HTMLEventName
                     case 'renderer'
-                        startup_Controller(app)
+                        appEngine.activate(app, app.Role)
+
                     otherwise
                         error('UnexpectedEvent')
                 end
 
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', ME.message);
+                ui.Dialog(app.UIFigure, 'error', ME.message);
             end
         end
 
         %-----------------------------------------------------------------%
-        % function ipcSecundaryMatlabCallsHandler(app, callingApp, varargin)
-        %     % ...
-        % end
-    end
+        function applyJSCustomizations(app, tabIndex)
+            arguments
+                app
+                tabIndex = 0
+            end
 
-
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        % JSBACKDOOR: CUSTOMIZAÇÃO GUI (ESTÉTICA/COMPORTAMENTAL)
-        %-----------------------------------------------------------------%
-        function jsBackDoor_Initialization(app, varargin)
-            app.jsBackDoor = uihtml(app.UIFigure, "HTMLSource",           appUtil.jsBackDoorHTMLSource(),                              ...
-                                                  "HTMLEventReceivedFcn", @(~, evt)ipcSecundaryJSEventsHandler(app, evt, varargin{:}), ...
-                                                  "Visible",              "off");
-        end
-
-        %-----------------------------------------------------------------%
-        function jsBackDoor_Customizations(app)
             if app.isDocked
                 app.progressDialog = app.mainApp.progressDialog;
             else
@@ -141,7 +121,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Grid botões "dock":
             if app.isDocked
-                elToModify = {app.DockModuleGroup};
+                elToModify = {app.DockModule};
                 elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
                 if ~isempty(elDataTag)
                     sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
@@ -157,42 +137,9 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 ui.TextView.startup(app.jsBackDoor, elToModify{1}, appName);
             end
         end
-    end
-
-
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        % INICIALIZAÇÃO
-        %-----------------------------------------------------------------%
-        function startup_timerCreation(app)
-            app.timerObj = timer("ExecutionMode", "fixedSpacing", ...
-                                 "StartDelay",    1.5,            ...
-                                 "Period",        .1,             ...
-                                 "TimerFcn",      @(~,~)app.startup_timerFcn);
-            start(app.timerObj)
-        end
 
         %-----------------------------------------------------------------%
-        function startup_timerFcn(app)
-            if ui.FigureRenderStatus(app.UIFigure)
-                stop(app.timerObj)
-                delete(app.timerObj)
-
-                jsBackDoor_Initialization(app)
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function startup_Controller(app)
-            drawnow
-
-            jsBackDoor_Customizations(app)
-            startup_AppProperties(app)
-            startup_GUIComponents(app)
-        end
-
-        %-----------------------------------------------------------------%
-        function startup_AppProperties(app)
+        function initializeAppProperties(app)
             app.receiverObj    = app.mainApp.receiverObj;
             app.gpsObj         = app.mainApp.gpsObj;
             app.instrumentList = [app.receiverObj.List; app.gpsObj.List];
@@ -200,14 +147,20 @@ classdef winInstrument_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function startup_GUIComponents(app)
+        function initializeUIComponents(app)
             if ~strcmp(app.mainApp.executionMode, 'webApp')
                 app.dockModule_Undock.Enable = 1;
             end
-
-            TreeBuilding(app, [])
         end
 
+        %-----------------------------------------------------------------%
+        function applyInitialLayout(app)
+            TreeBuilding(app, [])
+        end
+    end
+
+
+    methods (Access = private)
         %-----------------------------------------------------------------%
         function TreeBuilding(app, idxSelectedNode)
             if ~isempty(app.TreeNode_Receiver.Children)
@@ -446,7 +399,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             if Flag
-                appUtil.modalWindow(app.UIFigure, 'warning', 'Endereço IP inválido');
+                ui.Dialog(app.UIFigure, 'warning', 'Endereço IP inválido');
 
                 switch event.Source
                     case app.IP;       app.IP.Value       = event.PreviousValue;
@@ -487,7 +440,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             if Flag
-                appUtil.modalWindow(app.UIFigure, 'warning', 'Porta inválida');
+                ui.Dialog(app.UIFigure, 'warning', 'Porta inválida');
                 app.Port.Value = event.PreviousValue;
                 
             else
@@ -526,10 +479,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 msgError = ME.message;
             end
         end
-    end
 
-
-    methods (Access = private)
         %-----------------------------------------------------------------%
         function update(app)
             saveNewFile(app, fullfile(app.mainApp.rootFolder, 'config'), false)
@@ -547,7 +497,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             % Atualiza as propriedades (app.instrumentList e app.editedList
             % pois podem estar desatualizadas, no caso da edição excluir
             % todos os instrumentos, ou desabilitar todos):
-            startup_AppProperties(app)
+            initializeAppProperties(app)
             TreeBuilding(app, [])
 
             % Fecha o módulo auxiliar "auxApp.winAddTask.mlapp", caso aberto.
@@ -578,10 +528,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 fclose(fileID);
 
                 if ShowAlert
-                    appUtil.modalWindow(app.UIFigure, 'warning', sprintf('Arquivo <b>instrumentList.json</b> salvo na pasta "%s"', Folder));
+                    ui.Dialog(app.UIFigure, 'warning', sprintf('Arquivo <b>instrumentList.json</b> salvo na pasta "%s"', Folder));
                 end
             catch ME
-                appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));
+                ui.Dialog(app.UIFigure, 'error', getReport(ME));
             end
         end
     end
@@ -593,16 +543,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
         % Code that executes after component creation
         function startupFcn(app, mainApp)
             
-            app.mainApp = mainApp;
-
-            if app.isDocked
-                app.GridLayout.Padding(4) = 30;
-                app.DockModuleGroup.Visible = 1;
-                app.jsBackDoor = mainApp.jsBackDoor;
-                startup_Controller(app)
-            else
-                appUtil.winPosition(app.UIFigure)
-                startup_timerCreation(app)
+            try
+                appEngine.boot(app, app.Role, mainApp)
+            catch ME
+                ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
             end
             
         end
@@ -620,7 +564,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             
             % Caso o nó selecionado da árvore seja o "RECEPTOR" ou "GPS",
             % busca-se o seu primeiro filho, caso existente.
-
             idx = SelectionNodeValidation(app);
 
             % Ajuste dos itens que são listas suspensas (uidropdown)
@@ -937,7 +880,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     end
 
                 catch ME
-                    appUtil.modalWindow(app.UIFigure, 'error', getReport(ME));
+                    ui.Dialog(app.UIFigure, 'error', getReport(ME));
                 end
             end
 
@@ -1531,18 +1474,18 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Image_downArrow.Layout.Column = 4;
             app.Image_downArrow.ImageSource = 'ArrowDown_32.png';
 
-            % Create DockModuleGroup
-            app.DockModuleGroup = uigridlayout(app.GridLayout);
-            app.DockModuleGroup.RowHeight = {'1x'};
-            app.DockModuleGroup.ColumnSpacing = 2;
-            app.DockModuleGroup.Padding = [5 2 5 2];
-            app.DockModuleGroup.Visible = 'off';
-            app.DockModuleGroup.Layout.Row = [2 3];
-            app.DockModuleGroup.Layout.Column = [3 4];
-            app.DockModuleGroup.BackgroundColor = [0.2 0.2 0.2];
+            % Create DockModule
+            app.DockModule = uigridlayout(app.GridLayout);
+            app.DockModule.RowHeight = {'1x'};
+            app.DockModule.ColumnSpacing = 2;
+            app.DockModule.Padding = [5 2 5 2];
+            app.DockModule.Visible = 'off';
+            app.DockModule.Layout.Row = [2 3];
+            app.DockModule.Layout.Column = [3 4];
+            app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
             % Create dockModule_Close
-            app.dockModule_Close = uiimage(app.DockModuleGroup);
+            app.dockModule_Close = uiimage(app.DockModule);
             app.dockModule_Close.ScaleMethod = 'none';
             app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
             app.dockModule_Close.Tag = 'DRIVETEST';
@@ -1552,7 +1495,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.dockModule_Close.ImageSource = 'Delete_12SVG_white.svg';
 
             % Create dockModule_Undock
-            app.dockModule_Undock = uiimage(app.DockModuleGroup);
+            app.dockModule_Undock = uiimage(app.DockModule);
             app.dockModule_Undock.ScaleMethod = 'none';
             app.dockModule_Undock.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
             app.dockModule_Undock.Tag = 'DRIVETEST';
