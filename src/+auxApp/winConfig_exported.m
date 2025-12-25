@@ -556,7 +556,7 @@ classdef winConfig_exported < matlab.apps.AppBase
         % Value changed function: plot_TiledSpacing
         function plot_TiledSpacingValueChanged(app, event)
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'AxesTileSpacingChanged', app.plot_TiledSpacing.Value)
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'onAxesTileSpacingChange', app.plot_TiledSpacing.Value)
 
         end
 
@@ -585,7 +585,7 @@ classdef winConfig_exported < matlab.apps.AppBase
                         app.mainApp.General.Plot.ClearWrite.Color = selectedColor;
                 end
 
-                ipcMainMatlabCallsHandler(app.mainApp, app, 'PlotColorChanged', plotTag)
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', plotTag)
             end
 
             app.mainApp.General_I.Plot = app.mainApp.General.Plot;
@@ -601,7 +601,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             
             switch event.Source
                 case app.plot_WaterfallColormap
-                    ipcMainMatlabCallsHandler(app.mainApp, app, 'WaterfallColormapChanged', app.plot_WaterfallColormap.Value)
+                    ipcMainMatlabCallsHandler(app.mainApp, app, 'onWaterfallColormapChange', app.plot_WaterfallColormap.Value)
                     app.mainApp.General.Plot.Waterfall.Colormap = app.plot_WaterfallColormap.Value;
 
                 case app.plot_WaterfallDepth
@@ -639,7 +639,7 @@ classdef winConfig_exported < matlab.apps.AppBase
                 updatePanel_Plot(app)
                 saveGeneralSettings(app)
     
-                ipcMainMatlabCallsHandler(app.mainApp, app, 'PlotColorChanged', 'ClrWrite')
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', 'ClrWrite')
             end
 
         end

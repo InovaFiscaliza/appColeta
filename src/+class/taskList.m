@@ -37,6 +37,23 @@ classdef taskList
 
     methods (Static)
         %-----------------------------------------------------------------%
+        function List = rawFileParser(rootFolder, callerId)
+            appName = class.Constants.appName;
+            [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
+
+            try
+                [List, msgError] = class.taskList.file2raw(fullfile(programDataFolder, 'taskList.json'), callerId);
+                if ~isempty(msgError)
+                    error(msgError)
+                end
+
+            catch
+                List = class.taskList.file2raw(fullfile(projectFolder, 'taskList.json'), callerId);
+            end
+        end
+
+
+        %-----------------------------------------------------------------%
         function [List, msgError] = file2raw(FileFullPath, srcFcn)
             try
                 List = jsondecode(fileread(FileFullPath));

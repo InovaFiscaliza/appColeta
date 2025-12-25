@@ -12,13 +12,13 @@ function [instrHandle, msgError] = ConnectivityTest_Receiver(app, instrSelected,
     if isempty(msgError)
         instrHandle = app.receiverObj.Table.Handle{idx};
         if MessageBoxFlag
-            appUtil.modalWindow(app.UIFigure, 'warning', sprintf('Conectado ao %s', instrHandle.UserData.IDN));
+            ui.Dialog(app.UIFigure, 'warning', sprintf('Conectado ao %s', instrHandle.UserData.IDN));
         end
 
     else
         instrHandle = [];
         if MessageBoxFlag
-            appUtil.modalWindow(app.UIFigure, 'error', msgError);
+            ui.Dialog(app.UIFigure, 'error', msgError);
         end
     end
 end

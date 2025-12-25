@@ -482,7 +482,9 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function update(app)
-            saveNewFile(app, fullfile(app.mainApp.rootFolder, 'config'), false)
+            appName = class.Constants.appName;
+            [~, programDataFolder] = appEngine.util.Path(appName, app.mainApp.rootFolder);
+            saveNewFile(app, programDataFolder, false)
 
             % Após salva a nova versão de "instrumentList.json", atualizam-se
             % as listas dos objetos HANDLE app.receiverObj e app.gpsObj.
@@ -506,7 +508,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function saveNewFile(app, Folder, ShowAlert)
-
             fileList = table2struct(app.instrumentList);
             for ii = 1:numel(fileList)
                 fileList(ii).Parameters = jsondecode(fileList(ii).Parameters);
@@ -523,13 +524,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             try
-                fileID = fopen(fullfile(Folder, 'instrumentList.json'), 'wt');
-                fwrite(fileID, jsonencode(fileList, 'PrettyPrint', true));
-                fclose(fileID);
-
+                writematrix(jsonencode(fileList, 'PrettyPrint', true), fullfile(Folder, 'instrumentList.json'), "FileType", "text", "QuoteStrings", "none", "Encoding", "UTF-8", "WriteMode", "overwrite")
                 if ShowAlert
                     ui.Dialog(app.UIFigure, 'warning', sprintf('Arquivo <b>instrumentList.json</b> salvo na pasta "%s"', Folder));
                 end
+                
             catch ME
                 ui.Dialog(app.UIFigure, 'error', getReport(ME));
             end

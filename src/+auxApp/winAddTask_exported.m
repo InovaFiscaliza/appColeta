@@ -1307,7 +1307,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             newTask.Antenna(1).Switch   = struct('Name', app.AntennaSwitch_Name.Value, 'OutputPort', app.switchList.SwitchOutputPort(switchIndex));
             newTask.Antenna.MetaData    = antennaMetaData;
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'AddOrEditTask', 'TASK:ADD', app.infoEdition, newTask)
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'onTaskAddingOrEditing', 'TASK:ADD', app.infoEdition, newTask)
 
         end
 

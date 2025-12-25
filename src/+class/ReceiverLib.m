@@ -202,26 +202,23 @@ classdef ReceiverLib < handle
 
 
         %-----------------------------------------------------------------%
-        function [tempList, msgError] = FileRead(obj, RootFolder)
+        function tempList = FileRead(obj, rootFolder)
+            appName = class.Constants.appName;
+            [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
 
             try
-                tempList = fcn.instrumentListRead(fullfile(RootFolder, 'config', 'instrumentList.json'));
-                tempList(~strcmp(tempList.Family, 'Receiver'),:) = [];
-
-                if height(tempList)
-                    if ~any(tempList.Enable)
-                        tempList.Enable(1) = 1;
-                    end
-                else
-                    tempList(end+1,:) = DefaultInstrument(obj);
-                end
-                msgError = '';
-
+                tempList = fcn.instrumentListRead(fullfile(programDataFolder, 'instrumentList.json'));
             catch ME
-                tempList          = obj.List;
-                tempList(end+1,:) = DefaultInstrument(obj);
+                tempList = fcn.instrumentListRead(fullfile(projectFolder,     'instrumentList.json'));
+            end
 
-                msgError = ME.message;
+            tempList(~strcmp(tempList.Family, 'Receiver'), :) = [];
+            if height(tempList)
+                if ~any(tempList.Enable)
+                    tempList.Enable(1) = 1;
+                end
+            else
+                tempList(end+1,:) = DefaultInstrument(obj);
             end
         end
     end

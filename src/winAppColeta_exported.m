@@ -159,38 +159,22 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                     case 'unload'
                         closeFcn(app)
-
-                    case 'BackgroundColorTurnedInvisible'
-                        switch event.HTMLEventData
-                            case 'SplashScreen'
-                                if isvalid(app.popupContainerGrid)
-                                    delete(app.popupContainerGrid)
-                                end
-
-                            otherwise
-                                error('UnexpectedEvent')
-                        end
                     
                     case 'customForm'
                         switch event.HTMLEventData.uuid
-                            case 'eFiscalizaSignInPage'
-                                report_uploadInfoController(app, event.HTMLEventData, 'uploadDocument', event.HTMLEventData.context)
-
                             case 'openDevTools'
                                 if isequal(app.General.operationMode.DevTools, rmfield(event.HTMLEventData, 'uuid'))
                                     webWin = struct(struct(struct(app.UIFigure).Controller).PlatformHost).CEF;
                                     webWin.openDevTools();
                                 end
+
+                            otherwise
+                                error('UnexpectedEvent')
                         end
 
                     case 'getNavigatorBasicInformation'
                         app.General.AppVersion.browser = event.HTMLEventData;
 
-                    % MAINAPP
-                    case 'mainApp.file_Tree'
-                        file_ContextMenu_delTreeNodeSelected(app)
-
-                    % AUXAPP.WINEXTERNALREQUEST
                     case 'auxApp.winAddTask.AntennaList_Tree'
                         ipcMainMatlabCallAuxiliarApp(app, 'TASK:ADD', 'MATLAB', 'deleteAddedAntenna')
 
@@ -214,62 +198,96 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         auxAppTag    = varargin{1};
                         closeModule(app.tabGroupController, auxAppTag, app.General)
 
-                    case 'closeFcnCallFromPopupApp'
-                        app.popupContainer.Parent.Visible = 0;
-
                     case 'dockButtonPushed'
                         auxAppTag    = varargin{1};
                         varargout{1} = auxAppInputArguments(app, auxAppTag);
-                    
-                    case 'openDevTools'
-                        dialogBox    = struct('id', 'login',    'label', 'Usuário: ', 'type', 'text');
-                        dialogBox(2) = struct('id', 'password', 'label', 'Senha: ',   'type', 'password');
-                        sendEventToHTMLSource(app.jsBackDoor, 'customForm', struct('UUID', 'openDevTools', 'Fields', dialogBox))
-
-                    case 'AddOrEditTask'
-                        auxAppTag   = varargin{1};
-                        infoEdition = varargin{2};
-                        newTask     = varargin{3};
-
-                        closeModule(app.tabGroupController, auxAppTag, app.General)
-
-                        % O try/catch possibilita a inclusão do progressDialog sem que 
-                        % exista o risco dele ficar visível, caso ocorra algum erro não
-                        % mapeado no método da classe.
-                        try
-                            app.progressDialog.Visible = 'visible';
-                            [app.specObj, msgError]    = app.specObj.AddOrEditTask(infoEdition, newTask, app.EMSatObj, app.ERMxObj);
-                            app.progressDialog.Visible = 'hidden';
-            
-                            if isempty(msgError)
-                                RegularTask_timerFcn(app)                                 % Startup of every task
-                            else
-                                ui.Dialog(app.UIFigure, 'warning', msgError);
-                            end
-                        catch ME
-                            struct2table(ME.stack)
-                        end
-
-                    case 'AxesTileSpacingChanged'
-                        tileSpacing = varargin{1};
-                        app.axes1.Parent.TileSpacing = tileSpacing;
-
-                    case 'PlotColorChanged'
-                        plotTag = varargin{1};
-                        if ~isempty(eval(['app.line_' plotTag]))
-                            app.plotStyleEditing = 1;
-                        end
-
-                    case 'WaterfallColormapChanged'
-                        waterfallColormap = varargin{1};
-                        colormap(app.axes2, waterfallColormap)
-
-                    case 'checkDataHubLampStatus'
-                        DataHubWarningLamp(app)
 
                     otherwise
-                        error('Unexpected call "%s" from %s', operationType, class(callingApp))
-                end
+                        switch class(callingApp)
+                            % CONFIG
+                            case {'auxApp.winConfig', 'auxApp.winConfig_exported'}
+                                switch operationType
+                                    case 'openDevTools'
+                                        dialogBox    = struct('id', 'login',    'label', 'Usuário: ', 'type', 'text');
+                                        dialogBox(2) = struct('id', 'password', 'label', 'Senha: ',   'type', 'password');
+                                        sendEventToHTMLSource(app.jsBackDoor, 'customForm', struct('UUID', 'openDevTools', 'Fields', dialogBox))
+        
+                                    case 'checkDataHubLampStatus'
+                                        DataHubWarningLamp(app)
+        
+                                    case 'onAxesTileSpacingChange'
+                                        tileSpacing = varargin{1};
+                                        app.axes1.Parent.TileSpacing = tileSpacing;
+                
+                                    case 'onPlotColorChange'
+                                        plotTag = varargin{1};
+                                        if ~isempty(eval(['app.line_' plotTag]))
+                                            app.plotStyleEditing = 1;
+                                        end
+                
+                                    case 'onWaterfallColormapChange'
+                                        waterfallColormap = varargin{1};
+                                        colormap(app.axes2, waterfallColormap)
+        
+                                    otherwise
+                                        error('UnexpectedCall')
+                                end
+
+                            % TASK:EDIT
+                            case {'auxApp.winTaskList', 'auxApp.winTaskList_exported'}
+                                switch operationType
+                                    case 'onTaskListEdit'
+                                        app.taskList = class.taskList.rawFileParser(app.rootFolder, 'winAppColetaV2');
+        
+                                    otherwise
+                                        error('UnexpectedCall')
+                                end
+
+                            % TASK:ADD
+                            case {'auxApp.winAddTask', 'auxApp.winAddTask_exported'}
+                                switch operationType
+                                    case 'onTaskAddingOrEditing'
+                                        auxAppTag   = varargin{1};
+                                        infoEdition = varargin{2};
+                                        newTask     = varargin{3};
+                
+                                        closeModule(app.tabGroupController, auxAppTag, app.General)
+                
+                                        % O try/catch possibilita a inclusão do progressDialog sem que 
+                                        % exista o risco dele ficar visível, caso ocorra algum erro não
+                                        % mapeado no método da classe.
+                                        try
+                                            app.progressDialog.Visible = 'visible';
+                                            [app.specObj, msgError]    = app.specObj.AddOrEditTask(infoEdition, newTask, app.EMSatObj, app.ERMxObj);
+                                            app.progressDialog.Visible = 'hidden';
+                            
+                                            if isempty(msgError)
+                                                RegularTask_timerFcn(app)                                 % Startup of every task
+                                            else
+                                                ui.Dialog(app.UIFigure, 'warning', msgError);
+                                            end
+                                        catch ME
+                                            struct2table(ME.stack)
+                                        end
+
+                                    otherwise
+                                        error('UnexpectedCall')
+                                end
+
+                            % auxApp.dockTracking
+                            case {'auxApp.dockTracking', 'auxApp.dockTracking_exported'}
+                                switch operationType
+                                    case 'closeFcnCallFromPopupApp'
+                                        app.popupContainer.Parent.Visible = 0;
+        
+                                    otherwise
+                                        error('UnexpectedCall')
+                                end
+
+                            otherwise
+                                error('Unexpected call "%s" from %s', operationType, class(callingApp))
+                        end
+                end                
 
             catch ME
                 ui.Dialog(app.UIFigure, 'error', ME.message);            
@@ -429,11 +447,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function initializeAppProperties(app)
-            % app.taskList
-            [app.taskList, msgError] =  class.taskList.file2raw(fullfile(app.rootFolder, 'config', 'taskList.json'), 'winAppColetaV2');
-            if ~isempty(msgError)
-                ui.Dialog(app.UIFigure, 'error', msgError);
-            end
+            % Um dos arquivos que compõem a subpasta "config", copiada para
+            % "ProgramData/ANATEL/appColeta" na primeira execução, é o arquivo 
+            % "taskList.json".
+            app.taskList    = class.taskList.rawFileParser(app.rootFolder, 'winAppColetaV2');
 
             % Others...
             app.specObj     = class.specClass.empty;

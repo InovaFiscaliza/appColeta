@@ -112,18 +112,17 @@ classdef GPSLib < handle
 
 
         %-----------------------------------------------------------------%
-        function [tempList, msgError] = FileRead(obj, RootFolder)
+        function tempList = FileRead(obj, rootFolder)
+            appName = class.Constants.appName;
+            [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
 
             try
-                tempList = fcn.instrumentListRead(fullfile(RootFolder, 'config', 'instrumentList.json'));
-                tempList(~strcmp(tempList.Family, 'GPS'),:) = [];
-
-                msgError = '';
-
+                tempList = fcn.instrumentListRead(fullfile(programDataFolder, 'instrumentList.json'));
             catch ME
-                tempList = [];
-                msgError = ME.message;
+                tempList = fcn.instrumentListRead(fullfile(projectFolder,     'instrumentList.json'));
             end
+
+            tempList(~strcmp(tempList.Family, 'GPS'), :) = [];
         end
     end
 

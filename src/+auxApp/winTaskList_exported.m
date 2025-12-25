@@ -175,14 +175,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function initializeAppProperties(app)
-            % Leitura de "taskList.json" - não é "aproveitada" a versão do 
-            % winAppColetaV2 porque ela não contém os fluxos desabilitados
-            % e, também, porque pode ter ocorridos uma alteração em editor
-            % externo ao app no "taskList.json".
-            [app.taskList, msgError] = class.taskList.file2raw(fullfile(app.mainApp.rootFolder, 'config', 'taskList.json'), 'auxApp.winEditTaskList');
-            if ~isempty(msgError)
-                ui.Dialog(app.UIFigure, "error", msgError);
-            end
+            app.taskList   = class.taskList.rawFileParser(app.mainApp.rootFolder, 'auxApp.winTaskList');
             app.editedList = app.taskList;
         end
 
@@ -439,10 +432,12 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function update(app)
-            saveNewFile(app, fullfile(app.mainApp.rootFolder, 'config'), false)
+            appName = class.Constants.appName;
+            [~, programDataFolder] = appEngine.util.Path(appName, app.mainApp.rootFolder);
+            saveNewFile(app, programDataFolder, false)
 
             % Atualiza a propriedade do app...
-            app.mainApp.taskList = class.taskList.file2raw(fullfile(app.mainApp.rootFolder, 'config', 'taskList.json'), 'winAppColetaV2');
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'onTaskListEdit')
 
             % Fecha o módulo auxiliar "auxApp.winAddTask.mlapp", caso aberto.
             ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
