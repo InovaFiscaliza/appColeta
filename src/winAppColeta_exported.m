@@ -359,44 +359,37 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function applyJSCustomizations(app, tabIndex)
             persistent customizationStatus
             if isempty(customizationStatus)
-                customizationStatus = [false, false, false, false, false, false];
+              % customizationStatus = zeros(1, numel(app.SubTabGroup.Children), 'logical');
+                customizationStatus = false;
             end
 
+            if customizationStatus(tabIndex)
+                return
+            end
+
+            customizationStatus(tabIndex) = true;
             switch tabIndex
-                case 0 % STARTUP
-                    sendEventToHTMLSource(app.jsBackDoor, 'startup', app.executionMode);
-                    customizationStatus = [false, false, false, false, false, false];
+                case 1
+                    elToModify = { ...
+                        app.MetaData, ...
+                        app.play_axesToolbar ...
+                    };
+                    elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
+
+                    appName = class(app);
+                    try
+                        ui.TextView.startup(app.jsBackDoor, elToModify{1}, appName);
+                    catch
+                    end
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', {struct('appName', appName, 'dataTag', elDataTag{2}, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0'))});
+                    catch
+                    end
 
                 otherwise
-                    if customizationStatus(tabIndex)
-                        return
-                    end
-
-                    customizationStatus(tabIndex) = true;
-                    switch tabIndex
-                        case 1
-                            elToModify = { ...
-                                app.MetaData, ...
-                                app.play_axesToolbar ...
-                            };
-                            elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-
-                            appName = class(app);
-                            try
-                                ui.TextView.startup(app.jsBackDoor, elToModify{1}, appName);
-                            catch
-                            end
-
-                            try
-                                sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', {struct('appName', appName, 'dataTag', elDataTag{2}, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0'))});
-                            catch
-                            end
-
-                        otherwise
-                            % Customização dos módulos que são renderizados
-                            % nesta figura são controladas pelos próprios
-                            % módulos.
-                    end
+                    % Previsto pensando em evolução, caso adicionado uitabgroup 
+                    % com nome "app.SubTabGrid" e seus uitabs...
             end
         end
 
@@ -471,7 +464,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function initializeUIComponents(app)
-            app.tabGroupController = ui.TabNavigator(app.NavBar, app.TabGroup, app.progressDialog, @app.applyJSCustomizations, '');
+            app.tabGroupController = ui.TabNavigator(app.NavBar, app.TabGroup, app.progressDialog);
             addComponent(app.tabGroupController, "Built-in", "",                     app.Tab1Button, "AlwaysOn", struct('On', 'Playback_32Yellow.png', 'Off', 'Playback_32White.png'), matlab.graphics.GraphicsPlaceholder, 1)
             addComponent(app.tabGroupController, "External", "auxApp.winInstrument", app.Tab2Button, "AlwaysOn", struct('On', 'Connect_36Yellow.png',  'Off', 'Connect_36White.png'),  app.Tab1Button,                    2)
             addComponent(app.tabGroupController, "External", "auxApp.winTaskList",   app.Tab3Button, "AlwaysOn", struct('On', 'Task_36Yellow.png',     'Off', 'Task_36White.png'),     app.Tab1Button,                    3)

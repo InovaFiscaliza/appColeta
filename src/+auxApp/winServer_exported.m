@@ -7,9 +7,9 @@ classdef winServer_exported < matlab.apps.AppBase
         DockModule                 matlab.ui.container.GridLayout
         dockModule_Undock          matlab.ui.control.Image
         dockModule_Close           matlab.ui.control.Image
-        TabGroup                   matlab.ui.container.TabGroup
-        TabGroupGrid               matlab.ui.container.Tab
-        Document                   matlab.ui.container.GridLayout
+        SubTabGroup                matlab.ui.container.TabGroup
+        SubTab1                    matlab.ui.container.Tab
+        SubGrid1                   matlab.ui.container.GridLayout
         communicationTable         matlab.ui.control.Table
         communicationTableRefresh  matlab.ui.control.Image
         communicationTableLabel    matlab.ui.control.Label
@@ -57,29 +57,23 @@ classdef winServer_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function applyJSCustomizations(app, tabIndex)
-            arguments
-                app
-                tabIndex = 0
+            persistent customizationStatus
+            if isempty(customizationStatus)
+                customizationStatus = zeros(1, numel(app.SubTabGroup.Children), 'logical');
             end
 
-            if app.isDocked
-                app.progressDialog = app.mainApp.progressDialog;
-            else
-                sendEventToHTMLSource(app.jsBackDoor, 'startup', app.mainApp.executionMode);
-                app.progressDialog = ui.ProgressDialog(app.jsBackDoor);
+            if customizationStatus(tabIndex)
+                return
             end
 
-            appName = class(app);
+            customizationStatus(tabIndex) = true;
+            switch tabIndex
+                case 1
+                    % ...
 
-            % Grid botões "dock":
-            if app.isDocked
-                elToModify = {app.DockModule};
-                elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-                if ~isempty(elDataTag)
-                    sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                        struct('appName', appName, 'dataTag', elDataTag{1}, 'style', struct('transition', 'opacity 2s ease', 'opacity', '0.5')), ...
-                    });
-                end
+                otherwise
+                    % Previsto pensando em evolução, caso adicionado uitab
+                    % ao app.SubTabGrid...
             end
         end
 
@@ -291,26 +285,26 @@ classdef winServer_exported < matlab.apps.AppBase
             app.toolButton_edit.Layout.Column = 3;
             app.toolButton_edit.Text = 'Iniciar servidor';
 
-            % Create TabGroup
-            app.TabGroup = uitabgroup(app.GridLayout);
-            app.TabGroup.AutoResizeChildren = 'off';
-            app.TabGroup.Layout.Row = [3 4];
-            app.TabGroup.Layout.Column = [2 3];
+            % Create SubTabGroup
+            app.SubTabGroup = uitabgroup(app.GridLayout);
+            app.SubTabGroup.AutoResizeChildren = 'off';
+            app.SubTabGroup.Layout.Row = [3 4];
+            app.SubTabGroup.Layout.Column = [2 3];
 
-            % Create TabGroupGrid
-            app.TabGroupGrid = uitab(app.TabGroup);
-            app.TabGroupGrid.AutoResizeChildren = 'off';
-            app.TabGroupGrid.Title = 'SERVIDOR';
+            % Create SubTab1
+            app.SubTab1 = uitab(app.SubTabGroup);
+            app.SubTab1.AutoResizeChildren = 'off';
+            app.SubTab1.Title = 'SERVIDOR';
 
-            % Create Document
-            app.Document = uigridlayout(app.TabGroupGrid);
-            app.Document.ColumnWidth = {320, '1x', 18};
-            app.Document.RowHeight = {17, 128, 22, '1x'};
-            app.Document.RowSpacing = 5;
-            app.Document.BackgroundColor = [1 1 1];
+            % Create SubGrid1
+            app.SubGrid1 = uigridlayout(app.SubTab1);
+            app.SubGrid1.ColumnWidth = {320, '1x', 18};
+            app.SubGrid1.RowHeight = {17, 128, 22, '1x'};
+            app.SubGrid1.RowSpacing = 5;
+            app.SubGrid1.BackgroundColor = [1 1 1];
 
             % Create serverInfoLabel
-            app.serverInfoLabel = uilabel(app.Document);
+            app.serverInfoLabel = uilabel(app.SubGrid1);
             app.serverInfoLabel.VerticalAlignment = 'bottom';
             app.serverInfoLabel.FontSize = 10;
             app.serverInfoLabel.Layout.Row = 1;
@@ -318,14 +312,14 @@ classdef winServer_exported < matlab.apps.AppBase
             app.serverInfoLabel.Text = 'CARACTERÍSTICAS:';
 
             % Create serverInfo
-            app.serverInfo = uitextarea(app.Document);
+            app.serverInfo = uitextarea(app.SubGrid1);
             app.serverInfo.Editable = 'off';
             app.serverInfo.FontSize = 11;
             app.serverInfo.Layout.Row = 2;
             app.serverInfo.Layout.Column = [1 3];
 
             % Create communicationTableLabel
-            app.communicationTableLabel = uilabel(app.Document);
+            app.communicationTableLabel = uilabel(app.SubGrid1);
             app.communicationTableLabel.VerticalAlignment = 'bottom';
             app.communicationTableLabel.FontSize = 10;
             app.communicationTableLabel.Layout.Row = 3;
@@ -333,7 +327,7 @@ classdef winServer_exported < matlab.apps.AppBase
             app.communicationTableLabel.Text = 'COMUNICAÇÃO:';
 
             % Create communicationTableRefresh
-            app.communicationTableRefresh = uiimage(app.Document);
+            app.communicationTableRefresh = uiimage(app.SubGrid1);
             app.communicationTableRefresh.ScaleMethod = 'none';
             app.communicationTableRefresh.ImageClickedFcn = createCallbackFcn(app, @communicationTableRefreshImageClicked, true);
             app.communicationTableRefresh.Tooltip = {'Atualiza registro de comunicação'};
@@ -344,7 +338,7 @@ classdef winServer_exported < matlab.apps.AppBase
             app.communicationTableRefresh.ImageSource = 'Refresh_18.png';
 
             % Create communicationTable
-            app.communicationTable = uitable(app.Document);
+            app.communicationTable = uitable(app.SubGrid1);
             app.communicationTable.ColumnName = {'INSTANTE'; 'IP'; 'PORTA'; 'MENSAGEM'; 'CLIENTE'; 'REQUISIÇÃO'; 'BYTES'; 'ESTADO'};
             app.communicationTable.RowName = {};
             app.communicationTable.Layout.Row = 4;

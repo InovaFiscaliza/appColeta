@@ -7,9 +7,9 @@ classdef winInstrument_exported < matlab.apps.AppBase
         DockModule              matlab.ui.container.GridLayout
         dockModule_Undock       matlab.ui.control.Image
         dockModule_Close        matlab.ui.control.Image
-        TabGroup                matlab.ui.container.TabGroup
-        Tab                     matlab.ui.container.Tab
-        TabGrid                 matlab.ui.container.GridLayout
+        SubTabGroup             matlab.ui.container.TabGroup
+        SubTab1                 matlab.ui.container.Tab
+        SubGrid1                matlab.ui.container.GridLayout
         Tab1_Grid               matlab.ui.container.GridLayout
         Image_downArrow         matlab.ui.control.Image
         Image_upArrow           matlab.ui.control.Image
@@ -105,36 +105,26 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function applyJSCustomizations(app, tabIndex)
-            arguments
-                app
-                tabIndex = 0
+            persistent customizationStatus
+            if isempty(customizationStatus)
+                customizationStatus = zeros(1, numel(app.SubTabGroup.Children), 'logical');
             end
 
-            if app.isDocked
-                app.progressDialog = app.mainApp.progressDialog;
-            else
-                sendEventToHTMLSource(app.jsBackDoor, 'startup', app.mainApp.executionMode);
-                app.progressDialog = ui.ProgressDialog(app.jsBackDoor);
+            if customizationStatus(tabIndex)
+                return
             end
 
-            appName = class(app);
+            customizationStatus(tabIndex) = true;
+            switch tabIndex
+                case 1        
+                    elToModify = {app.instrMetadata};
+                    elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
+                    if ~isempty(elDataTag)
+                        ui.TextView.startup(app.jsBackDoor, elToModify{1}, class(app));
+                    end
 
-            % Grid botões "dock":
-            if app.isDocked
-                elToModify = {app.DockModule};
-                elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-                if ~isempty(elDataTag)
-                    sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                        struct('appName', appName, 'dataTag', elDataTag{1}, 'style', struct('transition', 'opacity 2s ease', 'opacity', '0.5')), ...
-                    });
-                end
-            end
-
-            % Outros elementos:
-            elToModify = {app.instrMetadata};
-            elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-            if ~isempty(elDataTag)
-                ui.TextView.startup(app.jsBackDoor, elToModify{1}, appName);
+                otherwise
+                    % ...
             end
         end
 
@@ -1077,26 +1067,26 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.toolButton_export.Layout.Column = 2;
             app.toolButton_export.ImageSource = 'Export_16.png';
 
-            % Create TabGroup
-            app.TabGroup = uitabgroup(app.GridLayout);
-            app.TabGroup.AutoResizeChildren = 'off';
-            app.TabGroup.Layout.Row = [3 4];
-            app.TabGroup.Layout.Column = [2 3];
+            % Create SubTabGroup
+            app.SubTabGroup = uitabgroup(app.GridLayout);
+            app.SubTabGroup.AutoResizeChildren = 'off';
+            app.SubTabGroup.Layout.Row = [3 4];
+            app.SubTabGroup.Layout.Column = [2 3];
 
-            % Create Tab
-            app.Tab = uitab(app.TabGroup);
-            app.Tab.AutoResizeChildren = 'off';
-            app.Tab.Title = 'LISTA DE INSTRUMENTOS';
+            % Create SubTab1
+            app.SubTab1 = uitab(app.SubTabGroup);
+            app.SubTab1.AutoResizeChildren = 'off';
+            app.SubTab1.Title = 'LISTA DE INSTRUMENTOS';
 
-            % Create TabGrid
-            app.TabGrid = uigridlayout(app.Tab);
-            app.TabGrid.ColumnWidth = {310, '1x'};
-            app.TabGrid.RowHeight = {17, 34, 22, '1x'};
-            app.TabGrid.RowSpacing = 5;
-            app.TabGrid.BackgroundColor = [1 1 1];
+            % Create SubGrid1
+            app.SubGrid1 = uigridlayout(app.SubTab1);
+            app.SubGrid1.ColumnWidth = {310, '1x'};
+            app.SubGrid1.RowHeight = {17, 34, 22, '1x'};
+            app.SubGrid1.RowSpacing = 5;
+            app.SubGrid1.BackgroundColor = [1 1 1];
 
             % Create ModePanelLabel
-            app.ModePanelLabel = uilabel(app.TabGrid);
+            app.ModePanelLabel = uilabel(app.SubGrid1);
             app.ModePanelLabel.VerticalAlignment = 'bottom';
             app.ModePanelLabel.FontSize = 10;
             app.ModePanelLabel.Layout.Row = 1;
@@ -1104,7 +1094,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.ModePanelLabel.Text = 'MODO:';
 
             % Create ModePanel
-            app.ModePanel = uibuttongroup(app.TabGrid);
+            app.ModePanel = uibuttongroup(app.SubGrid1);
             app.ModePanel.AutoResizeChildren = 'off';
             app.ModePanel.SelectionChangedFcn = createCallbackFcn(app, @ValueChanged_OperationMode, true);
             app.ModePanel.BackgroundColor = [1 1 1];
@@ -1128,7 +1118,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.ButtonGroup_Edit.Position = [150 5 92 22];
 
             % Create TreeLabel
-            app.TreeLabel = uilabel(app.TabGrid);
+            app.TreeLabel = uilabel(app.SubGrid1);
             app.TreeLabel.VerticalAlignment = 'bottom';
             app.TreeLabel.FontSize = 10;
             app.TreeLabel.Layout.Row = 3;
@@ -1136,7 +1126,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreeLabel.Text = 'INSTRUMENTOS:';
 
             % Create PanelLabel
-            app.PanelLabel = uilabel(app.TabGrid);
+            app.PanelLabel = uilabel(app.SubGrid1);
             app.PanelLabel.VerticalAlignment = 'bottom';
             app.PanelLabel.FontSize = 10;
             app.PanelLabel.Layout.Row = 1;
@@ -1144,7 +1134,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.PanelLabel.Text = 'CARACTERÍSTICAS:';
 
             % Create Panel
-            app.Panel = uipanel(app.TabGrid);
+            app.Panel = uipanel(app.SubGrid1);
             app.Panel.AutoResizeChildren = 'off';
             app.Panel.Layout.Row = [2 4];
             app.Panel.Layout.Column = 2;
@@ -1412,7 +1402,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.AspectostcnicosLabel.Text = 'Aspectos técnicos:';
 
             % Create Tab1_Grid
-            app.Tab1_Grid = uigridlayout(app.TabGrid);
+            app.Tab1_Grid = uigridlayout(app.SubGrid1);
             app.Tab1_Grid.ColumnWidth = {2, 146, '1x', 0};
             app.Tab1_Grid.RowHeight = {16, 5, 16, '1x', 16, 5, 16};
             app.Tab1_Grid.ColumnSpacing = 5;

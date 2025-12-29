@@ -207,63 +207,39 @@ classdef winAddTask_exported < matlab.apps.AppBase
         function applyJSCustomizations(app, tabIndex)
             persistent customizationStatus
             if isempty(customizationStatus)
-                customizationStatus = [false, false, false];
+                customizationStatus = zeros(1, numel(app.SubTabGroup.Children), 'logical');
             end
 
+            if customizationStatus(tabIndex)
+                return
+            end
+
+            appName = class(app);
+            customizationStatus(tabIndex) = true;
             switch tabIndex
-                case 0 % STARTUP
-                    if app.isDocked
-                        app.progressDialog = app.mainApp.progressDialog;
-                    else
-                        sendEventToHTMLSource(app.jsBackDoor, 'startup', app.mainApp.executionMode);
-                        app.progressDialog = ui.ProgressDialog(app.jsBackDoor);                        
+                case 1
+                    elToModify = { ...
+                        app.Document, ...
+                        app.MetaData ...
+                    };
+                    elDataTag = ui.CustomizationBase.getElementsDataTag(elToModify);
+                    if ~isempty(elDataTag)
+                            sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                                struct('appName', appName, 'dataTag', elDataTag{1}, 'styleImportant', struct('border', '1px solid #7d7d7d', 'borderRadius', '0')) ...
+                            });
+                        ui.TextView.startup(app.jsBackDoor, elToModify{2}, appName);
                     end
-                    customizationStatus = [false, false, false];
 
-                otherwise
-                    if customizationStatus(tabIndex)
-                        return
-                    end
-
-                    appName = class(app);
-                    customizationStatus(tabIndex) = true;
-                    switch tabIndex
-                        case 1
-                            % Grid botões "dock":
-                            if app.isDocked
-                                elToModify = {app.DockModule};
-                                elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-                                if ~isempty(elDataTag)                                    
-                                    sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                                        struct('appName', appName, 'dataTag', elDataTag{1}, 'style', struct('transition', 'opacity 2s ease', 'opacity', '0.5')) ...
-                                    });
-                                end
-                            end
-
-                            % Outros elementos:
-                            elToModify = { ...
-                                app.Document, ...
-                                app.MetaData ...
-                            };
-                            elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-                            if ~isempty(elDataTag)
-                                    sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                                        struct('appName', appName, 'dataTag', elDataTag{1}, 'styleImportant', struct('border', '1px solid #7d7d7d', 'borderRadius', '0')) ...
-                                    });
-                                ui.TextView.startup(app.jsBackDoor, elToModify{2}, appName);
-                            end
-
-                        case 2
-                            % ...
-                            
-                        case 3
-                            elToModify = {app.AntennaList_Tree};
-                            elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-                            if ~isempty(elDataTag)
-                                sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                                    struct('appName', appName, 'dataTag', elDataTag{1}, 'listener', struct('componentName', 'auxApp.winAddTask.AntennaList_Tree', 'keyEvents', {{'Delete', 'Backspace'}})) ...
-                                });
-                            end
+                case 2
+                    % ...
+                    
+                case 3
+                    elToModify = {app.AntennaList_Tree};
+                    elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
+                    if ~isempty(elDataTag)
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', elDataTag{1}, 'listener', struct('componentName', 'auxApp.winAddTask.AntennaList_Tree', 'keyEvents', {{'Delete', 'Backspace'}})) ...
+                        });
                     end
             end
         end
