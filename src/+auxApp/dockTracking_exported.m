@@ -174,7 +174,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
     methods (Access = private)
 
         % Code that executes after component creation
-        function startupFcn(app, mainApp, antennaPos, targetPos)
+        function startupFcn(app, mainApp, callingApp, antennaPos, targetPos)
             
             try
                 appEngine.boot(app, app.Role, mainApp, [])

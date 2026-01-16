@@ -57,23 +57,17 @@ classdef winServer_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function applyJSCustomizations(app, tabIndex)
-            persistent customizationStatus
-            if isempty(customizationStatus)
-                customizationStatus = zeros(1, numel(app.SubTabGroup.Children), 'logical');
-            end
-
-            if customizationStatus(tabIndex)
+            if app.SubTabGroup.UserData.isTabInitialized(tabIndex)
                 return
             end
+            app.SubTabGroup.UserData.isTabInitialized(tabIndex) = true;
 
-            customizationStatus(tabIndex) = true;
             switch tabIndex
                 case 1
                     % ...
 
                 otherwise
-                    % Previsto pensando em evolução, caso adicionado uitab
-                    % ao app.SubTabGrid...
+                    % ...
             end
         end
 
@@ -109,7 +103,7 @@ classdef winServer_exported < matlab.apps.AppBase
                 app.communicationTable.Data = table('Size', [0, 8],                                                                                    ...
                                                'VariableTypes', {'string', 'string', 'double', 'string', 'string', 'string', 'double', 'string'}, ...
                                                'VariableNames', {'Timestamp', 'ClientAddress', 'ClientPort', 'Message', 'ClientName', 'Request', 'NumBytesWritten', 'Status'});
-                set(app.toolButton_edit, 'Text', 'Iniciar servidor', 'Icon', 'play_32.png')
+                set(app.toolButton_edit, 'Text', 'Inicia servidor', 'Icon', 'play_32.png')
 
             elseif isempty(app.mainApp.tcpServer.Server)
                 app.serverInfo.Value = '';
@@ -129,7 +123,7 @@ classdef winServer_exported < matlab.apps.AppBase
                 app.toolLampLabel.Text = sprintf('Servidor em execução desde %s.', char(app.mainApp.tcpServer.Time));
 
                 app.communicationTable.Data = app.mainApp.tcpServer.LOG;
-                set(app.toolButton_edit, 'Text', 'Parar servidor', 'Icon', 'stop_32.png')
+                set(app.toolButton_edit, 'Text', 'Para servidor', 'Icon', 'stop_32.png')
             end
         end
     end
@@ -283,7 +277,7 @@ classdef winServer_exported < matlab.apps.AppBase
             app.toolButton_edit.FontSize = 11;
             app.toolButton_edit.Layout.Row = 1;
             app.toolButton_edit.Layout.Column = 3;
-            app.toolButton_edit.Text = 'Iniciar servidor';
+            app.toolButton_edit.Text = 'Inicia servidor';
 
             % Create SubTabGroup
             app.SubTabGroup = uitabgroup(app.GridLayout);

@@ -89,7 +89,7 @@ classdef ReceiverLib < handle
                             hTransport.connect
                         end
 
-                        IDN = obj.ConnectionStatus(hReceiver);
+                        IDN = ConnectionStatus(obj, hReceiver);
                         break
 
                     catch ME
@@ -120,7 +120,7 @@ classdef ReceiverLib < handle
                     switch Type
                         case {'TCPIP Socket', 'TCP/UDP IP Socket'}                    
                             hReceiver = tcpclient(IP, Port);
-                            IDN = obj.ConnectionStatus(hReceiver);
+                            IDN = ConnectionStatus(obj, hReceiver);
 
                         otherwise
                             error('appColetaV2 supports only TCPIP Socket connection type.')

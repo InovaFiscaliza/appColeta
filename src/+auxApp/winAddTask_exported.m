@@ -187,6 +187,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 switch class(callingApp)
                     case {'winAppColeta', 'winAppColeta_exported'}
                         switch operationType
+                            % auxApp.dockTracking >> winAppColeta >> auxApp.winAddTask
+                            case 'closeFcnCallFromPopupApp'
+                                app.popupContainer.Parent.Visible = 0;
+
                             case 'deleteAddedAntenna'
                                 DelAntennaButtonClicked(app)
 
@@ -205,17 +209,12 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function applyJSCustomizations(app, tabIndex)
-            persistent customizationStatus
-            if isempty(customizationStatus)
-                customizationStatus = zeros(1, numel(app.SubTabGroup.Children), 'logical');
-            end
-
-            if customizationStatus(tabIndex)
+            if app.SubTabGroup.UserData.isTabInitialized(tabIndex)
                 return
             end
+            app.SubTabGroup.UserData.isTabInitialized(tabIndex) = true;
 
             appName = class(app);
-            customizationStatus(tabIndex) = true;
             switch tabIndex
                 case 1
                     elToModify = { ...
@@ -1000,7 +999,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             if isempty(app.AntennaList_Tree.Children)
                 error('Não configurados os parâmetros de instalação da(s) antena(s) em uso.')
             elseif ~app.AntennaSwitch_Mode.Value && (numel(app.AntennaList_Tree.Children) > 1)
-                    error('A configuração dos parâmetros de instalação de mais de uma antena é possível apenas quando habilitado o comutador.')
+                error('A configuração dos parâmetros de instalação de mais de uma antena é possível apenas quando habilitado o comutador.')
             end
 
             if app.AntennaSwitch_Mode.Value
@@ -1258,7 +1257,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 end
 
                 if strcmp(app.AntennaSwitch_Name.Value, 'EMSat')
-                    fcn.antennaTracking(app, antennaMetaData, app.progressDialog);
+                    fcn.antennaTracking(app, 'TASK:ADD', antennaMetaData, app.progressDialog);
                 end
 
             catch ME
@@ -1737,56 +1736,51 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Image clicked function: AddAntenna_Image
         function AddAntennaButtonClicked(app, event)
             
-            % antNode1
-            antNode1 = app.Antenna_TrackingMode.Value;
-
-            if ~isempty(app.Band_TargetList.Value)
-                antNode1 = sprintf('%s; %s', antNode1, app.Band_TargetList.Value);
-            else
-                antNode1 = sprintf('%s; "NA"', antNode1);
+            % Características da antena selecionada:
+            switch app.AntennaSwitch_Name.Value
+                case 'EMSat'
+                    newAntennaName = extractBefore(app.AntennaName.Value, ' ');
+                otherwise
+                    newAntennaName = app.AntennaName.Value;
             end
 
-            % antNode2
-            if app.AntennaHeight.Enable
-                antNode2 = sprintf('%.0fm', app.AntennaHeight.Value);
+            newAntennaSpec1 = app.Antenna_TrackingMode.Value;
+            if ~isempty(app.Band_TargetList.Value)
+                newAntennaSpec1 = sprintf('%s; %s', newAntennaSpec1, app.Band_TargetList.Value);
             else
-                antNode2 = '"NA"';
+                newAntennaSpec1 = sprintf('%s; "NA"', newAntennaSpec1);
+            end
+
+            if app.AntennaHeight.Enable
+                newAntennaSpec2 = sprintf('%.0fm', app.AntennaHeight.Value);
+            else
+                newAntennaSpec2 = '"NA"';
             end
 
             if app.AntennaAzimuth.Enable
-                antNode2 = sprintf('%s; %.3fº %s; %.3fº; %.1fº', antNode2,                    ...
-                                                                 app.AntennaAzimuth.Value,    ...
-                                                                 app.AntennaAzimuthRef.Value, ...
-                                                                 app.AntennaElevation.Value,  ...
-                                                                 app.AntennaPolarization.Value);
+                newAntennaSpec2 = sprintf('%s; %.3fº %s; %.3fº; %.1fº', newAntennaSpec2, app.AntennaAzimuth.Value, app.AntennaAzimuthRef.Value, app.AntennaElevation.Value, app.AntennaPolarization.Value);
             else
-                antNode2 = sprintf('%s; "NA"; "NA"; "NA"', antNode2);
+                newAntennaSpec2 = sprintf('%s; "NA"; "NA"; "NA"', newAntennaSpec2);
             end
 
-            % old values
-            AntennaList = {};
+            % Verifica se a antena seleciona já está na lista de antenas,
+            % incluindo-a como nova ou editando-a, a depender do caso.
+            antennaList = {};
             if ~isempty(app.AntennaList_Tree.Children)
-                AntennaList = {app.AntennaList_Tree.Children.Text};
-            end
-
-            % add new value
-            switch app.AntennaSwitch_Name.Value
-                case 'EMSat'; antennaName = extractBefore(app.AntennaName.Value, ' ');
-                otherwise;    antennaName = app.AntennaName.Value;
+                antennaList = {app.AntennaList_Tree.Children.Text};
             end
             
-            idx = find(strcmp(AntennaList, antennaName), 1);
-            if ~isempty(idx)
-                app.AntennaList_Tree.Children(idx).Children(1).Text = antNode1;
-                app.AntennaList_Tree.Children(idx).Children(2).Text = antNode2;
-            else
-                tempValue = numel(app.AntennaList_Tree.Children)+1;
-                tempNode  = uitreenode(app.AntennaList_Tree, 'Text', antennaName,   ...
-                                                             'NodeData', tempValue, ...
-                                                             'ContextMenu', app.ContextMenu);
+            [~, idx] = ismember(newAntennaName, antennaList);
+            if idx
+                app.AntennaList_Tree.Children(idx).Children(1).Text = newAntennaSpec1;
+                app.AntennaList_Tree.Children(idx).Children(2).Text = newAntennaSpec2;
 
-                uitreenode(tempNode, 'Text', antNode1, 'NodeData', tempValue, 'ContextMenu', app.ContextMenu);
-                uitreenode(tempNode, 'Text', antNode2, 'NodeData', tempValue, 'ContextMenu', app.ContextMenu);
+            else
+                nodeData   = numel(app.AntennaList_Tree.Children)+1;                
+                nodeHandle = uitreenode(app.AntennaList_Tree, 'Text', newAntennaName, 'NodeData', nodeData, 'ContextMenu', app.ContextMenu);
+
+                uitreenode(nodeHandle, 'Text', newAntennaSpec1, 'NodeData', nodeData, 'ContextMenu', app.ContextMenu);
+                uitreenode(nodeHandle, 'Text', newAntennaSpec2, 'NodeData', nodeData, 'ContextMenu', app.ContextMenu);
             end
 
         end
@@ -1795,12 +1789,17 @@ classdef winAddTask_exported < matlab.apps.AppBase
         function DelAntennaButtonClicked(app, event)
             
             if ~isempty(app.AntennaList_Tree.SelectedNodes)
-                delete(app.AntennaList_Tree.SelectedNodes)
+                nodeData = app.AntennaList_Tree.SelectedNodes.NodeData;
+                nodeHandles = findobj(app.AntennaList_Tree, 'NodeData', nodeData);
 
-                for ii = 1:numel(app.AntennaList_Tree.Children)
-                    app.AntennaList_Tree.Children(ii).NodeData             = ii;
-                    app.AntennaList_Tree.Children(ii).Children(1).NodeData = ii;
-                    app.AntennaList_Tree.Children(ii).Children(2).NodeData = ii;
+                if ~isempty(nodeHandles)
+                    delete(nodeHandles)
+
+                    for ii = 1:numel(app.AntennaList_Tree.Children)
+                        app.AntennaList_Tree.Children(ii).NodeData             = ii;
+                        app.AntennaList_Tree.Children(ii).Children(1).NodeData = ii;
+                        app.AntennaList_Tree.Children(ii).Children(2).NodeData = ii;
+                    end
                 end
             end
 

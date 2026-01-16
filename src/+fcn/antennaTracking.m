@@ -1,4 +1,10 @@
-function targetPos = antennaTracking(app, antennaMetaData, progressDialog)
+function targetPos = antennaTracking(callingApp, context, antennaMetaData, progressDialog)
+    arguments
+        callingApp 
+        context {mustBeMember(context, {'mainApp', 'TASK:ADD'})}
+        antennaMetaData 
+        progressDialog 
+    end
 
     errorTol  = class.Constants.errorPosTolerance;
     errorFlag = false;
@@ -10,7 +16,7 @@ function targetPos = antennaTracking(app, antennaMetaData, progressDialog)
         switch targetPos.TrackingMode
             case {'Target', 'LookAngles'}
                 if isfield(targetPos, 'Target')
-                    [tempTargetPos,  errorMsg] = app.EMSatObj.TargetPositionGET(antennaName, targetPos.Target);
+                    [tempTargetPos,  errorMsg] = TargetPositionGET(callingApp.EMSatObj, antennaName, targetPos.Target);
                     if ~isempty(errorMsg)
                         error(errorMsg)
                     end
@@ -20,65 +26,71 @@ function targetPos = antennaTracking(app, antennaMetaData, progressDialog)
                     targetPos.Polarization = tempTargetPos.Polarization;
                 end
     
-                [antennaPos, errorMsg] = app.EMSatObj.AntennaPositionGET(antennaName);
+                [antennaPos, errorMsg] = AntennaPositionGET(callingApp.EMSatObj, antennaName);
                 if ~isempty(errorMsg)
                     error(errorMsg)
                 end
     
                 if abs(targetPos.Azimuth      - antennaPos.Azimuth)      >= errorTol || ...
-                        abs(targetPos.Elevation    - antennaPos.Elevation)    >= errorTol || ...
-                        abs(targetPos.Polarization - antennaPos.Polarization) >= errorTol
+                   abs(targetPos.Elevation    - antennaPos.Elevation)    >= errorTol || ...
+                   abs(targetPos.Polarization - antennaPos.Polarization) >= errorTol
                     errorFlag = true;
-                    msg = sprintf('O conjunto antena/LNB "%s" parece não estar apontado para a posição correta.', antennaName);
+                    msg = sprintf([ ...
+                        'O conjunto antena/LNB "%s" parece não estar ' ...
+                        'apontado para a posição correta.' ...
+                    ], antennaName);
+
                 else
-                    msg = sprintf('O conjunto antena/LNB "%s" parece já estar apontado para a posição correta.',  antennaName);
+                    msg = sprintf([ ...
+                        'O conjunto antena/LNB "%s" parece já estar ' ...
+                        'apontado para a posição correta.' ...
+                    ], antennaName);
                 end
     
                 if errorFlag
-                    switch class(app)
-                        case {'auxApp.winAddTask', 'auxApp.winAddTask_exported'}
-                            msg = sprintf(['<font style="font-size:11;">%s\n\nPosição atual:'            ...
-                                '\n• <span style="color: #808080;">Azimute</span>: %.3fº'     ...
-                                '\n• <span style="color: #808080;">Elevação</span>: %.3fº'    ...
-                                '\n• <span style="color: #808080;">Polarização</span>: %.3fº' ...
-                                '\n\nPosição configurada:'                                    ...
-                                '\n• <span style="color: #808080;">Azimute</span>: %.3fº'     ...
-                                '\n• <span style="color: #808080;">Elevação</span>: %.3fº'    ...
-                                '\n• <span style="color: #808080;">Polarização</span>: %.3fº' ...
-                                '\n\nDeseja realizar o apontamento automático do conjunto antena/LNB agora?</font>'], ...
-                                msg, antennaPos.Azimuth, antennaPos.Elevation, antennaPos.Polarization,    ...
-                                targetPos.Azimuth, targetPos.Elevation, targetPos.Polarization);
+                    if strcmp(context, 'TASK:ADD')
+                        msg = sprintf([ ...
+                            '<font style="font-size:11;">%s\n\nPosição atual:'            ...
+                            '\n• <span style="color: #808080;">Azimute</span>: %.3fº'     ...
+                            '\n• <span style="color: #808080;">Elevação</span>: %.3fº'    ...
+                            '\n• <span style="color: #808080;">Polarização</span>: %.3fº' ...
+                            '\n\nPosição configurada:'                                    ...
+                            '\n• <span style="color: #808080;">Azimute</span>: %.3fº'     ...
+                            '\n• <span style="color: #808080;">Elevação</span>: %.3fº'    ...
+                            '\n• <span style="color: #808080;">Polarização</span>: %.3fº' ...
+                            '\n\nDeseja realizar o apontamento automático do conjunto antena/LNB agora?</font>' ...
+                        ], msg, antennaPos.Azimuth, antennaPos.Elevation, antennaPos.Polarization, targetPos.Azimuth, targetPos.Elevation, targetPos.Polarization);
     
-                            progressDialog.Visible = 'hidden';
-                            selection = uiconfirm(app.UIFigure, msg, '', 'Interpreter', 'html', 'Options', {'Sim', 'Não'}, 'DefaultOption', 1, 'CancelOption', 1, 'Icon', 'question');
-                            if selection == "Não"
-                                continue
-                            end
-    
-                            refApp = app.mainApp;
-    
-                        otherwise % winAppColeta | winAppColeta_exported
-                            refApp = app;
+                        progressDialog.Visible = 'hidden';
+                        selection = uiconfirm(callingApp.UIFigure, msg, '', 'Interpreter', 'html', 'Options', {'Sim', 'Não'}, 'DefaultOption', 1, 'CancelOption', 1, 'Icon', 'question');
+                        if selection == "Não"
+                            continue
+                        end
+                    end
+
+                    if isprop(callingApp, 'mainApp')
+                        mainApp = callingApp.mainApp;
+                    else
+                        mainApp = callingApp;
                     end
     
-                    ipcMainMatlabOpenPopupApp(refApp, 'Tracking', antennaPos, targetPos)
+                    ipcMainMatlabOpenPopupApp(mainApp, callingApp, 'Tracking', antennaPos, targetPos)
                 end
     
             case 'Manual'
-                switch class(app)
-                    case {'auxApp.winAddTask', 'auxApp.winAddTask_exported'}
-                        msg = sprintf(['<font style="font-size:11;">O apontamento do conjunto antena/LNB "%s" deverá ser realizado manualmente.'                                    ...
-                            '\n\nDeseja reconfigurar esse apontamento para automático ("Target" ou "LookAngles")?</font>'], ...
-                            antennaName);
-    
-                        progressDialog.Visible = 'hidden';
-                        selection = uiconfirm(app.UIFigure, msg, '', 'Interpreter', 'html', 'Options', {'Sim', 'Não'}, 'DefaultOption', 2, 'CancelOption', 2, 'Icon', 'question');
-                        if selection == "Sim"
-                            error('Operação cancelada para reconfiguração do tipo de apontamento do conjunto antena/LNB "%s".', antennaName)
-                        end
-    
-                    otherwise
-                        % ...
+                if strcmp(context, 'TASK:ADD')
+                    msg = sprintf([ ...
+                        '<font style="font-size:11;">O apontamento do conjunto ' ...
+                        'antena/LNB "%s" deverá ser realizado manualmente.\n\n' ...
+                        'Deseja reconfigurar esse apontamento para automático ' ...
+                        '("Target" ou "LookAngles")?</font>' ...
+                    ], antennaName);
+
+                    progressDialog.Visible = 'hidden';
+                    selection = uiconfirm(callingApp.UIFigure, msg, '', 'Interpreter', 'html', 'Options', {'Sim', 'Não'}, 'DefaultOption', 2, 'CancelOption', 2, 'Icon', 'question');
+                    if selection == "Sim"
+                        error('Operação cancelada para reconfiguração do tipo de apontamento do conjunto antena/LNB "%s".', antennaName)
+                    end
                 end
         end
     end
