@@ -1,0 +1,137 @@
+[
+  {
+    "Family": "Receiver",
+    "Name": "Tektronix SA2500",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "127.0.0.1",
+      "Port": "34835",
+      "Timeout": 5
+    },
+    "Description": "Modo servidor/cliente. Loopback (127.0.0.1).",
+    "Enable": 1
+  },
+  {
+    "Family": "Receiver",
+    "Name": "R&S FSL",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "10.21.204.212",
+      "Port": "5025",
+      "Timeout": 5
+    },
+    "Description": "FSL-6 (10k - 6 GHz)",
+    "Enable": 0
+  },
+  {
+    "Family": "Receiver",
+    "Name": "R&S FSW",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "10.21.204.212",
+      "Port": "5025",
+      "Timeout": 5
+    },
+    "Description": "EMSat",
+    "Enable": 1
+  },
+  {
+    "Family": "Receiver",
+    "Name": "R&S FSVR",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "192.168.1.106",
+      "Port": "5025",
+      "Timeout": 5
+    },
+    "Description": "FSVR",
+    "Enable": 0
+  },
+  {
+    "Family": "Receiver",
+    "Name": "Anritsu MS2720T",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "192.168.1.104",
+      "Port": "9001",
+      "Timeout": 5
+    },
+    "Description": "GR08",
+    "Enable": 1
+  },
+  {
+    "Family": "Receiver",
+    "Name": "Keysight N9344C",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "192.168.1.102",
+      "Port": "5025",
+      "Timeout": 5
+    },
+    "Description": "GR08",
+    "Enable": 0
+  },
+  {
+    "Family": "Receiver",
+    "Name": "Keysight N9936B",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "192.168.1.103",
+      "Port": "5025",
+      "Timeout": 5
+    },
+    "Description": "GR08",
+    "Enable": 1
+  },
+  {
+    "Family": "Receiver",
+    "Name": "Tektronix SA2500",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "192.168.1.105",
+      "Port": "34835",
+      "Timeout": 5
+    },
+    "Description": "GR08",
+    "Enable": 1
+  },
+  {
+    "Family": "Receiver",
+    "Name": "R&S EB500",
+    "Type": "TCP/UDP IP Socket",
+    "Parameters": {
+      "IP": "192.168.48.10",
+      "Port": "5555",
+      "Timeout": 5,
+      "Localhost_Enable": 0,
+      "Localhost_localIP": "",
+      "Localhost_publicIP": ""
+    },
+    "Description": "ETM",
+    "Enable": 1
+  },
+  {
+    "Family": "GPS",
+    "Name": "GPS USB/Serial",
+    "Type": "Serial",
+    "Parameters": {
+      "Port": "COM2",
+      "BaudRate": 9600,
+      "Timeout": 3
+    },
+    "Description": "GPS Garmin",
+    "Enable": 1
+  },
+  {
+    "Family": "GPS",
+    "Name": "GPS TCPIP",
+    "Type": "TCPIP Socket",
+    "Parameters": {
+      "IP": "192.168.10.30",
+      "Port": "11123",
+      "Timeout": 5
+    },
+    "Description": "GPS2IP (iOS)",
+    "Enable": 0
+  }
+]

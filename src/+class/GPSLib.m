@@ -82,8 +82,11 @@ classdef GPSLib < handle
                 if isempty(idx)
                     idx = height(obj.Table)+1;
                     switch Type
-                        case 'Serial';       hGPS = serialport(Port, BaudRate);
-                        case 'TCPIP Socket'; hGPS = tcpclient(IP, str2double(Port));
+                        case 'Serial'
+                            hGPS = serialport(Port, BaudRate);
+                            
+                        case 'TCPIP Socket'
+                            hGPS = tcpclient(IP, str2double(Port));
                     end
                     hGPS.Timeout = Timeout;
 

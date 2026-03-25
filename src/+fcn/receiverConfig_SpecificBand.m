@@ -16,7 +16,7 @@ function warnMsg = receiverConfig_SpecificBand(obj, idx, EMSatObj, ERMxObj)
     LevelUnit_Values   = strsplit(instrInfo.LevelUnit_Values{1}, ',');
     scpiVBW_Options    = strsplit(instrInfo.scpiVBW_Options{1},  ',');
 
-    rawFields = {'TraceMode',        'AverageMode',     'AveragCount',     ... %  1 a  3
+    rawFields = {'TraceMode',        'AverageMode',     'AverageCount',     ... %  1 a  3
                  'Detector',         'LevelUnit',       'FreqStart',       ... %  4 a  6
                  'FreqStop',         'DataPoints',      'StepWidth',       ... %  7 a  9
                  'ResolutionMode',   'ResolutionValue', 'Selectivity',     ... % 10 a 12

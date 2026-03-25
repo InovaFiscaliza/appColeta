@@ -1,0 +1,259 @@
+{
+    "family": "Receiver",
+    "name": "R&S FSW",
+    "tag": "FSW",
+    "band": "2 Hz - 43.5 GHz",
+    "image": "Instr_R&S_FSW.png",
+    "connection": {
+        "types": [
+            "TCPIP Socket"
+        ],
+        "defaultPort": 5025,
+        "terminator": "LF",
+        "traceData": {
+            "acquisitionMode": "polling",
+            "dataType": "level"
+        }
+    },
+    "communication": {
+        "legacy": {
+            "initReset": "*RST",
+            "initStartup": "*CLS;:INSTrument SAN;:FORMat:DATA REAL,32;:AVERage:TYPE LINear",
+            "initSweepMode": "INITiate:CONTinuous %SweepMode%",
+            "setBandConfig": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+            "setAttenuation": "",
+            "setVideoBandWidth": ";:BANDwidth:VIDeo:AUTO ON,;:BANDwidth:VIDeo %VBWValue%",
+            "queryIdentification": "*IDN?",
+            "queryStatus": "SYSTEM:ERROR?",
+            "queryBandConfig": "DISPlay:WINDow:TRACe1:MODE?;:SWEep:COUNt?;:DETector1:FUNCtion?;:UNIT:POWer?;:FREQuency:STARt?;:FREQuency:STOP?;:SWEep:POINTS?;:BANDwidth:RESolution:AUTO?;:BANDwidth:RESolution?;:INPut:GAIN:STATe?;:INPut:ATTenuation:AUTO?;:INPut:ATTenuation?;:SWEep:TIME?;:FREQuency:STARt? MIN;:FREQuency:STOP? MAX;:BANDwidth:VIDeo?",
+            "queryAttenuation": "INPut:ATTenuation?",
+            "fetchTraceData": "INITiate:IMMediate;*WAI;:TRACe:DATA? TRACe1",
+            "fetchGpsData": ""
+        },
+        "set": [
+            {
+                "step": "initialization",
+                "commands": [
+                    {
+                        "name": "reset",
+                        "parameterNames": [
+                            "reset"
+                        ],
+                        "mandatory": false,
+                        "postDelay": 1
+                    },
+                    {
+                        "name": "startup",
+                        "parameterNames": [
+                            "startup"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0
+                    },
+                    {
+                        "name": "sweepMode",
+                        "parameterNames": [
+                            "sweepMode"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0
+                    }
+                ]
+            },
+            {
+                "step": "acquisition",
+                "commands": [
+                    {
+                        "name": "bandConfig",
+                        "parameterNames": [
+                            "traceMode",
+                            "averageCount",
+                            "detector",
+                            "levelUnit",
+                            "freqStart",
+                            "freqStop",
+                            "dataPoints",
+                            "resolutionMode",
+                            "resolutionValue",
+                            "preamp",
+                            "attenuationMode",
+                            "attenuationValue",
+                            "sampleTimeValue",
+                            "minFreqRange",
+                            "maxFreqRange",
+                            "videoBandWidth"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0.1
+                    },
+                    {
+                        "name": "attenuationValue",
+                        "parameterNames": [
+                            "attenuationValue"
+                        ],
+                        "mandatory": false,
+                        "postDelay": 0
+                    },
+                    {
+                        "name": "videoBandWidth",
+                        "parameterNames": [
+                            "videoBandWidth"
+                        ],
+                        "mandatory": false,
+                        "postDelay": 0
+                    }
+                ]
+            }
+        ],
+        "query": {
+            "identification": "*IDN?",
+            "status": "SYSTEM:ERROR?",
+            "bandConfig": "DISPlay:WINDow:TRACe1:MODE?;:SWEep:COUNt?;:DETector1:FUNCtion?;:UNIT:POWer?;:FREQuency:STARt?;:FREQuency:STOP?;:SWEep:POINTS?;:BANDwidth:RESolution:AUTO?;:BANDwidth:RESolution?;:INPut:GAIN:STATe?;:INPut:ATTenuation:AUTO?;:INPut:ATTenuation?;:SWEep:TIME?;:FREQuency:STARt? MIN;:FREQuency:STOP? MAX;:BANDwidth:VIDeo?",
+            "attenuation": "INPut:ATTenuation?"
+        },
+        "fetch": {
+            "traceData": "INITiate:IMMediate;*WAI;:TRACe:DATA? TRACe1",
+            "gpsData": ""
+        },
+        "parameters": [
+            {
+                "name": "attenuationMode",
+                "write": "INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "read": "INPut:ATTenuation:AUTO?",
+                "requireMatch": false
+            },
+            {
+                "name": "attenuationValue",
+                "write": "INPut:ATTenuation %AttenuationValue%",
+                "read": "INPut:ATTenuation?",
+                "requireMatch": false
+            },
+            {
+                "name": "averageCount",
+                "write": "SWEep:COUNt %AverageCount%",
+                "read": "SWEep:COUNt?",
+                "requireMatch": false
+            },
+            {
+                "name": "dataPoints",
+                "write": "SWEep:POINTS %DataPoints%",
+                "read": "SWEep:POINTS?",
+                "requireMatch": false
+            },
+            {
+                "name": "detector",
+                "write": "DETector1:FUNCtion %Detector%",
+                "read": "DETector1:FUNCtion?",
+                "requireMatch": false
+            },
+            {
+                "name": "freqStart",
+                "write": "FREQuency:STARt %FreqStart%",
+                "read": "FREQuency:STARt?",
+                "requireMatch": false
+            },
+            {
+                "name": "freqStop",
+                "write": "FREQuency:STOP %FreqStop%",
+                "read": "FREQuency:STOP?",
+                "requireMatch": false
+            },
+            {
+                "name": "levelUnit",
+                "write": "UNIT:POWer %LevelUnit%",
+                "read": "UNIT:POWer?",
+                "requireMatch": false
+            },
+            {
+                "name": "maxFreqRange",
+                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "read": "FREQuency:STOP? MAX",
+                "requireMatch": false
+            },
+            {
+                "name": "minFreqRange",
+                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "read": "FREQuency:STARt? MIN",
+                "requireMatch": false
+            },
+            {
+                "name": "preamp",
+                "write": "INPut:GAIN:STATe %Preamp%",
+                "read": "INPut:GAIN:STATe?",
+                "requireMatch": false
+            },
+            {
+                "name": "reset",
+                "write": "*RST",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "resolutionMode",
+                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "read": "BANDwidth:RESolution:AUTO?",
+                "requireMatch": false
+            },
+            {
+                "name": "resolutionValue",
+                "write": "BANDwidth:RESolution %ResolutionValue%%VBWOption%",
+                "read": "BANDwidth:RESolution?",
+                "requireMatch": false
+            },
+            {
+                "name": "sampleTimeValue",
+                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "read": "SWEep:TIME?",
+                "requireMatch": false
+            },
+            {
+                "name": "startup",
+                "write": "*CLS;:INSTrument SAN;:FORMat:DATA REAL,32;:AVERage:TYPE LINear",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "sweepMode",
+                "write": "INITiate:CONTinuous %SweepMode%",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "traceMode",
+                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%",
+                "read": "DISPlay:WINDow:TRACe1:MODE?",
+                "requireMatch": false
+            },
+            {
+                "name": "videoBandWidth",
+                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "read": "BANDwidth:VIDeo?",
+                "requireMatch": false
+            }
+        ]
+    },
+    "features": {
+        "attenuationValues": "0 dB,1 dB,2 dB,3 dB,4 dB,5 dB,6 dB,7 dB,8 dB,9 dB,10 dB,11 dB,12 dB,13 dB,14 dB,15 dB,16 dB,17 dB,18 dB,19 dB,20 dB,21 dB,22 dB,23 dB,24 dB,25 dB,26 dB,27 dB,28 dB,29 dB,30 dB,31 dB,32 dB,33 dB,34 dB,35 dB,36 dB,37 dB,38 dB,39 dB,40 dB,41 dB,42 dB,43 dB,44 dB,45 dB,46 dB,47 dB,48 dB,49 dB,50 dB,51 dB,52 dB,53 dB,54 dB,55 dB,56 dB,57 dB,58 dB,59 dB,60 dB,61 dB,62 dB,63 dB,64 dB,65 dB,66 dB,67 dB,68 dB,69 dB,70 dB,71 dB,72 dB,73 dB,74 dB,75 dB,76 dB,77 dB,78 dB,79 dB",
+        "levelUnits": "DBM,DBUV",
+        "stepWidths": "",
+        "resolutions": "1.000 kHz,3.000 kHz,10.000 kHz,30.000 kHz,100.000 kHz,300.000 kHz,1000.000 kHz,3000.000 kHz,10000.000 kHz",
+        "videoBandWidths": "auto,0.100 kHz,0.300 kHz,1.000 kHz,3.000 kHz,10.000 kHz,30.000 kHz,100.000 kHz,300.000 kHz,1000.000 kHz,3000.000 kHz,10000.000 kHz",
+        "dataPoints": [
+            101,
+            100001
+        ],
+        "detector": {
+            "items": "Sample,Average/RMS,Positive Peak,Negative Peak",
+            "values": "SAMP,RMS,POS,NEG"
+        },
+        "sweepMode": {
+            "items": "Single Sweep",
+            "values": "OFF"
+        },
+        "traceMode": {
+            "items": "ClearWrite,Average,MaxHold,MinHold",
+            "values": "WRIT,AVER,MAXH,MINH",
+            "requiresAverageModeFor": []
+        }
+    }
+}

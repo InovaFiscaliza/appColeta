@@ -10,7 +10,7 @@ classdef TaskController < handle
     %
     % app.TaskController = model.TaskController(struct( ...
     %     'ReceiverObj', app.ReceiverObj, ...
-    %     'GPSObj',      app.GPSObj, ...
+    %     'GpsObj',      app.GpsObj, ...
     %     'UDPPortObj',  app.UDPPortObj, ...
     %     'EB500Obj',    app.EB500Obj, ...
     %     'EMSatObj',    app.EMSatObj, ...
@@ -21,14 +21,14 @@ classdef TaskController < handle
     properties
         %-----------------------------------------------------------------%
         ReceiverObj
-        GPSObj
+        GpsObj
     end
 
 
     properties (Access = private)
         %-----------------------------------------------------------------%
-        isRunning = false
-        isChanging = false
+        IsRunning = false
+        IsChanging = false
         
         TaskList
         UDPPortObj
@@ -53,18 +53,18 @@ classdef TaskController < handle
 
         %-----------------------------------------------------------------%
         function start(obj)
-            obj.isRunning = true;
+            obj.IsRunning = true;
             obj.runLoop();
         end
 
         %-----------------------------------------------------------------%
         function stop(obj)
-            obj.isRunning = false;
+            obj.IsRunning = false;
         end
 
         %-----------------------------------------------------------------%
         function updateTaskList(obj)
-            obj.isChanging = true;
+            obj.IsChanging = true;
         end
     end
 
@@ -72,7 +72,7 @@ classdef TaskController < handle
     methods (Access = private)
         %-----------------------------------------------------------------%
         function runLoop(obj)
-            while obj.isRunning
+            while obj.IsRunning
                 % ...
             end
         end

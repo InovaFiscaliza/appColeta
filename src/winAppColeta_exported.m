@@ -92,8 +92,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         SubTabGroup = struct('Children', -1, 'UserData', [])
 
-        % taskController
-        % taskList
+        TaskController
+        TaskList = model.Task.empty
 
         specObj
         revisitObj
@@ -490,7 +490,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.gpsObj      = class.GPSLib(app.rootFolder);            
             app.EB500Obj    = class.EB500Lib(app.rootFolder);
             app.EMSatObj    = class.EMSatLib(app.rootFolder);
-            app.ERMxObj     = class.ERMxLib(app.rootFolder);            
+            app.ERMxObj     = class.ERMxLib(app.rootFolder);
+            
+            app.TaskController = model.TaskController(struct( ...
+                'ReceiverObj', app.receiverObj, ...
+                'GpsObj',      app.gpsObj, ...
+                'UDPPortObj',  {app.udpPortArray}, ...
+                'EB500Obj',    app.EB500Obj, ...
+                'EMSatObj',    app.EMSatObj, ...
+                'ERMxObj',     app.ERMxObj ...
+            ));
 
             if app.General.tcpServer.Status
                 try

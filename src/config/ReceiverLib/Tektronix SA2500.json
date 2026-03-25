@@ -1,0 +1,223 @@
+{
+    "family": "Receiver",
+    "name": "Tektronix SA2500",
+    "tag": "SA2500",
+    "band": "10 kHz - 6.2 GHz",
+    "image": "Instr_Tektronix_SA2500.png",
+    "connection": {
+        "types": [
+            "TCPIP Socket"
+        ],
+        "defaultPort": 34835,
+        "terminator": "LF",
+        "traceData": {
+            "acquisitionMode": "polling",
+            "dataType": "level"
+        }
+    },
+    "communication": {
+        "legacy": {
+            "initReset": "*RST",
+            "initStartup": "*CLS;:DISPlay:GENeral:MEASview:SELect SPEC;:FORMat:DATA BIN;:SYSTem:GPS INT",
+            "initSweepMode": "INITiate:CONTinuous %SweepMode%",
+            "setBandConfig": "TRACe1:SPECtrum:FUNCtion %Trace%;:TRACe1:SPECtrum:AVERage:COUNt %AverageCount%;:TRACe1:SPECtrum:DETection %Detector%;:UNIT:POWer %LevelUnit%;:SPECtrum:FREQuency:START %FreqStart%;:SPECtrum:FREQuency:STOP %FreqStop%;:SPECtrum:BANDwidth:RESolution %ResolutionValue%;:INPut:GAIN:STATe %Preamp%%AutoLevel%",
+            "setAttenuation": "INPut:ATTenuation %AttenuationValue%",
+            "setVideoBandWidth": "",
+            "queryIdentification": "*IDN?",
+            "queryStatus": "SYSTEM:ERROR?",
+            "queryBandConfig": "TRACe1:SPECtrum:FUNCtion?;:TRACe1:SPECtrum:AVERage:COUNt?;:TRACe1:SPECtrum:DETection?;:UNIT:POWer?;:SPECtrum:FREQuency:STARt?;:SPECtrum:FREQuency:STOP?;:SPECtrum:BANDwidth:RESolution:AUTO?;:SPECtrum:BANDwidth:RESolution?;:INPut:GAIN:STATe?;:INPut:ATTenuation?",
+            "queryAttenuation": "INPut:ATTenuation?",
+            "fetchTraceData": "INIT;*WAI;:FETCH:SPECTRUM:TRACE1?",
+            "fetchGpsData": "SYSTem:GPS:POSition?"
+        },
+        "set": [
+            {
+                "step": "initialization",
+                "commands": [
+                    {
+                        "name": "reset",
+                        "parameterNames": [
+                            "reset"
+                        ],
+                        "mandatory": false,
+                        "postDelay": 7
+                    },
+                    {
+                        "name": "startup",
+                        "parameterNames": [
+                            "startup"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0
+                    },
+                    {
+                        "name": "sweepMode",
+                        "parameterNames": [
+                            "sweepMode"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0
+                    }
+                ]
+            },
+            {
+                "step": "acquisition",
+                "commands": [
+                    {
+                        "name": "bandConfig",
+                        "parameterNames": [
+                            "traceMode",
+                            "averageCount",
+                            "detector",
+                            "levelUnit",
+                            "freqStart",
+                            "freqStop",
+                            "resolutionMode",
+                            "resolutionValue",
+                            "preamp",
+                            "autoLevel"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0.3
+                    },
+                    {
+                        "name": "attenuationValue",
+                        "parameterNames": [
+                            "attenuationValue"
+                        ],
+                        "mandatory": false,
+                        "postDelay": 0
+                    },
+                    {
+                        "name": "videoBandWidth",
+                        "parameterNames": [
+                            "videoBandWidth"
+                        ],
+                        "mandatory": false,
+                        "postDelay": 0
+                    }
+                ]
+            }
+        ],
+        "query": {
+            "identification": "*IDN?",
+            "status": "SYSTEM:ERROR?",
+            "bandConfig": "TRACe1:SPECtrum:FUNCtion?;:TRACe1:SPECtrum:AVERage:COUNt?;:TRACe1:SPECtrum:DETection?;:UNIT:POWer?;:SPECtrum:FREQuency:STARt?;:SPECtrum:FREQuency:STOP?;:SPECtrum:BANDwidth:RESolution:AUTO?;:SPECtrum:BANDwidth:RESolution?;:INPut:GAIN:STATe?;:INPut:ATTenuation?",
+            "attenuation": "INPut:ATTenuation?"
+        },
+        "fetch": {
+            "traceData": "INIT;*WAI;:FETCH:SPECTRUM:TRACE1?",
+            "gpsData": "SYSTem:GPS:POSition?"
+        },
+        "parameters": [
+            {
+                "name": "attenuationValue",
+                "write": "TRACe1:SPECtrum:FUNCtion %Trace%;:TRACe1:SPECtrum:AVERage:COUNt %AverageCount%;:TRACe1:SPECtrum:DETection %Detector%;:UNIT:POWer %LevelUnit%;:SPECtrum:FREQuency:START %FreqStart%;:SPECtrum:FREQuency:STOP %FreqStop%;:SPECtrum:BANDwidth:RESolution %ResolutionValue%;:INPut:GAIN:STATe %Preamp%%AutoLevel%",
+                "read": "INPut:ATTenuation?",
+                "requireMatch": false
+            },
+            {
+                "name": "autoLevel",
+                "write": "INPut:ALEVel",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "averageCount",
+                "write": "TRACe1:SPECtrum:AVERage:COUNt %AverageCount%",
+                "read": "TRACe1:SPECtrum:AVERage:COUNt?",
+                "requireMatch": false
+            },
+            {
+                "name": "detector",
+                "write": "TRACe1:SPECtrum:DETection %Detector%",
+                "read": "TRACe1:SPECtrum:DETection?",
+                "requireMatch": false
+            },
+            {
+                "name": "freqStart",
+                "write": "SPECtrum:FREQuency:START %FreqStart%",
+                "read": "SPECtrum:FREQuency:STARt?",
+                "requireMatch": false
+            },
+            {
+                "name": "freqStop",
+                "write": "SPECtrum:FREQuency:STOP %FreqStop%",
+                "read": "SPECtrum:FREQuency:STOP?",
+                "requireMatch": false
+            },
+            {
+                "name": "levelUnit",
+                "write": "UNIT:POWer %LevelUnit%",
+                "read": "UNIT:POWer?",
+                "requireMatch": false
+            },
+            {
+                "name": "preamp",
+                "write": "INPut:GAIN:STATe %Preamp%",
+                "read": "INPut:GAIN:STATe?",
+                "requireMatch": false
+            },
+            {
+                "name": "reset",
+                "write": "*RST",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "resolutionMode",
+                "write": "",
+                "read": "SPECtrum:BANDwidth:RESolution:AUTO?",
+                "requireMatch": false
+            },
+            {
+                "name": "resolutionValue",
+                "write": "SPECtrum:BANDwidth:RESolution %ResolutionValue%",
+                "read": "SPECtrum:BANDwidth:RESolution?",
+                "requireMatch": false
+            },
+            {
+                "name": "startup",
+                "write": "*CLS;:DISPlay:GENeral:MEASview:SELect SPEC;:FORMat:DATA BIN;:SYSTem:GPS INT",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "sweepMode",
+                "write": "INITiate:CONTinuous %SweepMode%",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "traceMode",
+                "write": "TRACe1:SPECtrum:FUNCtion %Trace%",
+                "read": "TRACe1:SPECtrum:FUNCtion?",
+                "requireMatch": false
+            }
+        ]
+    },
+    "features": {
+        "attenuationValues": "0 dB,5 dB,10 dB,15 dB,20 dB,25 dB,30 dB,35 dB,40 dB,45 dB,50 dB",
+        "levelUnits": "DBM,DBUV",
+        "stepWidths": "",
+        "resolutions": "1.000 kHz,2.000 kHz,5.000 kHz,10.000 kHz,20.000 kHz,50.000 kHz,100.000 kHz,200.000 kHz,500.000 kHz,1000.000 kHz,2000.000 kHz",
+        "videoBandWidths": "auto",
+        "dataPoints": [
+            501,
+            501.001
+        ],
+        "detector": {
+            "items": "Average/RMS,Positive Peak,Negative Peak",
+            "values": "AVER,POS,NEG"
+        },
+        "sweepMode": {
+            "items": "Continuous Sweep",
+            "values": "ON"
+        },
+        "traceMode": {
+            "items": "ClearWrite,Average,MaxHold,MinHold",
+            "values": "NORM,AVER,MAXH,MINH",
+            "requiresAverageModeFor": []
+        }
+    }
+}
