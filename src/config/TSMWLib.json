@@ -1,0 +1,41 @@
+[
+    {
+    "Family": "Receiver",
+    "Name": "R&S TSMW",
+    "Tag": "TSMW",
+    "Band": "10 kHz - 6.2 GHz",
+    "Logo": "Instr_Tektronix.png",
+    "Image": "Instr_Tektronix_SA2500.png",
+    "connectType": [
+      "TCPIP Socket"
+    ],
+    "connectFlag": 1,
+    "connectPort": 5555,
+    "StartUp": "{\"CODE\":6,\"COMMAND\":\"powerScanConfig\",\"ARGS\":{}}",
+    "scpiReset": "",
+    "scpiGeneral": "{\"CODE\":6,\"COMMAND\":\"powerScanConfig\",\"ARGS\":{\"frontEndMask\":%FrontEndMask%,\"startFrequency\":%FreqStart%,\"stopFrequency\":%FreqStop%,\"requireRawData\":false,\"maxReportingRate\":%MaxReportingRate%,\"maxDeviceMeasurementRate\":%AcquisitionRate%,\"windowType\":1,\"fftSize\":%FftSize%,\"autoBandwidth\":%AutoBandwith%,\"bandwidth\":%Bandwidth%,\"levelThreshold\":%SensitivityMode%,\"threshold\":%Threshold%,\"preamplifier\":%Preamp%,\"autoAttenuation\":%AttenuationMode%,\"attenuation\":%AttenuationValue%,\"measurementTime\":%SampleTimeValue%,\"measurementDetectorType\":1,\"numBins\":%DataPoints%,\"frequencyDetectorType\":%Detector%,\"timeDetectorType\":1,\"timeDetectorIntervalType\":1,\"timeParameter\":1000,\"useMarker\":false,\"returnPowerValues\":false,\"singleSweepMode\":%SyncOptions%}}",
+    "scpiVBW_Options": "",
+    "scpiAttenuation": "",
+    "scpiQuery": "{\"CODE\":5,\"COMMAND\":\"getSettings\",\"ARGS\":{}}",
+    "scpiQuery_IDs": [
+      1,
+      3,
+      4,
+      5,
+      6,
+      7,
+      10,
+      11,
+      14,
+      16
+    ],
+    "scpiQuery_Attenuation": "",
+    "scpiTraceData": "{\"CODE\":7,\"COMMAND\":\"startPowerScanMeasurement\",\"ARGS\":{}}",
+    "scpiGPS": "{\"CODE\":2,\"COMMAND\":\"gpsGetLocation\",\"ARGS\":{}}",
+    "scpiStatus": "",
+    "DataPoints_Limits": [
+      512,
+      8192
+    ]
+}
+]
