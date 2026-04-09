@@ -11,6 +11,7 @@
     ],
     "connectFlag": 1,
     "connectPort": 5555,
+    "scpiIDN": "{\"CODE\":4,\"COMMAND\":\"*idn?\",\"ARGS\":{}}",
     "StartUp": "{\"CODE\":6,\"COMMAND\":\"powerScanConfig\",\"ARGS\":{}}",
     "scpiReset": "",
     "scpiGeneral": "{\"CODE\":6,\"COMMAND\":\"powerScanConfig\",\"ARGS\":{\"frontEndMask\":%FrontEndMask%,\"startFrequency\":%FreqStart%,\"stopFrequency\":%FreqStop%,\"requireRawData\":false,\"maxReportingRate\":%MaxReportingRate%,\"maxDeviceMeasurementRate\":%AcquisitionRate%,\"windowType\":1,\"fftSize\":%FftSize%,\"autoBandwidth\":%AutoBandwith%,\"bandwidth\":%Bandwidth%,\"levelThreshold\":%SensitivityMode%,\"threshold\":%Threshold%,\"preamplifier\":%Preamp%,\"autoAttenuation\":%AttenuationMode%,\"attenuation\":%AttenuationValue%,\"measurementTime\":%SampleTimeValue%,\"measurementDetectorType\":1,\"numBins\":%DataPoints%,\"frequencyDetectorType\":%Detector%,\"timeDetectorType\":1,\"timeDetectorIntervalType\":1,\"timeParameter\":1000,\"useMarker\":false,\"returnPowerValues\":false,\"singleSweepMode\":%SyncOptions%}}",
