@@ -17,7 +17,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         ButtonsSeparator1      matlab.ui.control.Image
         Tab1Button             matlab.ui.control.StateButton
         AppName                matlab.ui.control.Label
-        AppIcon                matlab.ui.control.Image
         TabGroup               matlab.ui.container.TabGroup
         Tab1_Task              matlab.ui.container.Tab
         Tab1Grid               matlab.ui.container.GridLayout
@@ -74,6 +73,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
     properties (Access = private)
         %-----------------------------------------------------------------%
         Role = 'mainApp'
+        Context = 'TASK:VIEW'
     end
 
 
@@ -89,6 +89,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         executionMode
         progressDialog
         popupContainer
+        popupCurrentApp
 
         SubTabGroup = struct('Children', -1, 'UserData', [])
 
@@ -176,6 +177,24 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                     case 'unload'
                         closeFcn(app)
+
+                    case 'closeFcnCallFromPopupApp'
+                        context = event.HTMLEventData.context;
+                        popupCurrentAppTag = event.HTMLEventData.dockAppName;
+
+                        switch context
+                            case {'mainApp', app.Context}
+                                hApp = app;
+                            otherwise
+                                hApp = getAppHandle(app.tabGroupController, context);
+                        end
+                        
+                        if ~isempty(hApp) && isvalid(hApp)
+                            deleteContextMenu(app.tabGroupController, hApp.UIFigure, popupCurrentAppTag)
+                        end
+
+                        delete(app.popupCurrentApp)
+                        app.popupCurrentApp = [];
                     
                     case 'customForm'
                         switch event.HTMLEventData.uuid
@@ -192,11 +211,17 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     case 'getNavigatorBasicInformation'
                         app.General.AppVersion.browser = event.HTMLEventData;
 
+                    case 'findResourceStaticURL'
+                        resourceStaticURL = event.HTMLEventData;
+                        if ~isempty(resourceStaticURL)
+                            app.General.AppVersion.application.resourceStaticURL = resourceStaticURL;
+                        end
+
                     case 'auxApp.winAddTask.AntennaList_Tree'
                         ipcMainMatlabCallAuxiliarApp(app, 'TASK:ADD', 'MATLAB', 'deleteAddedAntenna')
 
                     otherwise
-                        error('UnexpectedEvent')
+                        error('winAppColeta:UnexpectedEvent', 'Unexpected event "%s"', event.HTMLEventName)
                 end
                 drawnow
 
@@ -206,11 +231,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function varargout = ipcMainMatlabCallsHandler(app, callingApp, operationType, varargin)
+        function varargout = ipcMainMatlabCallsHandler(app, callingApp, eventName, varargin)
             varargout = {};
 
             try
-                switch operationType
+                switch eventName
                     case 'closeFcn'
                         auxAppTag    = varargin{1};
                         closeModule(app.tabGroupController, auxAppTag, app.General)
@@ -223,7 +248,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         switch class(callingApp)
                             % auxApp.winConfig (CONFIG)
                             case {'auxApp.winConfig', 'auxApp.winConfig_exported'}
-                                switch operationType
+                                switch eventName
                                     case 'checkDataHubLampStatus'
                                         DataHubWarningLamp(app)
 
@@ -247,22 +272,22 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                         colormap(app.axes2, waterfallColormap)
         
                                     otherwise
-                                        error('UnexpectedCall')
+                                        error('winAppColeta:UnexpectedCall', 'Unexpected call "%s"', eventName)
                                 end
 
                             % auxApp.winTaskList (TASK:EDIT)
                             case {'auxApp.winTaskList', 'auxApp.winTaskList_exported'}
-                                switch operationType
+                                switch eventName
                                     case 'onTaskListEdit'
                                         app.taskList = class.taskList.rawFileParser(app.rootFolder, 'winAppColetaV2');
         
                                     otherwise
-                                        error('UnexpectedCall')
+                                        error('winAppColeta:UnexpectedCall', 'Unexpected call "%s"', eventName)
                                 end
 
                             % auxApp.winAddTask (TASK:ADD)
                             case {'auxApp.winAddTask', 'auxApp.winAddTask_exported'}
-                                switch operationType
+                                switch eventName
                                     case 'onTaskAddingOrEditing'
                                         auxAppTag   = varargin{1};
                                         infoEdition = varargin{2};
@@ -288,46 +313,17 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                         end
 
                                     otherwise
-                                        error('UnexpectedCall')
-                                end
-
-                            % auxApp.dockTracking
-                            case {'auxApp.dockTracking', 'auxApp.dockTracking_exported'}
-                                switch operationType
-                                    case 'closeFcnCallFromPopupApp'
-                                        context = varargin{1};
-                                        moduleTag = varargin{2};
-        
-                                        switch context
-                                            case {'mainApp', 'TASK:VIEW'}
-                                                hApp = app;
-                                                app.popupContainer.Parent.Visible = 0;
-                                            otherwise
-                                                hApp = getAppHandle(app.tabGroupController, context);
-                                                ipcMainMatlabCallAuxiliarApp(app, context, 'MATLAB', operationType)
-                                        end
-                                        
-                                        if ~isempty(hApp)
-                                            deleteContextMenu(app.tabGroupController, hApp.UIFigure, moduleTag)
-                                        end
-        
-                                    otherwise
-                                        error('UnexpectedCall')
+                                        error('winAppColeta:UnexpectedCall', 'Unexpected call "%s"', eventName)
                                 end
 
                             otherwise
-                                error('Unexpected call "%s" from %s', operationType, class(callingApp))
+                                error('winAppColeta:UnexpectedCaller', 'Unexpected caller "%s"', class(callingApp))
                         end
                 end                
 
             catch ME
                 ui.Dialog(app.UIFigure, 'error', ME.message);            
             end
-
-            % Caso um app auxiliar esteja em modo DOCK, o progressDialog do
-            % app auxiliar coincide com o do appAnalise. Força-se, portanto, 
-            % a condição abaixo para evitar possível bloqueio da tela.
-            app.progressDialog.Visible = 'hidden';
         end
 
         %-----------------------------------------------------------------%
@@ -347,39 +343,64 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function ipcMainMatlabOpenPopupApp(app, callingApp, auxAppName, varargin)
+        function ipcMainMatlabOpenPopupApp(app, callingApp, auxAppName, context, varargin)
             arguments
                 app
                 callingApp
                 auxAppName char {mustBeMember(auxAppName, {'Tracking'})}
+                context    char {mustBeMember(context, {'mainApp', 'TASK:VIEW', 'TASK:EDIT', 'TASK:ADD', 'INSTRUMENT', 'SERVER', 'CONFIG'})}
             end
 
             arguments (Repeating)
                 varargin 
             end
 
-            switch auxAppName
-                case 'Tracking'
-                    screenWidth  = 622;
-                    screenHeight = 302;
-                otherwise
-                    % ...
-            end
-
             requestVisibilityChange(callingApp.progressDialog, 'visible', 'unlocked')
-            ui.PopUpContainer(callingApp, class.Constants.appName, screenWidth, screenHeight)
+            inputArguments = [{app, callingApp, context}, varargin];
 
-            % Executa o app auxiliar.
-            inputArguments = [{app, callingApp}, varargin];
-            auxDockAppName = sprintf('auxApp.dock%s', auxAppName);
-            
             if app.General.operationMode.Debug
-                eval(sprintf('auxApp.dock%s(inputArguments{:})', auxAppName))
-            else
-                eval([auxDockAppName '_exported(callingApp.popupContainer, inputArguments{:})'])
+                app.popupCurrentApp = eval(sprintf('auxApp.dock%s(inputArguments{:})', auxAppName));
+                app.popupCurrentApp.isDocked = false;
 
+            else
+                popupSpecifications = table( ...
+                    'Size', [15, 4], ...
+                    'VariableTypes', {'string', 'double', 'double', 'logical'}, ...
+                    'VariableNames', {'AuxAppName', 'Width', 'Height', 'IsFluid'} ...
+                );
+                popupSpecifications( 1, :) = {"Tracking", 622, 302, false};
+
+                auxAppNameIdx = find(popupSpecifications.AuxAppName == string(auxAppName), 1);
+                screenWidth = popupSpecifications.Width(auxAppNameIdx);
+                screenHeight = popupSpecifications.Height(auxAppNameIdx);
+                isFluid = popupSpecifications.IsFluid(auxAppNameIdx);
+
+                ui.PopUpContainer(callingApp, screenWidth, screenHeight)
+                auxDockAppName = sprintf('auxApp.dock%s', auxAppName);
+                app.popupCurrentApp = feval([auxDockAppName '_exported'], callingApp.popupContainer, inputArguments{:});
+                
+                ui.CustomizationBase.getElementsDataTag({
+                    callingApp.popupContainer;
+                    app.popupCurrentApp.GridLayout
+                });
+
+                if isFluid
+                    sizing = struct('type', 'fluid', 'width', 90, 'height', 80);
+                else
+                    sizing = struct('type', 'fixed', 'width', screenWidth, 'height', screenHeight+31);
+                end
+
+                sendEventToHTMLSource(callingApp.jsBackDoor, 'dockContainer', struct( ...
+                    'dockAppName', auxDockAppName, ...
+                    'dockAppDataTag', app.popupCurrentApp.GridLayout.UserData.id, ...
+                    'dockAppContainerDataTag', callingApp.popupContainer.UserData.id, ...
+                    'sizing', sizing, ...
+                    'context', context, ...
+                    'numCanvasElements', numel(findobj(app.popupCurrentApp.Container, 'Type', 'axes')) ...
+                ))
+
+                app.popupCurrentApp.GridLayout.UserData.auxDockAppName = auxDockAppName;
                 callingApp.popupContainer.UserData.auxDockAppName = auxDockAppName;
-                callingApp.popupContainer.Parent.Visible = 1;
             end
 
             requestVisibilityChange(callingApp.progressDialog, 'hidden', 'unlocked')
@@ -404,25 +425,30 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 case 1
                     appName = class(app);
                     elToModify = {
-                        app.MetaData;
-                        app.play_axesToolbar;
                         app.Tab1Button;
                         app.Tab2Button;
                         app.Tab3Button;
                         app.Tab4Button;
                         app.Tab5Button;
-                        app.Tab6Button
+                        app.Tab6Button;
+                        app.MetaData;
+                        app.play_axesToolbar;
+                        app.tool_ButtonPlay
                     };
-                    elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
 
                     try
-                        ui.TextView.startup(app.jsBackDoor, elToModify{1}, appName);
+                        ui.TextView.startup(app.jsBackDoor, app.MetaData, appName);
                     catch
                     end
 
                     try
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                            struct('appName', appName, 'dataTag', elDataTag{2}, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0')) ...
+                            struct('appName', appName, 'dataTag', app.play_axesToolbar.UserData.id, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0')), ...
+                            struct('appName', appName, 'dataTag', app.tool_LeftPanel.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
+                            struct('appName', appName, 'dataTag', app.tool_ButtonPlay.UserData.id,  'tooltip', struct('defaultPosition', 'top', 'textContent', 'Inicia ou interrompe tarefa')), ...
+                            struct('appName', appName, 'dataTag', app.tool_ButtonDel.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exclui tarefa')), ...
+                            struct('appName', appName, 'dataTag', app.tool_ButtonLOG.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'LOG tarefa')) ...
                         });
                     catch
                     end
@@ -472,9 +498,17 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     end
             end
 
-            app.General            = app.General_I;
+            app.General = app.General_I;
             app.General.AppVersion = util.getAppVersion(app.rootFolder, MFilePath, tempDir);
             sendEventToHTMLSource(app.jsBackDoor, 'getNavigatorBasicInformation')
+
+            % Ideia é identificar URL de pasta estática servida pelo backend, de 
+            % forma que possam ser inseridas imagens em uilabel (como ui.TextView).
+            try
+                [~, resourceName, resourceExt] = fileparts(app.tool_ButtonPlay.ImageSource);
+                sendEventToHTMLSource(app.jsBackDoor, 'findResourceStaticURL', struct('resourceName', [resourceName resourceExt], 'resourceTag', 'img', 'resourceId', app.tool_ButtonPlay.UserData.id))
+            catch
+            end
         end
 
         %-----------------------------------------------------------------%
@@ -503,7 +537,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function initializeUIComponents(app)
-            app.tabGroupController = ui.TabNavigator(app.NavBar, app.TabGroup, app.progressDialog);
+            app.tabGroupController = ui.TabNavigator(app.NavBar, app.TabGroup, app.progressDialog, app.jsBackDoor);
             addComponent(app.tabGroupController, "Built-in", "",                     app.Tab1Button, "AlwaysOn", struct('On', '', 'Off', ''), matlab.graphics.GraphicsPlaceholder, 1)
             addComponent(app.tabGroupController, "External", "auxApp.winInstrument", app.Tab2Button, "AlwaysOn", struct('On', '', 'Off', ''), app.Tab1Button,                      2)
             addComponent(app.tabGroupController, "External", "auxApp.winTaskList",   app.Tab3Button, "AlwaysOn", struct('On', '', 'Off', ''), app.Tab1Button,                      3)
@@ -2670,7 +2704,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.tool_LeftPanel = uiimage(app.task_toolGrid);
             app.tool_LeftPanel.ScaleMethod = 'none';
             app.tool_LeftPanel.ImageClickedFcn = createCallbackFcn(app, @Toolbar_PanelVisibilityImageClicked, true);
-            app.tool_LeftPanel.Tooltip = {'Visibilidade do painel à esquerda'};
+            app.tool_LeftPanel.Tooltip = {''};
             app.tool_LeftPanel.Layout.Row = [1 3];
             app.tool_LeftPanel.Layout.Column = 1;
             app.tool_LeftPanel.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'layout-sidebar-left.svg');
@@ -2687,7 +2721,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.tool_ButtonPlay = uiimage(app.task_toolGrid);
             app.tool_ButtonPlay.ImageClickedFcn = createCallbackFcn(app, @Toolbar_ToggleTaskStatusButtonPushed, true);
             app.tool_ButtonPlay.Enable = 'off';
-            app.tool_ButtonPlay.Tooltip = {'Inicia ou interrompe tarefa'};
+            app.tool_ButtonPlay.Tooltip = {''};
             app.tool_ButtonPlay.Layout.Row = 2;
             app.tool_ButtonPlay.Layout.Column = 3;
             app.tool_ButtonPlay.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'play_32.png');
@@ -2696,7 +2730,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.tool_ButtonDel = uiimage(app.task_toolGrid);
             app.tool_ButtonDel.ImageClickedFcn = createCallbackFcn(app, @Toolbar_DelTaskButtonPushed, true);
             app.tool_ButtonDel.Enable = 'off';
-            app.tool_ButtonDel.Tooltip = {'Exclui tarefa'};
+            app.tool_ButtonDel.Tooltip = {''};
             app.tool_ButtonDel.Layout.Row = 2;
             app.tool_ButtonDel.Layout.Column = 4;
             app.tool_ButtonDel.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Delete_32Red.png');
@@ -2713,7 +2747,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.tool_ButtonLOG = uiimage(app.task_toolGrid);
             app.tool_ButtonLOG.ImageClickedFcn = createCallbackFcn(app, @Toolbar_ShowTaskLogButtonPushed, true);
             app.tool_ButtonLOG.Enable = 'off';
-            app.tool_ButtonLOG.Tooltip = {'LOG tarefa'};
+            app.tool_ButtonLOG.Tooltip = {''};
             app.tool_ButtonLOG.Layout.Row = 2;
             app.tool_ButtonLOG.Layout.Column = 6;
             app.tool_ButtonLOG.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LOG_32.png');
@@ -2754,7 +2788,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % Create NavBar
             app.NavBar = uigridlayout(app.GridLayout);
-            app.NavBar.ColumnWidth = {22, 74, '1x', 34, 5, 34, 34, 34, 5, 34, 34, '1x', 20, 20, 20, 0, 0};
+            app.NavBar.ColumnWidth = {101, '1x', 34, 5, 34, 34, 34, 5, 34, 34, '1x', 20, 20, 1, 20, 20, 0, 0};
             app.NavBar.RowHeight = {5, 7, 20, 7, 5};
             app.NavBar.ColumnSpacing = 5;
             app.NavBar.RowSpacing = 0;
@@ -2764,21 +2798,15 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.NavBar.Layout.Column = 1;
             app.NavBar.BackgroundColor = [0.2 0.2 0.2];
 
-            % Create AppIcon
-            app.AppIcon = uiimage(app.NavBar);
-            app.AppIcon.Layout.Row = [1 5];
-            app.AppIcon.Layout.Column = 1;
-            app.AppIcon.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Playback_32White.png');
-
             % Create AppName
             app.AppName = uilabel(app.NavBar);
             app.AppName.WordWrap = 'on';
             app.AppName.FontSize = 11;
             app.AppName.FontColor = [1 1 1];
             app.AppName.Layout.Row = [1 5];
-            app.AppName.Layout.Column = [2 3];
+            app.AppName.Layout.Column = [1 2];
             app.AppName.Interpreter = 'html';
-            app.AppName.Text = {'appColeta v. 1.63.0'; '<font style="font-size: 9px;">R2024a</font>'};
+            app.AppName.Text = {'appColeta v. 1.64.0'; '<font style="font-size: 9px;">R2024a</font>'};
 
             % Create Tab1Button
             app.Tab1Button = uibutton(app.NavBar, 'state');
@@ -2790,7 +2818,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab1Button.BackgroundColor = [0.2 0.2 0.2];
             app.Tab1Button.FontSize = 11;
             app.Tab1Button.Layout.Row = [2 4];
-            app.Tab1Button.Layout.Column = 4;
+            app.Tab1Button.Layout.Column = 3;
             app.Tab1Button.Value = true;
 
             % Create ButtonsSeparator1
@@ -2798,7 +2826,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.ButtonsSeparator1.ScaleMethod = 'none';
             app.ButtonsSeparator1.Enable = 'off';
             app.ButtonsSeparator1.Layout.Row = [2 4];
-            app.ButtonsSeparator1.Layout.Column = 5;
+            app.ButtonsSeparator1.Layout.Column = 4;
             app.ButtonsSeparator1.VerticalAlignment = 'bottom';
             app.ButtonsSeparator1.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV_White.svg');
 
@@ -2812,7 +2840,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab2Button.BackgroundColor = [0.2 0.2 0.2];
             app.Tab2Button.FontSize = 11;
             app.Tab2Button.Layout.Row = [2 4];
-            app.Tab2Button.Layout.Column = 6;
+            app.Tab2Button.Layout.Column = 5;
 
             % Create Tab3Button
             app.Tab3Button = uibutton(app.NavBar, 'state');
@@ -2824,7 +2852,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab3Button.BackgroundColor = [0.2 0.2 0.2];
             app.Tab3Button.FontSize = 11;
             app.Tab3Button.Layout.Row = [2 4];
-            app.Tab3Button.Layout.Column = 7;
+            app.Tab3Button.Layout.Column = 6;
 
             % Create Tab4Button
             app.Tab4Button = uibutton(app.NavBar, 'state');
@@ -2836,14 +2864,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab4Button.BackgroundColor = [0.2 0.2 0.2];
             app.Tab4Button.FontSize = 11;
             app.Tab4Button.Layout.Row = [2 4];
-            app.Tab4Button.Layout.Column = 8;
+            app.Tab4Button.Layout.Column = 7;
 
             % Create ButtonsSeparator2
             app.ButtonsSeparator2 = uiimage(app.NavBar);
             app.ButtonsSeparator2.ScaleMethod = 'none';
             app.ButtonsSeparator2.Enable = 'off';
             app.ButtonsSeparator2.Layout.Row = [2 4];
-            app.ButtonsSeparator2.Layout.Column = 9;
+            app.ButtonsSeparator2.Layout.Column = 8;
             app.ButtonsSeparator2.VerticalAlignment = 'bottom';
             app.ButtonsSeparator2.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV_White.svg');
 
@@ -2857,7 +2885,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab5Button.BackgroundColor = [0.2 0.2 0.2];
             app.Tab5Button.FontSize = 11;
             app.Tab5Button.Layout.Row = [2 4];
-            app.Tab5Button.Layout.Column = 10;
+            app.Tab5Button.Layout.Column = 9;
 
             % Create Tab6Button
             app.Tab6Button = uibutton(app.NavBar, 'state');
@@ -2869,12 +2897,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab6Button.BackgroundColor = [0.2 0.2 0.2];
             app.Tab6Button.FontSize = 11;
             app.Tab6Button.Layout.Row = [2 4];
-            app.Tab6Button.Layout.Column = 11;
+            app.Tab6Button.Layout.Column = 10;
 
             % Create jsBackDoor
             app.jsBackDoor = uihtml(app.NavBar);
             app.jsBackDoor.Layout.Row = 3;
-            app.jsBackDoor.Layout.Column = 13;
+            app.jsBackDoor.Layout.Column = 12;
 
             % Create FigurePosition
             app.FigurePosition = uiimage(app.NavBar);
@@ -2883,7 +2911,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.FigurePosition.Visible = 'off';
             app.FigurePosition.Tooltip = {'Reposiciona janela'};
             app.FigurePosition.Layout.Row = 3;
-            app.FigurePosition.Layout.Column = 14;
+            app.FigurePosition.Layout.Column = 15;
             app.FigurePosition.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'screen-normal-24px-white.svg');
 
             % Create AppInfo
@@ -2892,7 +2920,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.AppInfo.ImageClickedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.AppInfo.Tooltip = {'Informações gerais'};
             app.AppInfo.Layout.Row = 3;
-            app.AppInfo.Layout.Column = 15;
+            app.AppInfo.Layout.Column = 16;
             app.AppInfo.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'kebab-vertical-24px-white.svg');
 
             % Show the figure after all components are created

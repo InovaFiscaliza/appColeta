@@ -11,14 +11,14 @@ function varargout = compile(compilationType, rootCompiledFolder, matlabRuntimeF
     arguments
         compilationType         char {mustBeMember(compilationType, {'Desktop+WebApp', 'Desktop', 'WebApp'})} = 'Desktop+WebApp'
         rootCompiledFolder      char    = 'C:\InovaFiscaliza (AppsDeployVersions)'
-        matlabRuntimeFolder     char    = 'D:\MATLAB Runtime\MATLAB Runtime (Custom)\R2024a'
+        matlabRuntimeFolder     char    = 'E:\MATLAB Runtime\MATLAB Runtime (Custom)\R2024a'
         showConsoleInDesktopBuild  (1,1) logical = false % versão desktop apresenta console
         createGitHubReleaseForDesktopBuild (1,1) logical = true
         githubCLIFolder         char    = 'C:\Program Files\GitHub CLI'
         githubAccount           char    = 'EricMagalhaesDelgado'
     end
 
-    appName     = 'appColeta';
+    appName = 'appColeta';
 
     initFolder  = fileparts(mfilename('fullpath'));
     finalFolder = fullfile(rootCompiledFolder, appName);
@@ -40,7 +40,7 @@ function varargout = compile(compilationType, rootCompiledFolder, matlabRuntimeF
     end
 
     % Abre projeto do "appColeta", caso fechado, o que mapeia as pastas do
-    % projeto, possibilitar chamar class.Constants.appRelease, por exemplo.
+    % projeto, possibilitando chamar class.Constants.appName, por exemplo.
     try
         prjInfo = currentProject;
 
@@ -52,7 +52,7 @@ function varargout = compile(compilationType, rootCompiledFolder, matlabRuntimeF
     end
 
     % Cria versões .M para cada um dos arquivos .MLAPP, possibilitando que
-    % a figura do app principal (appColeta.mlapp) seja um container para
+    % a figura do app principal (winAppColeta.mlapp) seja um container para
     % os apps auxiliares.
     cd(initFolder)
     preCompile()
@@ -139,8 +139,8 @@ function desktopPostCompilation(finalFolder, matlabRuntimeFolder, githubReleaseF
 
     if isfolder(deployApp)
         appName    = class.Constants.appName;
-        appRelease = class.Constants.appRelease;
         appVersion = class.Constants.appVersion;
+        appRelease = matlabRelease.Release;
 
         desktopFinalFolder = fullfile(finalFolder, 'desktop');
 
@@ -153,13 +153,18 @@ function desktopPostCompilation(finalFolder, matlabRuntimeFolder, githubReleaseF
             mcrProducts  = cellfun(@(x) int64(str2double(x)), fileContent);
         
             cacheContent = dir(fullfile(matlabRuntimeFolder, '*.zip'));
+            cacheWarning = true;
             for ii = 1:numel(cacheContent)
                 cacheFileString  = char(extractBetween(cacheContent(ii).name, 'InstallAgent_', '.zip'));
                 cacheFileProduts = compiler.internal.utils.hexString2RuntimeProducts(cacheFileString);
         
-                if any(~ismember(mcrProducts, cacheFileProduts))
-                    warning('Necessário atualizar a versão customizada do MATLAB Runtime.')
+                if all(ismember(mcrProducts, cacheFileProduts))
+                    cacheWarning = false;
                 end
+            end
+
+            if cacheWarning
+                warning('Necessário atualizar a versão customizada do MATLAB Runtime.')
             end
         end
 

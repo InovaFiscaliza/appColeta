@@ -1,8 +1,4 @@
-function preCompile(showDiffApp)
-    arguments
-        showDiffApp logical = false
-    end
-
+function preCompile()
     appName = 'appColeta';
 
     % Essa função manipula os arquivos .MLAPP do projeto, gerando versões .M.
@@ -13,7 +9,7 @@ function preCompile(showDiffApp)
     %
     % - "winConfig" etc
     %   A versão .M  traz manipulações que possibilitam que esses módulos do 
-    %   rfPreview possam ser renderizados na figura de "winRFPreview".
+    %   app possam ser renderizados na figura de "winRFPreview".
 
     initFolder = fileparts(mfilename('fullpath'));
 
@@ -42,8 +38,7 @@ function preCompile(showDiffApp)
                     newTags = {sprintf('classdef %s < matlab.apps.AppBase', newClassName), ...
                                sprintf('function app = %s',                 newClassName)};
 
-                    matlabCode   = replace(matlabCode, oldTags, newTags);
-                    writematrix(matlabCode, [fileBaseName '_exported.m'], 'FileType', 'text', 'WriteMode', 'overwrite', 'QuoteStrings', 'none')
+                    matlabCode = replace(matlabCode, oldTags, newTags);
 
                 otherwise
                     % Salva a versão original do .M em pasta temporária, de
@@ -74,13 +69,10 @@ function preCompile(showDiffApp)
 
                     % SUBSTITUIÇÃO 3: ClassName+Constructor+Delete
                     matlabCode  = replace(matlabCode, [oldTag4 extractAfter(matlabCode, oldTag4)], Step3Pattern(newClassName));
-
-                    writematrix(matlabCode, [fileBaseName '_exported.m'], 'FileType', 'text', 'WriteMode', 'overwrite', 'QuoteStrings', 'none')
-
-                    if showDiffApp
-                        visdiff(fullfile(tempdir, [oldClassName '.m']), [fileBaseName '_exported.m'])
-                    end
             end
+
+            matlabCode = strjoin(splitlines(matlabCode), '\r\n');
+            writematrix(matlabCode, [fileBaseName '_exported.m'], 'FileType', 'text', 'WriteMode', 'overwrite', 'QuoteStrings', 'none')
             fprintf('Criado o arquivo %s\n', [fileBaseName '_exported.m'])
 
         catch ME
