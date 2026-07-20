@@ -47,7 +47,7 @@ classdef winServer_exported < matlab.apps.AppBase
                         appEngine.activate(app, app.Role)
 
                     otherwise
-                        error('UnexpectedEvent')
+                        ipcMainJSEventsHandler(app.mainApp, event)
                 end
 
             catch ME

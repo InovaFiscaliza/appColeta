@@ -95,7 +95,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                         appEngine.activate(app, app.Role)
 
                     otherwise
-                        error('UnexpectedEvent')
+                        ipcMainJSEventsHandler(app.mainApp, event)
                 end
 
             catch ME
@@ -509,7 +509,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             try
-                writematrix(jsonencode(fileList, 'PrettyPrint', true), fullfile(Folder, 'instrumentList.json'), "FileType", "text", "QuoteStrings", "none", "Encoding", "UTF-8", "WriteMode", "overwrite")
+                writematrix(jsonencode(fileList, 'PrettyPrint', true), fullfile(Folder, 'instrumentList.json'), 'FileType', 'text', 'QuoteStrings', 'none', 'WriteMode', 'overwrite', 'Encoding', 'UTF-8')
                 if ShowAlert
                     ui.Dialog(app.UIFigure, 'warning', sprintf('Arquivo <b>instrumentList.json</b> salvo na pasta "%s"', Folder));
                 end

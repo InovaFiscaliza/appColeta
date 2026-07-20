@@ -436,7 +436,7 @@ classdef RFlookBinLib
                 fwrite(fileID, RefLevel, 'int16');
             end
         
-            fwrite(fileID, matlabCommunity.CompressLib.compress(processedArray, false));            
+            fwrite(fileID, matlabCommunity.CompressLib.compress(processedArray, false));
             fwrite(fileID, 'StOp', 'char*1');        
         end
 

@@ -237,12 +237,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             try
                 switch eventName
                     case 'closeFcn'
-                        auxAppTag    = varargin{1};
+                        auxAppTag = varargin{1};
                         closeModule(app.tabGroupController, auxAppTag, app.General)
 
                     case 'dockButtonPushed'
-                        auxAppTag    = varargin{1};
+                        auxAppTag = varargin{1};
                         varargout{1} = auxAppInputArguments(app, auxAppTag);
+
+                    case 'onUpdateLastVisitedFolder'
+                        filePath = varargin{1};
+                        updateLastVisitedFolder(app, filePath)
 
                     otherwise
                         switch class(callingApp)
@@ -368,7 +372,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     'VariableTypes', {'string', 'double', 'double', 'logical'}, ...
                     'VariableNames', {'AuxAppName', 'Width', 'Height', 'IsFluid'} ...
                 );
-                popupSpecifications( 1, :) = {"Tracking", 622, 302, false};
+                popupSpecifications(1, :) = {"Tracking", 622, 302, false};
 
                 auxAppNameIdx = find(popupSpecifications.AuxAppName == string(auxAppName), 1);
                 screenWidth = popupSpecifications.Width(auxAppNameIdx);
@@ -433,7 +437,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         app.Tab6Button;
                         app.MetaData;
                         app.play_axesToolbar;
-                        app.tool_ButtonPlay
+                        app.tool_LeftPanel;
+                        app.tool_ButtonPlay;
+                        app.tool_ButtonDel;
+                        app.tool_ButtonLOG
                     };
                     ui.CustomizationBase.getElementsDataTag(elToModify);
 
@@ -1212,7 +1219,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                                             if regularTask
                                                 writematrix(jsonencode(rmfield(app.specObj(ii).Band(jj).Mask, {'Table', 'Array', 'Validations', 'BrokenArray', 'FindPeaks'})), ...
-                                                    replace(app.specObj(ii).Band(jj).File.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), "QuoteStrings", "none", "WriteMode", "append")
+                                                    replace(app.specObj(ii).Band(jj).File.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
                                             end
 
                                             maskTrigger = 1;
