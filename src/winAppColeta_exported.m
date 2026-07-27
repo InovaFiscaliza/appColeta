@@ -700,7 +700,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 [idx2, msgError] = app.gpsObj.Connect(instrSelected);
                 if isempty(msgError)
                     SpecObj.Task.GPS.Handle = app.gpsObj.Table.Handle{idx2};
-                    SpecObj.GPS             = SpecObj.Task.GPS.Handle;
+                    SpecObj.hGPS = SpecObj.Task.GPS.Handle;
                 end
             end
         end
