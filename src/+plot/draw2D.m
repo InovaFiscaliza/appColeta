@@ -27,12 +27,12 @@ classdef (Abstract) draw2D
                 case 'Em andamento'
                     hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.MinHold.Color, 'Tag', 'MinHold');                    
                 otherwise
-                    idx = find(all(specObj.Band(jj).Waterfall.Matrix == -1000, 2), 1);
+                    idx = find(all(specObj.Bands(jj).Waterfall.Matrix == -1000, 2), 1);
                     if isempty(idx)
-                        idx = specObj.Band(jj).Waterfall.Depth+1;
+                        idx = specObj.Bands(jj).Waterfall.Depth+1;
                     end
         
-                    hPlot = plot(hAxes, xArray, min(specObj.Band(jj).Waterfall.Matrix(1:idx-1,:), [], 1), 'Color', generalSettings.Plot.MinHold.Color, 'Tag', 'MinHold');
+                    hPlot = plot(hAxes, xArray, min(specObj.Bands(jj).Waterfall.Matrix(1:idx-1,:), [], 1), 'Color', generalSettings.Plot.MinHold.Color, 'Tag', 'MinHold');
             end
             plot.datatipModel(hPlot, levelUnit)
         end
@@ -43,12 +43,12 @@ classdef (Abstract) draw2D
                 case 'Em andamento'
                     hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.Average.Color, 'Tag', 'Average');                    
                 otherwise
-                    idx = find(all(specObj.Band(kk).Waterfall.Matrix == -1000, 2), 1);
+                    idx = find(all(specObj.Bands(kk).Waterfall.Matrix == -1000, 2), 1);
                     if isempty(idx)
-                        idx = specObj.Band(kk).Waterfall.Depth+1;
+                        idx = specObj.Bands(kk).Waterfall.Depth+1;
                     end
         
-                    hPlot = plot(hAxes, xArray, mean(specObj.Band(kk).Waterfall.Matrix(1:idx-1,:), 1), 'Color', generalSettings.Plot.Average.Color, 'Tag', 'Average');
+                    hPlot = plot(hAxes, xArray, mean(specObj.Bands(kk).Waterfall.Matrix(1:idx-1,:), 1), 'Color', generalSettings.Plot.Average.Color, 'Tag', 'Average');
             end
             plot.datatipModel(hPlot, levelUnit)
         end
@@ -59,12 +59,12 @@ classdef (Abstract) draw2D
                 case 'Em andamento'
                     hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.MaxHold.Color, 'Tag', 'MaxHold');                    
                 otherwise
-                    idx = find(all(specObj.Band(kk).Waterfall.Matrix == -1000, 2), 1);
+                    idx = find(all(specObj.Bands(kk).Waterfall.Matrix == -1000, 2), 1);
                     if isempty(idx)
-                        idx = specObj.Band(kk).Waterfall.Depth+1;
+                        idx = specObj.Bands(kk).Waterfall.Depth+1;
                     end
         
-                    hPlot = plot(hAxes, xArray, max(specObj.Band(kk).Waterfall.Matrix(1:idx-1,:), [], 1), 'Color', generalSettings.Plot.MaxHold.Color, 'Tag', 'MaxHold');
+                    hPlot = plot(hAxes, xArray, max(specObj.Bands(kk).Waterfall.Matrix(1:idx-1,:), [], 1), 'Color', generalSettings.Plot.MaxHold.Color, 'Tag', 'MaxHold');
             end
             plot.datatipModel(hPlot, levelUnit)
         end
@@ -75,12 +75,12 @@ classdef (Abstract) draw2D
                 case 'Em andamento'
                     [~, peakIdx] = max(newArray);                    
                 otherwise
-                    idx = find(all(specObj.Band(kk).Waterfall.Matrix == -1000, 2), 1);
+                    idx = find(all(specObj.Bands(kk).Waterfall.Matrix == -1000, 2), 1);
                     if isempty(idx)
-                        idx = specObj.Band(kk).Waterfall.Depth+1;
+                        idx = specObj.Bands(kk).Waterfall.Depth+1;
                     end
         
-                    [~, peakIdx] = max(mean(specObj.Band(kk).Waterfall.Matrix(1:idx-1,:), 1));
+                    [~, peakIdx] = max(mean(specObj.Bands(kk).Waterfall.Matrix(1:idx-1,:), 1));
             end
         
             if isempty(hPeak) || ~isvalid(hPeak)
@@ -92,8 +92,8 @@ classdef (Abstract) draw2D
 
         %-----------------------------------------------------------------%
         function mask(hAxes, specObj, kk)
-            maskTable = specObj.Band(kk).Mask.Table;
-            levelUnit = specObj.Task.Script.Band(kk).instrLevelUnit;
+            maskTable = specObj.Bands(kk).Mask.Table;
+            levelUnit = specObj.TaskSpec.Script.Band(kk).instrLevelUnit;
 
             for ii = 1:height(maskTable)
                 newObj = plot(hAxes, [maskTable.FreqStart(ii), maskTable.FreqStop(ii)], [maskTable.THR(ii), maskTable.THR(ii)], 'red', ...

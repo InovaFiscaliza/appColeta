@@ -1,10 +1,10 @@
 function warnMsg = receiverConfig_SpecificBand(obj, idx, EMSatObj, ERMxObj)
     
-    newTask   = obj(idx).Task;
-    instrInfo = obj(idx).Task.Receiver.Config;
-    hReceiver = obj(idx).hReceiver;
+    newTask   = obj(idx).TaskSpec;
+    instrInfo = obj(idx).TaskSpec.Receiver.Config;
+    hReceiver = obj(idx).Connections.receiver;
      
-    rawBand   = obj(idx).Task.Script.Band;
+    rawBand   = obj(idx).TaskSpec.Script.Band;
     taskBand  = class.bandClass.empty;
 
     warnMsg    = {};
@@ -30,8 +30,8 @@ function warnMsg = receiverConfig_SpecificBand(obj, idx, EMSatObj, ERMxObj)
     % Teste de configuração para cada uma das bandas - em resumo, configura-se 
     % os parâmetros (FreqStart, FreqStop, Resolution etc) e, posteriormente, 
     % confirma-se que os parâmetros foram devidamente configurados.
-    if ismember(obj(idx).Task.Receiver.Config.connectFlag, [2, 3])
-        class.EB500Lib.OperationMode(hReceiver, obj(idx).Task.Receiver.Config.connectFlag)
+    if ismember(obj(idx).TaskSpec.Receiver.Config.connectFlag, [2, 3])
+        class.EB500Lib.OperationMode(hReceiver, obj(idx).TaskSpec.Receiver.Config.connectFlag)
     end
 
     for ii = 1:numel(rawBand)
@@ -142,7 +142,7 @@ function warnMsg = receiverConfig_SpecificBand(obj, idx, EMSatObj, ERMxObj)
                 AttenuationMode  = 1;
                 AttenuationValue = 0;
 
-                if strcmp(obj(idx).Task.Receiver.Selection.Name, 'Tektronix SA2500')
+                if strcmp(obj(idx).TaskSpec.Receiver.Selection.Name, 'Tektronix SA2500')
                     AutoLevel = ';:INPut:ALEVel';
                 end
 
@@ -256,7 +256,7 @@ function warnMsg = receiverConfig_SpecificBand(obj, idx, EMSatObj, ERMxObj)
         end
     end
 
-    obj(idx).Band = taskBand;
+    obj(idx).Bands = taskBand;
 end
 
 

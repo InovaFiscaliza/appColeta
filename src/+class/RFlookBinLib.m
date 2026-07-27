@@ -7,13 +7,13 @@ classdef RFlookBinLib
 	methods(Static = true)
         %-----------------------------------------------------------------%
         function [fileCount, CurrentFile] = OpenFile(specObj, idx, userPath)
-            baseName   = specObj.Band(idx).File.Basename;
-            fileCount  = specObj.Band(idx).File.Filecount+1;
+            baseName   = specObj.Bands(idx).File.Basename;
+            fileCount  = specObj.Bands(idx).File.Filecount+1;
             fileID     = [];
             fileMemMap = [];
             AlocatedSamples = 0;
 
-            switch specObj.Band(idx).File.Fileversion
+            switch specObj.Bands(idx).File.Fileversion
                 case 'RFlookBin v.1'
                     fileName = fullfile(userPath, sprintf('~%s_%.0f.bin', baseName, fileCount));
                     fileID   = fopen(fileName, 'w');
@@ -42,10 +42,10 @@ classdef RFlookBinLib
 
         %-----------------------------------------------------------------%
         function specObj = CloseFile(specObj, idx)
-            switch specObj.Band(idx).File.Fileversion
+            switch specObj.Bands(idx).File.Fileversion
                 case 'RFlookBin v.1'
-                    AlocatedSamples = specObj.Band(idx).File.CurrentFile.AlocatedSamples;
-                    WritedSamples   = specObj.Band(idx).File.CurrentFile.MemMap{1}.Data.Value;
+                    AlocatedSamples = specObj.Bands(idx).File.CurrentFile.AlocatedSamples;
+                    WritedSamples   = specObj.Bands(idx).File.CurrentFile.MemMap{1}.Data.Value;
 
                     if AlocatedSamples == WritedSamples
                         class.RFlookBinLib.v1_PostProcessing(specObj, idx, 'FullFile');
@@ -54,40 +54,40 @@ classdef RFlookBinLib
                     end
         
                 case 'RFlookBin v.2'
-                    fileID = specObj.Band(idx).File.CurrentFile.Handle;
+                    fileID = specObj.Bands(idx).File.CurrentFile.Handle;
                     fclose(fileID);
             end
 
-            specObj.Band(idx).File.CurrentFile = [];
+            specObj.Bands(idx).File.CurrentFile = [];
         end
 
 
         %-----------------------------------------------------------------%
         function specObj = CheckFile(specObj, idx, userPath)
-            if isempty(specObj.Band(idx).File.CurrentFile)
+            if isempty(specObj.Bands(idx).File.CurrentFile)
                 return
             end
 
-            switch specObj.Band(idx).File.Fileversion
+            switch specObj.Bands(idx).File.Fileversion
                 case 'RFlookBin v.1'
-                    AlocatedSamples = specObj.Band(idx).File.CurrentFile.AlocatedSamples;
-                    WritedSamples   = specObj.Band(idx).File.CurrentFile.MemMap{1}.Data.Value;
+                    AlocatedSamples = specObj.Bands(idx).File.CurrentFile.AlocatedSamples;
+                    WritedSamples   = specObj.Bands(idx).File.CurrentFile.MemMap{1}.Data.Value;
         
                     if AlocatedSamples == WritedSamples
                         class.RFlookBinLib.v1_PostProcessing(specObj, idx, 'FullFile');
 
-                        [specObj.Band(idx).File.Filecount, ...
-                            specObj.Band(idx).File.CurrentFile] = class.RFlookBinLib.OpenFile(specObj, idx, userPath);
+                        [specObj.Bands(idx).File.Filecount, ...
+                            specObj.Bands(idx).File.CurrentFile] = class.RFlookBinLib.OpenFile(specObj, idx, userPath);
                     end
         
                 case 'RFlookBin v.2'
-                    fileID = specObj.Band(idx).File.CurrentFile.Handle;
+                    fileID = specObj.Bands(idx).File.CurrentFile.Handle;
 
                     if ftell(fileID) > class.Constants.fileMaxSize
                         fclose(fileID);
 
-                        [specObj.Band(idx).File.Filecount, ...
-                            specObj.Band(idx).File.CurrentFile] = class.RFlookBinLib.OpenFile(specObj, idx, userPath);
+                        [specObj.Bands(idx).File.Filecount, ...
+                            specObj.Bands(idx).File.CurrentFile] = class.RFlookBinLib.OpenFile(specObj, idx, userPath);
                     end
             end
         end
@@ -95,12 +95,12 @@ classdef RFlookBinLib
 
         %-----------------------------------------------------------------%
         function EditFile(specObj, idx, rawArray, attFactor, TimeStamp)
-            if isempty(specObj.Band(idx).File.CurrentFile)
+            if isempty(specObj.Bands(idx).File.CurrentFile)
                 return
             end
 
-            gpsData = specObj.lastGPS;
-            switch specObj.Band(idx).File.Fileversion
+            gpsData = specObj.GPSLastFix;
+            switch specObj.Bands(idx).File.Fileversion
                 case 'RFlookBin v.1'
                     class.RFlookBinLib.v1_MemoryEdit(specObj, idx, rawArray, attFactor, gpsData, TimeStamp)
 
@@ -116,13 +116,13 @@ classdef RFlookBinLib
         % ## RFlookBin v.1 ##
         %-----------------------------------------------------------------%
         function AlocatedSamples = v1_WriteHeader(fileID, specObj, idx)
-            Script          = specObj.Task.Script;
+            Script          = specObj.TaskSpec.Script;
             MetaData        = Script.Band(idx);
             BitsPerSample   = Script.BitsPerSample;
             DataPoints      = MetaData.instrDataPoints;
 
-            if strcmp(specObj.Task.Script.Observation.Type, 'Samples')
-                AlocatedSamples = min([specObj.Task.Script.Band(idx).instrObservationSamples, ceil(class.Constants.fileMaxSize ./ (BitsPerSample * DataPoints))]);
+            if strcmp(specObj.TaskSpec.Script.Observation.Type, 'Samples')
+                AlocatedSamples = min([specObj.TaskSpec.Script.Band(idx).instrObservationSamples, ceil(class.Constants.fileMaxSize ./ (BitsPerSample * DataPoints))]);
             else
                 AlocatedSamples = ceil(class.Constants.fileMaxSize ./ (BitsPerSample * DataPoints));
             end
@@ -189,11 +189,11 @@ classdef RFlookBinLib
 
         %-----------------------------------------------------------------%
         function [Offset1, Offset2] = v1_WriteBody(fileID, specObj, idx, AlocatedSamples)        
-            Script          = specObj.Task.Script;
+            Script          = specObj.TaskSpec.Script;
             MetaData        = Script.Band(idx);
             BitsPerSample   = Script.BitsPerSample;
             DataPoints      = Script.Band(idx).instrDataPoints;
-            Node            = specObj.hReceiver.UserData.IDN;
+            Node            = specObj.Connections.receiver.UserData.IDN;
             
             Offset1 = ftell(fileID) + 12;
             Offset2 = Offset1 + 20*AlocatedSamples;
@@ -208,7 +208,7 @@ classdef RFlookBinLib
                                              'ThreadID',          MetaData.ID,                                            ...
                                              'Description',       replace(MetaData.Description, {'"', ',', newline}, ''), ...
                                              'Node',              Node,                                                   ...
-                                             'Antenna',           specObj.Band(idx).Antenna,                              ...
+                                             'Antenna',           specObj.Bands(idx).Antenna,                              ...
                                              'IntegrationFactor', MetaData.IntegrationFactor,                             ...
                                              'RevisitTime',       MetaData.RevisitTime)), 'char*1');        
         end
@@ -216,7 +216,7 @@ classdef RFlookBinLib
         
         %-----------------------------------------------------------------%
         function fileMemMap = v1_MemoryMap(fileName, specObj, idx, AlocatedSamples, Offset1, Offset2)        
-            Script     = specObj.Task.Script;
+            Script     = specObj.TaskSpec.Script;
             DataPoints = Script.Band(idx).instrDataPoints;
         
             switch Script.BitsPerSample
@@ -251,29 +251,29 @@ classdef RFlookBinLib
 
         %-----------------------------------------------------------------%
         function v1_MemoryEdit(specObj, idx1, rawArray, attFactor, gpsData, TimeStamp)
-            [processedArray, RefLevel] = class.RFlookBinLib.raw2processedArray(rawArray, specObj.Task.Script.BitsPerSample);
+            [processedArray, RefLevel] = class.RFlookBinLib.raw2processedArray(rawArray, specObj.TaskSpec.Script.BitsPerSample);
 
-            idx2 = specObj.Band(idx1).File.CurrentFile.MemMap{1}.Data.Value + 1;
+            idx2 = specObj.Bands(idx1).File.CurrentFile.MemMap{1}.Data.Value + 1;
 
-            specObj.Band(idx1).File.CurrentFile.MemMap{1}.Data.Value = idx2;
+            specObj.Bands(idx1).File.CurrentFile.MemMap{1}.Data.Value = idx2;
 
-            specObj.Band(idx1).File.CurrentFile.MemMap{2}.Data(idx2).localTimeStamp    = int8([year(TimeStamp)-2000, month(TimeStamp), day(TimeStamp), hour(TimeStamp), minute(TimeStamp), fix(second(TimeStamp))]);
-            specObj.Band(idx1).File.CurrentFile.MemMap{2}.Data(idx2).localTimeStamp_ms = int16((second(TimeStamp) - fix(second(TimeStamp))).*1000);
+            specObj.Bands(idx1).File.CurrentFile.MemMap{2}.Data(idx2).localTimeStamp    = int8([year(TimeStamp)-2000, month(TimeStamp), day(TimeStamp), hour(TimeStamp), minute(TimeStamp), fix(second(TimeStamp))]);
+            specObj.Bands(idx1).File.CurrentFile.MemMap{2}.Data(idx2).localTimeStamp_ms = int16((second(TimeStamp) - fix(second(TimeStamp))).*1000);
 
-            specObj.Band(idx1).File.CurrentFile.MemMap{2}.Data(idx2).RefLevel  = int16(RefLevel);
-            specObj.Band(idx1).File.CurrentFile.MemMap{2}.Data(idx2).attFactor = int8(attFactor);
+            specObj.Bands(idx1).File.CurrentFile.MemMap{2}.Data(idx2).RefLevel  = int16(RefLevel);
+            specObj.Bands(idx1).File.CurrentFile.MemMap{2}.Data(idx2).attFactor = int8(attFactor);
 
-            specObj.Band(idx1).File.CurrentFile.MemMap{2}.Data(idx2).gpsStatus = uint8(gpsData.Status);
-            specObj.Band(idx1).File.CurrentFile.MemMap{2}.Data(idx2).Latitude  = single(gpsData.Latitude);
-            specObj.Band(idx1).File.CurrentFile.MemMap{2}.Data(idx2).Longitude = single(gpsData.Longitude);
+            specObj.Bands(idx1).File.CurrentFile.MemMap{2}.Data(idx2).gpsStatus = uint8(gpsData.Status);
+            specObj.Bands(idx1).File.CurrentFile.MemMap{2}.Data(idx2).Latitude  = single(gpsData.Latitude);
+            specObj.Bands(idx1).File.CurrentFile.MemMap{2}.Data(idx2).Longitude = single(gpsData.Longitude);
 
-            specObj.Band(idx1).File.CurrentFile.MemMap{3}.Data.Array(:,idx2)   = processedArray;        
+            specObj.Bands(idx1).File.CurrentFile.MemMap{3}.Data.Array(:,idx2)   = processedArray;        
         end
 
 
         %-----------------------------------------------------------------%
         function v1_PostProcessing(specObj, idx, Type)
-            fileFullPath = specObj.Band(idx).File.CurrentFile.FullPath;
+            fileFullPath = specObj.Bands(idx).File.CurrentFile.FullPath;
 
             [filePath, name, ext] = fileparts(fileFullPath);
             fileName = [name, ext];
@@ -320,10 +320,10 @@ classdef RFlookBinLib
         % ## RFlookBin v.2/3 e RFlookBin v.2/4 ##
         %-----------------------------------------------------------------%
         function v2_WriteHeader(fileID, specObj, idx)
-            Script        = specObj.Task.Script;
+            Script        = specObj.TaskSpec.Script;
             MetaData      = Script.Band(idx);
             BitsPerSample = Script.BitsPerSample;
-            Node          = specObj.hReceiver.UserData.IDN;
+            Node          = specObj.Connections.receiver.UserData.IDN;
 
             if ~isempty(MetaData.instrVBW)
                 instrVBW  = MetaData.instrVBW;
@@ -332,7 +332,7 @@ classdef RFlookBinLib
             end
         
             meta2File     = struct('Receiver',         Node,                       ...
-                                   'AntennaInfo',      specObj.Band(idx).Antenna,  ...
+                                   'AntennaInfo',      specObj.Bands(idx).Antenna,  ...
                                    'gpsType',          Script.GPS.Type,            ...
                                    'Task',             Script.Name,                ...
                                    'ID',               MetaData.ID,                ...
@@ -374,16 +374,16 @@ classdef RFlookBinLib
                 meta2File.Longitude = Script.GPS.Longitude;
             end
 
-            if ~isempty(specObj.Band(idx).Mask)
+            if ~isempty(specObj.Bands(idx).Mask)
                 meta2File.Mask = jsonencode(struct('Status',    MetaData.MaskTrigger.Status,      ...
-                                                   'FindPeaks', specObj.Band(idx).Mask.FindPeaks, ...
-                                                   'Table',     specObj.Band(idx).Mask.Table));
+                                                   'FindPeaks', specObj.Bands(idx).Mask.FindPeaks, ...
+                                                   'Table',     specObj.Bands(idx).Mask.Table));
             end
 
             % Serializando... struct2json
             meta2File = unicode2native(jsonencode(meta2File), 'UTF-8');
         
-            if ~contains(specObj.Task.Type, 'Drive-test (Level+Azimuth)')
+            if ~contains(specObj.TaskSpec.Type, 'Drive-test (Level+Azimuth)')
                 formatName = 'RFlookBin v.2/3';
             else
                 formatName = 'RFlookBin v.2/4';
@@ -400,11 +400,11 @@ classdef RFlookBinLib
 
         %-----------------------------------------------------------------%
         function v2_WriteBody(specObj, idx, rawArray, attFactor, gpsData, TimeStamp)
-            Script        = specObj.Task.Script;
+            Script        = specObj.TaskSpec.Script;
             MetaData      = Script.Band(idx);
             BitsPerSample = Script.BitsPerSample;
 
-            fileID        = specObj.Band(idx).File.CurrentFile.Handle;
+            fileID        = specObj.Bands(idx).File.CurrentFile.Handle;
             
             fwrite(fileID, 'StArT', 'char*1');
             fwrite(fileID, [year(TimeStamp)-2000, month(TimeStamp), day(TimeStamp), hour(TimeStamp), minute(TimeStamp), fix(second(TimeStamp))]);

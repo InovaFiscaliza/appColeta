@@ -82,10 +82,10 @@ classdef EB500Lib < handle
             Timeout  = class.Constants.Timeout;
             udpPort  = hStreaming.LocalPort;
 
-            for ii = 1:numel(specObj.Band)
+            for ii = 1:numel(specObj.Bands)
                 specDatagram = [];
                 
-                writeline(hReceiver, specObj.Band(ii).SpecificSCPI.configSET);
+                writeline(hReceiver, specObj.Bands(ii).SpecificSCPI.configSET);
 
                 flush(hStreaming)
                 class.EB500Lib.DatagramRead_OnOff('PSCAN', 'Open', udpPort, hReceiver)
@@ -130,9 +130,9 @@ classdef EB500Lib < handle
 
                     if (MagicNumber == 963072)                                     && ...
                             (DataSize   == numel(specDatagram(jj).Data))           && ...
-                            (FreqStart  == specObj.Task.Script.Band(ii).FreqStart) && ...
-                            (FreqStop   == specObj.Task.Script.Band(ii).FreqStop)  && ...
-                            (DataPoints == specObj.Band(ii).DataPoints)
+                            (FreqStart  == specObj.TaskSpec.Script.Band(ii).FreqStart) && ...
+                            (FreqStop   == specObj.TaskSpec.Script.Band(ii).FreqStop)  && ...
+                            (DataPoints == specObj.Bands(ii).DataPoints)
                         nDatagrams = nDatagrams + 1;
                         if typecast(specDatagram(jj).Data(end:-1:end-1), 'uint16') == 2000
                             nTerminator = nTerminator + 1;
@@ -141,7 +141,7 @@ classdef EB500Lib < handle
                 end
                 
                 if nTerminator
-                    specObj.Band(ii).Datagrams = round(nDatagrams/nTerminator);
+                    specObj.Bands(ii).Datagrams = round(nDatagrams/nTerminator);
                 else
                     error(['ERROR - Não identificada a estimativa do número de datagramas que representam um único traço do fluxo %d.\n' ...
                            'Possíveis causas:\n'                                                                     ...

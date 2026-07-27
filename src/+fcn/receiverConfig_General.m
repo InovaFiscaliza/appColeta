@@ -1,17 +1,17 @@
 function receiverConfig_General(obj, idx)
 
-    newTask   = obj(idx).Task;
-    instrInfo = obj(idx).Task.Receiver.Config;
-    hReceiver = obj(idx).hReceiver;
+    newTask   = obj(idx).TaskSpec;
+    instrInfo = obj(idx).TaskSpec.Receiver.Config;
+    hReceiver = obj(idx).Connections.receiver;
 
-    GeneralSCPI = struct('resetSET',   '',                                 ...
-                         'startupSET', instrInfo.StartUp{1},               ...
-                         'syncSET',    '',                                 ...
-                         'attGET',     instrInfo.scpiQuery_Attenuation{1}, ...
-                         'dataGET',    instrInfo.scpiTraceData{1});  
+    ReceiverCommands = struct('reset',   '',                                 ...
+                              'startup', instrInfo.StartUp{1},               ...
+                              'sync',    '',                                 ...
+                              'query',   instrInfo.scpiQuery_Attenuation{1}, ...
+                              'data',    instrInfo.scpiTraceData{1});  
 
     if ~hReceiver.UserData.nTasks && strcmp(newTask.Receiver.Reset, 'On')
-        GeneralSCPI.resetSET = instrInfo.scpiReset{1};
+        ReceiverCommands.reset = instrInfo.scpiReset{1};
         writeline(hReceiver, instrInfo.scpiReset{1});
 
         pause(instrInfo.ResetPause)
@@ -24,9 +24,9 @@ function receiverConfig_General(obj, idx)
             case 'Single Sweep'; syncSET = 'INITiate:CONTinuous OFF';
             otherwise;           syncSET = 'INITiate:CONTinuous ON';       % 'Continuous Sweep' | 'Streaming'
         end
-        GeneralSCPI.syncSET = syncSET;
+        ReceiverCommands.sync = syncSET;
         writeline(hReceiver, syncSET);
     end
 
-    obj(idx).GeneralSCPI = GeneralSCPI;
+    obj(idx).ReceiverCommands = ReceiverCommands;
 end

@@ -93,16 +93,18 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         SubTabGroup = struct('Children', -1, 'UserData', [])
 
-        % taskController
-        % taskList
-
-        specObj
-        revisitObj
+        % A organização das tarefas (antiga "class.specClass") e a lógica de
+        % execução do loop de monitoração (antigo "RegularTask_MainLoop")
+        % foram migradas para model.Task / model.TaskController. As
+        % propriedades "specObj", "revisitObj", "udpPortArray" e
+        % "Flag_running", declaradas mais abaixo como "Dependent", são
+        % mantidas apenas como referências de conveniência para o estado
+        % armazenado em "TaskController", preservando os demais trechos
+        % deste arquivo sem necessidade de alteração.
+        TaskController
         timerObj_task
         taskList
 
-        Flag_running = 0
-        Flag_editing = 0
         plotStyleEditing = 0
 
         axes1
@@ -120,11 +122,54 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         
         receiverObj
         gpsObj
-        udpPortArray = {}
 
         EB500Obj
         EMSatObj
         ERMxObj
+    end
+
+
+    properties (Dependent, Access = public)
+        %-----------------------------------------------------------------%
+        specObj                                                             % app.TaskController.Tasks
+        revisitObj                                                          % app.TaskController.RevisitInfo
+        udpPortArray                                                        % app.TaskController.UDPPortArray
+        Flag_running                                                        % app.TaskController.IsRunning
+    end
+
+
+    methods
+        %-----------------------------------------------------------------%
+        function value = get.specObj(app)
+            value = app.TaskController.Tasks;
+        end
+
+        function set.specObj(app, value)
+            app.TaskController.Tasks = value;
+        end
+
+        %-----------------------------------------------------------------%
+        function value = get.revisitObj(app)
+            value = app.TaskController.RevisitInfo;
+        end
+
+        %-----------------------------------------------------------------%
+        function value = get.udpPortArray(app)
+            value = app.TaskController.UDPPortArray;
+        end
+
+        function set.udpPortArray(app, value)
+            app.TaskController.UDPPortArray = value;
+        end
+
+        %-----------------------------------------------------------------%
+        function value = get.Flag_running(app)
+            value = app.TaskController.IsRunning;
+        end
+
+        function set.Flag_running(app, value)
+            app.TaskController.IsRunning = value;
+        end
     end
 
 
@@ -526,12 +571,15 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.taskList    = class.taskList.rawFileParser(app.rootFolder, 'winAppColetaV2');
 
             % Others...
-            app.specObj     = class.specClass.empty;
             app.receiverObj = class.ReceiverLib(app.rootFolder);
             app.gpsObj      = class.GPSLib(app.rootFolder);            
             app.EB500Obj    = class.EB500Lib(app.rootFolder);
             app.EMSatObj    = class.EMSatLib(app.rootFolder);
             app.ERMxObj     = class.ERMxLib(app.rootFolder);            
+
+            app.TaskController = model.TaskController(app);
+            app.specObj         = model.Task.empty;
+            wireTaskController(app)
 
             if app.General.tcpServer.Status
                 try
@@ -616,29 +664,29 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function startup_specObjRead(app)
             [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
-            if isfile(fullfile(programDataFolder, 'startupInfo.mat'))
+            if isfile(fullfile(programDataFolder, 'taskListState.mat'))
                 app.progressDialog.Visible = 'visible';
 
-                load(fullfile(programDataFolder, 'startupInfo.mat'), 'SpecObj');
+                load(fullfile(programDataFolder, 'taskListState.mat'), 'Tasks');
 
                 % É possível que o MATLAB não consiga instancionar o objeto
-                % "class.specClass", lendo-o como "uint32", o que inviabiliza 
+                % "model.Task", lendo-o como "uint32", o que inviabiliza 
                 % o aproveitamento da informação salva...
 
-                % Warning: Variable 'SpecObj' originally saved as a class.specClass cannot be instantiated as an object and will be read in as a uint32.
+                % Warning: Variable 'Tasks' originally saved as a model.Task cannot be instantiated as an object and will be read in as a uint32.
 
-                if exist('SpecObj', 'var') && isa(SpecObj, 'class.specClass') && ~isempty(SpecObj)
-                    for ii = 1:numel(SpecObj)
-                        SpecObj(ii) = startup_specObjRead_Receiver(app, SpecObj(ii));
-                        SpecObj(ii) = startup_specObjRead_Streaming(app, SpecObj(ii));
-                        SpecObj(ii) = startup_specObjRead_GPS(app, SpecObj(ii));
+                if exist('Tasks', 'var') && isa(Tasks, 'model.Task') && ~isempty(Tasks)
+                    for ii = 1:numel(Tasks)
+                        Tasks(ii)      = startup_specObjRead_Receiver(app, Tasks(ii));
+                        Tasks(ii)      = app.TaskController.resolveStreamingHandle(Tasks(ii));
+                        [Tasks(ii), ~] = app.TaskController.resolveGpsHandle(Tasks(ii));
 
-                        if ismember(SpecObj(ii).Status, {'Na fila', 'Em andamento'})
-                            SpecObj(ii).Status = 'Erro';
+                        if ismember(Tasks(ii).Status, {'Na fila', 'Em andamento'})
+                            Tasks(ii).Status = 'Erro';
                         end
                     end
 
-                    app.specObj = SpecObj;
+                    app.specObj = Tasks;
                     Layout_tableBuilding(app, 1)
 
                     % Ida ao modo de "Execução das tarefas da monitoração"
@@ -662,46 +710,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             [idx, msgError] = Connect(app.receiverObj ,instrSelected);
             
             if isempty(msgError)
-                SpecObj.Task.Receiver.Handle = app.receiverObj.Table.Handle{idx};
-                SpecObj.hReceiver            = SpecObj.Task.Receiver.Handle;
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function SpecObj = startup_specObjRead_Streaming(app, SpecObj)
-
-            receiverName = SpecObj.Task.Receiver.Selection.Name{1};
-            taskType     = SpecObj.Task.Type;
-
-            idx1 = SelectedReceiverIndex(app, receiverName, taskType);
-            if ismember(app.receiverObj.Config.connectFlag(idx1), [2, 3])
-                [app.udpPortArray, idx2] = fcn.udpSockets(app.udpPortArray, app.EB500Obj.udpPort);
-                if ~isempty(idx2)
-                    SpecObj.Task.Streaming.Handle = app.udpPortArray{idx2};
-                    SpecObj.hStreaming            = SpecObj.Task.Streaming.Handle;
-                end
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function [SpecObj, msgError] = startup_specObjRead_GPS(app, SpecObj)
-
-            % Função funcionalmente idêntica à fcn.ConnectivityTest_GPS.
-            % A "duplicação" garante que seja usado a informação constante
-            % no objeto SpecObj, ao invés da informação constante no arquivo 
-            % "instrumentList.json", que pode ter sido editado.
-
-            msgError = '';
-
-            if ~isempty(SpecObj.Task.GPS.Selection)
-                instrSelected = struct('Type',       SpecObj.Task.GPS.Selection.Type{1}, ...
-                                       'Parameters', jsondecode(SpecObj.Task.GPS.Selection.Parameters{1}));
-
-                [idx2, msgError] = app.gpsObj.Connect(instrSelected);
-                if isempty(msgError)
-                    SpecObj.Task.GPS.Handle = app.gpsObj.Table.Handle{idx2};
-                    SpecObj.GPS             = SpecObj.Task.GPS.Handle;
-                end
+                SpecObj.TaskSpec.Receiver.Handle = app.receiverObj.Table.Handle{idx};
+                SpecObj.Connections.receiver      = SpecObj.TaskSpec.Receiver.Handle;
             end
         end
 
@@ -726,20 +736,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             end
         end
 
-        %-----------------------------------------------------------------%
-        function idx = SelectedReceiverIndex(app, receiverName, taskType)
-            idx = find(strcmp(app.receiverObj.Config.Name, receiverName));
-            if numel(idx) > 1
-                connectFlagList = app.receiverObj.Config.connectFlag(idx);
-                if contains(taskType, 'Drive-test (Level+Azimuth)')
-                    idx = idx(connectFlagList == 3);
-                else
-                    idx = idx(connectFlagList ~= 3);
-                end
-                idx = idx(1);
-            end
-        end
-
 
         %-----------------------------------------------------------------%
         % TIMER 
@@ -757,14 +753,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             if ~app.Flag_running
                 Flag = false;
                 for ii = 1:numel(app.specObj)
-                    if RegularTask_StatusTaskCheck(app, ii, '')
+                    if app.TaskController.statusTaskCheck(ii, '')
                         Flag = true;
                         break
                     end
                 end
 
                 if Flag
-                    RegularTask_MainLoop(app)
+                    app.TaskController.runLoop()
                 end
             end
 
@@ -777,743 +773,113 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         % REGULAR TASK
         %-----------------------------------------------------------------%
-        function RegularTask_specObjSave(app)
-            % Ao salvar "app.specObj" em um arquivo .MAT, reabrindo-o
-            % posteriormente, os objetos de comunicação (tcpclient, por
-            % exemplo) não retém o valor da propriedade "UserData".
-            %
-            % Por essa razão, esses objetos não serão salvos, devendo ser
-            % recriados na inicialização do app.
+        function wireTaskController(app)
+            % Inscreve o app nos eventos disparados por "app.TaskController"
+            % (model.TaskController), substituindo as antigas chamadas diretas
+            % a métodos de interface dentro do loop de monitoração (antigo
+            % "RegularTask_MainLoop" e demais funções "RegularTask_*" que
+            % foram migradas para model.TaskController).
 
-            SpecObj = copy(app.specObj);
-            
-            for ii = 1:numel(SpecObj)
-                SpecObj(ii).hReceiver  = [];
-                SpecObj(ii).hStreaming = [];
-                SpecObj(ii).hGPS       = [];
-
-                SpecObj(ii).Task.Receiver.Handle  = [];
-                SpecObj(ii).Task.Streaming.Handle = [];
-                SpecObj(ii).Task.GPS.Handle       = [];
-            end
-
-            [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
-            save(fullfile(programDataFolder, 'startupInfo.mat'), 'SpecObj')
+            addlistener(app.TaskController, 'StatusChanged',      @(~,~)   Layout_tableBuilding(app, app.UITable.Selection));
+            addlistener(app.TaskController, 'TasksChanged',       @(~,~)   RegularTask_TasksSave(app));
+            addlistener(app.TaskController, 'BandDataAcquired',   @(~,evt) onTaskBandDataAcquired(app, evt));
+            addlistener(app.TaskController, 'GpsUpdated',         @(~,evt) onTaskGpsUpdated(app, evt));
+            addlistener(app.TaskController, 'ErrorRaised',        @(~,evt) onTaskErrorRaised(app, evt));
+            addlistener(app.TaskController, 'RevisitInfoChanged', @(~,~)   Layout_metadataTab(app));
         end
 
 
         %-----------------------------------------------------------------%
-        function Flag = RegularTask_StatusTaskCheck(app, idx, evtName)
-            % Função responsável por trocar o estado das tarefas, de "Na
-            % fila" para "Em andamento", "Em andamento" para "Cancelada",
-            % "Em andamento" para "Erro" e por aí vai...
-            %
-            % Lembrando que o estado de uma nova tarefa é "Na fila", exceto
-            % quando ocorre algum erro no processo de criação (decorrente 
-            % de uma configuração de um parâmetro não aceito pelo receptor,
-            % por exemplo). Nesse caso, o estado será "Erro".
-            %
-            % Caso não exista alguma tarefa em execução, o app.Flag_running
-            % será igual a 0, e o app.timerObj estará ativo, o que o fará
-            % avaliar a cada minuto o estado de todas as tarefas, nesta 
-            % função, de forma que:
-            % (a) Seja iniciada uma tarefa no estado "Na fila";
-            % (b) Seja realizada uma nova tentativa de iniciar uma tarefa 
-            %     no estado "Erro" (o que ocorrerá a cada 15 minutos).
-            
-            Timestamp = datetime('now');
+        function onTaskBandDataAcquired(app, evt)
+            % Substitui o trecho de "RegularTask_MainLoop" que atualizava a
+            % interface gráfica (Layout_errorCount, plot_Draw,
+            % Layout_lastMaskValidation, tool_RevisitTime.Text, Sweeps.Text)
+            % a cada novo traço adquirido pela tarefa em execução.
 
-            Flag = false;
-            initialStatus = app.specObj(idx).Status;
-            
-            switch app.specObj(idx).Status
-                case 'Em andamento'
-                    if app.specObj(idx).Observation.EndTime < Timestamp || ismember(evtName, {'DeleteButtonPushed', 'ErrorTrigger'})
-                        Flag = true;
+            ii          = evt.TaskId;
+            jj          = evt.BandId;
+            maskTrigger = evt.Payload;
 
-                        if app.specObj(idx).Observation.EndTime < Timestamp
-                            app.specObj(idx).Status = 'Concluída';
-                        else
-                            switch evtName
-                                case 'DeleteButtonPushed'
-                                    app.specObj(idx).Status = 'Cancelada';
-                                case 'ErrorTrigger'
-                                    app.specObj(idx).Status = 'Erro';
-                            end
-                        end
-                        
-                        app.specObj(idx).hReceiver.UserData.nTasks = app.specObj(idx).hReceiver.UserData.nTasks-1;
-                        app.specObj(idx).LOG(end+1) = struct('type', 'task', 'time', char(Timestamp), 'msg', sprintf('Alterado o estado da tarefa: Em andamento → %s.', app.specObj(idx).Status));
+            if app.UITable.Selection == ii
+                Layout_errorCount(app, ii)
 
-                        for ii = 1:numel(app.specObj(idx).Band)
-                            app.specObj(idx) = class.RFlookBinLib.CloseFile(app.specObj(idx), ii);
-                            app.specObj(idx).Band(ii).Status = false;
-                        end
-
-                    else
-                        if strcmp(app.specObj(idx).Task.Script.Observation.Type, 'Samples')
-                            tempFlag = [];                            
-                            for ii = 1:numel(app.specObj(idx).Band)
-                                if app.specObj(idx).Band(ii).Status
-                                    if app.specObj(idx).Band(ii).nSweeps == app.specObj(idx).Task.Script.Band(ii).instrObservationSamples
-                                        app.specObj(idx) = class.RFlookBinLib.CloseFile(app.specObj(idx), ii);
-                                        app.specObj(idx).Band(ii).Status = false;
-                                        tempFlag(end+1) = true;
-
-                                    else
-                                        tempFlag(end+1) = false;
-                                    end
-                                end
-                            end
-
-                            if all(tempFlag)
-                                Flag = true;
-
-                                app.specObj(idx).Status = 'Concluída';
-                                app.specObj(idx).hReceiver.UserData.nTasks = app.specObj(idx).hReceiver.UserData.nTasks-1;
-                                app.specObj(idx).Observation.EndTime = Timestamp;
-                                app.specObj(idx).LOG(end+1) = struct('type', 'task', 'time', char(Timestamp), 'msg', sprintf('Alterado o estado da tarefa: Em andamento → %s.', app.specObj(idx).Status));
-
-                            elseif any(tempFlag)
-                                Flag = true;
-                            end
-                        end
+                if app.DropDown.Value == jj
+                    plot_Draw(app, ii, jj)
+                    if ~isempty(app.specObj(ii).Bands(jj).Mask)
+                        Layout_lastMaskValidation(app, maskTrigger, ii, jj)
                     end
-
-                case {'Na fila', 'Erro'}
-                    if strcmp(app.specObj(idx).Status, 'Erro') 
-                        if isnat(app.specObj(idx).Observation.StartUp)
-                            app.specObj(idx).Observation.StartUp = Timestamp;
-                        end
-
-                        StartUp = app.specObj(idx).Observation.StartUp;
-                        if isequal([year(Timestamp), month(Timestamp), day(Timestamp), hour(Timestamp), minute(Timestamp)], ...
-                                [year(StartUp), month(StartUp), day(StartUp), hour(StartUp), minute(StartUp)])
-                            return
-                        end
-                    end
-
-                    if app.specObj(idx).Observation.BeginTime < Timestamp
-                        switch app.specObj(idx).Task.Script.Observation.Type
-                            case {'Duration', 'Time'}
-                                if isnat(app.specObj(idx).Observation.EndTime) || (app.specObj(idx).Observation.EndTime > Timestamp)
-                                    Flag = true;
-                                end
-
-                            case 'Samples'
-                                Flag = true;
-                        end
-                    end
-
-                    if Flag
-                        try
-                            if strcmp(app.timerObj_task.Running, 'on')
-                                stop(app.timerObj_task)
-                            end
-                            RegularTask_StartUp(app, idx);
-
-                            app.specObj(idx).Status = 'Em andamento';
-                            app.specObj(idx).hReceiver.UserData.nTasks   = app.specObj(idx).hReceiver.UserData.nTasks+1;
-                            app.specObj(idx).hReceiver.UserData.SyncMode = app.specObj(idx).Task.Receiver.Sync;
-                            app.specObj(idx).LOG(end+1) = struct('type', 'task', 'time', char(Timestamp), 'msg', 'Iniciada a execução da tarefa.');
-
-                        catch ME
-                            if strcmp(app.timerObj_task.Running, 'off') && ~app.Flag_running
-                                start(app.timerObj_task)
-                            end
-                            app.specObj(idx).Status = 'Erro';
-                            app.specObj(idx).LOG(end+1) = struct('type', 'error', 'time', char(Timestamp), 'msg', getReport(ME));
-
-                            Flag = false;
-                        end
-                    end
-            end
-
-            if Flag
-                Layout_tableBuilding(app, app.UITable.Selection)
-            end
-
-            if ~strcmp(initialStatus, app.specObj(idx).Status)
-                RegularTask_specObjSave(app)
-            end
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_RestartStatus(app, idx, nSweepsFlag)
-
-            for ii = 1:numel(app.specObj(idx).Band)
-                app.specObj(idx).Band(ii).SyncModeRef   = -1;
-                app.specObj(idx).Band(ii).LastTimeStamp = [];
-                app.specObj(idx).Band(ii).Status        = true;
-
-                if nSweepsFlag
-                    app.specObj(idx).Band(ii).nSweeps   = 0;
+                    app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.specObj(ii).Bands(jj).nSweeps, app.specObj(ii).Bands(jj).RevisitTime);
+                    app.Sweeps.Text           = string(app.specObj(ii).Bands(jj).File.WritedSamples);
+                    drawnow
                 end
             end
         end
 
 
         %-----------------------------------------------------------------%
-        % Notas sobre a interface TCPCLIENT:
-        % (a) Não existe uma função que retorna os objetos TCPCLIENT 
-        %     (como instrfind p/ os objetos TCPIP). 
-        % (b) Algumas chamadas a um objeto não mais válido (decorrente 
-        %     de uma perda de conectividade, por exemplo) apresentam a 
-        %     mensagem de erro na janela de comandos do Matlab, mesmo 
-        %     "protegidos" num bloco try/catch. A execução não para, 
-        %     mas imprimir a mensagem na janela de comandos é um 
-        %     comportamento não esperado.
-        % (c) A propriedade que indica que o objeto não mais está conectado 
-        %     ao instrumento é privada, sendo acessível usando struct.
-        % (d) A propriedade "UserData" se perde quando da reinicialização
-        %     do app, sendo necessária criá-la novamente.
-        %-----------------------------------------------------------------%
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_StartUp(app, idx)
-            Task = app.specObj(idx).Task;
-            
-            % RECEIVER
-            msgError = app.receiverObj.ReconnectAttempt(Instrument(app.specObj(idx)),                      ...
-                                                        app.specObj(idx).Task.Receiver.Config.connectFlag, ...
-                                                        app.specObj(idx).Task.Receiver.Config.StartUp{1},  ...
-                                                        app.specObj(idx).Band(1).SpecificSCPI);
-            if ~isempty(msgError)
-                error(msgError)
-            end
-            hReceiver = app.specObj(idx).hReceiver;
-
-            % STREAMING
-            if isempty(app.specObj(idx).hStreaming)
-                if ismember(Task.Receiver.Config.connectFlag, [2, 3])
-                    app.specObj(idx) = startup_specObjRead_Streaming(app, app.specObj(idx));
-                end
-            else
-                if contains(app.specObj(idx).IDN, 'EB500')                 && ...
-                        ~contains(Task.Type, 'Drive-test (Level+Azimuth)') &&...
-                        isempty(app.specObj(idx).Band(1).Datagrams)
-
-                    hStreaming = app.specObj(idx).hStreaming;
-                    app.specObj(idx) = class.EB500Lib.DatagramRead_PSCAN_PreTask(app.EB500Obj, app.specObj(idx), hReceiver, hStreaming);
-                end
-            end
-
-            % GPS
-            if isempty(app.specObj(idx).hGPS)
-                if ~isempty(Task.GPS.Selection)
-                    [app.specObj(idx), msgError] = startup_specObjRead_GPS(app, app.specObj(idx));
-                    if ~isempty(msgError)
-                        error(msgError)
-                    end
-                end
-            end
-
-            % ANTENNA TRACKING (EMSat)
-            if strcmp(Task.Antenna.Switch.Name, 'EMSat')
-                fcn.antennaTracking(app, 'mainApp', Task.Antenna.MetaData, app.progressDialog);
-            end
-
-            % MASK, FILE & WATERFALL MATRIX
-            baseName = sprintf('appColeta_%s', datestr(now, 'yymmdd_THHMMSS'));
-            for ii = 1:numel(app.specObj(idx).Band)
-                ID = Task.Script.Band(ii).ID;
-
-                % ANTENNA SWITCH & ACU
-                % Esse trecho do código consiste na tentativa de obter a posição 
-                % da antena, inserindo-a no arquivo binário e apresentando no 
-                % painel de metadados. 
-                % 
-                % Erros retornáveis:
-                % - Caso não tenha sido desabilitado o Polling/Bus da ACU 
-                % no Compass.
-                % - Caso a ACU não esteja acessível ('MCL-3' e 'MCC-1' ainda
-                % não possuem); e 'MKA-1' ainda não é controlável por falta
-                % de conectividade de rede (o app não "enxerga" a ACU).
-                %
-                % Os erros não travam a execução do código pois a antena
-                % pode ter sido apontada manualmente ou automaticamente - este
-                % último poderia ter sido conduzido no momento de criação da 
-                % tarefa (e posteriormente reabilitado o controle da ACU pelo 
-                % Compass.
-                if strcmp(Task.Antenna.Switch.Name, 'EMSat')
-                    antennaName = extractBefore(Task.Script.Band(ii).instrAntenna, ' ');
-                    [antennaPos, errorMsg] = app.EMSatObj.AntennaPositionGET(antennaName);
-                    app.specObj(idx).Band(ii).Antenna.Position = jsonencode(antennaPos);
-
-                    if ~isempty(errorMsg)
-                        app.specObj(idx).LOG(end+1) = struct('type', 'startup', 'time', datestr(now), 'msg', sprintf('ID: %.0f\n%s ACU - %s', ID, antennaName, errorMsg));
-                    end
-                end
-
-                % MASK
-                app.specObj(idx).Band(ii).Mask = [];
-                if contains(Task.Type, 'Rompimento de Máscara Espectral') && Task.Script.Band(ii).MaskTrigger.Status
-                    maskInfo  = class.maskLib.FileRead(Task.MaskFile);
-                    maskArray = class.maskLib.ArrayConstructor(maskInfo, Task.Script.Band(ii));
-
-                    FindPeaks = Task.Script.Band(ii).MaskTrigger.FindPeaks;
-                    if isempty(FindPeaks)
-                        FindPeaks = class.Constants.FindPeaks;
-                    end
-
-                    app.specObj(idx).Band(ii).Mask = struct('Table', maskInfo.Table, 'Array', maskArray, 'Validations', 0, ...
-                                                            'BrokenArray', zeros(1, Task.Script.Band(ii).instrDataPoints), ...
-                                                            'BrokenCount', 0, 'Peaks', '', 'TimeStamp', NaT, 'FindPeaks', FindPeaks);
-                    app.specObj(idx).LOG(end+1)    = struct('type', 'mask', 'time', datestr(now), 'msg', sprintf('ID %.0f\n%s', ID, jsonencode(maskInfo.Table)));
-                end
-
-                % FILE
-                app.specObj(idx).Band(ii).File = struct('Fileversion', class.Constants.fileVersion,     ...
-                                                        'Basename', sprintf('%s_ID%.0f', baseName, ID), ...
-                                                        'Filecount', 0, 'WritedSamples', 0, 'CurrentFile', []);
-
-                [app.specObj(idx).Band(ii).File.Filecount, ...
-                    app.specObj(idx).Band(ii).File.CurrentFile] = class.RFlookBinLib.OpenFile(app.specObj(idx), ii, app.General.fileFolder.userPath);
-
-                logMsg = sprintf(['ID: %.0f\n'             ...
-                                  'scpiSet_Config: "%s"\n' ...
-                                  'scpiSet_Att: "%s"\n'    ...
-                                  'rawMetaData: "%s"\n'    ...
-                                  'Filename (base): %s'], ID,                                               ...
-                                                          app.specObj(idx).Band(ii).SpecificSCPI.configSET, ...
-                                                          app.specObj(idx).Band(ii).SpecificSCPI.attSET,    ...
-                                                          app.specObj(idx).Band(ii).rawMetaData,            ...
-                                                          app.specObj(idx).Band(ii).File.Basename);                
-                app.specObj(idx).LOG(end+1) = struct('type', 'startup', 'time', datestr(now), 'msg', logMsg);
-
-
-                % WATERFALL MATRIX
-                DataPoints     = Task.Script.Band(ii).instrDataPoints;
-                WaterfallDepth = app.General.Plot.Waterfall.Depth;
-                if strcmp(Task.Script.Observation.Type, 'Samples')
-                    WaterfallDepth = min([WaterfallDepth, Task.Script.Band(ii).instrObservationSamples]);
-                end              
-
-                app.specObj(idx).Band(ii).Waterfall = struct('idx', 0, 'Depth', WaterfallDepth, 'Matrix', -1000 .* ones(WaterfallDepth, DataPoints, 'single'));
-            end
-
-            RegularTask_RestartStatus(app, idx, 0)
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_MainLoop(app)
-            app.Flag_running = 1;
-            app.Flag_editing = 1;
-
-            stop(app.timerObj_task)
-
-            while app.Flag_running
-                if app.Flag_editing
-                    app.revisitObj = fcn.RevisitFactors(app.specObj);
-                    Layout_metadataTab(app)
-
-                    if isempty(app.revisitObj.GlobalRevisitTime)
-                        app.Flag_running = 0;
-                        break
-                    end
-                    
-                    nn = 0;
-                    app.Flag_editing = 0;
-                end
-
-                sweepTic = tic;
-                for ii = 1:numel(app.specObj)
-                    if RegularTask_StatusTaskCheck(app, ii, '')
-                        app.Flag_editing = 1;
-                        break
-                    end
-
-                    if ~strcmp(app.specObj(ii).Status, 'Em andamento')
-                        continue
-                    end
-
-                    regularTask = ~contains(app.specObj(ii).Task.Type, 'PRÉVIA');
-                    
-                    hReceiver   = app.specObj(ii).hReceiver;
-                    hStreaming  = app.specObj(ii).hStreaming;
-                    hGPS        = app.specObj(ii).hGPS;
-
-                    configMode  = true;
-
-                    nBands = numel(app.specObj(ii).Band);    
-                    for jj = 0:nBands
-                        if mod(nn, app.revisitObj.Band(ii).RevisitFactors(jj+1)) || app.revisitObj.Band(ii).RevisitFactors(jj+1) == -1
-                            continue
-                        end
-                        newTimeStamp = datetime('now');
-    
-                        if jj == 0
-                            % A atualização das coordenadas geográficas do
-                            % ponto de monitoração não precisa ser feita para 
-                            % a tarefa "Drive-test (Level+Azimuth)" porque essa 
-                            % tarefa já possui, no seu datagrama, a informação 
-                            % das coordenadas.
-
-                            if app.specObj(ii).Task.Receiver.Config.connectFlag ~= 3
-                                RegularTask_gpsData(app, ii, hReceiver, hGPS, newTimeStamp);
-                            end
-
-                        else
-                            app.specObj(ii) = class.RFlookBinLib.CheckFile(app.specObj(ii), jj, app.General.fileFolder.userPath);
-                            
-                            try
-                                % ANTENNA SWITCH (IF APPLICABLE)
-                                RegularTask_AntennaSwitch(app, ii, jj)
-
-                                % RECEIVER RECONFIGURATION (IF APPLICABLE)
-                                if (nBands > 1) || (hReceiver.UserData.nTasks > 1)
-                                    if configMode
-                                        if ismember(app.specObj(ii).Task.Receiver.Config.connectFlag, [2, 3])                                            
-                                            class.EB500Lib.OperationMode(hReceiver, app.specObj(ii).Task.Receiver.Config.connectFlag)
-                                        end
-                                        configMode = false;
-                                    end
-
-                                    RegularTask_ConfigBand(app, ii, jj, hReceiver)
-                                end
-
-                                attFactor = -1;
-                                if ~isempty(app.specObj(ii).GeneralSCPI.attGET)
-                                % Bloco try/catch protege eventual erro, o que não causará dano à 
-                                % monitoração em si por se tratar de informação não essencial.
-                                    try
-                                        attFactor = str2double(fcn.WriteRead(hReceiver, app.specObj(ii).GeneralSCPI.attGET));
-                                    catch
-                                    end
-                                end
-
-                                % maskTrigger: Variável local que registra se foi evidenciado rompimento da máscara espectral.
-                                maskTrigger = 0;
-
-                                if isempty(app.specObj(ii).Band(jj).Mask)
-                                    % SINGLE TRACE
-                                    newArray = RegularTask_specData(app, ii, jj, hReceiver, hStreaming, newTimeStamp);
-                                    app.specObj(ii).Band(jj).nSweeps = app.specObj(ii).Band(jj).nSweeps+1;
-                                
-                                else
-                                    % BURST OF TRACES
-                                    nSweeps  = app.specObj(ii).Band(jj).Mask.FindPeaks.nSweeps;
-                                    newArray = zeros(nSweeps, app.specObj(ii).Band(jj).DataPoints, 'single');                                    
-                                    for kk = 1:nSweeps
-                                        newArray(kk,:) = RegularTask_specData(app, ii, jj, hReceiver, hStreaming, newTimeStamp);
-                                        app.specObj(ii).Band(jj).nSweeps = app.specObj(ii).Band(jj).nSweeps+1;
-                                    end
-                                    smoothedArray = mean(newArray, 1);
-
-                                    % METADATA UPDATE
-                                    app.specObj(ii).Band(jj).Mask.Validations = app.specObj(ii).Band(jj).Mask.Validations + 1;
-
-                                    % MASK BROKEN ANALISYS                                    
-                                    validationArray = (smoothedArray - app.specObj(ii).Band(jj).Mask.Array) > 0;
-                                    if any(validationArray)
-                                        app.specObj(ii).Band(jj).Mask.BrokenArray = app.specObj(ii).Band(jj).Mask.BrokenArray + validationArray;
-
-                                        peaksTable = fcn.FindPeaks(app.specObj(ii), jj, smoothedArray, validationArray);
-                                        if ~isempty(peaksTable)
-                                            app.specObj(ii).Band(jj).Mask.BrokenCount = app.specObj(ii).Band(jj).Mask.BrokenCount + 1;
-                                            app.specObj(ii).Band(jj).Mask.Peaks       = peaksTable;
-                                            app.specObj(ii).Band(jj).Mask.TimeStamp   = newTimeStamp;
-
-                                            if regularTask
-                                                writematrix(jsonencode(rmfield(app.specObj(ii).Band(jj).Mask, {'Table', 'Array', 'Validations', 'BrokenArray', 'FindPeaks'})), ...
-                                                    replace(app.specObj(ii).Band(jj).File.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
-                                            end
-
-                                            maskTrigger = 1;
-                                        end
-                                    end
-
-                                    newArray = newArray(end,:);
-                                end
-                                
-                                app.specObj(ii).Error(1,2:4) = {NaT, NaT, 0};
-
-                                % WATERFALL MATRIX
-                                idx = app.specObj(ii).Band(jj).Waterfall.idx + 1;
-                                if idx > app.specObj(ii).Band(jj).Waterfall.Depth; idx = 1;
-                                end
-
-                                app.specObj(ii).Band(jj).Waterfall.idx = idx;
-                                app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:) = newArray(:,:,1);
-
-                                [~, ~, nDim] = size(newArray);
-                                if nDim > 1
-                                    app.specObj(ii).Band(jj).Azimuth = newArray(:,:,2);
-                                end
-
-                                % ESTIMATED REVISIT TIME
-                                if isempty(app.specObj(ii).Band(jj).LastTimeStamp)
-                                    app.specObj(ii).Band(jj).RevisitTime = app.revisitObj.GlobalRevisitTime * app.revisitObj.Band(ii).RevisitFactors(jj+1);
-                                else
-                                    app.specObj(ii).Band(jj).RevisitTime = ((app.General.Integration.SampleTime-1)*app.specObj(ii).Band(jj).RevisitTime + seconds(newTimeStamp-app.specObj(ii).Band(jj).LastTimeStamp))/app.General.Integration.SampleTime;
-                                end
-                                app.specObj(ii).Band(jj).LastTimeStamp = newTimeStamp;
-
-                                % PLOT, WRITEDSAMPLES & MASKINFO (IF APPLICABLE)
-                                if app.UITable.Selection == ii
-                                    Layout_errorCount(app, ii)
-
-                                    if app.DropDown.Value == jj
-                                        plot_Draw(app, ii, jj)
-                                        if ~isempty(app.specObj(ii).Band(jj).Mask)
-                                            Layout_lastMaskValidation(app, maskTrigger, ii, jj)
-                                        end
-                                        app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.specObj(ii).Band(jj).nSweeps, app.specObj(ii).Band(jj).RevisitTime);
-                                    end
-                                end
-
-                                % FILE
-                                if regularTask && (isempty(app.specObj(ii).Band(jj).Mask) || ismember(app.specObj(ii).Task.Script.Band(jj).MaskTrigger.Status, [0, 3]) || ((app.specObj(ii).Task.Script.Band(jj).MaskTrigger.Status == 2) && maskTrigger))
-                                    class.RFlookBinLib.EditFile(app.specObj(ii), jj, newArray, attFactor, newTimeStamp)
-                                    app.specObj(ii).Band(jj).File.WritedSamples = app.specObj(ii).Band(jj).File.WritedSamples + 1;
-
-                                    if (app.UITable.Selection == ii) && (app.DropDown.Value == jj)
-                                        app.Sweeps.Text = string(app.specObj(ii).Band(jj).File.WritedSamples);
-                                    end                                    
-                                end
-
-                                if (app.UITable.Selection == ii) && (app.DropDown.Value == jj)
-                                    drawnow
-                                end
-    
-                            catch ME
-                                % O controle de erro do GPS se dá na função "RegularTask_gpsData".
-                                % 
-                                % O controle de erro do RECEPTOR se dá aqui, neste trecho da função 
-                                % "RegularTask_MainLoop".
-                                %
-                                % O app tentará reativar a conexão toda vez que o contador de
-                                % erro atingir um múltiplo de "class.Constants.errorCountTrigger".
-                                % E, além disso, caso ultrapassado o tempo (em segundos) definido 
-                                % em "class.Constants.errorTimeTrigger", o app trocará o estado da 
-                                % tarefa de "Em andamento" → "Erro".
-
-                                if ME.message == "If you specify a message identifier argument, you must specify the message text argument."
-                                    pause(1)
-                                end
-
-                                app.specObj(ii).LOG(end+1) = struct('type', 'error (RECEIVER)', 'time', char(newTimeStamp), 'msg', ME.message);
-                                RegularTask_errorHandle(app, 'Receiver', ii, newTimeStamp)
-
-                                if app.UITable.Selection == ii
-                                    Layout_errorCount(app, ii)
-                                    drawnow
-                                end
-                                beep
-
-                                msgError = app.receiverObj.ReconnectAttempt(app.specObj(ii).hReceiver.UserData.instrSelected, ...
-                                                                            app.specObj(ii).Task.Receiver.Config.connectFlag, ...
-                                                                            app.specObj(ii).Task.Receiver.Config.StartUp{1},  ...
-                                                                            app.specObj(ii).Band(jj).SpecificSCPI);
-                                if ~isempty(msgError)
-                                    RegularTask_StatusTaskCheck(app, ii, 'ErrorTrigger');
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-
-                nn = nn+1;
-                pause(max(app.revisitObj.GlobalRevisitTime-toc(sweepTic), .001))
-            end
-
-            start(app.timerObj_task)
-
-            app.revisitObj = [];
-            Layout_metadataTab(app)
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_ConfigBand(app, ii, jj, hReceiver)
-            writeline(hReceiver, app.specObj(ii).Band(jj).SpecificSCPI.configSET);
-            pause(.001)
-            
-            if ~isempty(app.specObj(ii).Band(jj).SpecificSCPI.attSET)
-                writeline(hReceiver, app.specObj(ii).Band(jj).SpecificSCPI.attSET);
-            end
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_gpsData(app, ii, hReceiver, hGPS, newTimeStamp)
-            % O controle de erro do RECEPTOR se dá na função "RegularTask_MainLoop".
-            %
-            % O controle de erro do GPS, por outro lado, se dá diretamente aqui, 
-            % nesta função, e é restrito ao caso em que o receptor é "External",
-            % ou seja, não se trata de GPS embarcado no RECEPTOR (GPS conectado
-            % à porta USB do computador que executa o app, por exemplo).
-            %
-            % Caso a tarefa seja do tipo "Drive-test", toda vez que for manifestada 
-            % uma desconexão, o app tentará reativar a conexao. Ou, em sendo uma tarefa 
-            % de outro tipo, o app tentará reativar a conexão toda vez que o contador de
-            % erro atingir um múltiplo de "class.Constants.errorGPSCountTrigger".
-             
-            gpsData = struct('Status', 0, 'Latitude', -1, 'Longitude', -1, 'TimeStamp', '');
-
-            try
-                switch app.specObj(ii).Task.Script.GPS.Type
-                    case 'Built-in'
-                        gpsData = fcn.gpsBuiltInReader(hReceiver);
-                    case 'External'
-                        gpsData = fcn.gpsExternalReader(hGPS, 1);
-                        app.specObj(ii).Error(2,2:4) = {NaT, NaT, 0};
-                end
-
-            catch ME
-                app.specObj(ii).LOG(end+1) = struct('type', 'error (GPS)', 'time', char(newTimeStamp), 'msg', ME.message);
-
-                if strcmp(app.specObj(ii).Task.Script.GPS.Type, 'External')
-                    RegularTask_errorHandle(app, 'GPS', ii, newTimeStamp)
-
-                    if contains(app.specObj(ii).Task.Type, 'Drive-test') || ~mod(app.specObj(ii).Error.Count(2), class.Constants.errorGPSCountTrigger)
-                        app.gpsObj.ReconnectAttempt(hGPS.UserData.instrSelected);
-                    end
-                end
-            end
+        function onTaskGpsUpdated(app, evt)
+            % Substitui o trecho de "RegularTask_gpsData" que atualizava a
+            % interface gráfica (Layout_lastGPS) e as coordenadas da estação
+            % (app.General.stationInfo), a cada nova leitura de GPS.
+
+            ii      = evt.TaskId;
+            gpsData = evt.Payload;
 
             % As coordenadas da estação - registradas em app.General.stationInfo
             % - são atualizadas apenas se a estação for do tipo móvel ("Mobile") 
             % e as novas coordenadas geográficas forem válidas.
-
             if strcmp(app.General.stationInfo.Type, 'Mobile') && gpsData.Status
                 app.General.stationInfo.Latitude  = gpsData.Latitude;
                 app.General.stationInfo.Longitude = gpsData.Longitude;
             end
 
-            RegularTask_gpsUpdate(app, ii, gpsData, newTimeStamp)
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_gpsUpdate(app, ii, gpsData, newTimeStamp)
-            if isempty(gpsData.TimeStamp)
-                gpsData.TimeStamp = char(newTimeStamp);
-            end
-            app.specObj(ii).lastGPS = gpsData;
-
-            if (app.UITable.Selection == ii)
+            if app.UITable.Selection == ii
                 Layout_lastGPS(app, gpsData)
             end
         end
-        
-        
-        %-----------------------------------------------------------------%
-        function RegularTask_AntennaSwitch(app, ii, jj)
-            switch app.specObj(ii).Task.Antenna.Switch.Name
-                case 'EMSat'
-                    msgError = app.EMSatObj.MatrixSwitch(app.specObj(ii).Band(jj).Antenna.SwitchPort,    ...
-                                                         app.specObj(ii).Task.Antenna.Switch.OutputPort, ...
-                                                         app.specObj(ii).Band(jj).Antenna.LNBChannel,    ...
-                                                         app.specObj(ii).Band(jj).Antenna.LNBIndex);
-                    if ~isempty(msgError)
-                        error(msgError)
-                    end
 
-                case 'ERMx'
-                    msgError = app.ERMxObj.MatrixSwitch( app.specObj(ii).Band(jj).Antenna.SwitchPort, ...
-                                                         app.specObj(ii).Task.Antenna.Switch.OutputPort);
-                    if ~isempty(msgError)
-                        error(msgError)
-                    end
+
+        %-----------------------------------------------------------------%
+        function onTaskErrorRaised(app, evt)
+            % Substitui o trecho de "RegularTask_MainLoop" que atualizava a
+            % interface gráfica (Layout_errorCount) e emitia um "beep" a cada
+            % erro de aquisição (RECEIVER ou GPS).
+
+            ii = evt.TaskId;
+
+            if app.UITable.Selection == ii
+                Layout_errorCount(app, ii)
+                drawnow
             end
+            beep
         end
 
 
         %-----------------------------------------------------------------%
-        function newArray = RegularTask_specData(app, ii, jj, hReceiver, hStreaming, newTimeStamp)
-            Timeout = class.Constants.Timeout;
-            Flag_success = false;
+        function RegularTask_TasksSave(app)
+            % Ao salvar "app.specObj" (app.TaskController.Tasks) em um arquivo
+            % .MAT, reabrindo-o posteriormente, os objetos de comunicação
+            % (tcpclient, por exemplo) não retém o valor da propriedade "UserData".
+            %
+            % Por essa razão, esses objetos não serão salvos, devendo ser
+            % recriados na inicialização do app.
 
-            switch app.specObj(ii).Task.Receiver.Config.connectFlag
-                case 1
-                    % Spectrum analyzers (R&S, KeySight, Tektronix, Anritsu)
-
-                    recTic = tic;
-                    t1 = toc(recTic);
-                    while t1 < Timeout
-                        try
-                            writeline(hReceiver, app.specObj(ii).GeneralSCPI.dataGET);
-                            newArray = readbinblock(hReceiver, 'single');
-                                                        
-                            if numel(newArray) == app.specObj(ii).Band(jj).DataPoints
-                                if strcmp(app.specObj(ii).Task.Receiver.Sync, 'Continuous Sweep')
-                                    SyncModeRef = sum(newArray);
-
-                                    if SyncModeRef ~= app.specObj(ii).Band(jj).SyncModeRef
-                                        app.specObj(ii).Band(jj).SyncModeRef = SyncModeRef;
-                                    else
-                                        continue
-                                    end                                    
-                                end
-
-                                Flag_success = true;
-                                break
-                            end
-    
-                        catch
-                        end
-                        t1 = toc(recTic);
-                    end
-                    
-                case 2
-                    % R&S EB500: Tarefas ordinárias
-                    
-                    taskInfo = struct('Type',       app.specObj(ii).Task.Type,                      ...
-                                      'FreqStart',  app.specObj(ii).Task.Script.Band(jj).FreqStart, ...
-                                      'FreqStop',   app.specObj(ii).Task.Script.Band(jj).FreqStop,  ...
-                                      'DataPoints', app.specObj(ii).Band(jj).DataPoints,            ...
-                                      'nDatagrams', app.specObj(ii).Band(jj).Datagrams,             ...
-                                      'udpPort',    app.EB500Obj.udpPort);
-
-                    [newArray, Flag_success] = class.EB500Lib.DatagramRead_PSCAN(taskInfo, hReceiver, hStreaming);
-
-                case 3
-                    % R&S EB500 - Tarefa "Drive-test (Level+Azimuth)"
-                    % O newArray gerado aqui, e apenas aqui, possui informações
-                    % de nível, azimute e nota de qualidade do azimute. A dimensão 
-                    % dele é 1 (Height) x DataPoints (Width) x 3 (Depth).
-
-                    taskInfo = struct('Type',       app.specObj(ii).Task.Type,                                                                          ...
-                                      'FreqCenter', (app.specObj(ii).Task.Script.Band(jj).FreqStart + app.specObj(ii).Task.Script.Band(jj).FreqStop)/2, ...
-                                      'FreqSpan',   app.specObj(ii).Task.Script.Band(jj).FreqStop - app.specObj(ii).Task.Script.Band(jj).FreqStart,     ...
-                                      'DataPoints', app.specObj(ii).Band(jj).DataPoints,                                                                ...
-                                      'udpPort',    app.EB500Obj.udpPort);
-
-                    [newArray, gpsData, Flag_success] = class.EB500Lib.DatagramRead_FFM(taskInfo, hReceiver, hStreaming);
-
-                    % No datagrama tem a informação de gps... então vamos aproveitar! :)
-                    RegularTask_gpsUpdate(app, ii, gpsData, newTimeStamp)
-            end
-            flush(hReceiver)
+            Tasks = copy(app.specObj);
             
-            if Flag_success
-                if app.specObj(ii).Band(jj).FlipArray
-                    newArray(:,:,1) = flip(newArray(:,:,1));
-                end
-            else
-                error('Não foi lido corretamente o vetor de nível do receptor dentro do tempo limite (%.0f segundos).', Timeout)
-            end            
+            for ii = 1:numel(Tasks)
+                Tasks(ii).Connections.receiver = [];
+                Tasks(ii).Connections.stream   = [];
+                Tasks(ii).Connections.gps      = [];
+
+                Tasks(ii).TaskSpec.Receiver.Handle  = [];
+                Tasks(ii).TaskSpec.Streaming.Handle = [];
+                Tasks(ii).TaskSpec.GPS.Handle       = [];
+            end
+
+            [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
+            save(fullfile(programDataFolder, 'taskListState.mat'), 'Tasks')
         end
 
-
-        %-----------------------------------------------------------------%
-        function RegularTask_errorHandle(app, errorType, ii, newTimeStamp)
-            switch errorType
-                case 'Receiver'; idx = 1;
-                case 'GPS';      idx = 2;
-            end
-                                
-            if isnat(app.specObj(ii).Error.CreatedTime(idx))
-                app.specObj(ii).Error.CreatedTime(idx) = newTimeStamp;
-            end
-            app.specObj(ii).Error.LastTime(idx) = newTimeStamp;
-            app.specObj(ii).Error.Count(idx) = app.specObj(ii).Error.Count(idx) + 1;
-        end
 
         %-----------------------------------------------------------------%
         function Layout_tableBuilding(app, idx)
@@ -1524,15 +890,15 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             
             for ii = 1:numel(app.specObj)
                 EndTime = '-';
-                if ~isnat(app.specObj(ii).Observation.EndTime) && ~isinf(app.specObj(ii).Observation.EndTime)
-                    EndTime = datestr(app.specObj(ii).Observation.EndTime, 'dd/mm/yyyy HH:MM:SS');
+                if ~isnat(app.specObj(ii).Timing.endedAt) && ~isinf(app.specObj(ii).Timing.endedAt)
+                    EndTime = datestr(app.specObj(ii).Timing.endedAt, 'dd/mm/yyyy HH:MM:SS');
                 end
         
-                tempTable(end+1,:) = {app.specObj(ii).ID,                        ...
-                                      app.specObj(ii).Task.Script.Name,          ...
-                                      app.specObj(ii).IDN,                       ...
-                                      app.specObj(ii).Observation.Created,       ...
-                                      datestr(app.specObj(ii).Observation.BeginTime, 'dd/mm/yyyy HH:MM:SS'), ...
+                tempTable(end+1,:) = {app.specObj(ii).TaskId,                    ...
+                                      app.specObj(ii).TaskSpec.Script.Name,      ...
+                                      app.specObj(ii).ReceiverId,                ...
+                                      app.specObj(ii).Timing.createdAt,          ...
+                                      datestr(app.specObj(ii).Timing.startedAt, 'dd/mm/yyyy HH:MM:SS'), ...
                                       EndTime,                                   ...
                                       app.specObj(ii).Status};
             end    
@@ -1572,19 +938,19 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function Layout_treeBuilding(app, Selection)
             if app.UITable.Selection
                 idx = app.UITable.Selection;
-                numBands = numel(app.specObj(idx).Task.Script.Band);
+                numBands = numel(app.specObj(idx).TaskSpec.Script.Band);
                 ids = {};
 
                 for ii = 1:numBands
-                    Antenna = app.specObj(idx).Task.Script.Band(ii).instrAntenna;
+                    Antenna = app.specObj(idx).TaskSpec.Script.Band(ii).instrAntenna;
                     if ~isempty(Antenna)
                         Antenna = sprintf('(%s)', Antenna);
                     end
                     
                     ids{end+1} = sprintf('ID %d: %.3f - %.3f MHz %s',                            ...
-                                         app.specObj(idx).Task.Script.Band(ii).ID,               ...
-                                         app.specObj(idx).Task.Script.Band(ii).FreqStart / 1e+6, ...
-                                         app.specObj(idx).Task.Script.Band(ii).FreqStop  / 1e+6, ...
+                                         app.specObj(idx).TaskSpec.Script.Band(ii).ID,               ...
+                                         app.specObj(idx).TaskSpec.Script.Band(ii).FreqStart / 1e+6, ...
+                                         app.specObj(idx).TaskSpec.Script.Band(ii).FreqStop  / 1e+6, ...
                                          Antenna);
                 end
                 
@@ -1614,8 +980,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function Layout_errorCount(app, idx)
-            if ~isempty(idx) && app.specObj(idx).Error.Count(1)
-                set(app.errorCount_txt, 'Text', string(app.specObj(idx).Error.Count(1)), 'Visible', 'on')
+            if ~isempty(idx) && app.specObj(idx).RetryPolicy.receiver.failureCount
+                set(app.errorCount_txt, 'Text', string(app.specObj(idx).RetryPolicy.receiver.failureCount), 'Visible', 'on')
                 app.errorCount_img.Visible = 'on';
             else
                 set(app.errorCount_txt, 'Text', '0', 'Visible', 'off')
@@ -1654,16 +1020,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function Layout_lastMaskValidation(app, maskTrigger, ii, jj)
             if maskTrigger
-                Validations = app.specObj(ii).Band(jj).Mask.Validations;
-                BrokenCount = app.specObj(ii).Band(jj).Mask.BrokenCount;
+                Validations = app.specObj(ii).Bands(jj).Mask.Validations;
+                BrokenCount = app.specObj(ii).Bands(jj).Mask.BrokenCount;
         
-                if ~isempty(app.specObj(ii).Band(jj).Mask.Peaks)
-                    nPeaks      = sprintf(' (%d)', height(app.specObj(ii).Band(jj).Mask.Peaks));
-                    FreqCenter  = app.specObj(ii).Band(jj).Mask.Peaks.FreqCenter(1);
-                    BandWidth   = app.specObj(ii).Band(jj).Mask.Peaks.BW(1);
-                    Prominence  = app.specObj(ii).Band(jj).Mask.Peaks.Prominence(1);
-                    dTimeStamp  = extractBefore(char(app.specObj(ii).Band(jj).Mask.TimeStamp), ' ');
-                    hTimeStamp  = extractAfter(char(app.specObj(ii).Band(jj).Mask.TimeStamp), ' ');
+                if ~isempty(app.specObj(ii).Bands(jj).Mask.Peaks)
+                    nPeaks      = sprintf(' (%d)', height(app.specObj(ii).Bands(jj).Mask.Peaks));
+                    FreqCenter  = app.specObj(ii).Bands(jj).Mask.Peaks.FreqCenter(1);
+                    BandWidth   = app.specObj(ii).Bands(jj).Mask.Peaks.BW(1);
+                    Prominence  = app.specObj(ii).Bands(jj).Mask.Peaks.Prominence(1);
+                    dTimeStamp  = extractBefore(char(app.specObj(ii).Bands(jj).Mask.TimeStamp), ' ');
+                    hTimeStamp  = extractAfter(char(app.specObj(ii).Bands(jj).Mask.TimeStamp), ' ');
                 else
                     nPeaks      = '';
                     FreqCenter  = -1;
@@ -1679,7 +1045,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                                   Validations, BrokenCount, nPeaks, FreqCenter, BandWidth, Prominence, dTimeStamp, hTimeStamp);
             else
                 app.lastMask_text.Text = replace(app.lastMask_text.Text, [extractBefore(app.lastMask_text.Text, 'VALIDAÇÕES') 'VALIDAÇÕES'], ...
-                    sprintf('<b style="color: #a2142f; font-size: 14;">%.0f</b> \nVALIDAÇÕES', app.specObj(ii).Band(jj).Mask.Validations));
+                    sprintf('<b style="color: #a2142f; font-size: 14;">%.0f</b> \nVALIDAÇÕES', app.specObj(ii).Bands(jj).Mask.Validations));
             end
         end
 
@@ -1724,7 +1090,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             sources = {'Nível'};
 
             if ii > 0 && jj > 0
-                if contains(app.specObj(ii).Task.Type, 'Drive-test (Level+Azimuth)')
+                if contains(app.specObj(ii).TaskSpec.Type, 'Drive-test (Level+Azimuth)')
                     sources{end+1} = 'Azimute';
                 end
     
@@ -1732,8 +1098,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 % maior do que zero, então o campo "Mask" será diferente de vazio.
                 % A validação abaixo é idêntica (funcionalmente) à:
                 
-              % if contains(app.specObj(ii).Task.Type, 'Rompimento de Máscara Espectral') && app.specObj(ii).Task.Script.Band(jj).MaskTrigger.Status
-                if ~isempty(app.specObj(ii).Band(jj).Mask)
+              % if contains(app.specObj(ii).TaskSpec.Type, 'Rompimento de Máscara Espectral') && app.specObj(ii).TaskSpec.Script.Band(jj).MaskTrigger.Status
+                if ~isempty(app.specObj(ii).Bands(jj).Mask)
                     sources{end+1} = 'Máscara';
                 end
             end
@@ -1759,13 +1125,13 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function [xArray, downYLim, upYLim, FreqStart, FreqStop, LevelUnit, strUnit] = plot_AxesParameters(app, ii, jj, newArray)
             % xArray
-            FreqStart = app.specObj(ii).Task.Script.Band(jj).FreqStart / 1e+6;
-            FreqStop  = app.specObj(ii).Task.Script.Band(jj).FreqStop  / 1e+6;
-            LevelUnit = app.specObj(ii).Task.Script.Band(jj).instrLevelUnit;
-            xArray    = linspace(FreqStart, FreqStop, app.specObj(ii).Band(jj).DataPoints);
+            FreqStart = app.specObj(ii).TaskSpec.Script.Band(jj).FreqStart / 1e+6;
+            FreqStop  = app.specObj(ii).TaskSpec.Script.Band(jj).FreqStop  / 1e+6;
+            LevelUnit = app.specObj(ii).TaskSpec.Script.Band(jj).instrLevelUnit;
+            xArray    = linspace(FreqStart, FreqStop, app.specObj(ii).Bands(jj).DataPoints);
     
             % General settings
-            [~, strUnit] = class.Constants.yAxisUpLimit(app.specObj(ii).Task.Script.Band(jj).instrLevelUnit);
+            [~, strUnit] = class.Constants.yAxisUpLimit(app.specObj(ii).TaskSpec.Script.Band(jj).instrLevelUnit);
     
             [downYLim, upYLim] = bounds(newArray);
             downYLim  = downYLim - mod(downYLim, 10);
@@ -1781,8 +1147,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function plot_Draw(app, ii, jj)
-            idx = app.specObj(ii).Band(jj).Waterfall.idx;
-            newArray = app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:);
+            idx = app.specObj(ii).Bands(jj).Waterfall.idx;
+            newArray = app.specObj(ii).Bands(jj).Waterfall.Matrix(idx,:);
 
             if app.plotStyleEditing
                 app.plotStyleEditing = 0;
@@ -1801,7 +1167,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[downYLim, upYLim], YScale='linear')
             
                         % Mask threshold
-                        if ~isempty(app.specObj(ii).Band(jj).Mask)
+                        if ~isempty(app.specObj(ii).Bands(jj).Mask)
                             plot.draw2D.mask(app.axes1, app.specObj(ii), jj)
                         end
                 
@@ -1828,14 +1194,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         ylabel(app.axes1, 'Azimute (º)');
                         set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[0, 360], YScale='linear')
 
-                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, app.specObj(ii).Band(jj).Azimuth, LevelUnit, 'ClrWrite', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
+                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, app.specObj(ii).Bands(jj).Azimuth, LevelUnit, 'ClrWrite', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
 
                     case 'Máscara'
                         ylabel(app.axes1, 'Rompimento (%)');
                         set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[.1, 100], YScale='log')
             
-                        KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
-                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, '%%', 'MaskPlot', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
+                        KK = 100/app.specObj(ii).Bands(jj).Mask.Validations;
+                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, KK.*app.specObj(ii).Bands(jj).Mask.BrokenArray, '%%', 'MaskPlot', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
                 end
                 app.restoreView(1) = struct('ID', 'app.axes1', 'xLim', app.axes1.XLim, 'yLim', app.axes1.YLim,  'cLim', 'auto');
 
@@ -1861,11 +1227,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         end
 
                     case 'Azimute'
-                        plot.draw2D.update(app.line_ClrWrite, app.specObj(ii).Band(jj).Azimuth, app.General)
+                        plot.draw2D.update(app.line_ClrWrite, app.specObj(ii).Bands(jj).Azimuth, app.General)
 
                     case 'Máscara'
-                        KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
-                        plot.draw2D.update(app.line_ClrWrite, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, app.General)
+                        KK = 100/app.specObj(ii).Bands(jj).Mask.Validations;
+                        plot.draw2D.update(app.line_ClrWrite, KK.*app.specObj(ii).Bands(jj).Mask.BrokenArray, app.General)
                 end
             end
 
@@ -1875,12 +1241,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     if ~exist('xArray', 'var')
                         [xArray, downYLim, upYLim, FreqStart, FreqStop] = plot_AxesParameters(app, ii, jj, newArray);
                     end
-                    set(app.axes2, 'YLim', [1, app.specObj(ii).Band(jj).Waterfall.Depth], 'View', [0, 90], 'CLim', [downYLim, upYLim])
+                    set(app.axes2, 'YLim', [1, app.specObj(ii).Bands(jj).Waterfall.Depth], 'View', [0, 90], 'CLim', [downYLim, upYLim])
                     app.restoreView(2) = struct('ID', 'app.axes2', 'xLim', [FreqStart, FreqStop], 'yLim', app.axes2.YLim,  'cLim', app.axes2.CLim);
 
                     app.surface_WFall = plot.draw3D.Waterfall(app.axes2, app.specObj(ii), jj, xArray);
                 else
-                    app.surface_WFall.CData = circshift(app.specObj(ii).Band(jj).Waterfall.Matrix, -idx);
+                    app.surface_WFall.CData = circshift(app.specObj(ii).Bands(jj).Waterfall.Matrix, -idx);
                 end
             end
         end
@@ -1949,11 +1315,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % <EspecificidadeAppColeta2>
             if app.General.startupInfo
-                RegularTask_specObjSave(app)
+                RegularTask_TasksSave(app)
             else
                 [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
-                if isfile(fullfile(programDataFolder, 'startupInfo.mat'))
-                    delete(fullfile(programDataFolder, 'startupInfo.mat'))
+                if isfile(fullfile(programDataFolder, 'taskListState.mat'))
+                    delete(fullfile(programDataFolder, 'taskListState.mat'))
                 end
             end
 
@@ -2057,8 +1423,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 plot_Startup(app)
                 plot_PlotSource(app, ii, jj);
                 
-                if ~isempty(app.specObj(ii).Band(jj).Waterfall)
-                    idx = app.specObj(ii).Band(jj).Waterfall.idx;
+                if ~isempty(app.specObj(ii).Bands(jj).Waterfall)
+                    idx = app.specObj(ii).Bands(jj).Waterfall.idx;
     
                     if idx
                         plot_Draw(app, ii, jj)
@@ -2070,28 +1436,28 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 Layout_metadataTab(app)
     
                 % (RIGHT PANEL)
-                if ~isempty(app.specObj(ii).Band(jj).File); WritedSamples = app.specObj(ii).Band(jj).File.WritedSamples;
+                if ~isempty(app.specObj(ii).Bands(jj).File); WritedSamples = app.specObj(ii).Bands(jj).File.WritedSamples;
                 else;                                       WritedSamples = -1; 
                 end
                 app.Sweeps.Text = string(WritedSamples);
     
-                if ~contains(app.specObj(ii).Task.Type, 'PRÉVIA') && strcmp(app.specObj(ii).Status, 'Em andamento') && app.specObj(ii).Band(jj).Status
+                if ~contains(app.specObj(ii).TaskSpec.Type, 'PRÉVIA') && strcmp(app.specObj(ii).Status, 'Em andamento') && app.specObj(ii).Bands(jj).Status
                     app.Sweeps_REC.Visible = 1;
                 else
                     app.Sweeps_REC.Visible = 0;
                 end
                 
-                if ~isempty(app.specObj(ii).Band(jj).Mask)                    
+                if ~isempty(app.specObj(ii).Bands(jj).Mask)                    
                     app.lastMask_text.Enable = 1;
                     Layout_lastMaskValidation(app, true, ii, jj)
                 else
                     Layout_lastMaskInitialState(app)
                 end
-                Layout_lastGPS(app, app.specObj(ii).lastGPS)
+                Layout_lastGPS(app, app.specObj(ii).GPSLastFix)
     
                 % (DOWN STATUS PANEL)
                 ysecondarylabel(app.axes1, sprintf('%s\n%s\n', app.UITable.Data.Receiver(ii), app.DropDown.Items{app.DropDown.Value}))
-                if ~isempty(app.tool_RevisitTime.Text); app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.specObj(ii).Band(jj).nSweeps, app.specObj(ii).Band(jj).RevisitTime);
+                if ~isempty(app.tool_RevisitTime.Text); app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.specObj(ii).Bands(jj).nSweeps, app.specObj(ii).Bands(jj).RevisitTime);
                 else;                                   app.tool_RevisitTime.Text = '';
                 end
 
@@ -2126,10 +1492,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     case {'Cancelada', 'Erro', 'Concluída'}
                         Timestamp = datetime('now');
         
-                        switch app.specObj(idx).Task.Script.Observation.Type
+                        switch app.specObj(idx).TaskSpec.Script.Observation.Type
                             case 'Duration'
-                                app.specObj(idx).Observation.BeginTime = Timestamp;
-                                app.specObj(idx).Observation.EndTime   = Timestamp + seconds(app.specObj(idx).Task.Script.Observation.Duration);
+                                app.specObj(idx).Timing.startedAt = Timestamp;
+                                app.specObj(idx).Timing.endedAt   = Timestamp + seconds(app.specObj(idx).TaskSpec.Script.Observation.Duration);
             
                             case 'Time'
                                 if strcmp(app.specObj(idx).Status, 'Concluída')
@@ -2138,21 +1504,21 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                 end
             
                             case 'Samples'
-                                app.specObj(idx).Observation.BeginTime = Timestamp;
-                                app.specObj(idx).Observation.EndTime   = NaT;
+                                app.specObj(idx).Timing.startedAt = Timestamp;
+                                app.specObj(idx).Timing.endedAt   = NaT;
                         end
         
                         app.specObj(idx).Status = 'Na fila';
-                        app.specObj(idx).LOG(end+1) = struct('type', 'task', 'time', char(Timestamp), 'msg', 'Reincluída na fila a tarefa.');
+                        app.specObj(idx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(Timestamp), 'message', 'Reincluída na fila a tarefa.');
 
-                        RegularTask_RestartStatus(app, idx, 1)        
+                        app.TaskController.restartStatus(idx, 1)
                         RegularTask_timerFcn(app)
 
                     %-----------------------------------------------------%
                     % STOP
                     %-----------------------------------------------------%
                     case 'Em andamento'
-                        RegularTask_StatusTaskCheck(app, idx, 'DeleteButtonPushed');
+                        app.TaskController.statusTaskCheck(idx, 'DeleteButtonPushed');
                 end
             end
             
@@ -2223,16 +1589,16 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             ii = app.UITable.Selection;
             jj = app.DropDown.Value;
 
-            if ~isempty(app.specObj(ii).Band(jj).Waterfall)
-                idx = app.specObj(ii).Band(jj).Waterfall.idx;
+            if ~isempty(app.specObj(ii).Bands(jj).Waterfall)
+                idx = app.specObj(ii).Bands(jj).Waterfall.idx;
 
                 if idx
-                    FreqStart = app.specObj(ii).Task.Script.Band(jj).FreqStart / 1e+6;
-                    FreqStop  = app.specObj(ii).Task.Script.Band(jj).FreqStop  / 1e+6;
-                    LevelUnit = app.specObj(ii).Task.Script.Band(jj).instrLevelUnit;
+                    FreqStart = app.specObj(ii).TaskSpec.Script.Band(jj).FreqStart / 1e+6;
+                    FreqStop  = app.specObj(ii).TaskSpec.Script.Band(jj).FreqStop  / 1e+6;
+                    LevelUnit = app.specObj(ii).TaskSpec.Script.Band(jj).instrLevelUnit;
 
-                    xArray    = linspace(FreqStart, FreqStop, app.specObj(ii).Band(jj).DataPoints);
-                    newArray = app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:);
+                    xArray    = linspace(FreqStart, FreqStop, app.specObj(ii).Bands(jj).DataPoints);
+                    newArray = app.specObj(ii).Bands(jj).Waterfall.Matrix(idx,:);
 
                     switch event.Source
                         case app.axesTool_MinHold
@@ -2306,8 +1672,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             ii = app.UITable.Selection;
             jj = app.DropDown.Value;
             
-            if ~isempty(app.specObj(ii).Band(jj).Waterfall)
-                idx = app.specObj(ii).Band(jj).Waterfall.idx;
+            if ~isempty(app.specObj(ii).Bands(jj).Waterfall)
+                idx = app.specObj(ii).Bands(jj).Waterfall.idx;
 
                 if idx
                     app.plotStyleEditing = 1;

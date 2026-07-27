@@ -56,15 +56,15 @@ classdef (Abstract) HtmlTextGenerator
         function log = LOG(specObj, idx)
             log = '';
 
-            if ~isempty(specObj(idx).LOG)
-                logTable = struct2table(specObj(idx).LOG);
-                log = strjoin("<b>" + logTable.time + " - " + upper(logTable.type) + "</b>" + newline + logTable.msg, '\n\n');
+            if ~isempty(specObj(idx).LogEntries)
+                logTable = struct2table(specObj(idx).LogEntries);
+                log = strjoin("<b>" + logTable.timestamp + " - " + upper(logTable.level) + "</b>" + newline + logTable.message, '\n\n');
             end
         end
 
         %-----------------------------------------------------------------%
         function htmlContent = Task(specObj, revisitObj, idxTask, idxBand)
-            Task   = specObj(idxTask).Task;
+            Task   = specObj(idxTask).TaskSpec;
             Script = Task.Script;
 
             % ObservationType
@@ -114,9 +114,9 @@ classdef (Abstract) HtmlTextGenerator
             end
         
             % MaskTrigger
-            if ~isempty(specObj(idxTask).Band(idxBand).Mask)
+            if ~isempty(specObj(idxTask).Bands(idxBand).Mask)
                 maskTrigger = struct('Status',    Task.Script.Band(idxBand).MaskTrigger.Status, ...
-                                     'FindPeaks', specObj(idxTask).Band(idxBand).Mask.FindPeaks);
+                                     'FindPeaks', specObj(idxTask).Bands(idxBand).Mask.FindPeaks);
             else
                 maskTrigger = 'NA';
             end
@@ -126,7 +126,7 @@ classdef (Abstract) HtmlTextGenerator
                                                 'Observation',   observationType,                          ...
                                                 'FileVersion',   class.Constants.fileVersion,              ...
                                                 'BitsPerSample', sprintf('%d bits', Script.BitsPerSample), ...
-                                                'Receiver',      specObj(idxTask).IDN,                     ...
+                                                'Receiver',      specObj(idxTask).ReceiverId,                     ...
                                                 'gpsType',       Script.GPS.Type));
 
             if contains(Task.Type, 'Rompimento de Máscara Espectral')
@@ -167,7 +167,7 @@ classdef (Abstract) HtmlTextGenerator
             
             dataStruct(end+1) = struct( ...
                 'group', 'ANTENA', ...
-                'value', specObj(idxTask).Band(idxBand).Antenna ...
+                'value', specObj(idxTask).Bands(idxBand).Antenna ...
             );
         
             dataStruct(end+1) = struct( ...

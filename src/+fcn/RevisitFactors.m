@@ -8,12 +8,12 @@ function timeObj = RevisitFactors(specObj)
     for ii = 1:numel(specObj)
         if specObj(ii).Status == "Em andamento"
             gpsRevisitTime = -1;
-            if ~isempty(specObj(ii).Task.Script.GPS.RevisitTime)
-                gpsRevisitTime = specObj(ii).Task.Script.GPS.RevisitTime;
+            if ~isempty(specObj(ii).TaskSpec.Script.GPS.RevisitTime)
+                gpsRevisitTime = specObj(ii).TaskSpec.Script.GPS.RevisitTime;
             end
 
-            tempArray = [specObj(ii).Task.Script.Band.RevisitTime];
-            tempArray(~[specObj(ii).Band.Status]) = -1;
+            tempArray = [specObj(ii).TaskSpec.Script.Band.RevisitTime];
+            tempArray(~[specObj(ii).Bands.Status]) = -1;
 
             timeObj.Band(ii) = struct('RevisitTimes',   [gpsRevisitTime, tempArray], ...
                                       'RevisitFactors', []);

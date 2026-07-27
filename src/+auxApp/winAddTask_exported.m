@@ -299,8 +299,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Caso se trate da edição de uma tarefa, seleciona-se o receptor
             % em uso, caso ainda disponível.
             if strcmp(app.infoEdition.type, 'edit')    
-                selectedReceiverSocket = InstrumentSocket(app, app.mainApp.specObj(app.infoEdition.idx).Task.Receiver.Selection.Parameters{1});
-                selectedReceiverName   = sprintf('%s - %s', app.mainApp.specObj(app.infoEdition.idx).Task.Receiver.Selection.Name{1}, selectedReceiverSocket);
+                selectedReceiverSocket = InstrumentSocket(app, app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Selection.Parameters{1});
+                selectedReceiverName   = sprintf('%s - %s', app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Selection.Name{1}, selectedReceiverSocket);
                 selectedReceiverIndex  = find(contains(receiverList, selectedReceiverName), 1);
 
                 if ~isempty(selectedReceiverIndex)
@@ -316,20 +316,20 @@ classdef winAddTask_exported < matlab.apps.AppBase
             TaskValueChanged(app)
 
             if strcmp(app.infoEdition.type, 'edit')
-                app.TaskType.Value = replace(app.mainApp.specObj(app.infoEdition.idx).Task.Type, ' (PRÉVIA)', '');
-                if contains(app.mainApp.specObj(app.infoEdition.idx).Task.Type, '(PRÉVIA)')                    
+                app.TaskType.Value = replace(app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Type, ' (PRÉVIA)', '');
+                if contains(app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Type, '(PRÉVIA)')                    
                     app.PreviewTaskCheckbox.Value = true;
                 end                
                 TaskTypeValueChanged(app)
 
                 if strcmp(app.TaskType.Value, 'Rompimento de Máscara Espectral')
-                    set(app.MaskFile_Button, 'Enable', 1, 'Tag', app.mainApp.specObj(app.infoEdition.idx).Task.MaskFile)
+                    set(app.MaskFile_Button, 'Enable', 1, 'Tag', app.mainApp.specObj(app.infoEdition.idx).TaskSpec.MaskFile)
                 end
 
-                app.Receiver_RstCommand.Value = app.mainApp.specObj(app.infoEdition.idx).Task.Receiver.Reset;
-                app.Receiver_SyncRef.Value    = app.mainApp.specObj(app.infoEdition.idx).Task.Receiver.Sync;
+                app.Receiver_RstCommand.Value = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Reset;
+                app.Receiver_SyncRef.Value    = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Sync;
 
-                gpsMetaData = app.mainApp.specObj(app.infoEdition.idx).Task.Script.GPS;
+                gpsMetaData = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Script.GPS;
                 if strcmp(gpsMetaData.Type, 'Manual')
                     app.GPS_List.Value            = 'ID 0: Manual';
                     app.GPS_manualLatitude.Value  = gpsMetaData.Latitude;
@@ -338,13 +338,13 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     GPSValueChanged(app)
                 end
 
-                switchMetaData = app.mainApp.specObj(app.infoEdition.idx).Task.Antenna.Switch;
+                switchMetaData = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Antenna.Switch;
                 if ~isempty(switchMetaData.Name)
                     app.AntennaSwitch_Mode.Value = 1;
                     AntennaSwitchModeValueChanged(app)
                 end
 
-                antennaList = app.mainApp.specObj(app.infoEdition.idx).Task.Antenna.MetaData;
+                antennaList = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Antenna.MetaData;
                 for kk = 1:numel(antennaList)
                     antennaMetaData = antennaList(kk);
 
@@ -1057,7 +1057,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         app.taskList   = mainApp.taskList;
                         app.okButton.Text = 'Inclui tarefa';
                     case 'edit'
-                        app.taskList   = class.taskList.app2raw(mainApp.specObj(editionType.idx).Task.Script);
+                        app.taskList   = class.taskList.app2raw(mainApp.specObj(editionType.idx).TaskSpec.Script);
                         app.okButton.Text = 'Edita tarefa';
                 end
 
