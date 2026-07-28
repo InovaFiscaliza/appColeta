@@ -1,0 +1,7 @@
+include:
+  - project: 'selfservice-bi-data-science/sfi/ci-templates'
+    ref: main
+    file: '/github-mirror-sync.yml'
+
+variables:
+  GITHUB_REPO: "InovaFiscaliza/appColeta"
