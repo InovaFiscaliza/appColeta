@@ -524,6 +524,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             mkdir(tempDir)
             app.General_I.fileFolder.tempPath  = tempDir;
             app.General_I.fileFolder.MFilePath = MFilePath;
+            app.General_I.stationInfo.Computer = appEngine.util.OperationSystem("computerName");
 
             switch app.executionMode
                 case 'webApp'
@@ -1273,6 +1274,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     % ...
             end
         end
+
+        %-----------------------------------------------------------------%
+        function updateLastVisitedFolder(app, filePath)
+            app.General_I.fileFolder.lastVisited = filePath;
+            app.General.fileFolder.lastVisited   = filePath;
+
+            appEngine.util.generalSettingsSave(class.Constants.appName, app.rootFolder, app.General_I, app.executionMode)
+        end
     end
     
 
@@ -1324,7 +1333,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             end
 
             if app.General.stationInfo.Type == "Mobile"
-                fcn.GeneralSettings(app.General, app.rootFolder)
+                appEngine.util.generalSettingsSave(class.Constants.appName, app.rootFolder, app.General_I, app.executionMode)
             end
 
             if ~isempty(app.tcpServer)

@@ -2120,7 +2120,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create AddMaskFile_Button
             app.AddMaskFile_Button = uibutton(app.SubGrid1, 'push');
             app.AddMaskFile_Button.ButtonPushedFcn = createCallbackFcn(app, @AddMaskFileButtonPushed, true);
-            app.AddMaskFile_Button.Icon = 'OpenFile_36x36.png';
+            app.AddMaskFile_Button.Icon = 'folder-opened-16px.svg';
             app.AddMaskFile_Button.BackgroundColor = [0.9804 0.9804 0.9804];
             app.AddMaskFile_Button.Visible = 'off';
             app.AddMaskFile_Button.Tooltip = {'Seleciona arquivo de máscara espectral'};
