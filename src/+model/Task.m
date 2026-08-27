@@ -19,7 +19,6 @@ classdef Task < matlab.mixin.Copyable
     %---------------------------------------------------------------------%
 
     properties
-        TaskId
         ReceiverId
 
         TaskSpec = class.taskClass.empty                                    % See "auxApp.winAddTask.mlapp"
@@ -38,7 +37,7 @@ classdef Task < matlab.mixin.Copyable
 
         RetryPolicy = struct('receiver', struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT), ...
                              'gps',      struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT))
-        Status      = ''                                                    % 'Na fila' | 'Em andamento' | 'Concluída' | 'Cancelada' | 'Erro'
+        Status      = ''                                                    % 'Na fila' | 'Em andamento' | 'Cancelamento solicitado' | 'Concluída' | 'Cancelada' | 'Erro'
         LogEntries  = struct('level', {}, 'timestamp', {}, 'message',  {})
     end
 
@@ -49,7 +48,6 @@ classdef Task < matlab.mixin.Copyable
             switch infoEdition.type
                 case 'new'
                     idx = numel(obj)+1;
-                    obj(idx).TaskId = idx;
                     obj(idx).Timing.createdAt = datestr(now, 'dd/mm/yyyy HH:MM:SS');
 
                 case 'edit'
@@ -72,8 +70,8 @@ classdef Task < matlab.mixin.Copyable
         end
 
         %-----------------------------------------------------------------%
-        function instr = Instrument(obj)
-            instr = struct( ...
+        function receiver = getReceiver(obj)
+            receiver = struct( ...
                 'Type', obj.TaskSpec.Receiver.Selection.Type{1}, ...
                 'Tag', obj.TaskSpec.Receiver.Config.Tag{1}, ...
                 'Parameters', jsondecode(obj.TaskSpec.Receiver.Selection.Parameters{1}) ...

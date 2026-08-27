@@ -1,0 +1,67 @@
+{
+    "instrumentNames": [
+        "Anritsu MS2720T",
+        "Keysight N9344C",
+        "Keysight N9936B",
+        "R&S EB500",
+        "R&S FSL",
+        "R&S FSVR",
+        "R&S FSW",
+        "Tektronix SA2500"
+    ],
+    "configFileKeys": [
+        "family",
+        "name",
+        "tag",
+        "band",
+        "image",
+        "connection",
+        "communication",
+        "features"
+    ],
+    "connectionTypes": [
+        "TCPIP Socket",
+        "TCP/UDP IP Socket",
+        "VISA"
+    ],
+    "traceDataAcquisitionMode": [
+        "polling",
+        "streaming"
+    ],
+    "traceDataTypes": [
+        "level",
+        "level+azimuth"
+    ],
+    "communicationParameters": [
+        "attenuationMode",
+        "attenuationValue",
+        "autoLevel",
+        "averageMode",
+        "averageCount",
+        "dataPoints",
+        "detector",
+        "dfMeasTime",
+        "dfSquelchMode",
+        "dfSquelchValue",
+        "levelUnit",
+        "freqStart",
+        "freqStop",
+        "freqCenter",
+        "freqSpan",
+        "freqInferiorLimit",
+        "freqSuperiorLimit",
+        "preamp",
+        "resolutionMode",
+        "resolutionValue",
+        "reset",
+        "sampleTimeMode",
+        "sampleTimeValue",
+        "selectivity",
+        "sensitivityMode",
+        "startup",
+        "stepWidth",
+        "sweepMode",
+        "traceMode",
+        "videoBandWidth"
+    ]
+}

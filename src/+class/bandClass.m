@@ -5,13 +5,13 @@ classdef bandClass
     % Version: 1.00
 
     properties
-        SpecificSCPI  = struct('configSET', {}, 'attSET', {})
+        SpecificSCPI = struct('configSET', {}, 'attSET', {})
         rawMetaData
         DataPoints
         Datagrams
-        SyncModeRef   = -1
+        SyncModeRef = ''
         FlipArray
-        nSweeps       = 0
+        nSweeps = 0
         LastTimeStamp
         RevisitTime
         Waterfall
@@ -19,8 +19,8 @@ classdef bandClass
         Mask
         File
         Antenna
-        Status        = true
-        uuid          = char(matlab.lang.internal.uuid())
+        Status = true
+        uuid = char(matlab.lang.internal.uuid())
     end
 
     % Propriedades:
@@ -36,7 +36,7 @@ classdef bandClass
     % (e) 'Datagrams'      - Estimativa do número de datagramas que representa 
     %                        um único traço (aplicável apenas para o receptor R&S EB500)
     % (f) 'DataPoints'     - Número de pontos por traço.
-    % (g) 'SyncModeRef'    - Soma do vetor de níveis, o que é usado como valor de referência 
+    % (g) 'SyncModeRef'    - Hash do vetor de níveis, o que é usado como valor de referência 
     %                        quando o modo de sincronismo usa o "ContinuousSweep", identificando 
     %                        se o traço é idêntico ao anterior, o que possibilita o seu descarte 
     %                        (aplicável apenas para o receptor Tektronix SA2500).

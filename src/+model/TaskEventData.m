@@ -18,11 +18,11 @@ classdef TaskEventData < event.EventData
 
     methods
         %-----------------------------------------------------------------%
-        function obj = TaskEventData(taskId, bandId, payload)
-            obj.TaskId = taskId;
+        function obj = TaskEventData(taskIdx, bandIdx, payload)
+            obj.TaskId = taskIdx;
 
             if nargin > 1
-                obj.BandId = bandId;
+                obj.BandId = bandIdx;
             else
                 obj.BandId = [];
             end

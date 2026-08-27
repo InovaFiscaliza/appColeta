@@ -15,12 +15,18 @@ classdef TaskController < handle
     % Comunicação com a UI: ao invés de manipular diretamente componentes
     % gráficos, o controller dispara eventos (StatusChanged, TasksChanged,
     % BandDataAcquired, GpsUpdated, ErrorRaised, RevisitInfoChanged), aos
-    % quais o app principal se inscreve (ver "wireTaskController").
+    % quais o app principal se inscreve.
     %
     % O acesso a recursos que não são de interface (bibliotecas de
     % instrumento, configurações gerais, diálogo de progresso) é feito por
-    % meio da referência ao app owner ("App"), seguindo o mesmo padrão já
-    % adotado em "class.tcpServerLib(app)".
+    % meio da referência ao app ("App").
+    %
+    % API pública: apenas o construtor e "runLoop". Os métodos usados pelo
+    % fluxo de restauração/edição manual de tarefas em
+    % "winAppColeta_exported.m" (reconexão de tarefas persistidas e reação
+    % a ações do usuário na tabela) permanecem restritos às classes amigas
+    % "winAppColeta_exported" e "winAppColeta" por meio de
+    % "Access = {?winAppColeta_exported, ?winAppColeta}".
     %
     % app.TaskController = model.TaskController(app);
     %---------------------------------------------------------------------%
@@ -37,12 +43,12 @@ classdef TaskController < handle
 
     properties
         %-----------------------------------------------------------------%
-        Tasks        = model.Task.empty
+        Tasks = model.Task.empty
         UDPPortArray = {}
     end
 
 
-    properties (SetAccess = private)
+    properties
         %-----------------------------------------------------------------%
         RevisitInfo = []
         IsRunning (1,1) logical = false
@@ -63,171 +69,201 @@ classdef TaskController < handle
 
         %-----------------------------------------------------------------%
         function runLoop(obj)
-            % Substitui "RegularTask_MainLoop(app)".
+            % Antes de iniciar o loop de monitoração propriamente dito, é
+            % dada a cada tarefa a chance de mudar de estado (ex.: "Na fila"
+            % → "Em andamento", "Erro" → "Em andamento" numa nova tentativa).
+            % Se nenhuma tarefa mudar de estado, não há o que monitorar e o
+            % método retorna sem efeito.
+
+            hasTaskToRun = false;
+            for taskIdx = 1:numel(obj.Tasks)
+                if updateTaskStatus(obj, taskIdx, 'routineCheck')
+                    hasTaskToRun = true;
+                    break
+                end
+            end
+
+            if ~hasTaskToRun
+                return
+            end
+
+            stop(obj.App.TaskSchedulerTimer)
 
             obj.IsRunning = true;
-            isEditing     = true;
-
-            stop(obj.App.timerObj_task)
+            isEditing = true;
+            forceConfiguration = false;
 
             while obj.IsRunning
+                numActiveTasks = sum(strcmp({obj.Tasks.Status}, 'Em andamento'));
+
                 if isEditing
                     obj.RevisitInfo = fcn.RevisitFactors(obj.Tasks);
                     notify(obj, 'RevisitInfoChanged')
+
+                    forceConfiguration = (numActiveTasks == 1);
 
                     if isempty(obj.RevisitInfo.GlobalRevisitTime)
                         obj.IsRunning = false;
                         break
                     end
 
-                    nn = 0;
-                    isEditing = false;
+                    sweepCount = 0;
+                    isEditing  = false;
                 end
 
-                sweepTic = tic;
-                for ii = 1:numel(obj.Tasks)
-                    if obj.statusTaskCheck(ii, '')
+                sweepStartTic = tic;
+                for taskIdx = 1:numel(obj.Tasks)
+                    if updateTaskStatus(obj, taskIdx, 'routineCheck')
                         isEditing = true;
                         break
                     end
 
-                    if ~strcmp(obj.Tasks(ii).Status, 'Em andamento')
-                        continue
+                    switch obj.Tasks(taskIdx).Status
+                        case 'Cancelamento solicitado'
+                            isEditing = true;
+                            obj.Tasks(taskIdx).Status = 'Cancelada';
+                            notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
+                            break
+
+                        case {'Na fila', 'Concluída', 'Cancelada', 'Erro'}
+                            continue
                     end
 
-                    regularTask = ~contains(obj.Tasks(ii).TaskSpec.Type, 'PRÉVIA');
+                    isRegularTask = ~contains(obj.Tasks(taskIdx).TaskSpec.Type, 'PRÉVIA');
 
-                    hReceiver   = obj.Tasks(ii).Connections.receiver;
-                    hStreaming  = obj.Tasks(ii).Connections.stream;
-                    hGPS        = obj.Tasks(ii).Connections.gps;
+                    hReceiver   = obj.Tasks(taskIdx).Connections.receiver;
+                    hStreaming  = obj.Tasks(taskIdx).Connections.stream;
+                    hGPS        = obj.Tasks(taskIdx).Connections.gps;
 
                     configMode  = true;
 
-                    nBands = numel(obj.Tasks(ii).Bands);
-                    for jj = 0:nBands
-                        if mod(nn, obj.RevisitInfo.Band(ii).RevisitFactors(jj+1)) || obj.RevisitInfo.Band(ii).RevisitFactors(jj+1) == -1
+                    numBands = numel(obj.Tasks(taskIdx).Bands);
+                    for bandIdx = 0:numBands
+                        revisitFactor = obj.RevisitInfo.Band(taskIdx).RevisitFactors(bandIdx+1);
+                        if mod(sweepCount, revisitFactor) || revisitFactor == -1
                             continue
                         end
-                        newTimeStamp = datetime('now');
+                        sampleTimestamp = datetime('now');
 
-                        if jj == 0
+                        if bandIdx == 0
                             % A atualização das coordenadas geográficas do
                             % ponto de monitoração não precisa ser feita para
                             % a tarefa "Drive-test (Level+Azimuth)" porque essa
                             % tarefa já possui, no seu datagrama, a informação
                             % das coordenadas.
 
-                            if obj.Tasks(ii).TaskSpec.Receiver.Config.connectFlag ~= 3
-                                obj.gpsData(ii, hReceiver, hGPS, newTimeStamp);
+                            if obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag ~= 3
+                                acquireGpsData(obj, taskIdx, hReceiver, hGPS, sampleTimestamp);
                             end
 
                         else
-                            obj.Tasks(ii) = class.RFlookBinLib.CheckFile(obj.Tasks(ii), jj, obj.App.General.fileFolder.userPath);
+                            obj.Tasks(taskIdx) = class.RFlookBinLib.CheckFile(obj.Tasks(taskIdx), bandIdx, obj.App.General.fileFolder.userPath);
 
                             try
                                 % ANTENNA SWITCH (IF APPLICABLE)
-                                obj.antennaSwitch(ii, jj)
+                                switchAntenna(obj, taskIdx, bandIdx)
 
                                 % RECEIVER RECONFIGURATION (IF APPLICABLE)
-                                if (nBands > 1) || (hReceiver.UserData.nTasks > 1)
+                                if numActiveTasks > 1 || numBands > 1 || forceConfiguration
                                     if configMode
-                                        if ismember(obj.Tasks(ii).TaskSpec.Receiver.Config.connectFlag, [2, 3])
-                                            class.EB500Lib.OperationMode(hReceiver, obj.Tasks(ii).TaskSpec.Receiver.Config.connectFlag)
+                                        if ismember(obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag, [2, 3])
+                                            class.EB500Lib.OperationMode(hReceiver, obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag)
                                         end
                                         configMode = false;
                                     end
 
-                                    obj.configBand(ii, jj, hReceiver)
+                                    configureBand(obj, taskIdx, bandIdx, hReceiver)
+                                    forceConfiguration = false;
                                 end
 
-                                attFactor = -1;
-                                if ~isempty(obj.Tasks(ii).ReceiverCommands.query)
+                                attenuationFactor = -1;
+                                if ~isempty(obj.Tasks(taskIdx).ReceiverCommands.query)
                                 % Bloco try/catch protege eventual erro, o que não causará dano à
                                 % monitoração em si por se tratar de informação não essencial.
                                     try
-                                        attFactor = str2double(fcn.WriteRead(hReceiver, obj.Tasks(ii).ReceiverCommands.query));
+                                        attenuationFactor = str2double(fcn.WriteRead(hReceiver, obj.Tasks(taskIdx).ReceiverCommands.query));
                                     catch
                                     end
                                 end
 
-                                % maskTrigger: Variável local que registra se foi evidenciado rompimento da máscara espectral.
-                                maskTrigger = 0;
+                                % maskTriggered: registra se foi evidenciado rompimento da máscara espectral.
+                                maskTriggered = 0;
 
-                                if isempty(obj.Tasks(ii).Bands(jj).Mask)
+                                if isempty(obj.Tasks(taskIdx).Bands(bandIdx).Mask)
                                     % SINGLE TRACE
-                                    newArray = obj.specData(ii, jj, hReceiver, hStreaming, newTimeStamp);
-                                    obj.Tasks(ii).Bands(jj).nSweeps = obj.Tasks(ii).Bands(jj).nSweeps+1;
+                                    traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, hReceiver, hStreaming, sampleTimestamp);
+                                    obj.Tasks(taskIdx).Bands(bandIdx).nSweeps = obj.Tasks(taskIdx).Bands(bandIdx).nSweeps+1;
 
                                 else
                                     % BURST OF TRACES
-                                    nSweeps  = obj.Tasks(ii).Bands(jj).Mask.FindPeaks.nSweeps;
-                                    newArray = zeros(nSweeps, obj.Tasks(ii).Bands(jj).DataPoints, 'single');
-                                    for kk = 1:nSweeps
-                                        newArray(kk,:) = obj.specData(ii, jj, hReceiver, hStreaming, newTimeStamp);
-                                        obj.Tasks(ii).Bands(jj).nSweeps = obj.Tasks(ii).Bands(jj).nSweeps+1;
+                                    burstSweeps = obj.Tasks(taskIdx).Bands(bandIdx).Mask.FindPeaks.nSweeps;
+                                    traceData   = zeros(burstSweeps, obj.Tasks(taskIdx).Bands(bandIdx).DataPoints, 'single');
+
+                                    for sweepIdx = 1:burstSweeps
+                                        traceData(sweepIdx,:) = acquireSpectrumTrace(obj, taskIdx, bandIdx, hReceiver, hStreaming, sampleTimestamp);
+                                        obj.Tasks(taskIdx).Bands(bandIdx).nSweeps = obj.Tasks(taskIdx).Bands(bandIdx).nSweeps+1;
                                     end
-                                    smoothedArray = mean(newArray, 1);
+
+                                    averagedTrace = mean(traceData, 1);
 
                                     % METADATA UPDATE
-                                    obj.Tasks(ii).Bands(jj).Mask.Validations = obj.Tasks(ii).Bands(jj).Mask.Validations + 1;
+                                    obj.Tasks(taskIdx).Bands(bandIdx).Mask.Validations = obj.Tasks(taskIdx).Bands(bandIdx).Mask.Validations + 1;
 
                                     % MASK BROKEN ANALISYS
-                                    validationArray = (smoothedArray - obj.Tasks(ii).Bands(jj).Mask.Array) > 0;
-                                    if any(validationArray)
-                                        obj.Tasks(ii).Bands(jj).Mask.BrokenArray = obj.Tasks(ii).Bands(jj).Mask.BrokenArray + validationArray;
+                                    maskExceedance = (averagedTrace - obj.Tasks(taskIdx).Bands(bandIdx).Mask.Array) > 0;
+                                    if any(maskExceedance)
+                                        obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenArray = obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenArray + maskExceedance;
 
-                                        peaksTable = fcn.FindPeaks(obj.Tasks(ii), jj, smoothedArray, validationArray);
+                                        peaksTable = fcn.FindPeaks(obj.Tasks(taskIdx), bandIdx, averagedTrace, maskExceedance);
                                         if ~isempty(peaksTable)
-                                            obj.Tasks(ii).Bands(jj).Mask.BrokenCount = obj.Tasks(ii).Bands(jj).Mask.BrokenCount + 1;
-                                            obj.Tasks(ii).Bands(jj).Mask.Peaks       = peaksTable;
-                                            obj.Tasks(ii).Bands(jj).Mask.TimeStamp   = newTimeStamp;
+                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenCount = obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenCount + 1;
+                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks       = peaksTable;
+                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.TimeStamp   = sampleTimestamp;
 
-                                            if regularTask
-                                                writematrix(jsonencode(rmfield(obj.Tasks(ii).Bands(jj).Mask, {'Table', 'Array', 'Validations', 'BrokenArray', 'FindPeaks'})), ...
-                                                    replace(obj.Tasks(ii).Bands(jj).File.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
+                                            if isRegularTask
+                                                writematrix(jsonencode(rmfield(obj.Tasks(taskIdx).Bands(bandIdx).Mask, {'Table', 'Array', 'Validations', 'BrokenArray', 'FindPeaks'})), ...
+                                                    replace(obj.Tasks(taskIdx).Bands(bandIdx).File.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
                                             end
 
-                                            maskTrigger = 1;
+                                            maskTriggered = 1;
                                         end
                                     end
 
-                                    newArray = newArray(end,:);
+                                    traceData = traceData(end,:);
                                 end
 
-                                obj.Tasks(ii).RetryPolicy.receiver = struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT);
+                                obj.Tasks(taskIdx).RetryPolicy.receiver = struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT);
 
                                 % WATERFALL MATRIX
-                                idx = obj.Tasks(ii).Bands(jj).Waterfall.idx + 1;
-                                if idx > obj.Tasks(ii).Bands(jj).Waterfall.Depth; idx = 1;
-                                end
+                                waterfallIdx = mod(obj.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx, obj.Tasks(taskIdx).Bands(bandIdx).Waterfall.Depth) + 1;
 
-                                obj.Tasks(ii).Bands(jj).Waterfall.idx = idx;
-                                obj.Tasks(ii).Bands(jj).Waterfall.Matrix(idx,:) = newArray(:,:,1);
+                                obj.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx = waterfallIdx;
+                                obj.Tasks(taskIdx).Bands(bandIdx).Waterfall.Matrix(waterfallIdx,:) = traceData(:,:,1);
 
-                                [~, ~, nDim] = size(newArray);
-                                if nDim > 1
-                                    obj.Tasks(ii).Bands(jj).Azimuth = newArray(:,:,2);
+                                [~, ~, numDims] = size(traceData);
+                                if numDims > 1
+                                    obj.Tasks(taskIdx).Bands(bandIdx).Azimuth = traceData(:,:,2);
                                 end
 
                                 % ESTIMATED REVISIT TIME
-                                if isempty(obj.Tasks(ii).Bands(jj).LastTimeStamp)
-                                    obj.Tasks(ii).Bands(jj).RevisitTime = obj.RevisitInfo.GlobalRevisitTime * obj.RevisitInfo.Band(ii).RevisitFactors(jj+1);
+                                if isempty(obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp)
+                                    obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = obj.RevisitInfo.GlobalRevisitTime * revisitFactor;
                                 else
-                                    obj.Tasks(ii).Bands(jj).RevisitTime = ((obj.App.General.Integration.SampleTime-1)*obj.Tasks(ii).Bands(jj).RevisitTime + seconds(newTimeStamp-obj.Tasks(ii).Bands(jj).LastTimeStamp))/obj.App.General.Integration.SampleTime;
+                                    obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = ((obj.App.General.Integration.SampleTime-1)*obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime + seconds(sampleTimestamp-obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp))/obj.App.General.Integration.SampleTime;
                                 end
-                                obj.Tasks(ii).Bands(jj).LastTimeStamp = newTimeStamp;
+                                obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp = sampleTimestamp;
 
                                 % FILE
-                                if regularTask && (isempty(obj.Tasks(ii).Bands(jj).Mask) || ismember(obj.Tasks(ii).TaskSpec.Script.Band(jj).MaskTrigger.Status, [0, 3]) || ((obj.Tasks(ii).TaskSpec.Script.Band(jj).MaskTrigger.Status == 2) && maskTrigger))
-                                    class.RFlookBinLib.EditFile(obj.Tasks(ii), jj, newArray, attFactor, newTimeStamp)
-                                    obj.Tasks(ii).Bands(jj).File.WritedSamples = obj.Tasks(ii).Bands(jj).File.WritedSamples + 1;
+                                if isRegularTask && (isempty(obj.Tasks(taskIdx).Bands(bandIdx).Mask) || ismember(obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).MaskTrigger.Status, [0, 3]) || ((obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).MaskTrigger.Status == 2) && maskTriggered))
+                                    class.RFlookBinLib.EditFile(obj.Tasks(taskIdx), bandIdx, traceData, attenuationFactor, sampleTimestamp)
+                                    obj.Tasks(taskIdx).Bands(bandIdx).File.WritedSamples = obj.Tasks(taskIdx).Bands(bandIdx).File.WritedSamples + 1;
                                 end
 
                                 % PLOT, WRITEDSAMPLES & MASKINFO (IF APPLICABLE)
-                                notify(obj, 'BandDataAcquired', model.TaskEventData(ii, jj, maskTrigger))
+                                notify(obj, 'BandDataAcquired', model.TaskEventData(taskIdx, bandIdx, maskTriggered))
 
                             catch ME
-                                % O controle de erro do GPS se dá na função "gpsData".
+                                % O controle de erro do GPS se dá na função "acquireGpsData".
                                 %
                                 % O controle de erro do RECEPTOR se dá aqui, neste trecho do
                                 % método "runLoop".
@@ -242,17 +278,20 @@ classdef TaskController < handle
                                     pause(1)
                                 end
 
-                                obj.Tasks(ii).LogEntries(end+1) = struct('level', 'error (RECEIVER)', 'timestamp', char(newTimeStamp), 'message', ME.message);
-                                obj.errorHandle('Receiver', ii, newTimeStamp)
+                                obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error (RECEIVER)', 'timestamp', char(sampleTimestamp), 'message', ME.message);
+                                recordFailure(obj, 'receiver', taskIdx, sampleTimestamp)
 
-                                notify(obj, 'ErrorRaised', model.TaskEventData(ii, [], 'Receiver'))
+                                notify(obj, 'ErrorRaised', model.TaskEventData(taskIdx, [], 'Receiver'))
 
-                                msgError = obj.App.receiverObj.ReconnectAttempt(obj.Tasks(ii).Connections.receiver.UserData.instrSelected, ...
-                                                                            obj.Tasks(ii).TaskSpec.Receiver.Config.connectFlag, ...
-                                                                            obj.Tasks(ii).TaskSpec.Receiver.Config.StartUp{1},  ...
-                                                                            obj.Tasks(ii).Bands(jj).SpecificSCPI);
+                                msgError = obj.App.receiverObj.ReconnectAttempt( ...
+                                    obj.Tasks(taskIdx).Connections.receiver.UserData.instrSelected, ...
+                                    obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag, ...
+                                    obj.Tasks(taskIdx).TaskSpec.Receiver.Config.StartUp{1},  ...
+                                    obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI ...
+                                );
+
                                 if ~isempty(msgError)
-                                    obj.statusTaskCheck(ii, 'ErrorTrigger');
+                                    updateTaskStatus(obj, taskIdx, 'error');
                                     break
                                 end
                             end
@@ -260,23 +299,29 @@ classdef TaskController < handle
                     end
                 end
 
-                nn = nn+1;
-                pause(max(obj.RevisitInfo.GlobalRevisitTime-toc(sweepTic), .001))
+                sweepCount = sweepCount+1;
+                pause(max(obj.RevisitInfo.GlobalRevisitTime-toc(sweepStartTic), .001))
             end
 
-            start(obj.App.timerObj_task)
+            start(obj.App.TaskSchedulerTimer)
 
             obj.RevisitInfo = [];
             notify(obj, 'RevisitInfoChanged')
         end
+    end
 
+
+    methods (Access = {?winAppColeta, ?winAppColeta_exported})
         %-----------------------------------------------------------------%
-        function Flag = statusTaskCheck(obj, idx, evtName)
-            % Substitui "RegularTask_StatusTaskCheck(app, idx, evtName)".
-            %
+        function hasChanged = updateTaskStatus(obj, taskIdx, evtName)
+            arguments
+                obj
+                taskIdx
+                evtName {mustBeMember(evtName, {'routineCheck', 'error', 'cancellationRequested'})}
+            end
+
             % Função responsável por trocar o estado das tarefas, de "Na
-            % fila" para "Em andamento", "Em andamento" para "Cancelada",
-            % "Em andamento" para "Erro" e por aí vai...
+            % fila" para "Em andamento", "Em andamento" para "Erro" etc.
             %
             % Lembrando que o estado de uma nova tarefa é "Na fila", exceto
             % quando ocorre algum erro no processo de criação (decorrente
@@ -284,169 +329,218 @@ classdef TaskController < handle
             % por exemplo). Nesse caso, o estado será "Erro".
             %
             % Caso não exista alguma tarefa em execução, o obj.IsRunning
-            % será igual a "false", e o timer da app estará ativo, o que o
+            % será igual a "false", e o timer do app estará ativo, o que o
             % fará avaliar a cada minuto o estado de todas as tarefas, nesta
             % função, de forma que:
             % (a) Seja iniciada uma tarefa no estado "Na fila";
             % (b) Seja realizada uma nova tentativa de iniciar uma tarefa
             %     no estado "Erro" (o que ocorrerá a cada 15 minutos).
 
-            Timestamp = datetime('now');
+            timestamp = datetime('now');
 
-            Flag = false;
-            initialStatus = obj.Tasks(idx).Status;
+            hasChanged    = false;
+            initialStatus = obj.Tasks(taskIdx).Status;
 
-            switch obj.Tasks(idx).Status
+            switch obj.Tasks(taskIdx).Status
                 case 'Em andamento'
-                    if obj.Tasks(idx).Timing.endedAt < Timestamp || ismember(evtName, {'DeleteButtonPushed', 'ErrorTrigger'})
-                        Flag = true;
+                    % Verifica se a tarefa deve ser finalizada, seja 
+                    % por ter atingido o tempo de término ou por ter 
+                    % recebido um evento de erro ou cancelamento.
+                    if obj.Tasks(taskIdx).Timing.endedAt < timestamp || ismember(evtName, {'error', 'cancellationRequested'})
+                        hasChanged = true;
 
-                        if obj.Tasks(idx).Timing.endedAt < Timestamp
-                            obj.Tasks(idx).Status = 'Concluída';
+                        if obj.Tasks(taskIdx).Timing.endedAt < timestamp
+                            obj.Tasks(taskIdx).Status = 'Concluída';
                         else
                             switch evtName
-                                case 'DeleteButtonPushed'
-                                    obj.Tasks(idx).Status = 'Cancelada';
-                                case 'ErrorTrigger'
-                                    obj.Tasks(idx).Status = 'Erro';
+                                case 'error'
+                                    obj.Tasks(taskIdx).Status = 'Erro';
+                                case 'cancellationRequested'
+                                    obj.Tasks(taskIdx).Status = 'Cancelamento solicitado';
                             end
                         end
 
-                        obj.Tasks(idx).Connections.receiver.UserData.nTasks = obj.Tasks(idx).Connections.receiver.UserData.nTasks-1;
-                        obj.Tasks(idx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(Timestamp), 'message', sprintf('Alterado o estado da tarefa: Em andamento → %s.', obj.Tasks(idx).Status));
+                        obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                            'level', 'task', ...
+                            'timestamp', char(timestamp), ...
+                            'message', sprintf('Alterado o estado da tarefa: Em andamento → %s.', obj.Tasks(taskIdx).Status) ...
+                        );
 
-                        for ii = 1:numel(obj.Tasks(idx).Bands)
-                            obj.Tasks(idx) = class.RFlookBinLib.CloseFile(obj.Tasks(idx), ii);
-                            obj.Tasks(idx).Bands(ii).Status = false;
+                        for bandIdx = 1:numel(obj.Tasks(taskIdx).Bands)
+                            obj.Tasks(taskIdx) = class.RFlookBinLib.CloseFile(obj.Tasks(taskIdx), bandIdx);
+                            obj.Tasks(taskIdx).Bands(bandIdx).Status = false;
                         end
 
                     else
-                        if strcmp(obj.Tasks(idx).TaskSpec.Script.Observation.Type, 'Samples')
-                            tempFlag = [];
-                            for ii = 1:numel(obj.Tasks(idx).Bands)
-                                if obj.Tasks(idx).Bands(ii).Status
-                                    if obj.Tasks(idx).Bands(ii).nSweeps == obj.Tasks(idx).TaskSpec.Script.Band(ii).instrObservationSamples
-                                        obj.Tasks(idx) = class.RFlookBinLib.CloseFile(obj.Tasks(idx), ii);
-                                        obj.Tasks(idx).Bands(ii).Status = false;
-                                        tempFlag(end+1) = true;
+                        if strcmp(obj.Tasks(taskIdx).TaskSpec.Script.Observation.Type, 'Samples')
+                            bandCompletionFlags = [];
+                            for bandIdx = 1:numel(obj.Tasks(taskIdx).Bands)
+                                if obj.Tasks(taskIdx).Bands(bandIdx).Status
+                                    if obj.Tasks(taskIdx).Bands(bandIdx).nSweeps == obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrObservationSamples
+                                        obj.Tasks(taskIdx) = class.RFlookBinLib.CloseFile(obj.Tasks(taskIdx), bandIdx);
+                                        obj.Tasks(taskIdx).Bands(bandIdx).Status = false;
+                                        bandCompletionFlags(end+1) = true;
 
                                     else
-                                        tempFlag(end+1) = false;
+                                        bandCompletionFlags(end+1) = false;
                                     end
                                 end
                             end
 
-                            if all(tempFlag)
-                                Flag = true;
+                            if all(bandCompletionFlags)
+                                hasChanged = true;
 
-                                obj.Tasks(idx).Status = 'Concluída';
-                                obj.Tasks(idx).Connections.receiver.UserData.nTasks = obj.Tasks(idx).Connections.receiver.UserData.nTasks-1;
-                                obj.Tasks(idx).Timing.endedAt = Timestamp;
-                                obj.Tasks(idx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(Timestamp), 'message', sprintf('Alterado o estado da tarefa: Em andamento → %s.', obj.Tasks(idx).Status));
+                                obj.Tasks(taskIdx).Status = 'Concluída';
+                                obj.Tasks(taskIdx).Timing.endedAt = timestamp;
+                                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                                    'level', 'task', ...
+                                    'timestamp', char(timestamp), ...
+                                    'message', sprintf('Alterado o estado da tarefa: Em andamento → %s.', obj.Tasks(taskIdx).Status) ...
+                                );
 
-                            elseif any(tempFlag)
-                                Flag = true;
+                            elseif any(bandCompletionFlags)
+                                hasChanged = true;
                             end
                         end
                     end
 
                 case {'Na fila', 'Erro'}
-                    if strcmp(obj.Tasks(idx).Status, 'Erro')
-                        if isnat(obj.Tasks(idx).Timing.startupAt)
-                            obj.Tasks(idx).Timing.startupAt = Timestamp;
+                    if strcmp(obj.Tasks(taskIdx).Status, 'Erro')
+                        if isnat(obj.Tasks(taskIdx).Timing.startupAt)
+                            obj.Tasks(taskIdx).Timing.startupAt = timestamp;
                         end
 
-                        StartUp = obj.Tasks(idx).Timing.startupAt;
-                        if isequal([year(Timestamp), month(Timestamp), day(Timestamp), hour(Timestamp), minute(Timestamp)], ...
-                                [year(StartUp), month(StartUp), day(StartUp), hour(StartUp), minute(StartUp)])
+                        startupTimestamp = obj.Tasks(taskIdx).Timing.startupAt;
+                        if isequal(dateshift(timestamp, 'start', 'minute'), dateshift(startupTimestamp, 'start', 'minute'))
                             return
                         end
                     end
 
-                    if obj.Tasks(idx).Timing.startedAt < Timestamp
-                        switch obj.Tasks(idx).TaskSpec.Script.Observation.Type
+                    if obj.Tasks(taskIdx).Timing.startedAt < timestamp
+                        switch obj.Tasks(taskIdx).TaskSpec.Script.Observation.Type
                             case {'Duration', 'Time'}
-                                if isnat(obj.Tasks(idx).Timing.endedAt) || (obj.Tasks(idx).Timing.endedAt > Timestamp)
-                                    Flag = true;
+                                if isnat(obj.Tasks(taskIdx).Timing.endedAt) || (obj.Tasks(taskIdx).Timing.endedAt > timestamp)
+                                    hasChanged = true;
                                 end
 
                             case 'Samples'
-                                Flag = true;
+                                hasChanged = true;
                         end
                     end
 
-                    if Flag
+                    if hasChanged
                         try
-                            if strcmp(obj.App.timerObj_task.Running, 'on')
-                                stop(obj.App.timerObj_task)
+                            if strcmp(obj.App.TaskSchedulerTimer.Running, 'on')
+                                stop(obj.App.TaskSchedulerTimer)
                             end
-                            obj.startUp(idx);
+                            startTask(obj, taskIdx);
 
-                            obj.Tasks(idx).Status = 'Em andamento';
-                            obj.Tasks(idx).Connections.receiver.UserData.nTasks   = obj.Tasks(idx).Connections.receiver.UserData.nTasks+1;
-                            obj.Tasks(idx).Connections.receiver.UserData.SyncMode = obj.Tasks(idx).TaskSpec.Receiver.Sync;
-                            obj.Tasks(idx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(Timestamp), 'message', 'Iniciada a execução da tarefa.');
+                            obj.Tasks(taskIdx).Status = 'Em andamento';
+                            obj.Tasks(taskIdx).Connections.receiver.UserData.SyncMode = obj.Tasks(taskIdx).TaskSpec.Receiver.Sync;
+                            obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(timestamp), 'message', 'Iniciada a execução da tarefa.');
 
                         catch ME
-                            if strcmp(obj.App.timerObj_task.Running, 'off') && ~obj.IsRunning
-                                start(obj.App.timerObj_task)
+                            if strcmp(obj.App.TaskSchedulerTimer.Running, 'off') && ~obj.IsRunning
+                                start(obj.App.TaskSchedulerTimer)
                             end
-                            obj.Tasks(idx).Status = 'Erro';
-                            obj.Tasks(idx).LogEntries(end+1) = struct('level', 'error', 'timestamp', char(Timestamp), 'message', getReport(ME));
+                            obj.Tasks(taskIdx).Status = 'Erro';
+                            obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error', 'timestamp', char(timestamp), 'message', getReport(ME));
 
-                            Flag = false;
+                            hasChanged = false;
                         end
                     end
             end
 
-            if Flag
-                notify(obj, 'StatusChanged', model.TaskEventData(idx))
+            if hasChanged
+                notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
             end
 
-            if ~strcmp(initialStatus, obj.Tasks(idx).Status)
+            if ~strcmp(initialStatus, obj.Tasks(taskIdx).Status)
                 notify(obj, 'TasksChanged')
             end
         end
 
         %-----------------------------------------------------------------%
-        function restartStatus(obj, idx, nSweepsFlag)
-            % Substitui "RegularTask_RestartStatus(app, idx, nSweepsFlag)".
+        function resetTaskBands(obj, idx, resetSweepCount)
+            for bandIdx = 1:numel(obj.Tasks(idx).Bands)
+                obj.Tasks(idx).Bands(bandIdx).SyncModeRef = '';
+                obj.Tasks(idx).Bands(bandIdx).LastTimeStamp = [];
+                obj.Tasks(idx).Bands(bandIdx).Status = true;
 
-            for ii = 1:numel(obj.Tasks(idx).Bands)
-                obj.Tasks(idx).Bands(ii).SyncModeRef   = -1;
-                obj.Tasks(idx).Bands(ii).LastTimeStamp = [];
-                obj.Tasks(idx).Bands(ii).Status        = true;
-
-                if nSweepsFlag
-                    obj.Tasks(idx).Bands(ii).nSweeps   = 0;
+                if resetSweepCount
+                    obj.Tasks(idx).Bands(bandIdx).nSweeps = 0;
                 end
             end
         end
 
         %-----------------------------------------------------------------%
-        function startUp(obj, idx)
-            % Substitui "RegularTask_StartUp(app, idx)".
+        function task = resolveStreamingHandle(obj, task)
+            % Usada tanto no início de uma tarefa quanto na reconexão de
+            % tarefas persistidas.
 
-            TaskSpec = obj.Tasks(idx).TaskSpec;
+            receiverName = task.TaskSpec.Receiver.Selection.Name{1};
+            taskType = task.TaskSpec.Type;
+
+            receiverIdx = findReceiverIndex(obj, receiverName, taskType);
+            if ismember(obj.App.receiverObj.Config.connectFlag(receiverIdx), [2, 3])
+                [obj.UDPPortArray, udpPortIdx] = fcn.udpSockets(obj.UDPPortArray, obj.App.EB500Obj.udpPort);
+                if ~isempty(udpPortIdx)
+                    task.TaskSpec.Streaming.Handle = obj.UDPPortArray{udpPortIdx};
+                    task.Connections.stream = task.TaskSpec.Streaming.Handle;
+                end
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function [task, msgError] = resolveGpsHandle(obj, task)
+            % Usada tanto no início de uma tarefa quanto na reconexão de
+            % tarefas persistidas.
+
+            msgError = '';
+
+            if ~isempty(task.TaskSpec.GPS.Selection)
+                instrSelected = struct( ...
+                    'Type', task.TaskSpec.GPS.Selection.Type{1}, ...
+                    'Parameters', jsondecode(task.TaskSpec.GPS.Selection.Parameters{1}) ...
+                );
+
+                [gpsIdx, msgError] = obj.App.gpsObj.Connect(instrSelected);
+                if isempty(msgError)
+                    task.TaskSpec.GPS.Handle = obj.App.gpsObj.Table.Handle{gpsIdx};
+                    task.GPS                 = task.TaskSpec.GPS.Handle;
+                end
+            end
+        end
+    end
+
+
+    methods (Access = private)
+        %-----------------------------------------------------------------%
+        function startTask(obj, idx)
+            taskSpec = obj.Tasks(idx).TaskSpec;
 
             % RECEIVER
-            msgError = obj.App.receiverObj.ReconnectAttempt(Instrument(obj.Tasks(idx)),                     ...
-                                                        obj.Tasks(idx).TaskSpec.Receiver.Config.connectFlag, ...
-                                                        obj.Tasks(idx).TaskSpec.Receiver.Config.StartUp{1},  ...
-                                                        obj.Tasks(idx).Bands(1).SpecificSCPI);
+            msgError = obj.App.receiverObj.ReconnectAttempt( ...
+                getReceiver(obj.Tasks(idx)), ...
+                obj.Tasks(idx).TaskSpec.Receiver.Config.connectFlag, ...
+                obj.Tasks(idx).TaskSpec.Receiver.Config.StartUp{1}, ...
+                obj.Tasks(idx).Bands(1).SpecificSCPI ...
+            );
+
             if ~isempty(msgError)
                 error(msgError)
             end
+            
             hReceiver = obj.Tasks(idx).Connections.receiver;
 
             % STREAMING
             if isempty(obj.Tasks(idx).Connections.stream)
-                if ismember(TaskSpec.Receiver.Config.connectFlag, [2, 3])
-                    obj.Tasks(idx) = obj.resolveStreamingHandle(obj.Tasks(idx));
+                if ismember(taskSpec.Receiver.Config.connectFlag, [2, 3])
+                    obj.Tasks(idx) = resolveStreamingHandle(obj, obj.Tasks(idx));
                 end
             else
                 if contains(obj.Tasks(idx).ReceiverId, 'EB500')                 && ...
-                        ~contains(TaskSpec.Type, 'Drive-test (Level+Azimuth)') &&...
+                        ~contains(taskSpec.Type, 'Drive-test (Level+Azimuth)') &&...
                         isempty(obj.Tasks(idx).Bands(1).Datagrams)
 
                     hStreaming = obj.Tasks(idx).Connections.stream;
@@ -456,8 +550,8 @@ classdef TaskController < handle
 
             % GPS
             if isempty(obj.Tasks(idx).Connections.gps)
-                if ~isempty(TaskSpec.GPS.Selection)
-                    [obj.Tasks(idx), msgError] = obj.resolveGpsHandle(obj.Tasks(idx));
+                if ~isempty(taskSpec.GPS.Selection)
+                    [obj.Tasks(idx), msgError] = resolveGpsHandle(obj, obj.Tasks(idx));
                     if ~isempty(msgError)
                         error(msgError)
                     end
@@ -465,14 +559,14 @@ classdef TaskController < handle
             end
 
             % ANTENNA TRACKING (EMSat)
-            if strcmp(TaskSpec.Antenna.Switch.Name, 'EMSat')
-                fcn.antennaTracking(obj.App, 'mainApp', TaskSpec.Antenna.MetaData, obj.App.progressDialog);
+            if strcmp(taskSpec.Antenna.Switch.Name, 'EMSat')
+                fcn.antennaTracking(obj.App, 'mainApp', taskSpec.Antenna.MetaData, obj.App.progressDialog);
             end
 
             % MASK, FILE & WATERFALL MATRIX
             baseName = sprintf('appColeta_%s', datestr(now, 'yymmdd_THHMMSS'));
-            for ii = 1:numel(obj.Tasks(idx).Bands)
-                ID = TaskSpec.Script.Band(ii).ID;
+            for bandIdx = 1:numel(obj.Tasks(idx).Bands)
+                bandId = taskSpec.Script.Band(bandIdx).ID;
 
                 % ANTENNA SWITCH & ACU
                 % Esse trecho do código consiste na tentativa de obter a posição
@@ -491,110 +585,69 @@ classdef TaskController < handle
                 % último poderia ter sido conduzido no momento de criação da
                 % tarefa (e posteriormente reabilitado o controle da ACU pelo
                 % Compass.
-                if strcmp(TaskSpec.Antenna.Switch.Name, 'EMSat')
-                    antennaName = extractBefore(TaskSpec.Script.Band(ii).instrAntenna, ' ');
+                if strcmp(taskSpec.Antenna.Switch.Name, 'EMSat')
+                    antennaName = extractBefore(taskSpec.Script.Band(bandIdx).instrAntenna, ' ');
                     [antennaPos, errorMsg] = obj.App.EMSatObj.AntennaPositionGET(antennaName);
-                    obj.Tasks(idx).Bands(ii).Antenna.Position = jsonencode(antennaPos);
+                    obj.Tasks(idx).Bands(bandIdx).Antenna.Position = jsonencode(antennaPos);
 
                     if ~isempty(errorMsg)
-                        obj.Tasks(idx).LogEntries(end+1) = struct('level', 'startup', 'timestamp', datestr(now), 'message', sprintf('ID: %.0f\n%s ACU - %s', ID, antennaName, errorMsg));
+                        obj.Tasks(idx).LogEntries(end+1) = struct('level', 'startup', 'timestamp', datestr(now), 'message', sprintf('ID: %.0f\n%s ACU - %s', bandId, antennaName, errorMsg));
                     end
                 end
 
                 % MASK
-                obj.Tasks(idx).Bands(ii).Mask = [];
-                if contains(TaskSpec.Type, 'Rompimento de Máscara Espectral') && TaskSpec.Script.Band(ii).MaskTrigger.Status
-                    maskInfo  = class.maskLib.FileRead(TaskSpec.MaskFile);
-                    maskArray = class.maskLib.ArrayConstructor(maskInfo, TaskSpec.Script.Band(ii));
+                obj.Tasks(idx).Bands(bandIdx).Mask = [];
+                if contains(taskSpec.Type, 'Rompimento de Máscara Espectral') && taskSpec.Script.Band(bandIdx).MaskTrigger.Status
+                    maskInfo  = class.maskLib.FileRead(taskSpec.MaskFile);
+                    maskArray = class.maskLib.ArrayConstructor(maskInfo, taskSpec.Script.Band(bandIdx));
 
-                    FindPeaks = TaskSpec.Script.Band(ii).MaskTrigger.FindPeaks;
-                    if isempty(FindPeaks)
-                        FindPeaks = class.Constants.FindPeaks;
+                    findPeaksConfig = taskSpec.Script.Band(bandIdx).MaskTrigger.FindPeaks;
+                    if isempty(findPeaksConfig)
+                        findPeaksConfig = class.Constants.FindPeaks;
                     end
 
-                    obj.Tasks(idx).Bands(ii).Mask = struct('Table', maskInfo.Table, 'Array', maskArray, 'Validations', 0, ...
-                                                            'BrokenArray', zeros(1, TaskSpec.Script.Band(ii).instrDataPoints), ...
-                                                            'BrokenCount', 0, 'Peaks', '', 'TimeStamp', NaT, 'FindPeaks', FindPeaks);
-                    obj.Tasks(idx).LogEntries(end+1)    = struct('level', 'mask', 'timestamp', datestr(now), 'message', sprintf('ID %.0f\n%s', ID, jsonencode(maskInfo.Table)));
+                    obj.Tasks(idx).Bands(bandIdx).Mask = struct('Table', maskInfo.Table, 'Array', maskArray, 'Validations', 0, ...
+                                                            'BrokenArray', zeros(1, taskSpec.Script.Band(bandIdx).instrDataPoints), ...
+                                                            'BrokenCount', 0, 'Peaks', '', 'TimeStamp', NaT, 'FindPeaks', findPeaksConfig);
+                    obj.Tasks(idx).LogEntries(end+1)    = struct('level', 'mask', 'timestamp', datestr(now), 'message', sprintf('ID %.0f\n%s', bandId, jsonencode(maskInfo.Table)));
                 end
 
                 % FILE
-                obj.Tasks(idx).Bands(ii).File = struct('Fileversion', class.Constants.fileVersion,     ...
-                                                        'Basename', sprintf('%s_ID%.0f', baseName, ID), ...
-                                                        'Filecount', 0, 'WritedSamples', 0, 'CurrentFile', []);
+                obj.Tasks(idx).Bands(bandIdx).File = struct( ...
+                    'Fileversion', class.Constants.fileVersion,     ...
+                    'Basename', sprintf('%s_ID%.0f', baseName, bandId), ...
+                    'Filecount', 0, ...
+                    'WritedSamples', 0, ...
+                    'CurrentFile', [] ...
+                );
 
-                [obj.Tasks(idx).Bands(ii).File.Filecount, ...
-                    obj.Tasks(idx).Bands(ii).File.CurrentFile] = class.RFlookBinLib.OpenFile(obj.Tasks(idx), ii, obj.App.General.fileFolder.userPath);
+                [obj.Tasks(idx).Bands(bandIdx).File.Filecount, ...
+                 obj.Tasks(idx).Bands(bandIdx).File.CurrentFile] = class.RFlookBinLib.OpenFile(obj.Tasks(idx), bandIdx, obj.App.General.fileFolder.userPath);
 
-                logMsg = sprintf(['ID: %.0f\n'             ...
-                                  'scpiSet_Config: "%s"\n' ...
-                                  'scpiSet_Att: "%s"\n'    ...
-                                  'rawMetaData: "%s"\n'    ...
-                                  'Filename (base): %s'], ID,                                                  ...
-                                                          obj.Tasks(idx).Bands(ii).SpecificSCPI.configSET, ...
-                                                          obj.Tasks(idx).Bands(ii).SpecificSCPI.attSET,    ...
-                                                          obj.Tasks(idx).Bands(ii).rawMetaData,            ...
-                                                          obj.Tasks(idx).Bands(ii).File.Basename);
+                logMsg = sprintf('ID: %.0f\nscpiSet_Config: "%s"\nscpiSet_Att: "%s"\nrawMetaData: "%s"\nFilename (base): %s', ...
+                    bandId, ...
+                    obj.Tasks(idx).Bands(bandIdx).SpecificSCPI.configSET, ...
+                    obj.Tasks(idx).Bands(bandIdx).SpecificSCPI.attSET, ...
+                    obj.Tasks(idx).Bands(bandIdx).rawMetaData, ...
+                    obj.Tasks(idx).Bands(bandIdx).File.Basename ...
+                );
                 obj.Tasks(idx).LogEntries(end+1) = struct('level', 'startup', 'timestamp', datestr(now), 'message', logMsg);
 
-
                 % WATERFALL MATRIX
-                DataPoints     = TaskSpec.Script.Band(ii).instrDataPoints;
-                WaterfallDepth = obj.App.General.Plot.Waterfall.Depth;
-                if strcmp(TaskSpec.Script.Observation.Type, 'Samples')
-                    WaterfallDepth = min([WaterfallDepth, TaskSpec.Script.Band(ii).instrObservationSamples]);
+                dataPoints     = taskSpec.Script.Band(bandIdx).instrDataPoints;
+                waterfallDepth = obj.App.General.Plot.Waterfall.Depth;
+                if strcmp(taskSpec.Script.Observation.Type, 'Samples')
+                    waterfallDepth = min([waterfallDepth, taskSpec.Script.Band(bandIdx).instrObservationSamples]);
                 end
 
-                obj.Tasks(idx).Bands(ii).Waterfall = struct('idx', 0, 'Depth', WaterfallDepth, 'Matrix', -1000 .* ones(WaterfallDepth, DataPoints, 'single'));
+                obj.Tasks(idx).Bands(bandIdx).Waterfall = struct('idx', 0, 'Depth', waterfallDepth, 'Matrix', -1000 .* ones(waterfallDepth, dataPoints, 'single'));
             end
 
-            obj.restartStatus(idx, 0)
+            resetTaskBands(obj, idx, 0)
         end
 
         %-----------------------------------------------------------------%
-        function task = resolveStreamingHandle(obj, task)
-            % Substitui "startup_specObjRead_Streaming(app, SpecObj)". Usada
-            % tanto no início de uma tarefa (startUp) quanto na reconexão de
-            % tarefas persistidas (winAppColeta_exported > startup_specObjRead).
-
-            receiverName = task.TaskSpec.Receiver.Selection.Name{1};
-            taskType     = task.TaskSpec.Type;
-
-            idx1 = obj.selectedReceiverIndex(receiverName, taskType);
-            if ismember(obj.App.receiverObj.Config.connectFlag(idx1), [2, 3])
-                [obj.UDPPortArray, idx2] = fcn.udpSockets(obj.UDPPortArray, obj.App.EB500Obj.udpPort);
-                if ~isempty(idx2)
-                    task.TaskSpec.Streaming.Handle = obj.UDPPortArray{idx2};
-                    task.Connections.stream        = task.TaskSpec.Streaming.Handle;
-                end
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function [task, msgError] = resolveGpsHandle(obj, task)
-            % Substitui "startup_specObjRead_GPS(app, SpecObj)". Usada tanto
-            % no início de uma tarefa (startUp) quanto na reconexão de
-            % tarefas persistidas (winAppColeta_exported > startup_specObjRead).
-
-            msgError = '';
-
-            if ~isempty(task.TaskSpec.GPS.Selection)
-                instrSelected = struct('Type',       task.TaskSpec.GPS.Selection.Type{1}, ...
-                                       'Parameters', jsondecode(task.TaskSpec.GPS.Selection.Parameters{1}));
-
-                [idx2, msgError] = obj.App.gpsObj.Connect(instrSelected);
-                if isempty(msgError)
-                    task.TaskSpec.GPS.Handle = obj.App.gpsObj.Table.Handle{idx2};
-                    task.GPS                 = task.TaskSpec.GPS.Handle;
-                end
-            end
-        end
-    end
-
-
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        function idx = selectedReceiverIndex(obj, receiverName, taskType)
+        function idx = findReceiverIndex(obj, receiverName, taskType)
             idx = find(strcmp(obj.App.receiverObj.Config.Name, receiverName));
             if numel(idx) > 1
                 connectFlagList = obj.App.receiverObj.Config.connectFlag(idx);
@@ -608,15 +661,13 @@ classdef TaskController < handle
         end
 
         %-----------------------------------------------------------------%
-        function gpsData(obj, ii, hReceiver, hGPS, newTimeStamp)
-            % Substitui "RegularTask_gpsData(app, ii, hReceiver, hGPS, newTimeStamp)".
-            %
+        function acquireGpsData(obj, taskIdx, hReceiver, hGPS, timestamp)
             % O controle de erro do RECEPTOR se dá no método "runLoop".
             %
             % O controle de erro do GPS, por outro lado, se dá diretamente aqui,
             % nesta função, e é restrito ao caso em que o receptor é "External",
-            % ou seja, não se trata de GPS embarcado no RECEPTOR (GPS conectado
-            % à porta USB do computador que executa o app, por exemplo).
+            % ou seja, não se trata de GPS embarcado no RECEPTOR, mas GPS 
+            % conectado à porta USB do computador, por exemplo.
             %
             % Caso a tarefa seja do tipo "Drive-test", toda vez que for manifestada
             % uma desconexão, o app tentará reativar a conexao. Ou, em sendo uma tarefa
@@ -626,169 +677,171 @@ classdef TaskController < handle
             gpsResult = struct('Status', 0, 'Latitude', -1, 'Longitude', -1, 'TimeStamp', '');
 
             try
-                switch obj.Tasks(ii).TaskSpec.Script.GPS.Type
+                switch obj.Tasks(taskIdx).TaskSpec.Script.GPS.Type
                     case 'Built-in'
                         gpsResult = fcn.gpsBuiltInReader(hReceiver);
                     case 'External'
                         gpsResult = fcn.gpsExternalReader(hGPS, 1);
-                        obj.Tasks(ii).RetryPolicy.gps = struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT);
+                        obj.Tasks(taskIdx).RetryPolicy.gps = struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT);
                 end
 
             catch ME
-                obj.Tasks(ii).LogEntries(end+1) = struct('level', 'error (GPS)', 'timestamp', char(newTimeStamp), 'message', ME.message);
+                obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error (GPS)', 'timestamp', char(timestamp), 'message', ME.message);
 
-                if strcmp(obj.Tasks(ii).TaskSpec.Script.GPS.Type, 'External')
-                    obj.errorHandle('GPS', ii, newTimeStamp)
-                    notify(obj, 'ErrorRaised', model.TaskEventData(ii, [], 'GPS'))
+                if strcmp(obj.Tasks(taskIdx).TaskSpec.Script.GPS.Type, 'External')
+                    recordFailure(obj, 'gps', taskIdx, timestamp)
+                    notify(obj, 'ErrorRaised', model.TaskEventData(taskIdx, [], 'GPS'))
 
-                    if contains(obj.Tasks(ii).TaskSpec.Type, 'Drive-test') || ~mod(obj.Tasks(ii).RetryPolicy.gps.failureCount, class.Constants.errorGPSCountTrigger)
+                    if contains(obj.Tasks(taskIdx).TaskSpec.Type, 'Drive-test') || ~mod(obj.Tasks(taskIdx).RetryPolicy.gps.failureCount, class.Constants.errorGPSCountTrigger)
                         obj.App.gpsObj.ReconnectAttempt(hGPS.UserData.instrSelected);
                     end
                 end
             end
 
-            obj.gpsUpdate(ii, gpsResult, newTimeStamp)
+            applyGpsFix(obj, taskIdx, gpsResult, timestamp)
         end
 
         %-----------------------------------------------------------------%
-        function gpsUpdate(obj, ii, gpsResult, newTimeStamp)
-            % Substitui "RegularTask_gpsUpdate(app, ii, gpsData, newTimeStamp)".
-
+        function applyGpsFix(obj, taskIdx, gpsResult, timestamp)
             if isempty(gpsResult.TimeStamp)
-                gpsResult.TimeStamp = char(newTimeStamp);
+                gpsResult.TimeStamp = char(timestamp);
             end
-            obj.Tasks(ii).GPSLastFix = gpsResult;
+            obj.Tasks(taskIdx).GPSLastFix = gpsResult;
 
-            notify(obj, 'GpsUpdated', model.TaskEventData(ii, [], gpsResult))
+            notify(obj, 'GpsUpdated', model.TaskEventData(taskIdx, [], gpsResult))
         end
 
         %-----------------------------------------------------------------%
-        function antennaSwitch(obj, ii, jj)
-            % Substitui "RegularTask_AntennaSwitch(app, ii, jj)".
+        function switchAntenna(obj, taskIdx, bandIdx)
+            switchName = obj.Tasks(taskIdx).TaskSpec.Antenna.Switch.Name;
+            if ~ismember(switchName, {'EMSat', 'ERMx'})
+                return
+            end
 
-            switch obj.Tasks(ii).TaskSpec.Antenna.Switch.Name
+            switch switchName
                 case 'EMSat'
-                    msgError = obj.App.EMSatObj.MatrixSwitch(obj.Tasks(ii).Bands(jj).Antenna.SwitchPort,    ...
-                                                         obj.Tasks(ii).TaskSpec.Antenna.Switch.OutputPort, ...
-                                                         obj.Tasks(ii).Bands(jj).Antenna.LNBChannel,    ...
-                                                         obj.Tasks(ii).Bands(jj).Antenna.LNBIndex);
-                    if ~isempty(msgError)
-                        error(msgError)
-                    end
+                    msgError = obj.App.EMSatObj.MatrixSwitch( ...
+                        obj.Tasks(taskIdx).Bands(bandIdx).Antenna.SwitchPort, ...
+                        obj.Tasks(taskIdx).TaskSpec.Antenna.Switch.OutputPort, ...
+                        obj.Tasks(taskIdx).Bands(bandIdx).Antenna.LNBChannel, ...
+                        obj.Tasks(taskIdx).Bands(bandIdx).Antenna.LNBIndex ...
+                    );
 
-                case 'ERMx'
-                    msgError = obj.App.ERMxObj.MatrixSwitch( obj.Tasks(ii).Bands(jj).Antenna.SwitchPort, ...
-                                                         obj.Tasks(ii).TaskSpec.Antenna.Switch.OutputPort);
-                    if ~isempty(msgError)
-                        error(msgError)
-                    end
+                otherwise % 'ERMx'
+                    msgError = obj.App.ERMxObj.MatrixSwitch( ...
+                        obj.Tasks(taskIdx).Bands(bandIdx).Antenna.SwitchPort, ...
+                        obj.Tasks(taskIdx).TaskSpec.Antenna.Switch.OutputPort ...
+                    );
+            end
+
+            if ~isempty(msgError)
+                error(msgError)
             end
         end
 
         %-----------------------------------------------------------------%
-        function configBand(obj, ii, jj, hReceiver)
-            % Substitui "RegularTask_ConfigBand(app, ii, jj, hReceiver)".
-
-            writeline(hReceiver, obj.Tasks(ii).Bands(jj).SpecificSCPI.configSET);
+        function configureBand(obj, taskIdx, bandIdx, hReceiver)
+            writeline(hReceiver, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.configSET);
             pause(.001)
 
-            if ~isempty(obj.Tasks(ii).Bands(jj).SpecificSCPI.attSET)
-                writeline(hReceiver, obj.Tasks(ii).Bands(jj).SpecificSCPI.attSET);
+            if ~isempty(obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.attSET)
+                writeline(hReceiver, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.attSET);
             end
         end
 
         %-----------------------------------------------------------------%
-        function newArray = specData(obj, ii, jj, hReceiver, hStreaming, newTimeStamp)
-            % Substitui "RegularTask_specData(app, ii, jj, hReceiver, hStreaming, newTimeStamp)".
+        function traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, hReceiver, hStreaming, timestamp)
+            timeout  = class.Constants.Timeout;
+            acquired = false;
 
-            Timeout = class.Constants.Timeout;
-            Flag_success = false;
+            switch obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag
+                case 1 % Analisadores de espectro (R&S, KeySight, Tektronix, Anritsu)
+                    acquisitionTic = tic;
+                    elapsed = 0;
 
-            switch obj.Tasks(ii).TaskSpec.Receiver.Config.connectFlag
-                case 1
-                    % Spectrum analyzers (R&S, KeySight, Tektronix, Anritsu)
+                    while elapsed < timeout
+                        elapsed = toc(acquisitionTic);
 
-                    recTic = tic;
-                    t1 = toc(recTic);
-                    while t1 < Timeout
                         try
-                            writeline(hReceiver, obj.Tasks(ii).ReceiverCommands.data);
-                            newArray = readbinblock(hReceiver, 'single');
+                            writeline(hReceiver, obj.Tasks(taskIdx).ReceiverCommands.data);
+                            traceData = readbinblock(hReceiver, 'single');
 
-                            if numel(newArray) == obj.Tasks(ii).Bands(jj).DataPoints
-                                if strcmp(obj.Tasks(ii).TaskSpec.Receiver.Sync, 'Continuous Sweep')
-                                    SyncModeRef = sum(newArray);
+                            if numel(traceData) == obj.Tasks(taskIdx).Bands(bandIdx).DataPoints
+                                if strcmp(obj.Tasks(taskIdx).TaskSpec.Receiver.Sync, 'Continuous Sweep')
+                                    % Normaliza o traço de dados para calcular o hash de sincronização
+                                    syncHash = Hash.sha1(traceData - min(traceData));
 
-                                    if SyncModeRef ~= obj.Tasks(ii).Bands(jj).SyncModeRef
-                                        obj.Tasks(ii).Bands(jj).SyncModeRef = SyncModeRef;
+                                    if ~strcmp(obj.Tasks(taskIdx).Bands(bandIdx).SyncModeRef, syncHash)
+                                        obj.Tasks(taskIdx).Bands(bandIdx).SyncModeRef = syncHash;
                                     else
                                         continue
                                     end
                                 end
 
-                                Flag_success = true;
+                                acquired = true;
                                 break
                             end
 
                         catch
                         end
-                        t1 = toc(recTic);
                     end
 
-                case 2
-                    % R&S EB500: Tarefas ordinárias
+                case 2 % R&S EB500: Tarefas ordinárias
 
-                    taskInfo = struct('Type',       obj.Tasks(ii).TaskSpec.Type,                      ...
-                                      'FreqStart',  obj.Tasks(ii).TaskSpec.Script.Band(jj).FreqStart, ...
-                                      'FreqStop',   obj.Tasks(ii).TaskSpec.Script.Band(jj).FreqStop,  ...
-                                      'DataPoints', obj.Tasks(ii).Bands(jj).DataPoints,            ...
-                                      'nDatagrams', obj.Tasks(ii).Bands(jj).Datagrams,             ...
-                                      'udpPort',    obj.App.EB500Obj.udpPort);
+                    taskInfo = struct( ...
+                        'Type',       obj.Tasks(taskIdx).TaskSpec.Type, ...
+                        'FreqStart',  obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart, ...
+                        'FreqStop',   obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop, ...
+                        'DataPoints', obj.Tasks(taskIdx).Bands(bandIdx).DataPoints, ...
+                        'nDatagrams', obj.Tasks(taskIdx).Bands(bandIdx).Datagrams, ...
+                        'udpPort',    obj.App.EB500Obj.udpPort ...
+                    );
 
-                    [newArray, Flag_success] = class.EB500Lib.DatagramRead_PSCAN(taskInfo, hReceiver, hStreaming);
+                    [traceData, acquired] = class.EB500Lib.DatagramRead_PSCAN(taskInfo, hReceiver, hStreaming);
 
-                case 3
-                    % R&S EB500 - Tarefa "Drive-test (Level+Azimuth)"
-                    % O newArray gerado aqui, e apenas aqui, possui informações
+                case 3 % R&S EB500 - Tarefa "Drive-test (Level+Azimuth)"
+                    taskInfo = struct( ...
+                        'Type',       obj.Tasks(taskIdx).TaskSpec.Type, ...
+                        'FreqCenter', (obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart + obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop)/2, ...
+                        'FreqSpan',   obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop - obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart, ...
+                        'DataPoints', obj.Tasks(taskIdx).Bands(bandIdx).DataPoints, ...
+                        'udpPort',    obj.App.EB500Obj.udpPort ...
+                    );
+
+                    % O traceData gerado aqui, e apenas aqui, possui informações
                     % de nível, azimute e nota de qualidade do azimute. A dimensão
                     % dele é 1 (Height) x DataPoints (Width) x 3 (Depth).
-
-                    taskInfo = struct('Type',       obj.Tasks(ii).TaskSpec.Type,                                                                          ...
-                                      'FreqCenter', (obj.Tasks(ii).TaskSpec.Script.Band(jj).FreqStart + obj.Tasks(ii).TaskSpec.Script.Band(jj).FreqStop)/2, ...
-                                      'FreqSpan',   obj.Tasks(ii).TaskSpec.Script.Band(jj).FreqStop - obj.Tasks(ii).TaskSpec.Script.Band(jj).FreqStart,     ...
-                                      'DataPoints', obj.Tasks(ii).Bands(jj).DataPoints,                                                                ...
-                                      'udpPort',    obj.App.EB500Obj.udpPort);
-
-                    [newArray, gpsResult, Flag_success] = class.EB500Lib.DatagramRead_FFM(taskInfo, hReceiver, hStreaming);
+                    [traceData, gpsResult, acquired] = class.EB500Lib.DatagramRead_FFM(taskInfo, hReceiver, hStreaming);
 
                     % No datagrama tem a informação de gps... então vamos aproveitar! :)
-                    obj.gpsUpdate(ii, gpsResult, newTimeStamp)
+                    applyGpsFix(obj, taskIdx, gpsResult, timestamp)
             end
             flush(hReceiver)
 
-            if Flag_success
-                if obj.Tasks(ii).Bands(jj).FlipArray
-                    newArray(:,:,1) = flip(newArray(:,:,1));
+            if acquired
+                if obj.Tasks(taskIdx).Bands(bandIdx).FlipArray
+                    traceData(:,:,1) = flip(traceData(:,:,1));
                 end
             else
-                error('Não foi lido corretamente o vetor de nível do receptor dentro do tempo limite (%.0f segundos).', Timeout)
+                error('Não foi lido corretamente o vetor de nível do receptor dentro do tempo limite (%.0f segundos).', timeout)
             end
         end
 
         %-----------------------------------------------------------------%
-        function errorHandle(obj, errorType, ii, newTimeStamp)
-            % Substitui "RegularTask_errorHandle(app, errorType, ii, newTimeStamp)".
-
-            switch errorType
-                case 'Receiver'; family = 'receiver';
-                case 'GPS';      family = 'gps';
+        function recordFailure(obj, errorType, taskIdx, timestamp)
+            arguments
+                obj
+                errorType char {mustBeMember(errorType, {'receiver', 'gps'})}
+                taskIdx (1, 1) double {mustBePositive}
+                timestamp datetime
             end
 
-            if isnat(obj.Tasks(ii).RetryPolicy.(family).firstFailureAt)
-                obj.Tasks(ii).RetryPolicy.(family).firstFailureAt = newTimeStamp;
+            if isnat(obj.Tasks(taskIdx).RetryPolicy.(errorType).firstFailureAt)
+                obj.Tasks(taskIdx).RetryPolicy.(errorType).firstFailureAt = timestamp;
             end
-            obj.Tasks(ii).RetryPolicy.(family).lastFailureAt  = newTimeStamp;
-            obj.Tasks(ii).RetryPolicy.(family).failureCount   = obj.Tasks(ii).RetryPolicy.(family).failureCount + 1;
+
+            obj.Tasks(taskIdx).RetryPolicy.(errorType).lastFailureAt = timestamp;
+            obj.Tasks(taskIdx).RetryPolicy.(errorType).failureCount  = obj.Tasks(taskIdx).RetryPolicy.(errorType).failureCount + 1;
         end
     end
 
