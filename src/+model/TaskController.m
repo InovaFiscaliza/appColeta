@@ -131,9 +131,9 @@ classdef TaskController < handle
 
                     isRegularTask = ~contains(obj.Tasks(taskIdx).TaskSpec.Type, 'PRÉVIA');
 
-                    hReceiver   = obj.Tasks(taskIdx).Connections.receiver;
-                    hStreaming  = obj.Tasks(taskIdx).Connections.stream;
-                    hGPS        = obj.Tasks(taskIdx).Connections.gps;
+                    receiverHandle   = obj.Tasks(taskIdx).Connections.receiver;
+                    udpPortHandle  = obj.Tasks(taskIdx).Connections.stream;
+                    gpsHandle        = obj.Tasks(taskIdx).Connections.gps;
 
                     configMode  = true;
 
@@ -153,7 +153,7 @@ classdef TaskController < handle
                             % das coordenadas.
 
                             if obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag ~= 3
-                                acquireGpsData(obj, taskIdx, hReceiver, hGPS, sampleTimestamp);
+                                acquireGpsData(obj, taskIdx, receiverHandle, gpsHandle, sampleTimestamp);
                             end
 
                         else
@@ -167,12 +167,12 @@ classdef TaskController < handle
                                 if numActiveTasks > 1 || numBands > 1 || forceConfiguration
                                     if configMode
                                         if ismember(obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag, [2, 3])
-                                            class.EB500Lib.OperationMode(hReceiver, obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag)
+                                            class.EB500Lib.OperationMode(receiverHandle, obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag)
                                         end
                                         configMode = false;
                                     end
 
-                                    configureBand(obj, taskIdx, bandIdx, hReceiver)
+                                    configureBand(obj, taskIdx, bandIdx, receiverHandle)
                                     forceConfiguration = false;
                                 end
 
@@ -181,7 +181,7 @@ classdef TaskController < handle
                                 % Bloco try/catch protege eventual erro, o que não causará dano à
                                 % monitoração em si por se tratar de informação não essencial.
                                     try
-                                        attenuationFactor = str2double(fcn.WriteRead(hReceiver, obj.Tasks(taskIdx).ReceiverCommands.query));
+                                        attenuationFactor = str2double(fcn.WriteRead(receiverHandle, obj.Tasks(taskIdx).ReceiverCommands.query));
                                     catch
                                     end
                                 end
@@ -191,7 +191,7 @@ classdef TaskController < handle
 
                                 if isempty(obj.Tasks(taskIdx).Bands(bandIdx).Mask)
                                     % SINGLE TRACE
-                                    traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, hReceiver, hStreaming, sampleTimestamp);
+                                    traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, sampleTimestamp);
                                     obj.Tasks(taskIdx).Bands(bandIdx).nSweeps = obj.Tasks(taskIdx).Bands(bandIdx).nSweeps+1;
 
                                 else
@@ -200,7 +200,7 @@ classdef TaskController < handle
                                     traceData   = zeros(burstSweeps, obj.Tasks(taskIdx).Bands(bandIdx).DataPoints, 'single');
 
                                     for sweepIdx = 1:burstSweeps
-                                        traceData(sweepIdx,:) = acquireSpectrumTrace(obj, taskIdx, bandIdx, hReceiver, hStreaming, sampleTimestamp);
+                                        traceData(sweepIdx,:) = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, sampleTimestamp);
                                         obj.Tasks(taskIdx).Bands(bandIdx).nSweeps = obj.Tasks(taskIdx).Bands(bandIdx).nSweeps+1;
                                     end
 
@@ -283,7 +283,7 @@ classdef TaskController < handle
 
                                 notify(obj, 'ErrorRaised', model.TaskEventData(taskIdx, [], 'Receiver'))
 
-                                msgError = obj.App.receiverObj.ReconnectAttempt( ...
+                                msgError = reconnectAttempt(obj.App.receiverObj, ...
                                     obj.Tasks(taskIdx).Connections.receiver.UserData.instrSelected, ...
                                     obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag, ...
                                     obj.Tasks(taskIdx).TaskSpec.Receiver.Config.StartUp{1},  ...
@@ -504,7 +504,7 @@ classdef TaskController < handle
                     'Parameters', jsondecode(task.TaskSpec.GPS.Selection.Parameters{1}) ...
                 );
 
-                [gpsIdx, msgError] = obj.App.gpsObj.Connect(instrSelected);
+                [gpsIdx, msgError] = connect(obj.App.gpsObj, instrSelected);
                 if isempty(msgError)
                     task.TaskSpec.GPS.Handle = obj.App.gpsObj.Table.Handle{gpsIdx};
                     task.GPS                 = task.TaskSpec.GPS.Handle;
@@ -520,7 +520,7 @@ classdef TaskController < handle
             taskSpec = obj.Tasks(idx).TaskSpec;
 
             % RECEIVER
-            msgError = obj.App.receiverObj.ReconnectAttempt( ...
+            msgError = reconnectAttempt(obj.App.receiverObj, ...
                 getReceiver(obj.Tasks(idx)), ...
                 obj.Tasks(idx).TaskSpec.Receiver.Config.connectFlag, ...
                 obj.Tasks(idx).TaskSpec.Receiver.Config.StartUp{1}, ...
@@ -531,7 +531,7 @@ classdef TaskController < handle
                 error(msgError)
             end
             
-            hReceiver = obj.Tasks(idx).Connections.receiver;
+            receiverHandle = obj.Tasks(idx).Connections.receiver;
 
             % STREAMING
             if isempty(obj.Tasks(idx).Connections.stream)
@@ -543,8 +543,8 @@ classdef TaskController < handle
                         ~contains(taskSpec.Type, 'Drive-test (Level+Azimuth)') &&...
                         isempty(obj.Tasks(idx).Bands(1).Datagrams)
 
-                    hStreaming = obj.Tasks(idx).Connections.stream;
-                    obj.Tasks(idx) = class.EB500Lib.DatagramRead_PSCAN_PreTask(obj.App.EB500Obj, obj.Tasks(idx), hReceiver, hStreaming);
+                    udpPortHandle = obj.Tasks(idx).Connections.stream;
+                    obj.Tasks(idx) = class.EB500Lib.DatagramRead_PSCAN_PreTask(obj.App.EB500Obj, obj.Tasks(idx), receiverHandle, udpPortHandle);
                 end
             end
 
@@ -661,7 +661,7 @@ classdef TaskController < handle
         end
 
         %-----------------------------------------------------------------%
-        function acquireGpsData(obj, taskIdx, hReceiver, hGPS, timestamp)
+        function acquireGpsData(obj, taskIdx, receiverHandle, gpsHandle, timestamp)
             % O controle de erro do RECEPTOR se dá no método "runLoop".
             %
             % O controle de erro do GPS, por outro lado, se dá diretamente aqui,
@@ -674,14 +674,16 @@ classdef TaskController < handle
             % de outro tipo, o app tentará reativar a conexão toda vez que o contador de
             % erro atingir um múltiplo de "class.Constants.errorGPSCountTrigger".
 
-            gpsResult = struct('Status', 0, 'Latitude', -1, 'Longitude', -1, 'TimeStamp', '');
+            gps = model.GPS.DEFAULT;
 
             try
                 switch obj.Tasks(taskIdx).TaskSpec.Script.GPS.Type
                     case 'Built-in'
-                        gpsResult = fcn.gpsBuiltInReader(hReceiver);
+                        receiverId = obj.Tasks(taskIdx).ReceiverId;
+                        gps = model.GPS.fetchGPSCoordinates('Built-in', receiverHandle, receiverId);
+
                     case 'External'
-                        gpsResult = fcn.gpsExternalReader(hGPS, 1);
+                        gps = model.GPS.fetchGPSCoordinates('External', gpsHandle);
                         obj.Tasks(taskIdx).RetryPolicy.gps = struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT);
                 end
 
@@ -693,22 +695,22 @@ classdef TaskController < handle
                     notify(obj, 'ErrorRaised', model.TaskEventData(taskIdx, [], 'GPS'))
 
                     if contains(obj.Tasks(taskIdx).TaskSpec.Type, 'Drive-test') || ~mod(obj.Tasks(taskIdx).RetryPolicy.gps.failureCount, class.Constants.errorGPSCountTrigger)
-                        obj.App.gpsObj.ReconnectAttempt(hGPS.UserData.instrSelected);
+                        reconnectAttempt(obj.App.gpsObj, gpsHandle.UserData.instrSelected);
                     end
                 end
             end
 
-            applyGpsFix(obj, taskIdx, gpsResult, timestamp)
+            applyGpsFix(obj, taskIdx, gps, timestamp)
         end
 
         %-----------------------------------------------------------------%
-        function applyGpsFix(obj, taskIdx, gpsResult, timestamp)
-            if isempty(gpsResult.TimeStamp)
-                gpsResult.TimeStamp = char(timestamp);
+        function applyGpsFix(obj, taskIdx, gps, timestamp)
+            if isempty(gps.TimeStamp)
+                gps.TimeStamp = char(timestamp);
             end
-            obj.Tasks(taskIdx).GPSLastFix = gpsResult;
+            obj.Tasks(taskIdx).GPSLastFix = gps;
 
-            notify(obj, 'GpsUpdated', model.TaskEventData(taskIdx, [], gpsResult))
+            notify(obj, 'GpsUpdated', model.TaskEventData(taskIdx, [], gps))
         end
 
         %-----------------------------------------------------------------%
@@ -740,17 +742,17 @@ classdef TaskController < handle
         end
 
         %-----------------------------------------------------------------%
-        function configureBand(obj, taskIdx, bandIdx, hReceiver)
-            writeline(hReceiver, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.configSET);
+        function configureBand(obj, taskIdx, bandIdx, receiverHandle)
+            writeline(receiverHandle, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.configSET);
             pause(.001)
 
             if ~isempty(obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.attSET)
-                writeline(hReceiver, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.attSET);
+                writeline(receiverHandle, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.attSET);
             end
         end
 
         %-----------------------------------------------------------------%
-        function traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, hReceiver, hStreaming, timestamp)
+        function traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, timestamp)
             timeout  = class.Constants.Timeout;
             acquired = false;
 
@@ -763,8 +765,8 @@ classdef TaskController < handle
                         elapsed = toc(acquisitionTic);
 
                         try
-                            writeline(hReceiver, obj.Tasks(taskIdx).ReceiverCommands.data);
-                            traceData = readbinblock(hReceiver, 'single');
+                            writeline(receiverHandle, obj.Tasks(taskIdx).ReceiverCommands.data);
+                            traceData = readbinblock(receiverHandle, 'single');
 
                             if numel(traceData) == obj.Tasks(taskIdx).Bands(bandIdx).DataPoints
                                 if strcmp(obj.Tasks(taskIdx).TaskSpec.Receiver.Sync, 'Continuous Sweep')
@@ -797,7 +799,7 @@ classdef TaskController < handle
                         'udpPort',    obj.App.EB500Obj.udpPort ...
                     );
 
-                    [traceData, acquired] = class.EB500Lib.DatagramRead_PSCAN(taskInfo, hReceiver, hStreaming);
+                    [traceData, acquired] = class.EB500Lib.DatagramRead_PSCAN(taskInfo, receiverHandle, udpPortHandle);
 
                 case 3 % R&S EB500 - Tarefa "Drive-test (Level+Azimuth)"
                     taskInfo = struct( ...
@@ -811,12 +813,12 @@ classdef TaskController < handle
                     % O traceData gerado aqui, e apenas aqui, possui informações
                     % de nível, azimute e nota de qualidade do azimute. A dimensão
                     % dele é 1 (Height) x DataPoints (Width) x 3 (Depth).
-                    [traceData, gpsResult, acquired] = class.EB500Lib.DatagramRead_FFM(taskInfo, hReceiver, hStreaming);
+                    [traceData, gps, acquired] = class.EB500Lib.DatagramRead_FFM(taskInfo, receiverHandle, udpPortHandle);
 
                     % No datagrama tem a informação de gps... então vamos aproveitar! :)
-                    applyGpsFix(obj, taskIdx, gpsResult, timestamp)
+                    applyGpsFix(obj, taskIdx, gps, timestamp)
             end
-            flush(hReceiver)
+            flush(receiverHandle)
 
             if acquired
                 if obj.Tasks(taskIdx).Bands(bandIdx).FlipArray

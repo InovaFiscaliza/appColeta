@@ -57,7 +57,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
         Band_SamplesLabel            matlab.ui.control.Label
         Band_Tree                    matlab.ui.container.Tree
         Band_TreeLabel               matlab.ui.control.Label
-        DocumentLabel                matlab.ui.control.Label
         Toolbar                      matlab.ui.container.GridLayout
         okButton                     matlab.ui.control.Button
         SubTabGroup                  matlab.ui.container.TabGroup
@@ -217,28 +216,22 @@ classdef winAddTask_exported < matlab.apps.AppBase
             appName = class(app);
             switch tabIndex
                 case 1
-                    elToModify = { ...
-                        app.Document, ...
-                        app.MetaData ...
-                    };
-                    elDataTag = ui.CustomizationBase.getElementsDataTag(elToModify);
-                    if ~isempty(elDataTag)
-                            sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                                struct('appName', appName, 'dataTag', elDataTag{1}, 'styleImportant', struct('border', '1px solid #7d7d7d', 'borderRadius', '0')) ...
-                            });
-                        ui.TextView.startup(app.jsBackDoor, elToModify{2}, appName);
+                    ui.CustomizationBase.getElementsDataTag({app.MetaData});
+                    try
+                        ui.TextView.startup(app.jsBackDoor, app.MetaData, appName);
+                    catch
                     end
 
                 case 2
                     % ...
                     
                 case 3
-                    elToModify = {app.AntennaList_Tree};
-                    elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-                    if ~isempty(elDataTag)
+                    ui.CustomizationBase.getElementsDataTag({app.AntennaList_Tree});
+                    try
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                            struct('appName', appName, 'dataTag', elDataTag{1}, 'listener', struct('componentName', 'auxApp.winAddTask.AntennaList_Tree', 'keyEvents', {{'Delete', 'Backspace'}})) ...
+                            struct('appName', appName, 'dataTag', app.AntennaList_Tree.UserData.id, 'listener', struct('componentName', 'auxApp.winAddTask.AntennaList_Tree', 'keyEvents', {{'Delete', 'Backspace'}})) ...
                         });
+                    catch
                     end
             end
         end
@@ -433,7 +426,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
 
         %-----------------------------------------------------------------%
-        function [instrHandle, msgError] = ConnectivityTest_Receiver_Aux(app, MessageBoxFlag)
+        function [instrHandle, msgError] = ConnectivityTest_Receiver_Aux(app, emitNotification)
             receiverName = SelectedReceiverName(app);
 
             idx1 = str2double(char(extractBetween(app.Receiver_List.Value, 'ID', ':')));
@@ -443,19 +436,35 @@ classdef winAddTask_exported < matlab.apps.AppBase
                                    'Tag',        app.receiverObj.Config.Tag{idx2}, ...
                                    'Parameters', jsondecode(app.receiverObj.List.Parameters{idx1}));
 
-            [instrHandle, msgError] = fcn.ConnectivityTest_Receiver(app, instrSelected, MessageBoxFlag);
+            [instrHandle, notification] = testConnectivity(app.receiverObj, instrSelected, emitNotification);
+            msgError = '';
+
+            if ~isempty(notification)
+                ui.Dialog(app.UIFigure, notification.type, notification.message);
+                if strcmp(notification.type, 'error')
+                    msgError = notification.message;
+                end
+            end
         end
 
 
         %-----------------------------------------------------------------%
-        function [instrHandle, gpsData, msgError] = ConnectivityTest_GPS_Aux(app, MessageBoxFlag)
+        function [instrHandle, gpsData, errorMsg] = ConnectivityTest_GPS_Aux(app, MessageBoxFlag)
 
             idx1 = str2double(char(extractBetween(app.GPS_List.Value, 'ID', ':'))) - numel(app.Receiver_List.Items);
 
             instrSelected = struct('Type',       app.gpsObj.List.Type{idx1}, ...
                                    'Parameters', jsondecode(app.gpsObj.List.Parameters{idx1}));
             
-            [instrHandle, gpsData, msgError] = fcn.ConnectivityTest_GPS(app, instrSelected, MessageBoxFlag);
+            [instrHandle, gpsData, notification] = testConnectivity(app.gpsObj, instrSelected, MessageBoxFlag);
+            errorMsg = '';
+
+            if ~isempty(notification)
+                ui.Dialog(app.UIFigure, notification.type, notification.message);
+                if strcmp(notification.type, 'error')
+                    errorMsg = notification.message;
+                end
+            end
         end
 
 
@@ -1202,11 +1211,11 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 sReceiver = app.receiverObj.List(idx3,:);
 
                 [hReceiver, errorMsg] = ConnectivityTest_Receiver_Aux(app, 0);
-                if ~isempty(errorMsg)
-                    error(errorMsg)
-                end
+                % if ~isempty(errorMsg)
+                %     error(errorMsg)
+                % end
 
-                if hReceiver.UserData.nTasks > 0
+                if ~isempty(hReceiver) && hReceiver.UserData.nTasks > 0
                     if ~strcmp(hReceiver.UserData.SyncMode, app.Receiver_SyncRef.Value)
                         error('O receptor selecionado está envolvido em outra(s) tarefa(s), com modo de sincronismo diferente do selecionado, o que não é permitido.')
                     elseif strcmp(app.Receiver_RstCommand.Value, 'On')
@@ -1232,9 +1241,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     sGPS = app.gpsObj.List(idx4,:);
 
                     [hGPS, ~, errorMsg] = ConnectivityTest_GPS_Aux(app, 0);
-                    if ~isempty(errorMsg)
-                        error(errorMsg)
-                    end
+                    % if ~isempty(errorMsg)
+                    %     error(errorMsg)
+                    % end
                 end
 
                 % ANTENNA (MATRIX SWITCH & ANTENNA/LNB POSITION)
@@ -1561,7 +1570,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         if strcmp(app.Receiver_List.Value, app.GPS_List.Value)
                             instrHandle = ConnectivityTest_Receiver_Aux(app, 0);
                             if ~isempty(instrHandle)
-                                gps = fcn.gpsBuiltInReader(instrHandle);
+                                gps = model.GPS.fetchGPSCoordinates('Built-in', instrHandle, instrHandle.UserData.IDN);
                             end
             
                         elseif strcmp(app.GPS_List.Value, 'ID 0: Manual')
@@ -1573,7 +1582,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         else
                             instrHandle = ConnectivityTest_GPS_Aux(app, 0);
                             if ~isempty(instrHandle)
-                                gps = fcn.gpsExternalReader(instrHandle, 1);
+                                gps = model.GPS.fetchGPSCoordinates('External', instrHandle);
                             end
                         end
             
@@ -2053,8 +2062,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {10, 320, 11, 320, 10, '1x', 37, 11, 8, 2};
-            app.GridLayout.RowHeight = {2, 8, 24, 12, 17, 5, '1x', 11, 10, 34};
+            app.GridLayout.ColumnWidth = {20, 320, 20, '1x', 22, 16, 10, 8, 2};
+            app.GridLayout.RowHeight = {2, 8, 10, 14, 20, '1x', 20, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
@@ -2065,8 +2074,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.SubTabGroup.AutoResizeChildren = 'off';
             app.SubTabGroup.SelectionChangedFcn = createCallbackFcn(app, @SubTabGroupSelectionChanged, true);
             app.SubTabGroup.Tag = '1';
-            app.SubTabGroup.Layout.Row = [3 8];
-            app.SubTabGroup.Layout.Column = [2 8];
+            app.SubTabGroup.Layout.Row = [4 6];
+            app.SubTabGroup.Layout.Column = [2 6];
 
             % Create SubTab1
             app.SubTab1 = uitab(app.SubTabGroup);
@@ -2184,16 +2193,15 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.ObservationPanel_Grid.RowHeight = {17, 22, 22, 49};
             app.ObservationPanel_Grid.ColumnSpacing = 11;
             app.ObservationPanel_Grid.RowSpacing = 5;
-            app.ObservationPanel_Grid.Padding = [10 10 10 2];
             app.ObservationPanel_Grid.BackgroundColor = [1 1 1];
 
             % Create ObservationTypeLabel
             app.ObservationTypeLabel = uilabel(app.ObservationPanel_Grid);
             app.ObservationTypeLabel.VerticalAlignment = 'bottom';
-            app.ObservationTypeLabel.FontSize = 10;
+            app.ObservationTypeLabel.FontSize = 11;
             app.ObservationTypeLabel.Layout.Row = 1;
             app.ObservationTypeLabel.Layout.Column = 1;
-            app.ObservationTypeLabel.Text = 'Tipo:';
+            app.ObservationTypeLabel.Text = 'Critério de término:';
 
             % Create ObservationType
             app.ObservationType = uidropdown(app.ObservationPanel_Grid);
@@ -2339,7 +2347,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create SubGrid2
             app.SubGrid2 = uigridlayout(app.SubTab2);
             app.SubGrid2.ColumnWidth = {256, 22, 22};
-            app.SubGrid2.RowHeight = {17, 22, 60, 22, 22, '1x'};
+            app.SubGrid2.RowHeight = {17, 22, 70, 22, 22, '1x'};
             app.SubGrid2.ColumnSpacing = 5;
             app.SubGrid2.RowSpacing = 5;
             app.SubGrid2.BackgroundColor = [1 1 1];
@@ -2382,13 +2390,12 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Receiver_Grid = uigridlayout(app.Receiver_Panel);
             app.Receiver_Grid.RowHeight = {17, 22};
             app.Receiver_Grid.RowSpacing = 5;
-            app.Receiver_Grid.Padding = [10 10 10 2];
             app.Receiver_Grid.BackgroundColor = [1 1 1];
 
             % Create Receiver_RstCommandLabel
             app.Receiver_RstCommandLabel = uilabel(app.Receiver_Grid);
             app.Receiver_RstCommandLabel.VerticalAlignment = 'bottom';
-            app.Receiver_RstCommandLabel.FontSize = 10;
+            app.Receiver_RstCommandLabel.FontSize = 11;
             app.Receiver_RstCommandLabel.Layout.Row = 1;
             app.Receiver_RstCommandLabel.Layout.Column = 1;
             app.Receiver_RstCommandLabel.Text = 'Reset:';
@@ -2405,7 +2412,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Receiver_SyncRefLabel
             app.Receiver_SyncRefLabel = uilabel(app.Receiver_Grid);
             app.Receiver_SyncRefLabel.VerticalAlignment = 'bottom';
-            app.Receiver_SyncRefLabel.FontSize = 10;
+            app.Receiver_SyncRefLabel.FontSize = 11;
             app.Receiver_SyncRefLabel.Layout.Row = 1;
             app.Receiver_SyncRefLabel.Layout.Column = 2;
             app.Receiver_SyncRefLabel.Text = 'Sincronismo:';
@@ -2466,17 +2473,17 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create GPS_Grid
             app.GPS_Grid = uigridlayout(app.GPS_Panel);
-            app.GPS_Grid.RowHeight = {25, 22, 25, 22};
+            app.GPS_Grid.RowHeight = {17, 22, 22, 22};
             app.GPS_Grid.RowSpacing = 5;
             app.GPS_Grid.BackgroundColor = [1 1 1];
 
             % Create GPS_manualLatitudeLabel
             app.GPS_manualLatitudeLabel = uilabel(app.GPS_Grid);
             app.GPS_manualLatitudeLabel.VerticalAlignment = 'bottom';
-            app.GPS_manualLatitudeLabel.FontSize = 10;
+            app.GPS_manualLatitudeLabel.FontSize = 11;
             app.GPS_manualLatitudeLabel.Layout.Row = 1;
             app.GPS_manualLatitudeLabel.Layout.Column = 1;
-            app.GPS_manualLatitudeLabel.Text = {'Latitude:'; '(graus decimais)'};
+            app.GPS_manualLatitudeLabel.Text = 'Latitude (°):';
 
             % Create GPS_manualLatitude
             app.GPS_manualLatitude = uieditfield(app.GPS_Grid, 'numeric');
@@ -2489,10 +2496,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create GPS_manualLongitudeLabel
             app.GPS_manualLongitudeLabel = uilabel(app.GPS_Grid);
             app.GPS_manualLongitudeLabel.VerticalAlignment = 'bottom';
-            app.GPS_manualLongitudeLabel.FontSize = 10;
+            app.GPS_manualLongitudeLabel.FontSize = 11;
             app.GPS_manualLongitudeLabel.Layout.Row = 1;
             app.GPS_manualLongitudeLabel.Layout.Column = 2;
-            app.GPS_manualLongitudeLabel.Text = {'Longitude:'; '(graus decimais)'};
+            app.GPS_manualLongitudeLabel.Text = 'Longitude (º):';
 
             % Create GPS_manualLongitude
             app.GPS_manualLongitude = uieditfield(app.GPS_Grid, 'numeric');
@@ -2505,10 +2512,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create GPS_RevisitTimeLabel
             app.GPS_RevisitTimeLabel = uilabel(app.GPS_Grid);
             app.GPS_RevisitTimeLabel.VerticalAlignment = 'bottom';
-            app.GPS_RevisitTimeLabel.FontSize = 10;
+            app.GPS_RevisitTimeLabel.FontSize = 11;
             app.GPS_RevisitTimeLabel.Layout.Row = 3;
             app.GPS_RevisitTimeLabel.Layout.Column = 1;
-            app.GPS_RevisitTimeLabel.Text = {'Tempo revisita:'; '(segundos)'};
+            app.GPS_RevisitTimeLabel.Text = 'Tempo revisita (seg):';
 
             % Create GPS_RevisitTime
             app.GPS_RevisitTime = uieditfield(app.GPS_Grid, 'numeric');
@@ -2526,8 +2533,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create SubGrid3
             app.SubGrid3 = uigridlayout(app.SubTab3);
-            app.SubGrid3.ColumnWidth = {288, 12};
-            app.SubGrid3.RowHeight = {17, 22, 22, 22, 172, 10, '1x'};
+            app.SubGrid3.ColumnWidth = {282, 18};
+            app.SubGrid3.RowHeight = {17, 22, 22, 22, 178, 18, '1x'};
             app.SubGrid3.RowSpacing = 5;
             app.SubGrid3.BackgroundColor = [1 1 1];
 
@@ -2573,15 +2580,14 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create Antenna_Grid
             app.Antenna_Grid = uigridlayout(app.Antenna_Panel);
-            app.Antenna_Grid.RowHeight = {17, 22, 25, 22, 25, 22};
+            app.Antenna_Grid.RowHeight = {17, 22, 22, 22, 22, 22};
             app.Antenna_Grid.RowSpacing = 5;
-            app.Antenna_Grid.Padding = [10 10 10 2];
             app.Antenna_Grid.BackgroundColor = [1 1 1];
 
             % Create Antenna_TrackingModeLabel
             app.Antenna_TrackingModeLabel = uilabel(app.Antenna_Grid);
             app.Antenna_TrackingModeLabel.VerticalAlignment = 'bottom';
-            app.Antenna_TrackingModeLabel.FontSize = 10;
+            app.Antenna_TrackingModeLabel.FontSize = 11;
             app.Antenna_TrackingModeLabel.Layout.Row = 1;
             app.Antenna_TrackingModeLabel.Layout.Column = [1 2];
             app.Antenna_TrackingModeLabel.Text = 'Apontamento:';
@@ -2599,10 +2605,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create AntennaHeightLabel
             app.AntennaHeightLabel = uilabel(app.Antenna_Grid);
             app.AntennaHeightLabel.VerticalAlignment = 'bottom';
-            app.AntennaHeightLabel.FontSize = 10;
+            app.AntennaHeightLabel.FontSize = 11;
             app.AntennaHeightLabel.Layout.Row = 3;
             app.AntennaHeightLabel.Layout.Column = 1;
-            app.AntennaHeightLabel.Text = {'Altura de instalação:'; '(metros)'};
+            app.AntennaHeightLabel.Text = 'Altura de instalação (m):';
 
             % Create AntennaHeight
             app.AntennaHeight = uieditfield(app.Antenna_Grid, 'numeric');
@@ -2629,10 +2635,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create AntennaAzimuthLabel
             app.AntennaAzimuthLabel = uilabel(app.AntennaAzimuth_Grid);
             app.AntennaAzimuthLabel.VerticalAlignment = 'bottom';
-            app.AntennaAzimuthLabel.FontSize = 10;
+            app.AntennaAzimuthLabel.FontSize = 11;
             app.AntennaAzimuthLabel.Layout.Row = 1;
             app.AntennaAzimuthLabel.Layout.Column = 1;
-            app.AntennaAzimuthLabel.Text = {'Azimute:'; '(graus)'};
+            app.AntennaAzimuthLabel.Text = 'Azimute (º):';
 
             % Create AntennaAzimuth
             app.AntennaAzimuth = uieditfield(app.AntennaAzimuth_Grid, 'numeric');
@@ -2656,10 +2662,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create AntennaElevationLabel
             app.AntennaElevationLabel = uilabel(app.Antenna_Grid);
             app.AntennaElevationLabel.VerticalAlignment = 'bottom';
-            app.AntennaElevationLabel.FontSize = 10;
+            app.AntennaElevationLabel.FontSize = 11;
             app.AntennaElevationLabel.Layout.Row = 5;
             app.AntennaElevationLabel.Layout.Column = 1;
-            app.AntennaElevationLabel.Text = {'Elevação:'; '(graus)'};
+            app.AntennaElevationLabel.Text = 'Elevação (º):';
 
             % Create AntennaElevation
             app.AntennaElevation = uieditfield(app.Antenna_Grid, 'numeric');
@@ -2673,10 +2679,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create AntennaPolarizationLabel
             app.AntennaPolarizationLabel = uilabel(app.Antenna_Grid);
             app.AntennaPolarizationLabel.VerticalAlignment = 'bottom';
-            app.AntennaPolarizationLabel.FontSize = 10;
+            app.AntennaPolarizationLabel.FontSize = 11;
             app.AntennaPolarizationLabel.Layout.Row = 5;
             app.AntennaPolarizationLabel.Layout.Column = 2;
-            app.AntennaPolarizationLabel.Text = {'Polarização:'; '(graus)'};
+            app.AntennaPolarizationLabel.Text = 'Polarização (º):';
 
             % Create AntennaPolarization
             app.AntennaPolarization = uieditfield(app.Antenna_Grid, 'numeric');
@@ -2689,12 +2695,11 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create AddAntenna_Image
             app.AddAntenna_Image = uiimage(app.SubGrid3);
+            app.AddAntenna_Image.ScaleMethod = 'none';
             app.AddAntenna_Image.ImageClickedFcn = createCallbackFcn(app, @AddAntennaButtonClicked, true);
             app.AddAntenna_Image.Layout.Row = 6;
             app.AddAntenna_Image.Layout.Column = 2;
-            app.AddAntenna_Image.HorizontalAlignment = 'right';
-            app.AddAntenna_Image.VerticalAlignment = 'bottom';
-            app.AddAntenna_Image.ImageSource = 'addSymbol_32.png';
+            app.AddAntenna_Image.ImageSource = 'Add_16.png';
 
             % Create AntennaList_Tree
             app.AntennaList_Tree = uitree(app.SubGrid3);
@@ -2709,13 +2714,13 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.Padding = [10 6 10 6];
             app.Toolbar.Tag = '2';
-            app.Toolbar.Layout.Row = 10;
-            app.Toolbar.Layout.Column = [1 10];
+            app.Toolbar.Layout.Row = 8;
+            app.Toolbar.Layout.Column = [1 9];
 
             % Create okButton
             app.okButton = uibutton(app.Toolbar, 'push');
             app.okButton.ButtonPushedFcn = createCallbackFcn(app, @okButtonPushed, true);
-            app.okButton.Icon = 'Add_24.png';
+            app.okButton.Icon = 'Add_16.png';
             app.okButton.IconAlignment = 'rightmargin';
             app.okButton.BackgroundColor = [0.9412 0.9412 0.9412];
             app.okButton.FontSize = 11;
@@ -2724,23 +2729,16 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.okButton.Layout.Column = 2;
             app.okButton.Text = 'Inclui tarefa';
 
-            % Create DocumentLabel
-            app.DocumentLabel = uilabel(app.GridLayout);
-            app.DocumentLabel.Tag = '3';
-            app.DocumentLabel.VerticalAlignment = 'bottom';
-            app.DocumentLabel.FontSize = 10;
-            app.DocumentLabel.Layout.Row = 5;
-            app.DocumentLabel.Layout.Column = 4;
-            app.DocumentLabel.Text = 'CARACTERÍSTICAS:';
-
             % Create Document
             app.Document = uigridlayout(app.GridLayout);
             app.Document.ColumnWidth = {310, 120, '1x', 22};
-            app.Document.RowHeight = {17, 22, 19, 208, 19, 62, 19, 22, '1x'};
+            app.Document.RowHeight = {17, 22, 19, 208, 19, 69, 19, 22, '1x'};
+            app.Document.ColumnSpacing = 20;
             app.Document.RowSpacing = 5;
+            app.Document.Padding = [0 11 0 0];
             app.Document.Tag = '4';
-            app.Document.Layout.Row = 7;
-            app.Document.Layout.Column = [4 7];
+            app.Document.Layout.Row = 6;
+            app.Document.Layout.Column = [4 5];
             app.Document.BackgroundColor = [1 1 1];
 
             % Create Band_TreeLabel
@@ -2750,12 +2748,12 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_TreeLabel.FontSize = 10;
             app.Band_TreeLabel.Layout.Row = 1;
             app.Band_TreeLabel.Layout.Column = 1;
-            app.Band_TreeLabel.Text = 'Faixas de frequência relacionadas à tarefa:';
+            app.Band_TreeLabel.Text = 'FAIXAS DE FREQUÊNCIA';
 
             % Create Band_Tree
             app.Band_Tree = uitree(app.Document);
             app.Band_Tree.SelectionChangedFcn = createCallbackFcn(app, @BandViewTreeSelectionChanged, true);
-            app.Band_Tree.FontSize = 10;
+            app.Band_Tree.FontSize = 11;
             app.Band_Tree.Layout.Row = [2 4];
             app.Band_Tree.Layout.Column = 1;
 
@@ -2765,7 +2763,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_SamplesLabel.FontSize = 10;
             app.Band_SamplesLabel.Layout.Row = 1;
             app.Band_SamplesLabel.Layout.Column = 2;
-            app.Band_SamplesLabel.Text = 'Amostras a coletar:';
+            app.Band_SamplesLabel.Text = 'AMOSTRAS A COLETAR';
 
             % Create Band_Samples
             app.Band_Samples = uieditfield(app.Document, 'numeric');
@@ -2786,7 +2784,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.MetaDataLabel.FontColor = [0.149 0.149 0.149];
             app.MetaDataLabel.Layout.Row = 5;
             app.MetaDataLabel.Layout.Column = 1;
-            app.MetaDataLabel.Text = 'Parâmetros de configuração:';
+            app.MetaDataLabel.Text = 'PARÂMETROS DE CONFIGURAÇÃO';
 
             % Create MetaData
             app.MetaData = uilabel(app.Document);
@@ -2834,10 +2832,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_StepWidthLabel
             app.Band_StepWidthLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_StepWidthLabel.VerticalAlignment = 'bottom';
-            app.Band_StepWidthLabel.FontSize = 10;
+            app.Band_StepWidthLabel.FontSize = 11;
             app.Band_StepWidthLabel.Layout.Row = 1;
-            app.Band_StepWidthLabel.Layout.Column = [1 2];
-            app.Band_StepWidthLabel.Text = 'Passo varredura (kHz):';
+            app.Band_StepWidthLabel.Layout.Column = 1;
+            app.Band_StepWidthLabel.Text = 'Passo (kHz):';
 
             % Create Band_StepWidth1
             app.Band_StepWidth1 = uieditfield(app.Band_ReceiverGrid, 'numeric');
@@ -2865,10 +2863,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_DataPointsLabel
             app.Band_DataPointsLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_DataPointsLabel.VerticalAlignment = 'bottom';
-            app.Band_DataPointsLabel.FontSize = 10;
+            app.Band_DataPointsLabel.FontSize = 11;
             app.Band_DataPointsLabel.Layout.Row = 1;
             app.Band_DataPointsLabel.Layout.Column = 2;
-            app.Band_DataPointsLabel.Text = 'Pontos por traço:';
+            app.Band_DataPointsLabel.Text = 'Pontos:';
 
             % Create Band_DataPoints1
             app.Band_DataPoints1 = uispinner(app.Band_ReceiverGrid);
@@ -2898,7 +2896,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_SelectivityLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_SelectivityLabel.Tag = 'task_Set2';
             app.Band_SelectivityLabel.VerticalAlignment = 'bottom';
-            app.Band_SelectivityLabel.FontSize = 10;
+            app.Band_SelectivityLabel.FontSize = 11;
             app.Band_SelectivityLabel.Visible = 'off';
             app.Band_SelectivityLabel.Layout.Row = 4;
             app.Band_SelectivityLabel.Layout.Column = 1;
@@ -2919,7 +2917,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_ResolutionLabel
             app.Band_ResolutionLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_ResolutionLabel.VerticalAlignment = 'bottom';
-            app.Band_ResolutionLabel.FontSize = 10;
+            app.Band_ResolutionLabel.FontSize = 11;
             app.Band_ResolutionLabel.Layout.Row = 4;
             app.Band_ResolutionLabel.Layout.Column = 1;
             app.Band_ResolutionLabel.Text = 'Resolução:';
@@ -2938,7 +2936,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_VBWLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_VBWLabel.Tag = 'task_Set1';
             app.Band_VBWLabel.VerticalAlignment = 'bottom';
-            app.Band_VBWLabel.FontSize = 10;
+            app.Band_VBWLabel.FontSize = 11;
             app.Band_VBWLabel.Layout.Row = 4;
             app.Band_VBWLabel.Layout.Column = 2;
             app.Band_VBWLabel.Text = 'VBW:';
@@ -2957,7 +2955,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_PreampLabel
             app.Band_PreampLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_PreampLabel.VerticalAlignment = 'bottom';
-            app.Band_PreampLabel.FontSize = 10;
+            app.Band_PreampLabel.FontSize = 11;
             app.Band_PreampLabel.Layout.Row = 6;
             app.Band_PreampLabel.Layout.Column = 1;
             app.Band_PreampLabel.Text = 'Pré-amplificador:';
@@ -2975,7 +2973,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_attModeLabel
             app.Band_attModeLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_attModeLabel.VerticalAlignment = 'bottom';
-            app.Band_attModeLabel.FontSize = 10;
+            app.Band_attModeLabel.FontSize = 11;
             app.Band_attModeLabel.Layout.Row = 6;
             app.Band_attModeLabel.Layout.Column = 2;
             app.Band_attModeLabel.Text = 'Modo do atenuador:';
@@ -2993,7 +2991,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_attValueLabel
             app.Band_attValueLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_attValueLabel.VerticalAlignment = 'bottom';
-            app.Band_attValueLabel.FontSize = 10;
+            app.Band_attValueLabel.FontSize = 11;
             app.Band_attValueLabel.Layout.Row = 6;
             app.Band_attValueLabel.Layout.Column = 3;
             app.Band_attValueLabel.Text = 'Atenuador:';
@@ -3011,7 +3009,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_DetectorLabel
             app.Band_DetectorLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_DetectorLabel.VerticalAlignment = 'bottom';
-            app.Band_DetectorLabel.FontSize = 10;
+            app.Band_DetectorLabel.FontSize = 11;
             app.Band_DetectorLabel.Layout.Row = 8;
             app.Band_DetectorLabel.Layout.Column = 1;
             app.Band_DetectorLabel.Text = 'Detector:';
@@ -3029,7 +3027,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_IntegrationTimeLabel
             app.Band_IntegrationTimeLabel = uilabel(app.Band_ReceiverGrid);
             app.Band_IntegrationTimeLabel.VerticalAlignment = 'bottom';
-            app.Band_IntegrationTimeLabel.FontSize = 10;
+            app.Band_IntegrationTimeLabel.FontSize = 11;
             app.Band_IntegrationTimeLabel.Layout.Row = 8;
             app.Band_IntegrationTimeLabel.Layout.Column = 3;
             app.Band_IntegrationTimeLabel.Text = 'Integração (ms):';
@@ -3051,7 +3049,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_DFLabel.FontSize = 10;
             app.Band_DFLabel.Layout.Row = 5;
             app.Band_DFLabel.Layout.Column = [2 3];
-            app.Band_DFLabel.Text = 'DIRECTION FINDER (DF):';
+            app.Band_DFLabel.Text = 'DIRECTION FINDER (DF)';
 
             % Create Band_DFPanel
             app.Band_DFPanel = uipanel(app.Document);
@@ -3064,13 +3062,12 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_DFGrid.ColumnWidth = {110, 110, 110};
             app.Band_DFGrid.RowHeight = {17, 22};
             app.Band_DFGrid.RowSpacing = 5;
-            app.Band_DFGrid.Padding = [10 10 10 5];
             app.Band_DFGrid.BackgroundColor = [1 1 1];
 
             % Create Band_DFSquelchModeLabel
             app.Band_DFSquelchModeLabel = uilabel(app.Band_DFGrid);
             app.Band_DFSquelchModeLabel.VerticalAlignment = 'bottom';
-            app.Band_DFSquelchModeLabel.FontSize = 10;
+            app.Band_DFSquelchModeLabel.FontSize = 11;
             app.Band_DFSquelchModeLabel.Layout.Row = 1;
             app.Band_DFSquelchModeLabel.Layout.Column = 1;
             app.Band_DFSquelchModeLabel.Text = 'SquelchMode:';
@@ -3089,7 +3086,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_DFSquelchValueLabel
             app.Band_DFSquelchValueLabel = uilabel(app.Band_DFGrid);
             app.Band_DFSquelchValueLabel.VerticalAlignment = 'bottom';
-            app.Band_DFSquelchValueLabel.FontSize = 10;
+            app.Band_DFSquelchValueLabel.FontSize = 11;
             app.Band_DFSquelchValueLabel.Layout.Row = 1;
             app.Band_DFSquelchValueLabel.Layout.Column = 2;
             app.Band_DFSquelchValueLabel.Text = 'Squelch (dBµV):';
@@ -3112,7 +3109,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_DFMeasTimeLabel
             app.Band_DFMeasTimeLabel = uilabel(app.Band_DFGrid);
             app.Band_DFMeasTimeLabel.VerticalAlignment = 'bottom';
-            app.Band_DFMeasTimeLabel.FontSize = 10;
+            app.Band_DFMeasTimeLabel.FontSize = 11;
             app.Band_DFMeasTimeLabel.Layout.Row = 1;
             app.Band_DFMeasTimeLabel.Layout.Column = 3;
             app.Band_DFMeasTimeLabel.Text = 'Integração (ms):';
@@ -3148,16 +3145,15 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create Band_AntennaGrid
             app.Band_AntennaGrid = uigridlayout(app.Band_AntennaPanel);
-            app.Band_AntennaGrid.ColumnWidth = {200, 20, 230};
+            app.Band_AntennaGrid.ColumnWidth = {140, 20, 170};
             app.Band_AntennaGrid.RowHeight = {17, 22};
             app.Band_AntennaGrid.RowSpacing = 5;
-            app.Band_AntennaGrid.Padding = [10 10 10 5];
             app.Band_AntennaGrid.BackgroundColor = [1 1 1];
 
             % Create Band_TargetListLabel
             app.Band_TargetListLabel = uilabel(app.Band_AntennaGrid);
             app.Band_TargetListLabel.VerticalAlignment = 'bottom';
-            app.Band_TargetListLabel.FontSize = 10;
+            app.Band_TargetListLabel.FontSize = 11;
             app.Band_TargetListLabel.Layout.Row = 1;
             app.Band_TargetListLabel.Layout.Column = 1;
             app.Band_TargetListLabel.Text = 'Estação alvo:';
@@ -3176,7 +3172,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create Band_AntennaLabel
             app.Band_AntennaLabel = uilabel(app.Band_AntennaGrid);
             app.Band_AntennaLabel.VerticalAlignment = 'bottom';
-            app.Band_AntennaLabel.FontSize = 10;
+            app.Band_AntennaLabel.FontSize = 11;
             app.Band_AntennaLabel.Layout.Row = 1;
             app.Band_AntennaLabel.Layout.Column = 3;
             app.Band_AntennaLabel.Text = 'Antena/LNB:';
@@ -3210,8 +3206,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.DockModule.Padding = [5 2 5 2];
             app.DockModule.Tag = '5';
             app.DockModule.Visible = 'off';
-            app.DockModule.Layout.Row = [2 3];
-            app.DockModule.Layout.Column = [7 9];
+            app.DockModule.Layout.Row = [2 4];
+            app.DockModule.Layout.Column = [5 8];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
             % Create dockModule_Close

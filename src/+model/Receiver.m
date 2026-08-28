@@ -1,4 +1,4 @@
-classdef ReceiverLib < handle
+classdef Receiver < handle
 
     % ?? EVOLUÇÃO ??
     % Inserir conexão VISA (TCPIP, SOCKET, USB etc)?! Caso sim, mapear objeto 
@@ -39,20 +39,26 @@ classdef ReceiverLib < handle
 
     properties
         Config
-        List   = table('Size', [0, 6],                                                      ...
-                       'VariableTypes', {'cell', 'cell', 'cell', 'cell', 'cell', 'double'}, ...
-                       'VariableNames', {'Family', 'Name', 'Type', 'Parameters', 'Description', 'Enable'});
-        Table  = table('Size', [0, 4],                                          ...
-                       'VariableTypes', {'string', 'string', 'cell', 'string'}, ...
-                       'VariableNames', {'Family', 'Socket', 'Handle', 'Status'})
+
+        List = table( ...
+            'Size', [0, 6], ...
+            'VariableTypes', {'cell', 'cell', 'cell', 'cell', 'cell', 'double'}, ...
+            'VariableNames', {'Family', 'Name', 'Type', 'Parameters', 'Description', 'Enable'} ...
+        )
+
+        Table = table( ...
+            'Size', [0, 4], ...
+            'VariableTypes', {'string', 'string', 'cell', 'string'}, ...
+            'VariableNames', {'Family', 'Socket', 'Handle', 'Status'} ...
+        )
     end
 
 
     methods
         %-----------------------------------------------------------------%
-        function obj = ReceiverLib(RootFolder)
-            obj.Config = struct2table(jsondecode(fileread(fullfile(RootFolder, 'config', 'ReceiverLib.json'))));
-            obj.List   = FileRead(obj, RootFolder);
+        function obj = Receiver(rootFolder)
+            obj.Config = struct2table(jsondecode(fileread(fullfile(rootFolder, 'config', 'ReceiverLib.json'))));
+            obj.List   = fileRead(obj, rootFolder);
 
             if ~isdeployed()
                 arrayfun(@(x) delete(x), tcpclientfind())
@@ -60,22 +66,21 @@ classdef ReceiverLib < handle
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function [idx, msgError] = Connect(obj, instrSelected)
+        function [idx, msgError] = connect(obj, instrSelected)
             % Características do instrumento em que se deseja controlar:
-            Type   = instrSelected.Type;
-            Tag    = instrSelected.Tag;
-            [IP, Port, Timeout, Localhost_publicIP, Localhost_localIP] = obj.MissingParameters(instrSelected.Parameters);
-            Socket = sprintf('%s:%d', IP, Port);
+            type = instrSelected.Type;
+            tag  = instrSelected.Tag;
+            [ip, port, timeout, localhostPublicIP, localhostLocalIP] = missingParameters(obj, instrSelected.Parameters);
+            socketTag = sprintf('%s:%d', ip, port);
 
             % Consulta se há objeto "tcpclient" criado para o instrumento:
-            IDN = '';
+            idn = '';
             msgError = '';
-            idx = find(strcmp(obj.Table.Socket, Socket), 1);
+            idx = find(strcmp(obj.Table.Socket, socketTag), 1);
 
             if ~isempty(idx)
-                hReceiver = obj.Table.Handle{idx};
+                receiverHandle = obj.Table.Handle{idx};
 
                 warning('off', 'MATLAB:structOnObject')
                 warning('off', 'transportlib:legacy:PropertyNotSupported')
@@ -84,12 +89,12 @@ classdef ReceiverLib < handle
                 % esteja com falha.
                 for kk = 1:3
                     try
-                        hTransport = struct(struct(hReceiver).TCPCustomClient).Transport;
-                        if ~hTransport.Connected
-                            hTransport.connect
+                        transportHandle = struct(struct(receiverHandle).TCPCustomClient).Transport;
+                        if ~transportHandle.Connected
+                            transportHandle.connect
                         end
 
-                        IDN = ConnectionStatus(obj, hReceiver);
+                        idn = connectionStatus(obj, receiverHandle);
                         break
 
                     catch ME
@@ -101,7 +106,7 @@ classdef ReceiverLib < handle
 
                             case {'MATLAB:class:InvalidHandle', 'testmeaslib:CustomDisplay:PropertyError'}
                                 delete(obj.Table.Handle{idx})
-                                obj.Table(idx,:) = [];
+                                obj.Table(idx, :) = [];
                                 idx = [];
                                 break
                         end
@@ -109,7 +114,7 @@ classdef ReceiverLib < handle
                     pause(.100)
                 end
 
-                if isempty(IDN)
+                if isempty(idn)
                     idx = [];
                 end
             end
@@ -117,30 +122,30 @@ classdef ReceiverLib < handle
             try
                 if isempty(idx)
                     idx = height(obj.Table)+1;
-                    switch Type
-                        case {'TCPIP Socket', 'TCP/UDP IP Socket'}                    
-                            hReceiver = tcpclient(IP, Port);
-                            IDN = ConnectionStatus(obj, hReceiver);
+                    switch type
+                        case {'TCPIP Socket', 'TCP/UDP IP Socket'}
+                            receiverHandle = tcpclient(ip, port);
+                            idn = connectionStatus(obj, receiverHandle);
 
                         otherwise
                             error('appColetaV2 supports only TCPIP Socket connection type.')
-                            % hReceiver = visadev(sprintf('TCPIP::%s::INSTR', IP));
-                            % hReceiver = visadev(sprintf('TCPIP::%s::%d::SOCKET', IP, Port));
+                            % receiverHandle = visadev(sprintf('TCPIP::%s::INSTR', ip));
+                            % receiverHandle = visadev(sprintf('TCPIP::%s::%d::SOCKET', ip, port));
                     end
-                    hReceiver.Timeout = Timeout;
+                    receiverHandle.Timeout = timeout;
                 end
 
-                if ~isempty(IDN)
-                    if contains(IDN, Tag, "IgnoreCase", true) 
+                if ~isempty(idn)
+                    if contains(idn, tag, "IgnoreCase", true)
                         if idx > height(obj.Table)
-                            ClientIP = '';
-                            if     ~isempty(Localhost_publicIP); ClientIP      = Localhost_publicIP;
-                            elseif ~isempty(Localhost_localIP);  ClientIP      = Localhost_localIP;
-                            elseif ~strcmp(IP, '127.0.0.1');     [~, ClientIP] = obj.IPsFind(IP);
+                            clientIP = '';
+                            if     ~isempty(localhostPublicIP); clientIP      = localhostPublicIP;
+                            elseif ~isempty(localhostLocalIP);  clientIP      = localhostLocalIP;
+                            elseif ~strcmp(ip, '127.0.0.1');     [~, clientIP] = ipsFind(obj, ip);
                             end
-        
-                            hReceiver.UserData = struct('IDN', IDN, 'ClientIP', ClientIP, 'nTasks', 0, 'SyncMode', '', 'instrSelected', instrSelected);
-                            obj.Table{idx,:}   = {"Receiver", Socket, hReceiver, "Connected"};
+
+                            receiverHandle.UserData = struct('IDN', idn, 'ClientIP', clientIP, 'nTasks', 0, 'SyncMode', '', 'instrSelected', instrSelected);
+                            obj.Table(idx, :)        = {"Receiver", socketTag, receiverHandle, "Connected"};
 
                         else
                             obj.Table.Status(idx) = "Connected";
@@ -148,7 +153,7 @@ classdef ReceiverLib < handle
 
                     else
                         obj.Table.Status(idx) = "Disconnected";
-                        error('O instrumento identificado (%s) difere do configurado (%s).', IDN, Tag)
+                        error('O instrumento identificado (%s) difere do configurado (%s).', idn, tag)
                     end
 
                 else
@@ -158,18 +163,17 @@ classdef ReceiverLib < handle
 
             catch ME
                 msgError = ME.message;
-                if (idx > height(obj.Table)) & exist('hReceiver', 'var')
-                    clear hReceiver
+                if (idx > height(obj.Table)) & exist('receiverHandle', 'var')
+                    clear receiverHandle
                 end
                 idx = [];
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function msgError = ReconnectAttempt(obj, instrSelected, connectFlag, StartUp, SpecificSCPI)
+        function msgError = reconnectAttempt(obj, instrSelected, connectFlag, startUp, specificSCPI)
 
-            [idx, msgError] = Connect(obj, instrSelected);
+            [idx, msgError] = connect(obj, instrSelected);
 
             % Se ocorrer alguma queda de energia e o receptor desligar, ao
             % religar, o receptor voltará às suas configurações de fábrica,
@@ -178,31 +182,53 @@ classdef ReceiverLib < handle
 
             if isempty(msgError)
                 try
-                    hReceiver = obj.Table.Handle{idx};
+                    receiverHandle = obj.Table.Handle{idx};
 
                     if ismember(connectFlag, [2, 3])
-                        class.EB500Lib.OperationMode(hReceiver, connectFlag)
+                        class.EB500Lib.OperationMode(receiverHandle, connectFlag)
                     end
-    
-                    writeline(hReceiver, StartUp);
+
+                    writeline(receiverHandle, startUp);
                     pause(.001)
-    
-                    writeline(hReceiver, SpecificSCPI.configSET);
+
+                    writeline(receiverHandle, specificSCPI.configSET);
                     pause(.001)
-                    
-                    if ~isempty(SpecificSCPI.attSET)
-                        writeline(hReceiver, SpecificSCPI.attSET);
+
+                    if ~isempty(specificSCPI.attSET)
+                        writeline(receiverHandle, specificSCPI.attSET);
                     end
-    
+
                 catch ME
                     msgError = ME.message;
                 end
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function tempList = FileRead(obj, rootFolder)
+        function [instrHandle, notification] = testConnectivity(obj, instrSelected, emitNotification)
+            notification = [];
+
+            [idx, msgError] = connect(obj, instrSelected);
+
+            if isempty(msgError)
+                instrHandle = obj.Table.Handle{idx};
+                if emitNotification
+                    notification = struct('type', 'warning', 'message', sprintf('Conectado ao %s', instrHandle.UserData.IDN));
+                end
+
+            else
+                instrHandle = [];
+                if emitNotification
+                    notification = struct('type', 'error', 'message', msgError);
+                end
+            end
+        end
+    end
+
+
+    methods (Access = protected)
+        %-----------------------------------------------------------------%
+        function tempList = fileRead(obj, rootFolder)
             appName = class.Constants.appName;
             [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
 
@@ -218,61 +244,56 @@ classdef ReceiverLib < handle
                     tempList.Enable(1) = 1;
                 end
             else
-                tempList(end+1,:) = DefaultInstrument(obj);
+                tempList(end+1, :) = defaultInstrument(obj);
             end
         end
-    end
 
-
-    methods (Access = protected)
         %-----------------------------------------------------------------%
-        function defaultIntrument = DefaultInstrument(obj)
-            defaultIntrument = {'Receiver', 'Tektronix SA2500', 'TCPIP Socket', '{"IP":"127.0.0.1","Port":"34835","Timeout":5}', 'Modo servidor/cliente. Loopback (127.0.0.1).', 1};
+        function instrument = defaultInstrument(~)
+            instrument = {'Receiver', 'Tektronix SA2500', 'TCPIP Socket', '{"IP":"127.0.0.1","Port":"34835","Timeout":5}', 'Modo servidor/cliente. Loopback (127.0.0.1).', 1};
         end
 
-
         %-----------------------------------------------------------------%
-        function [IP, Port, Timeout, Localhost_publicIP, Localhost_localIP] = MissingParameters(obj, Parameters)
+        function [ip, port, timeout, localhostPublicIP, localhostLocalIP] = missingParameters(~, Parameters)
             % IP
-            if isfield(Parameters, 'IP');                 IP = Parameters.IP;
-            else;                                         IP = '';
+            if isfield(Parameters, 'IP');                 ip = Parameters.IP;
+            else;                                         ip = '';
             end
 
-            if strcmpi(IP, 'localhost');                  IP = '127.0.0.1';
+            if strcmpi(ip, 'localhost');                  ip = '127.0.0.1';
             end
         
             % Port
-            if isfield(Parameters, 'Port');               Port = Parameters.Port;
-            else;                                         Port = [];
+            if isfield(Parameters, 'Port');               port = Parameters.Port;
+            else;                                         port = [];
             end
             
-            if ~isnumeric(Port);                          Port = str2double(Port);
+            if ~isnumeric(port);                          port = str2double(port);
             end
 
             % Timeout
-            if isfield(Parameters, 'Timeout');            Timeout = Parameters.Timeout;
-            else;                                         Timeout = class.Constants.Timeout;
+            if isfield(Parameters, 'Timeout');            timeout = Parameters.Timeout;
+            else;                                         timeout = class.Constants.Timeout;
             end
         
-            % Localhost_publicIP & % Localhost_localIP
-            Localhost_publicIP = '';
-            Localhost_localIP  = '';
+            % localhostPublicIP & localhostLocalIP
+            localhostPublicIP = '';
+            localhostLocalIP  = '';
 
             if isfield(Parameters, 'Localhost_Enable') && Parameters.Localhost_Enable
                 if isfield(Parameters, 'Localhost_publicIP')
-                    Localhost_publicIP = Parameters.Localhost_publicIP;
+                    localhostPublicIP = Parameters.Localhost_publicIP;
                 end        
                 
                 if isfield(Parameters, 'Localhost_localIP')
-                    Localhost_localIP = Parameters.Localhost_localIP;
+                    localhostLocalIP = Parameters.Localhost_localIP;
                 end
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function IDN = ConnectionStatus(obj, hReceiver)
-            IDN = '';            
+        function idn = connectionStatus(~, receiverHandle)
+            idn = '';            
 
             % A ideia de usar writeline/readline (com loop, criando artificialmente 
             % um Timeout) é fazer duas operações de comunicações com o socket (notei 
@@ -280,54 +301,52 @@ classdef ReceiverLib < handle
             % normalmente, retornando erro apenas numa segunda operação). Isso evita, também,
             % o Timeout padrão do writeread (10 segundos).
 
-            flush(hReceiver)
-            % IDN = writeread(hReceiver, '*IDN?');
-            writeline(hReceiver, '*IDN?')
+            flush(receiverHandle)
+            writeline(receiverHandle, '*IDN?')
 
             statusTic = tic;
             t = toc(statusTic);
             while t < class.Constants.idnTimeout
-                if hReceiver.NumBytesAvailable
-                    IDN = readline(hReceiver);
-                    if ~isempty(IDN)
-                        IDN = replace(strtrim(IDN), {'"', ''''}, {'', ''});
+                if receiverHandle.NumBytesAvailable
+                    idn = readline(receiverHandle);
+                    if ~isempty(idn)
+                        idn = replace(strtrim(idn), {'"', ''''}, {'', ''});
                         break
                     end
                 end
                 t = toc(statusTic);
             end
             
-            if isempty(IDN)
+            if isempty(idn)
                 error('ReceiverLib:EmptyIDN', 'Empty identification')
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function [localIP, publicIP] = IPsFind(obj, instrIP)
+        function [localIP, publicIP] = ipsFind(~, instrIP)
             [~, msg] = system('arp -a');            
             msgCell  = splitlines(msg);
             msgCell(cellfun(@(x) isempty(x), msgCell)) = [];
             
-            idx_localIPs = find(cellfun(@(x) contains(x, ' --- '), msgCell));
-            idx_instrIPs = find(cellfun(@(x) contains(x, [' ' instrIP ' ']), msgCell));
+            idxLocalIPs = find(cellfun(@(x) contains(x, ' --- '), msgCell));
+            idxInstrIPs = find(cellfun(@(x) contains(x, [' ' instrIP ' ']), msgCell));
             
             localIP = '';
             regExp  = '(\d{1,3}[.]\d{1,3}[.]\d{1,3}[.]\d{1,3})';
-            if ~isempty(idx_instrIPs)
-                idx_instrIPs = idx_instrIPs(1);
+            if ~isempty(idxInstrIPs)
+                idxInstrIPs = idxInstrIPs(1);
                 
-                temp = idx_localIPs - idx_instrIPs;
+                temp = idxLocalIPs - idxInstrIPs;
                 idx  = find(temp<0);
                 idx  = idx(end);
                         
-                localIP  = char(regexp(msgCell{idx_localIPs(idx)}, regExp, 'match'));
+                localIP  = char(regexp(msgCell{idxLocalIPs(idx)}, regExp, 'match'));
                 publicIP = localIP;
                 
             else
                 localIPs = {};
-                for ii = 1:numel(idx_localIPs)
-                    localIPs = [localIPs, regexp(msgCell{idx_localIPs(ii)}, regExp, 'match')];
+                for ii = 1:numel(idxLocalIPs)
+                    localIPs = [localIPs, regexp(msgCell{idxLocalIPs(ii)}, regExp, 'match')];
                 end
                 
                 for jj = 1:numel(localIPs)

@@ -83,4 +83,8 @@ Antes de cada função, insira uma linha de comentário para facilitar a visuali
     % ...
   end
 
+**Chamar métodos de uma classe**
+
+Use a notação `methodName(obj, ...)` ao invés de `obj.methodName(...)` para chamar métodos de instâncias de classes.
+
 Adote este padrão em todo o código MATLAB do projeto.

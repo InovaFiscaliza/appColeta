@@ -7,7 +7,7 @@ function receivedMessage = WriteRead(hReceiver, requiredInfo)
     % O STRTRIM, ao final, apaga tanto espaços quanto quebras de linhas, funcionando
     % como um leitor de caracteres seguido de um FLUSH.
 
-    % Posteriormente, migrar todas as chamadas do WRITEREAD (fcn.gpsBuiltInReader, 
+    % Posteriormente, migrar todas as chamadas do WRITEREAD (model.GPS.fetchGPSCoordinates, 
     % por exemplo) para essa função.
 
     writeline(hReceiver, requiredInfo);

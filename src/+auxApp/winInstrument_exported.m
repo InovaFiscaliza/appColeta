@@ -473,8 +473,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Após salva a nova versão de "instrumentList.json", atualizam-se
             % as listas dos objetos HANDLE app.receiverObj e app.gpsObj.
-            app.receiverObj.List = FileRead(app.receiverObj, app.mainApp.rootFolder);                
-            gpsObjList = FileRead(app.gpsObj, app.mainApp.rootFolder);
+            app.receiverObj.List = fileRead(app.receiverObj, app.mainApp.rootFolder);                
+            gpsObjList = fileRead(app.gpsObj, app.mainApp.rootFolder);
             if ~isempty(gpsObjList)
                 app.gpsObj.List = gpsObjList;
             else
@@ -903,13 +903,19 @@ classdef winInstrument_exported < matlab.apps.AppBase
                                                'Tag',        app.receiverObj.Config.Tag{idx2}, ...
                                                'Parameters', jsondecode(app.editedList.Parameters{idx1}));
     
-                        fcn.ConnectivityTest_Receiver(app, instrSelected, 1);
+                        [~, notification] = testConnectivity(app.receiverObj, instrSelected, 1);
+                        if ~isempty(notification)
+                            ui.Dialog(app.UIFigure, notification.type, notification.message);
+                        end
     
                     case 'GPS'
                         instrSelected = struct('Type',       app.Type.Value, ...
                                                'Parameters', jsondecode(app.editedList.Parameters{idx1}));
     
-                        fcn.ConnectivityTest_GPS(app, instrSelected, 1);
+                        [~, ~, notification] = testConnectivity(app.gpsObj, instrSelected, 1);
+                        if ~isempty(notification)
+                            ui.Dialog(app.UIFigure, notification.type, notification.message);
+                        end
                 end
             end
 
@@ -994,8 +1000,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {10, '1x', 48, 8, 2};
-            app.GridLayout.RowHeight = {2, 8, 24, '1x', 10, 34};
+            app.GridLayout.ColumnWidth = {20, '1x', 38, 10, 8, 2};
+            app.GridLayout.RowHeight = {2, 8, 10, 14, '1x', 20, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
@@ -1008,8 +1014,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.RowSpacing = 0;
             app.Toolbar.Padding = [10 6 10 6];
-            app.Toolbar.Layout.Row = 6;
-            app.Toolbar.Layout.Column = [1 5];
+            app.Toolbar.Layout.Row = 7;
+            app.Toolbar.Layout.Column = [1 6];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
             % Create toolSeparator
@@ -1065,7 +1071,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             % Create SubTabGroup
             app.SubTabGroup = uitabgroup(app.GridLayout);
             app.SubTabGroup.AutoResizeChildren = 'off';
-            app.SubTabGroup.Layout.Row = [3 4];
+            app.SubTabGroup.Layout.Row = [4 5];
             app.SubTabGroup.Layout.Column = [2 3];
 
             % Create SubTab1
@@ -1410,7 +1416,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             % Create Tree
             app.Tree = uitree(app.Tab1_Grid);
             app.Tree.SelectionChangedFcn = createCallbackFcn(app, @TreeSelectionChanged, true);
-            app.Tree.FontSize = 10;
+            app.Tree.FontSize = 11;
             app.Tree.Layout.Row = [1 7];
             app.Tree.Layout.Column = [1 3];
 
@@ -1464,8 +1470,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.DockModule.ColumnSpacing = 2;
             app.DockModule.Padding = [5 2 5 2];
             app.DockModule.Visible = 'off';
-            app.DockModule.Layout.Row = [2 3];
-            app.DockModule.Layout.Column = [3 4];
+            app.DockModule.Layout.Row = [2 4];
+            app.DockModule.Layout.Column = [3 5];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
             % Create dockModule_Close
