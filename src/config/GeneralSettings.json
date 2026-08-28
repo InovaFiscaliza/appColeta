@@ -1,5 +1,5 @@
 {
-    "version": 0.05,
+    "version": 0.06,
     "operationMode": {
         "Debug": false,
         "Dock": true,
@@ -93,5 +93,35 @@
     "Integration": {
         "Trace": 10,
         "SampleTime": 10
+    },
+    "reportLib": {
+        "system": "eFiscaliza",
+        "unit": "",
+        "allowedMacrothemes": [
+            "PM-EC",
+            "PM-EF",
+            "PM-EM (Mobilidade)",
+            "PM-RD",
+            "PM-SAT",
+            "PM-SAT (Banda C e KU)",
+            "PM-SAT (Banda Ka)",
+            "UTE"
+        ],
+        "outputCompressionMode": "Não",
+        "entityType": {
+            "default": "",
+            "options": [
+                "",
+                "Prestadora",
+                "Importador",
+                "Fornecedor",
+                "Usuário"
+            ]
+        },
+        "basemap": "streets-dark",
+        "image": {
+            "format": "jpeg",
+            "resolutionDpi": 120
+        }
     }
 }
