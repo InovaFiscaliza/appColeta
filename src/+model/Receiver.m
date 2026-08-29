@@ -1,42 +1,4 @@
 classdef Receiver < handle
-
-    % ?? EVOLUÇÃO ??
-    % Inserir conexão VISA (TCPIP, SOCKET, USB etc)?! Caso sim, mapear objeto 
-    % transporte relacionado struct(struct(hReceiver).Client).Transport.connect
-
-    % ## tcpclient ##
-    % O objeto "tcpclient" possui uma propriedade privada da classe - "TCPCustomClient" -, o qual armazena o objeto "TCPCustomClient".
-    % É essa propriedade que possibilita acesso ao objeto "TCPClient".
-    %
-    % ## TCPClient ##
-    % O objeto "TCPClient" possui as propriedades "Connect" (true|false) e "ConnectionStatus" ('Connected'|'Disconnected') que registram o 
-    % estado da conexão, o qual só é alterado quando realizada alguma operação de escrita (write, writeline etc) ou leitura no objeto "tcpclient".
-    %
-    % O MATLAB retorna os seguintes erros em operações de escrita e leitura de um objeto "tcpclient" desconectado:
-    % 'MATLAB:networklib:tcpclient:connectTerminated'  (write)
-    % 'transportclients:string:writeFailed'            (writeline|writeread)
-    % 'network:tcpclient:sendFailed'                   (write|writeline)
-    % 'transportclients:string:timeoutToken'           (writeread)
-    % 'transportclients:string:invalidConnectionState' (read|readline)
-    %
-    % E esse objeto "TCPClient" possui os métodos "connect" e "disconnect", os quais tentam alterar ativamente o estado da conexão.
-    %
-    % O controle da conexão do appColeta com o objeto "tcpclient" pode ser feito com a exclusão do objeto (delete/clear) e posterior
-    % recriação, ou por meio da alteração do seu estado (método "connect" do objeto "TCPClient").
-    %
-    % Notei, contudo, que o objeto "TCPCustomClient" às vezes é deletado, desvinculando o objeto "tcpclient" do "TCPClient". Quando isso
-    % acontece, o MATLAB retorna os seguintes erros:
-    % 'MATLAB:networklib:tcpclient:writeFailed'        (write)
-    % 'MATLAB:class:InvalidHandle'                     (writeline|writeread|read|readline)
-    % 'testmeaslib:CustomDisplay:PropertyError'        (acesso à propriedade)
-    %
-    % Nesse caso, o objeto "tcpclient" deve ser recriado. Não é adequado armazenar um handle pro objeto "TCPClient" porque, mesmo
-    % existente, ele pode não mais estar relacionado ao objeto "tcpclient".
-    %
-    % Na maioria das vezes, contudo, isso não ocorre, e aí basta chamar o método "connect" do objeto "TCPClient". Se a conexão não for
-    % reestabelecida, o MATLAB retorna o erro:
-    % 'network:tcpclient:connectFailed'
-
     properties
         Config
 
@@ -67,11 +29,44 @@ classdef Receiver < handle
         end
 
         %-----------------------------------------------------------------%
-        function [idx, msgError] = connect(obj, instrSelected)
+        % ## tcpclient ##
+        % O objeto "tcpclient" possui uma propriedade privada da classe - "TCPCustomClient" -, o qual armazena o objeto "TCPCustomClient".
+        % É essa propriedade que possibilita acesso ao objeto "TCPClient".
+        %
+        % ## TCPClient ##
+        % O objeto "TCPClient" possui as propriedades "Connect" (true|false) e "ConnectionStatus" ('Connected'|'Disconnected') que registram o 
+        % estado da conexão, o qual só é alterado quando realizada alguma operação de escrita (write, writeline etc) ou leitura no objeto "tcpclient".
+        %
+        % O MATLAB retorna os seguintes erros em operações de escrita e leitura de um objeto "tcpclient" desconectado:
+        % 'MATLAB:networklib:tcpclient:connectTerminated'  (write)
+        % 'transportclients:string:writeFailed'            (writeline|writeread)
+        % 'network:tcpclient:sendFailed'                   (write|writeline)
+        % 'transportclients:string:timeoutToken'           (writeread)
+        % 'transportclients:string:invalidConnectionState' (read|readline)
+        %
+        % E esse objeto "TCPClient" possui os métodos "connect" e "disconnect", os quais tentam alterar ativamente o estado da conexão.
+        %
+        % O controle da conexão do appColeta com o objeto "tcpclient" pode ser feito com a exclusão do objeto (delete/clear) e posterior
+        % recriação, ou por meio da alteração do seu estado (método "connect" do objeto "TCPClient").
+        %
+        % Notei, contudo, que o objeto "TCPCustomClient" às vezes é deletado, desvinculando o objeto "tcpclient" do "TCPClient". Quando isso
+        % acontece, o MATLAB retorna os seguintes erros:
+        % 'MATLAB:networklib:tcpclient:writeFailed'        (write)
+        % 'MATLAB:class:InvalidHandle'                     (writeline|writeread|read|readline)
+        % 'testmeaslib:CustomDisplay:PropertyError'        (acesso à propriedade)
+        %
+        % Nesse caso, o objeto "tcpclient" deve ser recriado. Não é adequado armazenar um handle pro objeto "TCPClient" porque, mesmo
+        % existente, ele pode não mais estar relacionado ao objeto "tcpclient".
+        %
+        % Na maioria das vezes, contudo, isso não ocorre, e aí basta chamar o método "connect" do objeto "TCPClient". Se a conexão não for
+        % reestabelecida, o MATLAB retorna o erro:
+        % 'network:tcpclient:connectFailed'
+        %-----------------------------------------------------------------%
+        function [idx, msgError] = connect(obj, receiver)
             % Características do instrumento em que se deseja controlar:
-            type = instrSelected.Type;
-            tag  = instrSelected.Tag;
-            [ip, port, timeout, localhostPublicIP, localhostLocalIP] = missingParameters(obj, instrSelected.Parameters);
+            type = receiver.Type;
+            tag  = receiver.Tag;
+            [ip, port, timeout, localhostPublicIP, localhostLocalIP] = missingParameters(obj, receiver.Parameters);
             socketTag = sprintf('%s:%d', ip, port);
 
             % Consulta se há objeto "tcpclient" criado para o instrumento:
@@ -128,7 +123,7 @@ classdef Receiver < handle
                             idn = connectionStatus(obj, receiverHandle);
 
                         otherwise
-                            error('appColetaV2 supports only TCPIP Socket connection type.')
+                            error('appColeta supports only TCPIP Socket connection type.')
                             % receiverHandle = visadev(sprintf('TCPIP::%s::INSTR', ip));
                             % receiverHandle = visadev(sprintf('TCPIP::%s::%d::SOCKET', ip, port));
                     end
@@ -144,7 +139,7 @@ classdef Receiver < handle
                             elseif ~strcmp(ip, '127.0.0.1');     [~, clientIP] = ipsFind(obj, ip);
                             end
 
-                            receiverHandle.UserData = struct('IDN', idn, 'ClientIP', clientIP, 'nTasks', 0, 'SyncMode', '', 'instrSelected', instrSelected);
+                            receiverHandle.UserData = struct('IDN', idn, 'ClientIP', clientIP, 'SyncMode', '', 'Config', receiver);
                             obj.Table(idx, :)        = {"Receiver", socketTag, receiverHandle, "Connected"};
 
                         else

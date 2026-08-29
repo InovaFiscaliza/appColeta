@@ -1161,7 +1161,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 % Uso de informação constante no objeto "model.Task" ao
                 % invés da constante em arquivo "instrumentList.json".
     
-                receiver = getReceiver(task);
+                receiver = getReceiverConfig(task);
                 [idx, msgError] = connect(app.receiverObj, receiver);
                 
                 if isempty(msgError)

@@ -6,16 +6,8 @@ classdef Task < matlab.mixin.Copyable
     % Representa uma tarefa de monitoração (na fila, em andamento ou já
     % finalizada) gerenciada pelo appColeta. Essa classe substitui a antiga
     % "class.specClass", preservando a mesma estrutura de propriedades para
-    % manter compatibilidade com as funções auxiliares que a consomem via
-    % "duck typing" (sem checagem de classe): class.RFlookBinLib, class.EB500Lib,
-    % class.maskLib, fcn.FindPeaks, fcn.RevisitFactors, fcn.receiverConfig_General
-    % e fcn.receiverConfig_SpecificBand.
-    %
+    % manter compatibilidade com as funções auxiliares que a consomem.
     % A lista de tarefas em execução é mantida em model.TaskController.Tasks.
-    % A propriedade "app.specObj" (winAppColeta_exported.m) é apenas uma
-    % referência de conveniência (Dependent) para esse array.
-    %
-    % app.TaskController.Tasks = model.Task.empty;
     %---------------------------------------------------------------------%
 
     properties
@@ -71,7 +63,7 @@ classdef Task < matlab.mixin.Copyable
         end
 
         %-----------------------------------------------------------------%
-        function receiver = getReceiver(obj)
+        function receiver = buildReceiverConfig(obj)
             receiver = struct( ...
                 'Type', obj.TaskSpec.Receiver.Selection.Type{1}, ...
                 'Tag', obj.TaskSpec.Receiver.Config.Tag{1}, ...
