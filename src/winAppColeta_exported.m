@@ -457,10 +457,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
                             struct('appName', appName, 'dataTag', app.AxesToolbar.UserData.id, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0')), ...
                             struct('appName', appName, 'dataTag', app.SpectrumFlowList.UserData.id, 'selector', 'input', 'styleImportant', struct('height', '44px'), 'dropDownBackgroundColor', struct('items', 'rgba(183, 49, 44, 0.75)', 'selectedItem', 'rgb(108, 4, 4)')), ...
-                            struct('appName', appName, 'dataTag', app.tool_LeftPanel.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonPlay.UserData.id,  'tooltip', struct('defaultPosition', 'top', 'textContent', 'Inicia ou interrompe tarefa')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonDel.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exclui tarefa')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonLOG.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'LOG tarefa')) ...
+                            struct('appName', appName, 'dataTag', app.tool_LeftPanel.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
+                            struct('appName', appName, 'dataTag', app.tool_ButtonPlay.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Inicia ou interrompe tarefa')), ...
+                            struct('appName', appName, 'dataTag', app.tool_ButtonDel.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exclui tarefa')), ...
+                            struct('appName', appName, 'dataTag', app.tool_ButtonLOG.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'LOG tarefa')) ...
                         });
                     catch
                     end
@@ -709,14 +709,19 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function loadSelectedBand(app, taskIdx, bandIdx)
             taskTable = app.UITable.Data;
             hasSelection = ~isempty(taskTable) && ~isempty(taskIdx);
+            hasBands = false;
+
+            if hasSelection
+                hasBands = ~isempty(app.TaskController.Tasks(taskIdx).Bands);
+            end
 
             resetPlotState(app)
-            updatePlotSourceOptions(app, taskIdx, bandIdx);
+            updatePlotSourceOptions(app, hasSelection, hasBands, taskIdx, bandIdx);
 
             updateTaskMetaData(app)
             updateMaskStatus(app, true, taskIdx, bandIdx)
 
-            if hasSelection
+            if hasSelection && hasBands
                 if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall)
                     waterfallIdx = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx;
 
@@ -765,7 +770,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             taskIdx = app.UITable.Selection;
             bandIdx = app.SpectrumFlowList.Value;
 
-            if ~isempty(taskTable) && ~isempty(taskIdx)
+            hasSelection = ~isempty(taskTable) && ~isempty(taskIdx);
+            hasBands = false;
+
+            if hasSelection
+                hasBands = ~isempty(app.TaskController.Tasks(taskIdx).Bands);
+            end
+
+            if hasSelection && hasBands
                 app.MetaData.Text = util.HtmlTextGenerator.Task(app.TaskController.Tasks, app.TaskController.RevisitInfo, taskIdx, bandIdx);
             else
                 app.MetaData.Text = '';
@@ -810,7 +822,17 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function updateMaskStatus(app, maskTrigger, taskIdx, bandIdx)
-            hasMask = ~isempty(taskIdx) && ~isempty(bandIdx) && ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask);
+            taskTable = app.UITable.Data;
+            hasSelection = ~isempty(taskTable) && ~isempty(taskIdx);
+            hasBands = false;
+            hasMask = false;
+
+            if hasSelection
+                hasBands = ~isempty(app.TaskController.Tasks(taskIdx).Bands);
+                if hasBands
+                    hasMask = ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask);
+                end
+            end
 
             if ~hasMask
                 app.MaskStatus.Enable = 0;
@@ -918,10 +940,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function updatePlotSourceOptions(app, taskIdx, bandIdx)
+        function updatePlotSourceOptions(app, hasSelection, hasBands, taskIdx, bandIdx)
             sources = {'Nível'};
 
-            if ~isempty(taskIdx) && ~isempty(bandIdx) && taskIdx > 0 && bandIdx > 0
+            if hasSelection && hasBands
                 if contains(app.TaskController.Tasks(taskIdx).TaskSpec.Type, 'Drive-test (Level+Azimuth)')
                     sources{end+1} = 'Azimute';
                 end
@@ -1161,7 +1183,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 % Uso de informação constante no objeto "model.Task" ao
                 % invés da constante em arquivo "instrumentList.json".
     
-                receiver = getReceiverConfig(task);
+                receiver = buildReceiverConfig(task);
                 [idx, msgError] = connect(app.receiverObj, receiver);
                 
                 if isempty(msgError)

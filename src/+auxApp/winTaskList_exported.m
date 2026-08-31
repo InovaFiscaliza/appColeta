@@ -10,7 +10,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
         SubTabGroup                matlab.ui.container.TabGroup
         SubTab1                    matlab.ui.container.Tab
         SubGrid1                   matlab.ui.container.GridLayout
-        Panel                      matlab.ui.container.Panel
         PanelGrid                  matlab.ui.container.GridLayout
         BandSpecificInfo_Grid      matlab.ui.container.GridLayout
         FindPeaks_Panel            matlab.ui.container.Panel
@@ -90,7 +89,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         BitsPerPointLabel          matlab.ui.control.Label
         Name                       matlab.ui.control.EditField
         NameLabel                  matlab.ui.control.Label
-        PanelLabel                 matlab.ui.control.Label
+        TreeLabel                  matlab.ui.control.Label
         TreeGrid                   matlab.ui.container.GridLayout
         Image_downArrow            matlab.ui.control.Image
         Image_upArrow              matlab.ui.control.Image
@@ -98,7 +97,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
         Image_addBand              matlab.ui.control.Image
         Image_addTask              matlab.ui.control.Image
         Tree                       matlab.ui.container.Tree
-        TreeLabel                  matlab.ui.control.Label
         ModePanel                  matlab.ui.container.ButtonGroup
         ModeButtonEdit             matlab.ui.control.RadioButton
         ModeButtonView             matlab.ui.control.RadioButton
@@ -520,8 +518,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     app.RFMode.Items    = {app.editedList(idx1).Band(idx2).RFMode};
                     app.LevelUnit.Items = {app.editedList(idx1).Band(idx2).LevelUnit};
 
-                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks); app.FindPeaks_Type.Items = {'Valores padrão (appColeta)'};
-                    else;                                                              app.FindPeaks_Type.Items = {'Valores customizados'};
+                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks)
+                        app.FindPeaks_Type.Items = {'Valores padrão (appColeta)'};
+                    else
+                        app.FindPeaks_Type.Items = {'Valores customizados'};
                     end
 
                 %---------------------------------------------------------%
@@ -545,8 +545,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     app.LevelUnit.Value = app.editedList(idx1).Band(idx2).LevelUnit;
                     app.RFMode.Value    = app.editedList(idx1).Band(idx2).RFMode;
 
-                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks); app.FindPeaks_Type.Value = 'Valores padrão (appColeta)';
-                    else;                                                              app.FindPeaks_Type.Value = 'Valores customizados';
+                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks)
+                        app.FindPeaks_Type.Value = 'Valores padrão (appColeta)';
+                    else
+                        app.FindPeaks_Type.Value = 'Valores customizados';
                     end
                 end
 
@@ -1248,7 +1250,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create SubGrid1
             app.SubGrid1 = uigridlayout(app.SubTab1);
             app.SubGrid1.ColumnWidth = {310, '1x'};
-            app.SubGrid1.RowHeight = {17, 34, 22, '1x'};
+            app.SubGrid1.RowHeight = {17, '1x', 22, 34};
+            app.SubGrid1.ColumnSpacing = 20;
             app.SubGrid1.RowSpacing = 5;
             app.SubGrid1.BackgroundColor = [1 1 1];
 
@@ -1256,16 +1259,16 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.ModePanelLabel = uilabel(app.SubGrid1);
             app.ModePanelLabel.VerticalAlignment = 'bottom';
             app.ModePanelLabel.FontSize = 10;
-            app.ModePanelLabel.Layout.Row = 1;
+            app.ModePanelLabel.Layout.Row = 3;
             app.ModePanelLabel.Layout.Column = 1;
-            app.ModePanelLabel.Text = 'MODO:';
+            app.ModePanelLabel.Text = 'MODO';
 
             % Create ModePanel
             app.ModePanel = uibuttongroup(app.SubGrid1);
             app.ModePanel.AutoResizeChildren = 'off';
             app.ModePanel.SelectionChangedFcn = createCallbackFcn(app, @OperationModeValueChanged, true);
             app.ModePanel.BackgroundColor = [1 1 1];
-            app.ModePanel.Layout.Row = 2;
+            app.ModePanel.Layout.Row = 4;
             app.ModePanel.Layout.Column = 1;
             app.ModePanel.FontSize = 10;
 
@@ -1284,14 +1287,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.ModeButtonEdit.Interpreter = 'html';
             app.ModeButtonEdit.Position = [150 5 92 22];
 
-            % Create TreeLabel
-            app.TreeLabel = uilabel(app.SubGrid1);
-            app.TreeLabel.VerticalAlignment = 'bottom';
-            app.TreeLabel.FontSize = 10;
-            app.TreeLabel.Layout.Row = 3;
-            app.TreeLabel.Layout.Column = 1;
-            app.TreeLabel.Text = 'TAREFAS:';
-
             % Create TreeGrid
             app.TreeGrid = uigridlayout(app.SubGrid1);
             app.TreeGrid.ColumnWidth = {2, 146, '1x', 0};
@@ -1299,7 +1294,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TreeGrid.ColumnSpacing = 5;
             app.TreeGrid.RowSpacing = 0;
             app.TreeGrid.Padding = [0 0 0 0];
-            app.TreeGrid.Layout.Row = 4;
+            app.TreeGrid.Layout.Row = 2;
             app.TreeGrid.Layout.Column = 1;
             app.TreeGrid.BackgroundColor = [1 1 1];
 
@@ -1355,24 +1350,21 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Image_downArrow.Layout.Column = 4;
             app.Image_downArrow.ImageSource = 'ArrowDown_32.png';
 
-            % Create PanelLabel
-            app.PanelLabel = uilabel(app.SubGrid1);
-            app.PanelLabel.VerticalAlignment = 'bottom';
-            app.PanelLabel.FontSize = 10;
-            app.PanelLabel.Layout.Row = 1;
-            app.PanelLabel.Layout.Column = 2;
-            app.PanelLabel.Text = 'CARACTERÍSTICAS:';
-
-            % Create Panel
-            app.Panel = uipanel(app.SubGrid1);
-            app.Panel.AutoResizeChildren = 'off';
-            app.Panel.Layout.Row = [2 4];
-            app.Panel.Layout.Column = 2;
+            % Create TreeLabel
+            app.TreeLabel = uilabel(app.SubGrid1);
+            app.TreeLabel.VerticalAlignment = 'bottom';
+            app.TreeLabel.FontSize = 10;
+            app.TreeLabel.Layout.Row = 1;
+            app.TreeLabel.Layout.Column = 1;
+            app.TreeLabel.Text = 'TAREFAS';
 
             % Create PanelGrid
-            app.PanelGrid = uigridlayout(app.Panel);
-            app.PanelGrid.ColumnWidth = {252, '1x'};
+            app.PanelGrid = uigridlayout(app.SubGrid1);
+            app.PanelGrid.ColumnWidth = {310, 1, '1x'};
             app.PanelGrid.RowHeight = {'1x'};
+            app.PanelGrid.Padding = [0 0 0 0];
+            app.PanelGrid.Layout.Row = [1 4];
+            app.PanelGrid.Layout.Column = 2;
             app.PanelGrid.BackgroundColor = [1 1 1];
 
             % Create Tab2_PanelGrid
@@ -1389,10 +1381,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create NameLabel
             app.NameLabel = uilabel(app.Tab2_PanelGrid);
             app.NameLabel.VerticalAlignment = 'bottom';
-            app.NameLabel.FontSize = 11;
+            app.NameLabel.FontSize = 10;
             app.NameLabel.Layout.Row = 1;
             app.NameLabel.Layout.Column = 1;
-            app.NameLabel.Text = 'Nome:';
+            app.NameLabel.Text = 'NOME';
 
             % Create Name
             app.Name = uieditfield(app.Tab2_PanelGrid, 'text');
@@ -1405,10 +1397,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create BitsPerPointLabel
             app.BitsPerPointLabel = uilabel(app.Tab2_PanelGrid);
             app.BitsPerPointLabel.VerticalAlignment = 'bottom';
-            app.BitsPerPointLabel.FontSize = 11;
+            app.BitsPerPointLabel.FontSize = 10;
             app.BitsPerPointLabel.Layout.Row = 3;
             app.BitsPerPointLabel.Layout.Column = 1;
-            app.BitsPerPointLabel.Text = 'Codificação:';
+            app.BitsPerPointLabel.Text = 'CODIFICAÇÃO';
 
             % Create BitsPerPoint
             app.BitsPerPoint = uidropdown(app.Tab2_PanelGrid);
@@ -1423,10 +1415,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create ObservationLabel
             app.ObservationLabel = uilabel(app.Tab2_PanelGrid);
             app.ObservationLabel.VerticalAlignment = 'bottom';
-            app.ObservationLabel.FontSize = 11;
+            app.ObservationLabel.FontSize = 10;
             app.ObservationLabel.Layout.Row = 5;
             app.ObservationLabel.Layout.Column = 1;
-            app.ObservationLabel.Text = 'Período de observação:';
+            app.ObservationLabel.Text = 'PERÍODO DE OBSERVAÇÃO';
 
             % Create ObservationPanel
             app.ObservationPanel = uipanel(app.Tab2_PanelGrid);
@@ -1463,7 +1455,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create Duration_Grid
             app.Duration_Grid = uigridlayout(app.ObservationPanel_Grid);
-            app.Duration_Grid.ColumnWidth = {110, 110};
+            app.Duration_Grid.ColumnWidth = {139, 139};
             app.Duration_Grid.RowHeight = {'1x'};
             app.Duration_Grid.RowSpacing = 5;
             app.Duration_Grid.Padding = [0 0 0 0];
@@ -1496,7 +1488,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create SpecificTime_Grid
             app.SpecificTime_Grid = uigridlayout(app.ObservationPanel_Grid);
-            app.SpecificTime_Grid.ColumnWidth = {53, 5, 52, 10, 53, 5, 52};
+            app.SpecificTime_Grid.ColumnWidth = {67, 5, 67, 10, 67, 5, 67};
             app.SpecificTime_Grid.RowHeight = {22, 22};
             app.SpecificTime_Grid.ColumnSpacing = 0;
             app.SpecificTime_Grid.RowSpacing = 5;
@@ -1602,10 +1594,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create gpsModeLabel
             app.gpsModeLabel = uilabel(app.Tab2_PanelGrid);
             app.gpsModeLabel.VerticalAlignment = 'bottom';
-            app.gpsModeLabel.FontSize = 11;
+            app.gpsModeLabel.FontSize = 10;
             app.gpsModeLabel.Layout.Row = 7;
             app.gpsModeLabel.Layout.Column = 1;
-            app.gpsModeLabel.Text = 'GPS:';
+            app.gpsModeLabel.Text = 'GPS';
 
             % Create gpsMode
             app.gpsMode = uidropdown(app.Tab2_PanelGrid);
@@ -1626,7 +1618,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create GPS_Grid
             app.GPS_Grid = uigridlayout(app.GPS_Panel);
-            app.GPS_Grid.ColumnWidth = {110, 110};
+            app.GPS_Grid.ColumnWidth = {139, 139};
             app.GPS_Grid.RowHeight = {17, 22, 22, 22};
             app.GPS_Grid.RowSpacing = 5;
             app.GPS_Grid.BackgroundColor = [1 1 1];
@@ -1677,7 +1669,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.GPS_RevisitTimeLabel.FontSize = 11;
             app.GPS_RevisitTimeLabel.Layout.Row = 3;
             app.GPS_RevisitTimeLabel.Layout.Column = 1;
-            app.GPS_RevisitTimeLabel.Text = 'Tempo revisita (seg):';
+            app.GPS_RevisitTimeLabel.Text = 'Revisita (seg):';
 
             % Create GPS_RevisitTime
             app.GPS_RevisitTime = uieditfield(app.GPS_Grid, 'numeric');
@@ -1695,21 +1687,21 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create BandSpecificInfo_Grid
             app.BandSpecificInfo_Grid = uigridlayout(app.PanelGrid);
             app.BandSpecificInfo_Grid.ColumnWidth = {110, 110, 110, 110, '1x'};
-            app.BandSpecificInfo_Grid.RowHeight = {17, 22, 22, 22, 32, 22, 22, 22, 22, 22, 36, 22, '1x'};
+            app.BandSpecificInfo_Grid.RowHeight = {17, 22, 22, 22, 22, 22, 22, 22, 22, 22, 36, 22, '1x'};
             app.BandSpecificInfo_Grid.RowSpacing = 5;
             app.BandSpecificInfo_Grid.Padding = [0 0 0 0];
             app.BandSpecificInfo_Grid.Layout.Row = 1;
-            app.BandSpecificInfo_Grid.Layout.Column = 2;
+            app.BandSpecificInfo_Grid.Layout.Column = 3;
             app.BandSpecificInfo_Grid.BackgroundColor = [1 1 1];
 
             % Create StatusLabel
             app.StatusLabel = uilabel(app.BandSpecificInfo_Grid);
             app.StatusLabel.VerticalAlignment = 'bottom';
-            app.StatusLabel.FontSize = 11;
+            app.StatusLabel.FontSize = 10;
             app.StatusLabel.FontColor = [0.149 0.149 0.149];
             app.StatusLabel.Layout.Row = 1;
             app.StatusLabel.Layout.Column = 1;
-            app.StatusLabel.Text = 'Estado:';
+            app.StatusLabel.Text = 'ESTADO';
 
             % Create Status
             app.Status = uidropdown(app.BandSpecificInfo_Grid);
@@ -1725,11 +1717,11 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create MaskTriggerLabel
             app.MaskTriggerLabel = uilabel(app.BandSpecificInfo_Grid);
             app.MaskTriggerLabel.VerticalAlignment = 'bottom';
-            app.MaskTriggerLabel.FontSize = 11;
+            app.MaskTriggerLabel.FontSize = 10;
             app.MaskTriggerLabel.FontColor = [0.149 0.149 0.149];
             app.MaskTriggerLabel.Layout.Row = 1;
             app.MaskTriggerLabel.Layout.Column = [2 3];
-            app.MaskTriggerLabel.Text = 'Máscara espectral:';
+            app.MaskTriggerLabel.Text = 'MÁSCARA ESPECTRAL';
 
             % Create MaskTrigger
             app.MaskTrigger = uidropdown(app.BandSpecificInfo_Grid);
@@ -1745,7 +1737,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create IDLabel
             app.IDLabel = uilabel(app.BandSpecificInfo_Grid);
             app.IDLabel.VerticalAlignment = 'bottom';
-            app.IDLabel.FontSize = 11;
+            app.IDLabel.FontSize = 10;
             app.IDLabel.Layout.Row = 3;
             app.IDLabel.Layout.Column = 1;
             app.IDLabel.Text = 'ID';
@@ -1765,10 +1757,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create DescriptionLabel
             app.DescriptionLabel = uilabel(app.BandSpecificInfo_Grid);
             app.DescriptionLabel.VerticalAlignment = 'bottom';
-            app.DescriptionLabel.FontSize = 11;
+            app.DescriptionLabel.FontSize = 10;
             app.DescriptionLabel.Layout.Row = 3;
             app.DescriptionLabel.Layout.Column = [2 3];
-            app.DescriptionLabel.Text = 'Descrição:';
+            app.DescriptionLabel.Text = 'DESCRIÇÃO';
 
             % Create Description
             app.Description = uieditfield(app.BandSpecificInfo_Grid, 'text');
@@ -1782,10 +1774,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create ObservationSamplesLabel
             app.ObservationSamplesLabel = uilabel(app.BandSpecificInfo_Grid);
             app.ObservationSamplesLabel.VerticalAlignment = 'bottom';
-            app.ObservationSamplesLabel.FontSize = 11;
+            app.ObservationSamplesLabel.FontSize = 10;
             app.ObservationSamplesLabel.Layout.Row = 3;
-            app.ObservationSamplesLabel.Layout.Column = 4;
-            app.ObservationSamplesLabel.Text = 'Amostras a coletar:';
+            app.ObservationSamplesLabel.Layout.Column = [4 5];
+            app.ObservationSamplesLabel.Text = 'AMOSTRAS A COLETAR';
 
             % Create ObservationSamples
             app.ObservationSamples = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
@@ -1803,10 +1795,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create FreqStartLabel
             app.FreqStartLabel = uilabel(app.BandSpecificInfo_Grid);
             app.FreqStartLabel.VerticalAlignment = 'bottom';
-            app.FreqStartLabel.FontSize = 11;
+            app.FreqStartLabel.FontSize = 10;
             app.FreqStartLabel.Layout.Row = 5;
             app.FreqStartLabel.Layout.Column = 1;
-            app.FreqStartLabel.Text = {'Frequência inicial'; '(MHz):'};
+            app.FreqStartLabel.Text = 'FREQ. INICIAL (MHz)';
 
             % Create FreqStart
             app.FreqStart = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
@@ -1824,10 +1816,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create FreqStopLabel
             app.FreqStopLabel = uilabel(app.BandSpecificInfo_Grid);
             app.FreqStopLabel.VerticalAlignment = 'bottom';
-            app.FreqStopLabel.FontSize = 11;
+            app.FreqStopLabel.FontSize = 10;
             app.FreqStopLabel.Layout.Row = 5;
             app.FreqStopLabel.Layout.Column = 2;
-            app.FreqStopLabel.Text = {'Frequência final'; '(MHz):'};
+            app.FreqStopLabel.Text = 'FREQ. FINAL (MHz)';
 
             % Create FreqStop
             app.FreqStop = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
@@ -1845,10 +1837,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create StepWidthLabel
             app.StepWidthLabel = uilabel(app.BandSpecificInfo_Grid);
             app.StepWidthLabel.VerticalAlignment = 'bottom';
-            app.StepWidthLabel.FontSize = 11;
+            app.StepWidthLabel.FontSize = 10;
             app.StepWidthLabel.Layout.Row = 5;
             app.StepWidthLabel.Layout.Column = 3;
-            app.StepWidthLabel.Text = {'Passo varredura'; '(kHz):'};
+            app.StepWidthLabel.Text = 'PASSO (kHz)';
 
             % Create StepWidth
             app.StepWidth = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
@@ -1865,10 +1857,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create ResolutionLabel
             app.ResolutionLabel = uilabel(app.BandSpecificInfo_Grid);
             app.ResolutionLabel.VerticalAlignment = 'bottom';
-            app.ResolutionLabel.FontSize = 11;
+            app.ResolutionLabel.FontSize = 10;
             app.ResolutionLabel.Layout.Row = 5;
             app.ResolutionLabel.Layout.Column = 4;
-            app.ResolutionLabel.Text = {'Resolução'; '(kHz):'};
+            app.ResolutionLabel.Text = 'RESOLUÇÃO (kHz)';
 
             % Create Resolution
             app.Resolution = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
@@ -1885,10 +1877,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create TraceModeLabel
             app.TraceModeLabel = uilabel(app.BandSpecificInfo_Grid);
             app.TraceModeLabel.VerticalAlignment = 'bottom';
-            app.TraceModeLabel.FontSize = 11;
+            app.TraceModeLabel.FontSize = 10;
             app.TraceModeLabel.Layout.Row = 7;
             app.TraceModeLabel.Layout.Column = 1;
-            app.TraceModeLabel.Text = 'Modo do traço:';
+            app.TraceModeLabel.Text = 'TRAÇO';
 
             % Create TraceMode
             app.TraceMode = uidropdown(app.BandSpecificInfo_Grid);
@@ -1904,10 +1896,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create IntegrationFactorLabel
             app.IntegrationFactorLabel = uilabel(app.BandSpecificInfo_Grid);
             app.IntegrationFactorLabel.VerticalAlignment = 'bottom';
-            app.IntegrationFactorLabel.FontSize = 11;
+            app.IntegrationFactorLabel.FontSize = 10;
             app.IntegrationFactorLabel.Layout.Row = 7;
             app.IntegrationFactorLabel.Layout.Column = 2;
-            app.IntegrationFactorLabel.Text = 'Fator integração:';
+            app.IntegrationFactorLabel.Text = 'FATOR INTEGRAÇÃO';
 
             % Create IntegrationFactor
             app.IntegrationFactor = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
@@ -1925,10 +1917,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create RFModeLabel
             app.RFModeLabel = uilabel(app.BandSpecificInfo_Grid);
             app.RFModeLabel.VerticalAlignment = 'bottom';
-            app.RFModeLabel.FontSize = 11;
+            app.RFModeLabel.FontSize = 10;
             app.RFModeLabel.Layout.Row = 7;
             app.RFModeLabel.Layout.Column = 3;
-            app.RFModeLabel.Text = 'Modo de RF:';
+            app.RFModeLabel.Text = 'MODO DE RF';
 
             % Create RFMode
             app.RFMode = uidropdown(app.BandSpecificInfo_Grid);
@@ -1944,10 +1936,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create VBWLabel
             app.VBWLabel = uilabel(app.BandSpecificInfo_Grid);
             app.VBWLabel.VerticalAlignment = 'bottom';
-            app.VBWLabel.FontSize = 11;
+            app.VBWLabel.FontSize = 10;
             app.VBWLabel.Layout.Row = 7;
             app.VBWLabel.Layout.Column = 4;
-            app.VBWLabel.Text = 'VBW:';
+            app.VBWLabel.Text = 'VBW';
 
             % Create VBW
             app.VBW = uidropdown(app.BandSpecificInfo_Grid);
@@ -1963,10 +1955,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create DetectorLabel
             app.DetectorLabel = uilabel(app.BandSpecificInfo_Grid);
             app.DetectorLabel.VerticalAlignment = 'bottom';
-            app.DetectorLabel.FontSize = 11;
+            app.DetectorLabel.FontSize = 10;
             app.DetectorLabel.Layout.Row = 9;
             app.DetectorLabel.Layout.Column = 1;
-            app.DetectorLabel.Text = 'Detector:';
+            app.DetectorLabel.Text = 'DETECTOR';
 
             % Create Detector
             app.Detector = uidropdown(app.BandSpecificInfo_Grid);
@@ -1982,10 +1974,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create LevelUnitLabel
             app.LevelUnitLabel = uilabel(app.BandSpecificInfo_Grid);
             app.LevelUnitLabel.VerticalAlignment = 'bottom';
-            app.LevelUnitLabel.FontSize = 11;
+            app.LevelUnitLabel.FontSize = 10;
             app.LevelUnitLabel.Layout.Row = 9;
             app.LevelUnitLabel.Layout.Column = 3;
-            app.LevelUnitLabel.Text = 'Unidade:';
+            app.LevelUnitLabel.Text = 'UNIDADE';
 
             % Create LevelUnit
             app.LevelUnit = uidropdown(app.BandSpecificInfo_Grid);
@@ -2001,10 +1993,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create RevisitTimeLabel
             app.RevisitTimeLabel = uilabel(app.BandSpecificInfo_Grid);
             app.RevisitTimeLabel.VerticalAlignment = 'bottom';
-            app.RevisitTimeLabel.FontSize = 11;
+            app.RevisitTimeLabel.FontSize = 10;
             app.RevisitTimeLabel.Layout.Row = 9;
             app.RevisitTimeLabel.Layout.Column = 4;
-            app.RevisitTimeLabel.Text = 'Tempo revisita (seg):';
+            app.RevisitTimeLabel.Text = 'REVISITA (seg)';
 
             % Create RevisitTime
             app.RevisitTime = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
@@ -2021,10 +2013,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create FindPeaks_PanelLabel
             app.FindPeaks_PanelLabel = uilabel(app.BandSpecificInfo_Grid);
             app.FindPeaks_PanelLabel.VerticalAlignment = 'bottom';
-            app.FindPeaks_PanelLabel.FontSize = 11;
+            app.FindPeaks_PanelLabel.FontSize = 10;
             app.FindPeaks_PanelLabel.Layout.Row = 11;
             app.FindPeaks_PanelLabel.Layout.Column = [1 4];
-            app.FindPeaks_PanelLabel.Text = {'Parâmetros relacionados à busca de emissões: '; '(caso evidenciado rompimento de máscara espectral)'};
+            app.FindPeaks_PanelLabel.Text = {'PARÂMETROS RELACIONADOS À BUSCA DE EMISSÕES'; '(caso evidenciado rompimento de máscara espectral)'};
 
             % Create FindPeaks_Panel
             app.FindPeaks_Panel = uipanel(app.BandSpecificInfo_Grid);
@@ -2035,16 +2027,17 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create FindPeaks_Grid
             app.FindPeaks_Grid = uigridlayout(app.FindPeaks_Panel);
             app.FindPeaks_Grid.ColumnWidth = {100, 110, 110, 110};
-            app.FindPeaks_Grid.RowHeight = {22, 34, 22};
+            app.FindPeaks_Grid.RowHeight = {17, 22, 34, 22};
             app.FindPeaks_Grid.RowSpacing = 5;
             app.FindPeaks_Grid.BackgroundColor = [1 1 1];
 
             % Create FindPeaks_TypeLabel
             app.FindPeaks_TypeLabel = uilabel(app.FindPeaks_Grid);
+            app.FindPeaks_TypeLabel.VerticalAlignment = 'bottom';
             app.FindPeaks_TypeLabel.FontSize = 11;
             app.FindPeaks_TypeLabel.Layout.Row = 1;
             app.FindPeaks_TypeLabel.Layout.Column = 1;
-            app.FindPeaks_TypeLabel.Text = 'Parâmetros:';
+            app.FindPeaks_TypeLabel.Text = 'Tipo:';
 
             % Create FindPeaks_Type
             app.FindPeaks_Type = uidropdown(app.FindPeaks_Grid);
@@ -2053,15 +2046,15 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_Type.Enable = 'off';
             app.FindPeaks_Type.FontSize = 11;
             app.FindPeaks_Type.BackgroundColor = [1 1 1];
-            app.FindPeaks_Type.Layout.Row = 1;
-            app.FindPeaks_Type.Layout.Column = [2 4];
+            app.FindPeaks_Type.Layout.Row = 2;
+            app.FindPeaks_Type.Layout.Column = [1 4];
             app.FindPeaks_Type.Value = 'Valores padrão (appColeta)';
 
             % Create FindPeaks_nSweepsLabel
             app.FindPeaks_nSweepsLabel = uilabel(app.FindPeaks_Grid);
             app.FindPeaks_nSweepsLabel.VerticalAlignment = 'bottom';
             app.FindPeaks_nSweepsLabel.FontSize = 11;
-            app.FindPeaks_nSweepsLabel.Layout.Row = 2;
+            app.FindPeaks_nSweepsLabel.Layout.Row = 3;
             app.FindPeaks_nSweepsLabel.Layout.Column = 1;
             app.FindPeaks_nSweepsLabel.Text = {'Quantidade de'; 'varreduras:'};
 
@@ -2071,7 +2064,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_nSweeps.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.FindPeaks_nSweeps.FontSize = 11;
             app.FindPeaks_nSweeps.Enable = 'off';
-            app.FindPeaks_nSweeps.Layout.Row = 3;
+            app.FindPeaks_nSweeps.Layout.Row = 4;
             app.FindPeaks_nSweeps.Layout.Column = 1;
             app.FindPeaks_nSweeps.Value = 10;
 
@@ -2080,7 +2073,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_ProminenceLabel.VerticalAlignment = 'bottom';
             app.FindPeaks_ProminenceLabel.WordWrap = 'on';
             app.FindPeaks_ProminenceLabel.FontSize = 11;
-            app.FindPeaks_ProminenceLabel.Layout.Row = 2;
+            app.FindPeaks_ProminenceLabel.Layout.Row = 3;
             app.FindPeaks_ProminenceLabel.Layout.Column = 2;
             app.FindPeaks_ProminenceLabel.Text = {'Proeminência '; 'mínima (dB):'};
 
@@ -2093,7 +2086,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_Prominence.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.FindPeaks_Prominence.FontSize = 11;
             app.FindPeaks_Prominence.Enable = 'off';
-            app.FindPeaks_Prominence.Layout.Row = 3;
+            app.FindPeaks_Prominence.Layout.Row = 4;
             app.FindPeaks_Prominence.Layout.Column = 2;
             app.FindPeaks_Prominence.Value = 30;
 
@@ -2102,7 +2095,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_DistanceLabel.VerticalAlignment = 'bottom';
             app.FindPeaks_DistanceLabel.WordWrap = 'on';
             app.FindPeaks_DistanceLabel.FontSize = 11;
-            app.FindPeaks_DistanceLabel.Layout.Row = 2;
+            app.FindPeaks_DistanceLabel.Layout.Row = 3;
             app.FindPeaks_DistanceLabel.Layout.Column = 3;
             app.FindPeaks_DistanceLabel.Text = {'Distância mínima '; 'entre picos (kHz):'};
 
@@ -2115,7 +2108,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_Distance.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.FindPeaks_Distance.FontSize = 11;
             app.FindPeaks_Distance.Enable = 'off';
-            app.FindPeaks_Distance.Layout.Row = 3;
+            app.FindPeaks_Distance.Layout.Row = 4;
             app.FindPeaks_Distance.Layout.Column = 3;
             app.FindPeaks_Distance.Value = 25;
 
@@ -2124,7 +2117,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_BWLabel.VerticalAlignment = 'bottom';
             app.FindPeaks_BWLabel.WordWrap = 'on';
             app.FindPeaks_BWLabel.FontSize = 11;
-            app.FindPeaks_BWLabel.Layout.Row = 2;
+            app.FindPeaks_BWLabel.Layout.Row = 3;
             app.FindPeaks_BWLabel.Layout.Column = 4;
             app.FindPeaks_BWLabel.Text = {'Largura mínima'; 'ocupada (kHz):'};
 
@@ -2137,7 +2130,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.FindPeaks_BW.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
             app.FindPeaks_BW.FontSize = 11;
             app.FindPeaks_BW.Enable = 'off';
-            app.FindPeaks_BW.Layout.Row = 3;
+            app.FindPeaks_BW.Layout.Row = 4;
             app.FindPeaks_BW.Layout.Column = 4;
             app.FindPeaks_BW.Value = 10;
 

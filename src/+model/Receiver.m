@@ -134,13 +134,16 @@ classdef Receiver < handle
                     if contains(idn, tag, "IgnoreCase", true)
                         if idx > height(obj.Table)
                             clientIP = '';
-                            if     ~isempty(localhostPublicIP); clientIP      = localhostPublicIP;
-                            elseif ~isempty(localhostLocalIP);  clientIP      = localhostLocalIP;
-                            elseif ~strcmp(ip, '127.0.0.1');     [~, clientIP] = ipsFind(obj, ip);
+                            if ~isempty(localhostPublicIP)
+                                clientIP = localhostPublicIP;
+                            elseif ~isempty(localhostLocalIP)
+                                clientIP = localhostLocalIP;
+                            elseif ~strcmp(ip, '127.0.0.1')
+                                [~, clientIP] = ipsFind(obj, ip);
                             end
 
                             receiverHandle.UserData = struct('IDN', idn, 'ClientIP', clientIP, 'SyncMode', '', 'Config', receiver);
-                            obj.Table(idx, :)        = {"Receiver", socketTag, receiverHandle, "Connected"};
+                            obj.Table{idx, :} = {"Receiver", socketTag, receiverHandle, "Connected"};
 
                         else
                             obj.Table.Status(idx) = "Connected";
@@ -158,7 +161,7 @@ classdef Receiver < handle
 
             catch ME
                 msgError = ME.message;
-                if (idx > height(obj.Table)) & exist('receiverHandle', 'var')
+                if (idx > height(obj.Table)) && exist('receiverHandle', 'var')
                     clear receiverHandle
                 end
                 idx = [];

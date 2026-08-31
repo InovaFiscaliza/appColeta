@@ -773,7 +773,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create SubGrid2
             app.SubGrid2 = uigridlayout(app.SubTab2);
             app.SubGrid2.ColumnWidth = {'1x', 16};
-            app.SubGrid2.RowHeight = {17, 136, 22, '1x'};
+            app.SubGrid2.RowHeight = {17, 144, 22, '1x'};
             app.SubGrid2.RowSpacing = 5;
             app.SubGrid2.BackgroundColor = [1 1 1];
 
@@ -802,15 +802,14 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create general_stationGrid
             app.general_stationGrid = uigridlayout(app.general_FilePanel);
             app.general_stationGrid.ColumnWidth = {150, 150, '1x'};
-            app.general_stationGrid.RowHeight = {17, 22, 25, 22, 17};
+            app.general_stationGrid.RowHeight = {17, 22, 22, 22, 17};
             app.general_stationGrid.RowSpacing = 5;
-            app.general_stationGrid.Padding = [10 9 10 4];
             app.general_stationGrid.BackgroundColor = [1 1 1];
 
             % Create general_stationNameLabel
             app.general_stationNameLabel = uilabel(app.general_stationGrid);
             app.general_stationNameLabel.VerticalAlignment = 'bottom';
-            app.general_stationNameLabel.FontSize = 10;
+            app.general_stationNameLabel.FontSize = 11;
             app.general_stationNameLabel.Layout.Row = 1;
             app.general_stationNameLabel.Layout.Column = 1;
             app.general_stationNameLabel.Text = 'Nome:';
@@ -826,7 +825,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create general_stationTypeLabel
             app.general_stationTypeLabel = uilabel(app.general_stationGrid);
             app.general_stationTypeLabel.VerticalAlignment = 'bottom';
-            app.general_stationTypeLabel.FontSize = 10;
+            app.general_stationTypeLabel.FontSize = 11;
             app.general_stationTypeLabel.Layout.Row = 1;
             app.general_stationTypeLabel.Layout.Column = 2;
             app.general_stationTypeLabel.Text = 'Tipo:';
@@ -845,10 +844,10 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create general_stationLatitudeLabel
             app.general_stationLatitudeLabel = uilabel(app.general_stationGrid);
             app.general_stationLatitudeLabel.VerticalAlignment = 'bottom';
-            app.general_stationLatitudeLabel.FontSize = 10;
+            app.general_stationLatitudeLabel.FontSize = 11;
             app.general_stationLatitudeLabel.Layout.Row = 3;
             app.general_stationLatitudeLabel.Layout.Column = 1;
-            app.general_stationLatitudeLabel.Text = {'Latitude:'; '(graus decimais)'};
+            app.general_stationLatitudeLabel.Text = 'Latitude (ª):';
 
             % Create general_stationLatitude
             app.general_stationLatitude = uieditfield(app.general_stationGrid, 'numeric');
@@ -864,10 +863,10 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create general_stationLongitudeLabel
             app.general_stationLongitudeLabel = uilabel(app.general_stationGrid);
             app.general_stationLongitudeLabel.VerticalAlignment = 'bottom';
-            app.general_stationLongitudeLabel.FontSize = 10;
+            app.general_stationLongitudeLabel.FontSize = 11;
             app.general_stationLongitudeLabel.Layout.Row = 3;
             app.general_stationLongitudeLabel.Layout.Column = 2;
-            app.general_stationLongitudeLabel.Text = {'Longitude:'; '(graus decimais)'};
+            app.general_stationLongitudeLabel.Text = 'Longitude (º):';
 
             % Create general_stationLongitude
             app.general_stationLongitude = uieditfield(app.general_stationGrid, 'numeric');
@@ -885,7 +884,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.general_lastSessionInfo.ValueChangedFcn = createCallbackFcn(app, @general_ParameterChanged, true);
             app.general_lastSessionInfo.Enable = 'off';
             app.general_lastSessionInfo.Text = 'Leitura dados armazenados na última sessão.';
-            app.general_lastSessionInfo.FontSize = 10;
+            app.general_lastSessionInfo.FontSize = 11;
             app.general_lastSessionInfo.Layout.Row = 5;
             app.general_lastSessionInfo.Layout.Column = [1 3];
 
@@ -914,15 +913,14 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_Grid
             app.server_Grid = uigridlayout(app.general_versionPanel);
             app.server_Grid.ColumnWidth = {150, 150};
-            app.server_Grid.RowHeight = {17, 22, 25, 22, 17, 22};
+            app.server_Grid.RowHeight = {17, 22, 27, 22, 22, 22};
             app.server_Grid.RowSpacing = 5;
-            app.server_Grid.Padding = [10 8 10 4];
             app.server_Grid.BackgroundColor = [1 1 1];
 
             % Create server_StatusLabel
             app.server_StatusLabel = uilabel(app.server_Grid);
             app.server_StatusLabel.VerticalAlignment = 'bottom';
-            app.server_StatusLabel.FontSize = 10;
+            app.server_StatusLabel.FontSize = 11;
             app.server_StatusLabel.Layout.Row = 1;
             app.server_StatusLabel.Layout.Column = 1;
             app.server_StatusLabel.Text = 'Estado:';
@@ -941,7 +939,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_KeyLabel
             app.server_KeyLabel = uilabel(app.server_Grid);
             app.server_KeyLabel.VerticalAlignment = 'bottom';
-            app.server_KeyLabel.FontSize = 10;
+            app.server_KeyLabel.FontSize = 11;
             app.server_KeyLabel.Layout.Row = 1;
             app.server_KeyLabel.Layout.Column = 2;
             app.server_KeyLabel.Text = 'Chave:';
@@ -957,7 +955,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_ClientListLabel
             app.server_ClientListLabel = uilabel(app.server_Grid);
             app.server_ClientListLabel.VerticalAlignment = 'bottom';
-            app.server_ClientListLabel.FontSize = 10;
+            app.server_ClientListLabel.FontSize = 11;
             app.server_ClientListLabel.Layout.Row = 3;
             app.server_ClientListLabel.Layout.Column = [1 2];
             app.server_ClientListLabel.Text = {'Lista de clientes:'; '(valores separados por vírgula)'};
@@ -973,10 +971,10 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_IPLabel
             app.server_IPLabel = uilabel(app.server_Grid);
             app.server_IPLabel.VerticalAlignment = 'bottom';
-            app.server_IPLabel.FontSize = 10;
+            app.server_IPLabel.FontSize = 11;
             app.server_IPLabel.Layout.Row = 5;
             app.server_IPLabel.Layout.Column = 1;
-            app.server_IPLabel.Text = 'Endereço IP (OpenVPN):';
+            app.server_IPLabel.Text = 'IP (OpenVPN):';
 
             % Create server_IP
             app.server_IP = uieditfield(app.server_Grid, 'text');
@@ -989,7 +987,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_PortLabel
             app.server_PortLabel = uilabel(app.server_Grid);
             app.server_PortLabel.VerticalAlignment = 'bottom';
-            app.server_PortLabel.FontSize = 10;
+            app.server_PortLabel.FontSize = 11;
             app.server_PortLabel.Layout.Row = 5;
             app.server_PortLabel.Layout.Column = 2;
             app.server_PortLabel.Text = 'Porta:';
@@ -1014,7 +1012,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create SubGrid3
             app.SubGrid3 = uigridlayout(app.SubTab3);
             app.SubGrid3.ColumnWidth = {104, '1x', 16};
-            app.SubGrid3.RowHeight = {17, 22, 22, 60, 22, 63, 22, '1x'};
+            app.SubGrid3.RowHeight = {17, 22, 22, 60, 22, 67, 22, '1x'};
             app.SubGrid3.RowSpacing = 5;
             app.SubGrid3.BackgroundColor = [1 1 1];
 
@@ -1136,13 +1134,12 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_WaterfallGrid.ColumnWidth = {94, 94};
             app.plot_WaterfallGrid.RowHeight = {17, 22};
             app.plot_WaterfallGrid.RowSpacing = 5;
-            app.plot_WaterfallGrid.Padding = [10 10 10 5];
             app.plot_WaterfallGrid.BackgroundColor = [1 1 1];
 
             % Create plot_WaterfallColormapLabel
             app.plot_WaterfallColormapLabel = uilabel(app.plot_WaterfallGrid);
             app.plot_WaterfallColormapLabel.VerticalAlignment = 'bottom';
-            app.plot_WaterfallColormapLabel.FontSize = 10;
+            app.plot_WaterfallColormapLabel.FontSize = 11;
             app.plot_WaterfallColormapLabel.Layout.Row = 1;
             app.plot_WaterfallColormapLabel.Layout.Column = 1;
             app.plot_WaterfallColormapLabel.Text = 'Mapa de cor:';
@@ -1160,7 +1157,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create plot_WaterfallDepthLabel
             app.plot_WaterfallDepthLabel = uilabel(app.plot_WaterfallGrid);
             app.plot_WaterfallDepthLabel.VerticalAlignment = 'bottom';
-            app.plot_WaterfallDepthLabel.FontSize = 10;
+            app.plot_WaterfallDepthLabel.FontSize = 11;
             app.plot_WaterfallDepthLabel.Layout.Row = 1;
             app.plot_WaterfallDepthLabel.Layout.Column = 2;
             app.plot_WaterfallDepthLabel.Text = 'Profundidade:';
@@ -1195,13 +1192,12 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationGrid.ColumnWidth = {94, 94, 94};
             app.plot_IntegrationGrid.RowHeight = {17, 22};
             app.plot_IntegrationGrid.RowSpacing = 5;
-            app.plot_IntegrationGrid.Padding = [10 10 10 5];
             app.plot_IntegrationGrid.BackgroundColor = [1 1 1];
 
             % Create plot_IntegrationTraceLabel
             app.plot_IntegrationTraceLabel = uilabel(app.plot_IntegrationGrid);
             app.plot_IntegrationTraceLabel.VerticalAlignment = 'bottom';
-            app.plot_IntegrationTraceLabel.FontSize = 10;
+            app.plot_IntegrationTraceLabel.FontSize = 11;
             app.plot_IntegrationTraceLabel.Layout.Row = 1;
             app.plot_IntegrationTraceLabel.Layout.Column = 1;
             app.plot_IntegrationTraceLabel.Text = 'Traço médio:';
@@ -1220,7 +1216,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create plot_IntegrationTimeLabel
             app.plot_IntegrationTimeLabel = uilabel(app.plot_IntegrationGrid);
             app.plot_IntegrationTimeLabel.VerticalAlignment = 'bottom';
-            app.plot_IntegrationTimeLabel.FontSize = 10;
+            app.plot_IntegrationTimeLabel.FontSize = 11;
             app.plot_IntegrationTimeLabel.Layout.Row = 1;
             app.plot_IntegrationTimeLabel.Layout.Column = [2 3];
             app.plot_IntegrationTimeLabel.Text = 'Tempo médio escrita:';

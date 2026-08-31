@@ -7,30 +7,27 @@ classdef winInstrument_exported < matlab.apps.AppBase
         DockModule              matlab.ui.container.GridLayout
         dockModule_Undock       matlab.ui.control.Image
         dockModule_Close        matlab.ui.control.Image
+        Toolbar                 matlab.ui.container.GridLayout
+        toolButton_edit         matlab.ui.control.Button
+        toolButton_connectTest  matlab.ui.control.Button
+        toolSeparator           matlab.ui.control.Image
+        toolButton_export       matlab.ui.control.Image
+        toolButton_open         matlab.ui.control.Image
         SubTabGroup             matlab.ui.container.TabGroup
         SubTab1                 matlab.ui.container.Tab
         SubGrid1                matlab.ui.container.GridLayout
-        Tab1_Grid               matlab.ui.container.GridLayout
-        Image_downArrow         matlab.ui.control.Image
-        Image_upArrow           matlab.ui.control.Image
-        Image_del               matlab.ui.control.Image
-        Image_add               matlab.ui.control.Image
-        Tree                    matlab.ui.container.Tree
-        TreeNode_Receiver       matlab.ui.container.TreeNode
-        TreeNode_GPS            matlab.ui.container.TreeNode
-        Panel                   matlab.ui.container.Panel
         Tab2_PanelGrid          matlab.ui.container.GridLayout
-        AspectostcnicosLabel    matlab.ui.control.Label
-        instrImage              matlab.ui.control.Image
-        instrMetadata           matlab.ui.control.Label
+        InstrumentPhoto         matlab.ui.control.Image
+        InstrumentSpec          matlab.ui.control.Label
+        InstrumentSpecLabel     matlab.ui.control.Label
         ParametersPanel         matlab.ui.container.Panel
         ParametersGrid          matlab.ui.container.GridLayout
-        LocalhostPanel          matlab.ui.container.Panel
-        LocalhostGrid2          matlab.ui.container.GridLayout
-        publicIP                matlab.ui.control.EditField
-        publicIPLabel           matlab.ui.control.Label
-        localIP                 matlab.ui.control.EditField
-        localIPLabel            matlab.ui.control.Label
+        LocalHostPanel          matlab.ui.container.Panel
+        LocalHostGrid           matlab.ui.container.GridLayout
+        IPublic                 matlab.ui.control.EditField
+        IPPublicLabel           matlab.ui.control.Label
+        IPLocal                 matlab.ui.control.EditField
+        IPLocalLabel            matlab.ui.control.Label
         LocalhostCheckBox       matlab.ui.control.CheckBox
         Timeout                 matlab.ui.control.NumericEditField
         TimeoutLabel            matlab.ui.control.Label
@@ -50,18 +47,19 @@ classdef winInstrument_exported < matlab.apps.AppBase
         FamilyLabel             matlab.ui.control.Label
         Status                  matlab.ui.control.DropDown
         StatusLabel             matlab.ui.control.Label
-        PanelLabel              matlab.ui.control.Label
-        TreeLabel               matlab.ui.control.Label
         ModePanel               matlab.ui.container.ButtonGroup
-        ButtonGroup_Edit        matlab.ui.control.RadioButton
-        ButtonGroup_View        matlab.ui.control.RadioButton
+        ButtonGroupEdit         matlab.ui.control.RadioButton
+        ButtonGroupView         matlab.ui.control.RadioButton
         ModePanelLabel          matlab.ui.control.Label
-        Toolbar                 matlab.ui.container.GridLayout
-        toolButton_export       matlab.ui.control.Image
-        toolButton_open         matlab.ui.control.Image
-        toolButton_edit         matlab.ui.control.Button
-        toolButton_connectTest  matlab.ui.control.Button
-        toolSeparator           matlab.ui.control.Image
+        Tab1_Grid               matlab.ui.container.GridLayout
+        OperationArrowDown      matlab.ui.control.Image
+        OperationArrowUp        matlab.ui.control.Image
+        OperationDel            matlab.ui.control.Image
+        OperationAdd            matlab.ui.control.Image
+        Tree                    matlab.ui.container.Tree
+        TreeNodeReceiver        matlab.ui.container.TreeNode
+        TreeNodeGPS             matlab.ui.container.TreeNode
+        TreeLabel               matlab.ui.control.Label
     end
 
     
@@ -112,7 +110,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             
             switch tabIndex
                 case 1        
-                    elToModify = {app.instrMetadata};
+                    elToModify = {app.InstrumentSpec};
                     elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
                     if ~isempty(elDataTag)
                         ui.TextView.startup(app.jsBackDoor, elToModify{1}, class(app));
@@ -148,21 +146,21 @@ classdef winInstrument_exported < matlab.apps.AppBase
     methods (Access = private)
         %-----------------------------------------------------------------%
         function TreeBuilding(app, idxSelectedNode)
-            if ~isempty(app.TreeNode_Receiver.Children)
-                delete(app.TreeNode_Receiver.Children)
+            if ~isempty(app.TreeNodeReceiver.Children)
+                delete(app.TreeNodeReceiver.Children)
             end
             
-            if ~isempty(app.TreeNode_GPS.Children)
-                delete(app.TreeNode_GPS.Children)
+            if ~isempty(app.TreeNodeGPS.Children)
+                delete(app.TreeNodeGPS.Children)
             end
 
             % Tree creation
             for ii = 1:height(app.editedList)
                 switch app.editedList.Family{ii}
                     case 'Receiver'
-                        Parent = app.TreeNode_Receiver;
+                        Parent = app.TreeNodeReceiver;
                     case 'GPS'
-                        Parent = app.TreeNode_GPS;                    
+                        Parent = app.TreeNodeGPS;                    
                     otherwise
                         continue
                 end
@@ -211,8 +209,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 removeStyle(app.Tree)
             end
 
-            h = [allchild(app.TreeNode_Receiver); ...
-                 allchild(app.TreeNode_GPS)];
+            h = [allchild(app.TreeNodeReceiver); ...
+                 allchild(app.TreeNodeGPS)];
 
             DisableNodes = [];
             for ii = 1:numel(h)
@@ -267,10 +265,12 @@ classdef winInstrument_exported < matlab.apps.AppBase
             switch app.Type.Value
                 case 'Serial'
                     app.ParametersGrid.ColumnWidth([1 3]) = {0, '1x'};
+                    app.BaudRateLabel.Visible = 'on';
                     portValidation = contains(app.Port.Value, 'COM');
 
                 otherwise
                     app.ParametersGrid.ColumnWidth([1 3]) = {110, 0};
+                    app.BaudRateLabel.Visible = 'off';
 
                     if isempty(app.IP.Value)
                         app.IP.Value = '127.0.0.1';
@@ -298,7 +298,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         function Layout_LocalhostCheckBox1(app)
             app.LocalhostCheckBox.Enable = 0;
 
-            if app.ButtonGroup_Edit.Value && strcmp(app.Type.Value, "TCP/UDP IP Socket")
+            if app.ButtonGroupEdit.Value && strcmp(app.Type.Value, "TCP/UDP IP Socket")
                 app.LocalhostCheckBox.Enable = 1;
             end
         end
@@ -306,7 +306,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function Layout_LocalhostCheckBox2(app)
             if app.LocalhostCheckBox.Value
-                set(app.LocalhostGrid2.Children, 'Enable', 1)
+                set(app.LocalHostGrid.Children, 'Enable', 1)
 
             else
                 idx = app.Tree.SelectedNodes.NodeData;
@@ -320,8 +320,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     Localhost_publicIP = ''; 
                 end
 
-                set(app.localIP,  'Enable', 0, 'Value', Localhost_localIP)
-                set(app.publicIP, 'Enable', 0, 'Value', Localhost_publicIP)
+                set(app.IPLocal,  'Enable', 0, 'Value', Localhost_localIP)
+                set(app.IPublic, 'Enable', 0, 'Value', Localhost_publicIP)
             end
         end
 
@@ -330,8 +330,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
             idx1 = app.Tree.SelectedNodes.NodeData;
             [htmlContent, imgSource] = util.HtmlTextGenerator.Instrument(app.receiverObj, app.gpsObj, app.editedList, idx1);
 
-            app.instrMetadata.Text   = htmlContent;
-            set(app.instrImage, 'ImageSource', imgSource, 'Visible', 'on')
+            app.InstrumentSpec.Text   = htmlContent;
+            set(app.InstrumentPhoto, 'ImageSource', imgSource, 'Visible', 'on')
         end
 
         %-----------------------------------------------------------------%
@@ -358,8 +358,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
                                                                        'Port',     app.Port.Value,              ...
                                                                        'Timeout',  app.Timeout.Value,           ...
                                                                        'Localhost_Enable',   Localhost_Enable,  ...
-                                                                       'Localhost_localIP',  app.localIP.Value, ...
-                                                                       'Localhost_publicIP', app.publicIP.Value));
+                                                                       'Localhost_localIP',  app.IPLocal.Value, ...
+                                                                       'Localhost_publicIP', app.IPublic.Value));
             end
         end
 
@@ -367,8 +367,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
         function Flag = IPv4Validation(app, event)            
             switch event.Source
                 case app.IP;       ipAddress = app.IP.Value;
-                case app.localIP;  ipAddress = app.localIP.Value;
-                case app.publicIP; ipAddress = app.publicIP.Value;
+                case app.IPLocal;  ipAddress = app.IPLocal.Value;
+                case app.IPublic; ipAddress = app.IPublic.Value;
             end
 
             ipString = regexp(ipAddress, '\d*[.]{1}\d{1,3}[.]{1}\d{1,3}[.]{1}\d*', 'match');
@@ -388,15 +388,15 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                 switch event.Source
                     case app.IP;       app.IP.Value       = event.PreviousValue;
-                    case app.localIP;  app.localIP.Value  = event.PreviousValue;
-                    case app.publicIP; app.publicIP.Value = event.PreviousValue;
+                    case app.IPLocal;  app.IPLocal.Value  = event.PreviousValue;
+                    case app.IPublic; app.IPublic.Value = event.PreviousValue;
                 end
             else
                 if ~strcmp(ipAddress, char(ipString))
                     switch event.Source
                         case app.IP;       app.IP.Value       = char(ipString);
-                        case app.localIP;  app.localIP.Value  = char(ipString);
-                        case app.publicIP; app.publicIP.Value = char(ipString);
+                        case app.IPLocal;  app.IPLocal.Value  = char(ipString);
+                        case app.IPublic; app.IPublic.Value = char(ipString);
                     end
                 end
             end
@@ -442,14 +442,14 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                 if isempty(idx)
                     switch app.Tree.SelectedNodes
-                        case app.TreeNode_Receiver
-                            app.Tree.SelectedNodes = app.TreeNode_Receiver.Children(1);
+                        case app.TreeNodeReceiver
+                            app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
     
-                        case app.TreeNode_GPS
-                            if ~isempty(app.TreeNode_GPS.Children)
-                                app.Tree.SelectedNodes = app.TreeNode_GPS.Children(1);
+                        case app.TreeNodeGPS
+                            if ~isempty(app.TreeNodeGPS.Children)
+                                app.Tree.SelectedNodes = app.TreeNodeGPS.Children(1);
                             else
-                                app.Tree.SelectedNodes = app.TreeNode_Receiver.Children(1);
+                                app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
                             end
                     end
                     idx = app.Tree.SelectedNodes.NodeData;
@@ -458,7 +458,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 msgError = '';
 
             catch ME
-                app.Tree.SelectedNodes = app.TreeNode_Receiver.Children(1);
+                app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
                 idx = app.Tree.SelectedNodes.NodeData;
 
                 msgError = ME.message;
@@ -559,7 +559,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             %---------------------------------------------------------%
             % ## MODO DE VISUALIZAÇÃO ##
             %---------------------------------------------------------%
-            if app.ButtonGroup_View.Value
+            if app.ButtonGroupView.Value
                 if app.editedList.Enable(idx); app.Status.Items = {'ON'};
                 else;                          app.Status.Items = {'OFF'};
                 end
@@ -605,12 +605,12 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                     if isfield(Parameters, 'Localhost_Enable')
                         app.LocalhostCheckBox.Value = Parameters.Localhost_Enable;
-                        app.localIP.Value  = Parameters.Localhost_localIP;
-                        app.publicIP.Value = Parameters.Localhost_publicIP;
+                        app.IPLocal.Value  = Parameters.Localhost_localIP;
+                        app.IPublic.Value = Parameters.Localhost_publicIP;
                     else
                         app.LocalhostCheckBox.Value = 0;
-                        app.localIP.Value           = '';
-                        app.publicIP.Value          = '';
+                        app.IPLocal.Value           = '';
+                        app.IPublic.Value          = '';
                     end
             end
 
@@ -632,7 +632,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             %-------------------------------------------------------------%
             % ## MODO DE VISUALIZAÇÃO ##
             %-------------------------------------------------------------%
-            if app.ButtonGroup_View.Value
+            if app.ButtonGroupView.Value
                 % Aspectos relacionados à indicação visual de que se trata 
                 % do modo de visualização:
 
@@ -646,7 +646,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                 app.Description.Editable = 'off';
                 set(findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
-                set(findobj(app.LocalhostGrid2, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
+                set(findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
                 app.LocalhostCheckBox.Enable = 0;
 
                 set(app.Status, 'Items', {app.Status.Value})
@@ -681,7 +681,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                 app.Description.Editable = 'on';
                 set(findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
-                set(findobj(app.LocalhostGrid2, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
+                set(findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
                 app.LocalhostCheckBox.Enable = 1;
 
                 set(app.Status, 'Items', {'ON', 'OFF'})
@@ -741,7 +741,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     ParameterUpdate(app)
 
                 %---------------------------------------------------------%
-                case {app.Port, app.IP, app.localIP, app.publicIP}
+                case {app.Port, app.IP, app.IPLocal, app.IPublic}
                     Flag = 0;
 
                     if ~isempty(event.Source.Value)
@@ -779,7 +779,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             
         end
 
-        % Image clicked function: Image_add
+        % Image clicked function: OperationAdd
         function ImageClicked_add(app, event)
             
             [idx, msgError] = SelectionNodeValidation(app);
@@ -794,7 +794,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: Image_del
+        % Image clicked function: OperationDel
         function ImageClicked_del(app, event)
             
             [idx, msgError] = SelectionNodeValidation(app);
@@ -802,7 +802,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             if isempty(msgError)
                 nodeParent = app.Tree.SelectedNodes.Parent;
 
-                if nodeParent == app.TreeNode_Receiver    
+                if nodeParent == app.TreeNodeReceiver    
                     if isscalar(nodeParent.Children)
                         return;
                     end
@@ -814,7 +814,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: Image_downArrow, Image_upArrow
+        % Image clicked function: OperationArrowDown, OperationArrowUp
         function ImageClicked_UpDownArrows(app, event)
             
             [idx, msgError] = SelectionNodeValidation(app);
@@ -826,13 +826,13 @@ classdef winInstrument_exported < matlab.apps.AppBase
     
                 Flag     = 0;
                 switch event.Source
-                    case app.Image_upArrow
+                    case app.OperationArrowUp
                         if idx2_old > 1
                             idx1_new = Parent.Children(idx2_old-1).NodeData;
                             Flag     = 1;
                         end
     
-                    case app.Image_downArrow
+                    case app.OperationArrowDown
                         if idx2_old < numel(Parent.Children)
                             idx1_new = Parent.Children(idx2_old+1).NodeData;
                             Flag     = 1;
@@ -934,7 +934,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 update(app)
             end
             
-            app.ButtonGroup_View.Value = 1;
+            app.ButtonGroupView.Value = 1;
             ValueChanged_OperationMode(app)
 
         end
@@ -1007,6 +1007,393 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.GridLayout.Padding = [0 0 0 0];
             app.GridLayout.BackgroundColor = [1 1 1];
 
+            % Create SubTabGroup
+            app.SubTabGroup = uitabgroup(app.GridLayout);
+            app.SubTabGroup.AutoResizeChildren = 'off';
+            app.SubTabGroup.Layout.Row = [4 5];
+            app.SubTabGroup.Layout.Column = [2 3];
+
+            % Create SubTab1
+            app.SubTab1 = uitab(app.SubTabGroup);
+            app.SubTab1.AutoResizeChildren = 'off';
+            app.SubTab1.Title = 'LISTA DE INSTRUMENTOS';
+
+            % Create SubGrid1
+            app.SubGrid1 = uigridlayout(app.SubTab1);
+            app.SubGrid1.ColumnWidth = {310, '1x'};
+            app.SubGrid1.RowHeight = {17, '1x', 22, 34};
+            app.SubGrid1.ColumnSpacing = 20;
+            app.SubGrid1.RowSpacing = 5;
+            app.SubGrid1.BackgroundColor = [1 1 1];
+
+            % Create TreeLabel
+            app.TreeLabel = uilabel(app.SubGrid1);
+            app.TreeLabel.VerticalAlignment = 'bottom';
+            app.TreeLabel.FontSize = 10;
+            app.TreeLabel.Layout.Row = 1;
+            app.TreeLabel.Layout.Column = 1;
+            app.TreeLabel.Text = 'INSTRUMENTOS';
+
+            % Create Tab1_Grid
+            app.Tab1_Grid = uigridlayout(app.SubGrid1);
+            app.Tab1_Grid.ColumnWidth = {146, '1x', 0};
+            app.Tab1_Grid.RowHeight = {16, 5, 16, '1x', 16, 5, 16};
+            app.Tab1_Grid.ColumnSpacing = 5;
+            app.Tab1_Grid.RowSpacing = 0;
+            app.Tab1_Grid.Padding = [0 0 0 0];
+            app.Tab1_Grid.Layout.Row = 2;
+            app.Tab1_Grid.Layout.Column = 1;
+            app.Tab1_Grid.BackgroundColor = [1 1 1];
+
+            % Create Tree
+            app.Tree = uitree(app.Tab1_Grid);
+            app.Tree.SelectionChangedFcn = createCallbackFcn(app, @TreeSelectionChanged, true);
+            app.Tree.FontSize = 11;
+            app.Tree.Layout.Row = [1 7];
+            app.Tree.Layout.Column = [1 2];
+
+            % Create TreeNodeReceiver
+            app.TreeNodeReceiver = uitreenode(app.Tree);
+            app.TreeNodeReceiver.Text = 'RECEPTOR';
+
+            % Create TreeNodeGPS
+            app.TreeNodeGPS = uitreenode(app.Tree);
+            app.TreeNodeGPS.Text = 'GPS';
+
+            % Create OperationAdd
+            app.OperationAdd = uiimage(app.Tab1_Grid);
+            app.OperationAdd.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_add, true);
+            app.OperationAdd.Enable = 'off';
+            app.OperationAdd.Tooltip = {'Adiciona novo instrumento'};
+            app.OperationAdd.Layout.Row = 1;
+            app.OperationAdd.Layout.Column = 3;
+            app.OperationAdd.ImageSource = 'addFileWithPlus_32.png';
+
+            % Create OperationDel
+            app.OperationDel = uiimage(app.Tab1_Grid);
+            app.OperationDel.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_del, true);
+            app.OperationDel.Enable = 'off';
+            app.OperationDel.Tooltip = {'Exclui instrumento selecionado'};
+            app.OperationDel.Layout.Row = 3;
+            app.OperationDel.Layout.Column = 3;
+            app.OperationDel.ImageSource = 'Delete_32Red.png';
+
+            % Create OperationArrowUp
+            app.OperationArrowUp = uiimage(app.Tab1_Grid);
+            app.OperationArrowUp.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
+            app.OperationArrowUp.Enable = 'off';
+            app.OperationArrowUp.Tooltip = {'Troca ordem do instrumento selecionado'};
+            app.OperationArrowUp.Layout.Row = 5;
+            app.OperationArrowUp.Layout.Column = 3;
+            app.OperationArrowUp.ImageSource = 'ArrowUp_32.png';
+
+            % Create OperationArrowDown
+            app.OperationArrowDown = uiimage(app.Tab1_Grid);
+            app.OperationArrowDown.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
+            app.OperationArrowDown.Enable = 'off';
+            app.OperationArrowDown.Tooltip = {'Troca ordem do instrumento selecionado'};
+            app.OperationArrowDown.Layout.Row = 7;
+            app.OperationArrowDown.Layout.Column = 3;
+            app.OperationArrowDown.ImageSource = 'ArrowDown_32.png';
+
+            % Create ModePanelLabel
+            app.ModePanelLabel = uilabel(app.SubGrid1);
+            app.ModePanelLabel.VerticalAlignment = 'bottom';
+            app.ModePanelLabel.FontSize = 10;
+            app.ModePanelLabel.Layout.Row = 3;
+            app.ModePanelLabel.Layout.Column = 1;
+            app.ModePanelLabel.Text = 'MODO';
+
+            % Create ModePanel
+            app.ModePanel = uibuttongroup(app.SubGrid1);
+            app.ModePanel.AutoResizeChildren = 'off';
+            app.ModePanel.SelectionChangedFcn = createCallbackFcn(app, @ValueChanged_OperationMode, true);
+            app.ModePanel.BackgroundColor = [1 1 1];
+            app.ModePanel.Layout.Row = 4;
+            app.ModePanel.Layout.Column = 1;
+            app.ModePanel.FontSize = 10;
+
+            % Create ButtonGroupView
+            app.ButtonGroupView = uiradiobutton(app.ModePanel);
+            app.ButtonGroupView.Text = '<font style="color:#0000ff;">VISUALIZAR</font> lista';
+            app.ButtonGroupView.FontSize = 11;
+            app.ButtonGroupView.Interpreter = 'html';
+            app.ButtonGroupView.Position = [6 5 117 22];
+            app.ButtonGroupView.Value = true;
+
+            % Create ButtonGroupEdit
+            app.ButtonGroupEdit = uiradiobutton(app.ModePanel);
+            app.ButtonGroupEdit.Text = '<font style="color:#a2142f;"><b>EDITAR</b></font> lista';
+            app.ButtonGroupEdit.FontSize = 11;
+            app.ButtonGroupEdit.Interpreter = 'html';
+            app.ButtonGroupEdit.Position = [150 5 92 22];
+
+            % Create Tab2_PanelGrid
+            app.Tab2_PanelGrid = uigridlayout(app.SubGrid1);
+            app.Tab2_PanelGrid.ColumnWidth = {110, 190, 1, '1x', 140, 22};
+            app.Tab2_PanelGrid.RowHeight = {17, 22, 22, 22, 22, '1x', 22, 22, 150};
+            app.Tab2_PanelGrid.RowSpacing = 5;
+            app.Tab2_PanelGrid.Padding = [0 0 0 0];
+            app.Tab2_PanelGrid.Layout.Row = [1 4];
+            app.Tab2_PanelGrid.Layout.Column = 2;
+            app.Tab2_PanelGrid.BackgroundColor = [1 1 1];
+
+            % Create StatusLabel
+            app.StatusLabel = uilabel(app.Tab2_PanelGrid);
+            app.StatusLabel.VerticalAlignment = 'bottom';
+            app.StatusLabel.FontSize = 10;
+            app.StatusLabel.FontColor = [0.149 0.149 0.149];
+            app.StatusLabel.Layout.Row = 1;
+            app.StatusLabel.Layout.Column = 1;
+            app.StatusLabel.Text = 'ESTADO';
+
+            % Create Status
+            app.Status = uidropdown(app.Tab2_PanelGrid);
+            app.Status.Items = {'ON', 'OFF'};
+            app.Status.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Status.FontSize = 11;
+            app.Status.BackgroundColor = [0.9412 0.9412 0.9412];
+            app.Status.Layout.Row = 2;
+            app.Status.Layout.Column = 1;
+            app.Status.Value = 'ON';
+
+            % Create FamilyLabel
+            app.FamilyLabel = uilabel(app.Tab2_PanelGrid);
+            app.FamilyLabel.VerticalAlignment = 'bottom';
+            app.FamilyLabel.FontSize = 10;
+            app.FamilyLabel.Layout.Row = 1;
+            app.FamilyLabel.Layout.Column = 2;
+            app.FamilyLabel.Text = 'FAMÍLIA';
+
+            % Create Family
+            app.Family = uidropdown(app.Tab2_PanelGrid);
+            app.Family.Items = {};
+            app.Family.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Family.FontSize = 11;
+            app.Family.BackgroundColor = [1 1 1];
+            app.Family.Layout.Row = 2;
+            app.Family.Layout.Column = 2;
+            app.Family.Value = {};
+
+            % Create NameLabel
+            app.NameLabel = uilabel(app.Tab2_PanelGrid);
+            app.NameLabel.VerticalAlignment = 'bottom';
+            app.NameLabel.FontSize = 10;
+            app.NameLabel.Layout.Row = 3;
+            app.NameLabel.Layout.Column = [1 3];
+            app.NameLabel.Text = 'FABRICANTE E MODELO';
+
+            % Create Name
+            app.Name = uidropdown(app.Tab2_PanelGrid);
+            app.Name.Items = {};
+            app.Name.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Name.FontSize = 11;
+            app.Name.BackgroundColor = [1 1 1];
+            app.Name.Layout.Row = 4;
+            app.Name.Layout.Column = [1 2];
+            app.Name.Value = {};
+
+            % Create DescriptionLabel
+            app.DescriptionLabel = uilabel(app.Tab2_PanelGrid);
+            app.DescriptionLabel.VerticalAlignment = 'bottom';
+            app.DescriptionLabel.FontSize = 10;
+            app.DescriptionLabel.Layout.Row = 5;
+            app.DescriptionLabel.Layout.Column = 1;
+            app.DescriptionLabel.Text = 'DESCRIÇÃO';
+
+            % Create Description
+            app.Description = uitextarea(app.Tab2_PanelGrid);
+            app.Description.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Description.Editable = 'off';
+            app.Description.FontSize = 11;
+            app.Description.Layout.Row = 6;
+            app.Description.Layout.Column = [1 2];
+
+            % Create TypeLabel
+            app.TypeLabel = uilabel(app.Tab2_PanelGrid);
+            app.TypeLabel.VerticalAlignment = 'bottom';
+            app.TypeLabel.FontSize = 10;
+            app.TypeLabel.Layout.Row = 7;
+            app.TypeLabel.Layout.Column = 1;
+            app.TypeLabel.Text = 'TIPO DE CONEXÃO';
+
+            % Create Type
+            app.Type = uidropdown(app.Tab2_PanelGrid);
+            app.Type.Items = {};
+            app.Type.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Type.FontSize = 11;
+            app.Type.BackgroundColor = [1 1 1];
+            app.Type.Layout.Row = 8;
+            app.Type.Layout.Column = [1 2];
+            app.Type.Value = {};
+
+            % Create ParametersPanel
+            app.ParametersPanel = uipanel(app.Tab2_PanelGrid);
+            app.ParametersPanel.AutoResizeChildren = 'off';
+            app.ParametersPanel.Layout.Row = 9;
+            app.ParametersPanel.Layout.Column = [1 2];
+
+            % Create ParametersGrid
+            app.ParametersGrid = uigridlayout(app.ParametersPanel);
+            app.ParametersGrid.ColumnWidth = {110, '1x', 0, '1x'};
+            app.ParametersGrid.RowHeight = {17, 22, 17, '1x'};
+            app.ParametersGrid.RowSpacing = 5;
+            app.ParametersGrid.Padding = [10 10 10 5];
+            app.ParametersGrid.BackgroundColor = [1 1 1];
+
+            % Create IPLabel
+            app.IPLabel = uilabel(app.ParametersGrid);
+            app.IPLabel.VerticalAlignment = 'bottom';
+            app.IPLabel.FontSize = 11;
+            app.IPLabel.Layout.Row = 1;
+            app.IPLabel.Layout.Column = 1;
+            app.IPLabel.Text = 'IP:';
+
+            % Create IP
+            app.IP = uieditfield(app.ParametersGrid, 'text');
+            app.IP.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.IP.Editable = 'off';
+            app.IP.FontSize = 11;
+            app.IP.Layout.Row = 2;
+            app.IP.Layout.Column = 1;
+
+            % Create PortLabel
+            app.PortLabel = uilabel(app.ParametersGrid);
+            app.PortLabel.VerticalAlignment = 'bottom';
+            app.PortLabel.FontSize = 11;
+            app.PortLabel.Layout.Row = 1;
+            app.PortLabel.Layout.Column = 2;
+            app.PortLabel.Text = 'Porta:';
+
+            % Create Port
+            app.Port = uieditfield(app.ParametersGrid, 'text');
+            app.Port.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Port.Editable = 'off';
+            app.Port.FontSize = 11;
+            app.Port.Layout.Row = 2;
+            app.Port.Layout.Column = 2;
+
+            % Create BaudRateLabel
+            app.BaudRateLabel = uilabel(app.ParametersGrid);
+            app.BaudRateLabel.VerticalAlignment = 'bottom';
+            app.BaudRateLabel.FontSize = 11;
+            app.BaudRateLabel.Visible = 'off';
+            app.BaudRateLabel.Layout.Row = 1;
+            app.BaudRateLabel.Layout.Column = [3 4];
+            app.BaudRateLabel.Text = 'BaudRate:';
+
+            % Create BaudRate
+            app.BaudRate = uieditfield(app.ParametersGrid, 'numeric');
+            app.BaudRate.Limits = [0 Inf];
+            app.BaudRate.RoundFractionalValues = 'on';
+            app.BaudRate.ValueDisplayFormat = '%.0f';
+            app.BaudRate.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.BaudRate.Editable = 'off';
+            app.BaudRate.FontSize = 11;
+            app.BaudRate.Layout.Row = 2;
+            app.BaudRate.Layout.Column = 3;
+            app.BaudRate.Value = 9600;
+
+            % Create TimeoutLabel
+            app.TimeoutLabel = uilabel(app.ParametersGrid);
+            app.TimeoutLabel.VerticalAlignment = 'bottom';
+            app.TimeoutLabel.FontSize = 11;
+            app.TimeoutLabel.Layout.Row = 1;
+            app.TimeoutLabel.Layout.Column = 4;
+            app.TimeoutLabel.Text = 'Timeout:';
+
+            % Create Timeout
+            app.Timeout = uieditfield(app.ParametersGrid, 'numeric');
+            app.Timeout.Limits = [1 20];
+            app.Timeout.RoundFractionalValues = 'on';
+            app.Timeout.ValueDisplayFormat = '%.0f';
+            app.Timeout.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Timeout.Editable = 'off';
+            app.Timeout.FontSize = 11;
+            app.Timeout.Layout.Row = 2;
+            app.Timeout.Layout.Column = 4;
+            app.Timeout.Value = 5;
+
+            % Create LocalhostCheckBox
+            app.LocalhostCheckBox = uicheckbox(app.ParametersGrid);
+            app.LocalhostCheckBox.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.LocalhostCheckBox.Enable = 'off';
+            app.LocalhostCheckBox.Text = 'Localhost';
+            app.LocalhostCheckBox.FontSize = 11;
+            app.LocalhostCheckBox.Layout.Row = 3;
+            app.LocalhostCheckBox.Layout.Column = [1 2];
+
+            % Create LocalHostPanel
+            app.LocalHostPanel = uipanel(app.ParametersGrid);
+            app.LocalHostPanel.AutoResizeChildren = 'off';
+            app.LocalHostPanel.Layout.Row = 4;
+            app.LocalHostPanel.Layout.Column = [1 4];
+
+            % Create LocalHostGrid
+            app.LocalHostGrid = uigridlayout(app.LocalHostPanel);
+            app.LocalHostGrid.RowHeight = {17, 22};
+            app.LocalHostGrid.RowSpacing = 5;
+            app.LocalHostGrid.Padding = [10 10 10 5];
+            app.LocalHostGrid.BackgroundColor = [1 1 1];
+
+            % Create IPLocalLabel
+            app.IPLocalLabel = uilabel(app.LocalHostGrid);
+            app.IPLocalLabel.FontSize = 11;
+            app.IPLocalLabel.Layout.Row = 1;
+            app.IPLocalLabel.Layout.Column = 1;
+            app.IPLocalLabel.Text = 'IP local:';
+
+            % Create IPLocal
+            app.IPLocal = uieditfield(app.LocalHostGrid, 'text');
+            app.IPLocal.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.IPLocal.Editable = 'off';
+            app.IPLocal.FontSize = 11;
+            app.IPLocal.Enable = 'off';
+            app.IPLocal.Layout.Row = 2;
+            app.IPLocal.Layout.Column = 1;
+
+            % Create IPPublicLabel
+            app.IPPublicLabel = uilabel(app.LocalHostGrid);
+            app.IPPublicLabel.FontSize = 11;
+            app.IPPublicLabel.Layout.Row = 1;
+            app.IPPublicLabel.Layout.Column = 2;
+            app.IPPublicLabel.Text = 'IP público:';
+
+            % Create IPublic
+            app.IPublic = uieditfield(app.LocalHostGrid, 'text');
+            app.IPublic.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.IPublic.Editable = 'off';
+            app.IPublic.FontSize = 11;
+            app.IPublic.Enable = 'off';
+            app.IPublic.Layout.Row = 2;
+            app.IPublic.Layout.Column = 2;
+
+            % Create InstrumentSpecLabel
+            app.InstrumentSpecLabel = uilabel(app.Tab2_PanelGrid);
+            app.InstrumentSpecLabel.VerticalAlignment = 'bottom';
+            app.InstrumentSpecLabel.FontSize = 10;
+            app.InstrumentSpecLabel.Layout.Row = 1;
+            app.InstrumentSpecLabel.Layout.Column = 4;
+            app.InstrumentSpecLabel.Text = 'ASPECTOS TÉCNICOS';
+
+            % Create InstrumentSpec
+            app.InstrumentSpec = uilabel(app.Tab2_PanelGrid);
+            app.InstrumentSpec.VerticalAlignment = 'top';
+            app.InstrumentSpec.WordWrap = 'on';
+            app.InstrumentSpec.FontSize = 11;
+            app.InstrumentSpec.Layout.Row = [2 9];
+            app.InstrumentSpec.Layout.Column = [4 6];
+            app.InstrumentSpec.Interpreter = 'html';
+            app.InstrumentSpec.Text = '';
+
+            % Create InstrumentPhoto
+            app.InstrumentPhoto = uiimage(app.Tab2_PanelGrid);
+            app.InstrumentPhoto.Visible = 'off';
+            app.InstrumentPhoto.Layout.Row = [3 5];
+            app.InstrumentPhoto.Layout.Column = 5;
+            app.InstrumentPhoto.HorizontalAlignment = 'right';
+            app.InstrumentPhoto.VerticalAlignment = 'top';
+
             % Create Toolbar
             app.Toolbar = uigridlayout(app.GridLayout);
             app.Toolbar.ColumnWidth = {22, 22, 5, 22, '1x', 110};
@@ -1017,6 +1404,24 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Toolbar.Layout.Row = 7;
             app.Toolbar.Layout.Column = [1 6];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
+
+            % Create toolButton_open
+            app.toolButton_open = uiimage(app.Toolbar);
+            app.toolButton_open.ScaleMethod = 'none';
+            app.toolButton_open.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_open, true);
+            app.toolButton_open.Tooltip = {'Abre arquivo .json com lista de tarefas'};
+            app.toolButton_open.Layout.Row = 1;
+            app.toolButton_open.Layout.Column = 1;
+            app.toolButton_open.ImageSource = 'Import_16.png';
+
+            % Create toolButton_export
+            app.toolButton_export = uiimage(app.Toolbar);
+            app.toolButton_export.ScaleMethod = 'none';
+            app.toolButton_export.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_export, true);
+            app.toolButton_export.Tooltip = {'Exporta arquivo .json com lista de tarefas'};
+            app.toolButton_export.Layout.Row = 1;
+            app.toolButton_export.Layout.Column = 2;
+            app.toolButton_export.ImageSource = 'Export_16.png';
 
             % Create toolSeparator
             app.toolSeparator = uiimage(app.Toolbar);
@@ -1049,420 +1454,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.toolButton_edit.Layout.Row = 1;
             app.toolButton_edit.Layout.Column = 6;
             app.toolButton_edit.Text = 'Confirma edição';
-
-            % Create toolButton_open
-            app.toolButton_open = uiimage(app.Toolbar);
-            app.toolButton_open.ScaleMethod = 'none';
-            app.toolButton_open.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_open, true);
-            app.toolButton_open.Tooltip = {'Abre arquivo .json com lista de tarefas'};
-            app.toolButton_open.Layout.Row = 1;
-            app.toolButton_open.Layout.Column = 1;
-            app.toolButton_open.ImageSource = 'Import_16.png';
-
-            % Create toolButton_export
-            app.toolButton_export = uiimage(app.Toolbar);
-            app.toolButton_export.ScaleMethod = 'none';
-            app.toolButton_export.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_export, true);
-            app.toolButton_export.Tooltip = {'Exporta arquivo .json com lista de tarefas'};
-            app.toolButton_export.Layout.Row = 1;
-            app.toolButton_export.Layout.Column = 2;
-            app.toolButton_export.ImageSource = 'Export_16.png';
-
-            % Create SubTabGroup
-            app.SubTabGroup = uitabgroup(app.GridLayout);
-            app.SubTabGroup.AutoResizeChildren = 'off';
-            app.SubTabGroup.Layout.Row = [4 5];
-            app.SubTabGroup.Layout.Column = [2 3];
-
-            % Create SubTab1
-            app.SubTab1 = uitab(app.SubTabGroup);
-            app.SubTab1.AutoResizeChildren = 'off';
-            app.SubTab1.Title = 'LISTA DE INSTRUMENTOS';
-
-            % Create SubGrid1
-            app.SubGrid1 = uigridlayout(app.SubTab1);
-            app.SubGrid1.ColumnWidth = {310, '1x'};
-            app.SubGrid1.RowHeight = {17, 34, 22, '1x'};
-            app.SubGrid1.RowSpacing = 5;
-            app.SubGrid1.BackgroundColor = [1 1 1];
-
-            % Create ModePanelLabel
-            app.ModePanelLabel = uilabel(app.SubGrid1);
-            app.ModePanelLabel.VerticalAlignment = 'bottom';
-            app.ModePanelLabel.FontSize = 10;
-            app.ModePanelLabel.Layout.Row = 1;
-            app.ModePanelLabel.Layout.Column = 1;
-            app.ModePanelLabel.Text = 'MODO:';
-
-            % Create ModePanel
-            app.ModePanel = uibuttongroup(app.SubGrid1);
-            app.ModePanel.AutoResizeChildren = 'off';
-            app.ModePanel.SelectionChangedFcn = createCallbackFcn(app, @ValueChanged_OperationMode, true);
-            app.ModePanel.BackgroundColor = [1 1 1];
-            app.ModePanel.Layout.Row = 2;
-            app.ModePanel.Layout.Column = 1;
-            app.ModePanel.FontSize = 10;
-
-            % Create ButtonGroup_View
-            app.ButtonGroup_View = uiradiobutton(app.ModePanel);
-            app.ButtonGroup_View.Text = '<font style="color:#0000ff;">VISUALIZAR</font> lista';
-            app.ButtonGroup_View.FontSize = 11;
-            app.ButtonGroup_View.Interpreter = 'html';
-            app.ButtonGroup_View.Position = [6 5 117 22];
-            app.ButtonGroup_View.Value = true;
-
-            % Create ButtonGroup_Edit
-            app.ButtonGroup_Edit = uiradiobutton(app.ModePanel);
-            app.ButtonGroup_Edit.Text = '<font style="color:#a2142f;"><b>EDITAR</b></font> lista';
-            app.ButtonGroup_Edit.FontSize = 11;
-            app.ButtonGroup_Edit.Interpreter = 'html';
-            app.ButtonGroup_Edit.Position = [150 5 92 22];
-
-            % Create TreeLabel
-            app.TreeLabel = uilabel(app.SubGrid1);
-            app.TreeLabel.VerticalAlignment = 'bottom';
-            app.TreeLabel.FontSize = 10;
-            app.TreeLabel.Layout.Row = 3;
-            app.TreeLabel.Layout.Column = 1;
-            app.TreeLabel.Text = 'INSTRUMENTOS:';
-
-            % Create PanelLabel
-            app.PanelLabel = uilabel(app.SubGrid1);
-            app.PanelLabel.VerticalAlignment = 'bottom';
-            app.PanelLabel.FontSize = 10;
-            app.PanelLabel.Layout.Row = 1;
-            app.PanelLabel.Layout.Column = 2;
-            app.PanelLabel.Text = 'CARACTERÍSTICAS:';
-
-            % Create Panel
-            app.Panel = uipanel(app.SubGrid1);
-            app.Panel.AutoResizeChildren = 'off';
-            app.Panel.Layout.Row = [2 4];
-            app.Panel.Layout.Column = 2;
-
-            % Create Tab2_PanelGrid
-            app.Tab2_PanelGrid = uigridlayout(app.Panel);
-            app.Tab2_PanelGrid.ColumnWidth = {110, 190, '1x', 140, 22};
-            app.Tab2_PanelGrid.RowHeight = {17, 22, 22, 22, 22, '1x', 22, 22, 150};
-            app.Tab2_PanelGrid.RowSpacing = 5;
-            app.Tab2_PanelGrid.BackgroundColor = [1 1 1];
-
-            % Create StatusLabel
-            app.StatusLabel = uilabel(app.Tab2_PanelGrid);
-            app.StatusLabel.VerticalAlignment = 'bottom';
-            app.StatusLabel.FontSize = 10;
-            app.StatusLabel.FontColor = [0.149 0.149 0.149];
-            app.StatusLabel.Layout.Row = 1;
-            app.StatusLabel.Layout.Column = 1;
-            app.StatusLabel.Text = 'Estado:';
-
-            % Create Status
-            app.Status = uidropdown(app.Tab2_PanelGrid);
-            app.Status.Items = {'ON', 'OFF'};
-            app.Status.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.Status.FontSize = 11;
-            app.Status.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.Status.Layout.Row = 2;
-            app.Status.Layout.Column = 1;
-            app.Status.Value = 'ON';
-
-            % Create FamilyLabel
-            app.FamilyLabel = uilabel(app.Tab2_PanelGrid);
-            app.FamilyLabel.VerticalAlignment = 'bottom';
-            app.FamilyLabel.FontSize = 10;
-            app.FamilyLabel.Layout.Row = 1;
-            app.FamilyLabel.Layout.Column = 2;
-            app.FamilyLabel.Text = 'Família:';
-
-            % Create Family
-            app.Family = uidropdown(app.Tab2_PanelGrid);
-            app.Family.Items = {};
-            app.Family.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.Family.FontSize = 11;
-            app.Family.BackgroundColor = [1 1 1];
-            app.Family.Layout.Row = 2;
-            app.Family.Layout.Column = 2;
-            app.Family.Value = {};
-
-            % Create NameLabel
-            app.NameLabel = uilabel(app.Tab2_PanelGrid);
-            app.NameLabel.VerticalAlignment = 'bottom';
-            app.NameLabel.FontSize = 10;
-            app.NameLabel.Layout.Row = 3;
-            app.NameLabel.Layout.Column = 1;
-            app.NameLabel.Text = 'Fabricante e modelo:';
-
-            % Create Name
-            app.Name = uidropdown(app.Tab2_PanelGrid);
-            app.Name.Items = {};
-            app.Name.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.Name.FontSize = 11;
-            app.Name.BackgroundColor = [1 1 1];
-            app.Name.Layout.Row = 4;
-            app.Name.Layout.Column = [1 2];
-            app.Name.Value = {};
-
-            % Create DescriptionLabel
-            app.DescriptionLabel = uilabel(app.Tab2_PanelGrid);
-            app.DescriptionLabel.VerticalAlignment = 'bottom';
-            app.DescriptionLabel.FontSize = 10;
-            app.DescriptionLabel.Layout.Row = 5;
-            app.DescriptionLabel.Layout.Column = 1;
-            app.DescriptionLabel.Text = 'Descrição (opcional):';
-
-            % Create Description
-            app.Description = uitextarea(app.Tab2_PanelGrid);
-            app.Description.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.Description.Editable = 'off';
-            app.Description.FontSize = 11;
-            app.Description.Layout.Row = 6;
-            app.Description.Layout.Column = [1 2];
-
-            % Create TypeLabel
-            app.TypeLabel = uilabel(app.Tab2_PanelGrid);
-            app.TypeLabel.VerticalAlignment = 'bottom';
-            app.TypeLabel.FontSize = 10;
-            app.TypeLabel.Layout.Row = 7;
-            app.TypeLabel.Layout.Column = 1;
-            app.TypeLabel.Text = 'Tipo de conexão:';
-
-            % Create Type
-            app.Type = uidropdown(app.Tab2_PanelGrid);
-            app.Type.Items = {};
-            app.Type.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.Type.FontSize = 11;
-            app.Type.BackgroundColor = [1 1 1];
-            app.Type.Layout.Row = 8;
-            app.Type.Layout.Column = [1 2];
-            app.Type.Value = {};
-
-            % Create ParametersPanel
-            app.ParametersPanel = uipanel(app.Tab2_PanelGrid);
-            app.ParametersPanel.AutoResizeChildren = 'off';
-            app.ParametersPanel.Layout.Row = 9;
-            app.ParametersPanel.Layout.Column = [1 2];
-
-            % Create ParametersGrid
-            app.ParametersGrid = uigridlayout(app.ParametersPanel);
-            app.ParametersGrid.ColumnWidth = {110, '1x', '1x', '1x'};
-            app.ParametersGrid.RowHeight = {17, 22, 17, '1x'};
-            app.ParametersGrid.RowSpacing = 5;
-            app.ParametersGrid.Padding = [10 10 10 5];
-            app.ParametersGrid.BackgroundColor = [1 1 1];
-
-            % Create IPLabel
-            app.IPLabel = uilabel(app.ParametersGrid);
-            app.IPLabel.VerticalAlignment = 'bottom';
-            app.IPLabel.FontSize = 10;
-            app.IPLabel.Layout.Row = 1;
-            app.IPLabel.Layout.Column = 1;
-            app.IPLabel.Text = 'Endereço IP:';
-
-            % Create IP
-            app.IP = uieditfield(app.ParametersGrid, 'text');
-            app.IP.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.IP.Editable = 'off';
-            app.IP.FontSize = 11;
-            app.IP.Layout.Row = 2;
-            app.IP.Layout.Column = 1;
-
-            % Create PortLabel
-            app.PortLabel = uilabel(app.ParametersGrid);
-            app.PortLabel.VerticalAlignment = 'bottom';
-            app.PortLabel.FontSize = 10;
-            app.PortLabel.Layout.Row = 1;
-            app.PortLabel.Layout.Column = 2;
-            app.PortLabel.Text = 'Porta:';
-
-            % Create Port
-            app.Port = uieditfield(app.ParametersGrid, 'text');
-            app.Port.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.Port.Editable = 'off';
-            app.Port.FontSize = 11;
-            app.Port.Layout.Row = 2;
-            app.Port.Layout.Column = 2;
-
-            % Create BaudRateLabel
-            app.BaudRateLabel = uilabel(app.ParametersGrid);
-            app.BaudRateLabel.VerticalAlignment = 'bottom';
-            app.BaudRateLabel.FontSize = 10;
-            app.BaudRateLabel.Layout.Row = 1;
-            app.BaudRateLabel.Layout.Column = 3;
-            app.BaudRateLabel.Text = 'BaudRate:';
-
-            % Create BaudRate
-            app.BaudRate = uieditfield(app.ParametersGrid, 'numeric');
-            app.BaudRate.Limits = [0 Inf];
-            app.BaudRate.RoundFractionalValues = 'on';
-            app.BaudRate.ValueDisplayFormat = '%.0f';
-            app.BaudRate.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.BaudRate.Editable = 'off';
-            app.BaudRate.FontSize = 11;
-            app.BaudRate.Layout.Row = 2;
-            app.BaudRate.Layout.Column = 3;
-            app.BaudRate.Value = 9600;
-
-            % Create TimeoutLabel
-            app.TimeoutLabel = uilabel(app.ParametersGrid);
-            app.TimeoutLabel.VerticalAlignment = 'bottom';
-            app.TimeoutLabel.FontSize = 10;
-            app.TimeoutLabel.Layout.Row = 1;
-            app.TimeoutLabel.Layout.Column = 4;
-            app.TimeoutLabel.Text = 'Timeout:';
-
-            % Create Timeout
-            app.Timeout = uieditfield(app.ParametersGrid, 'numeric');
-            app.Timeout.Limits = [1 20];
-            app.Timeout.RoundFractionalValues = 'on';
-            app.Timeout.ValueDisplayFormat = '%.0f';
-            app.Timeout.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.Timeout.Editable = 'off';
-            app.Timeout.FontSize = 11;
-            app.Timeout.Layout.Row = 2;
-            app.Timeout.Layout.Column = 4;
-            app.Timeout.Value = 5;
-
-            % Create LocalhostCheckBox
-            app.LocalhostCheckBox = uicheckbox(app.ParametersGrid);
-            app.LocalhostCheckBox.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.LocalhostCheckBox.Enable = 'off';
-            app.LocalhostCheckBox.Text = 'Localhost';
-            app.LocalhostCheckBox.FontSize = 10;
-            app.LocalhostCheckBox.Layout.Row = 3;
-            app.LocalhostCheckBox.Layout.Column = [1 4];
-
-            % Create LocalhostPanel
-            app.LocalhostPanel = uipanel(app.ParametersGrid);
-            app.LocalhostPanel.AutoResizeChildren = 'off';
-            app.LocalhostPanel.Layout.Row = 4;
-            app.LocalhostPanel.Layout.Column = [1 4];
-
-            % Create LocalhostGrid2
-            app.LocalhostGrid2 = uigridlayout(app.LocalhostPanel);
-            app.LocalhostGrid2.RowHeight = {17, 22};
-            app.LocalhostGrid2.RowSpacing = 5;
-            app.LocalhostGrid2.Padding = [10 10 10 5];
-            app.LocalhostGrid2.BackgroundColor = [1 1 1];
-
-            % Create localIPLabel
-            app.localIPLabel = uilabel(app.LocalhostGrid2);
-            app.localIPLabel.FontSize = 10;
-            app.localIPLabel.Layout.Row = 1;
-            app.localIPLabel.Layout.Column = 1;
-            app.localIPLabel.Text = 'IP local:';
-
-            % Create localIP
-            app.localIP = uieditfield(app.LocalhostGrid2, 'text');
-            app.localIP.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.localIP.Editable = 'off';
-            app.localIP.FontSize = 11;
-            app.localIP.Enable = 'off';
-            app.localIP.Layout.Row = 2;
-            app.localIP.Layout.Column = 1;
-
-            % Create publicIPLabel
-            app.publicIPLabel = uilabel(app.LocalhostGrid2);
-            app.publicIPLabel.FontSize = 10;
-            app.publicIPLabel.Layout.Row = 1;
-            app.publicIPLabel.Layout.Column = 2;
-            app.publicIPLabel.Text = 'IP público:';
-
-            % Create publicIP
-            app.publicIP = uieditfield(app.LocalhostGrid2, 'text');
-            app.publicIP.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.publicIP.Editable = 'off';
-            app.publicIP.FontSize = 11;
-            app.publicIP.Enable = 'off';
-            app.publicIP.Layout.Row = 2;
-            app.publicIP.Layout.Column = 2;
-
-            % Create instrMetadata
-            app.instrMetadata = uilabel(app.Tab2_PanelGrid);
-            app.instrMetadata.VerticalAlignment = 'top';
-            app.instrMetadata.WordWrap = 'on';
-            app.instrMetadata.FontSize = 11;
-            app.instrMetadata.Layout.Row = [2 9];
-            app.instrMetadata.Layout.Column = [3 5];
-            app.instrMetadata.Interpreter = 'html';
-            app.instrMetadata.Text = '';
-
-            % Create instrImage
-            app.instrImage = uiimage(app.Tab2_PanelGrid);
-            app.instrImage.Visible = 'off';
-            app.instrImage.Layout.Row = [3 5];
-            app.instrImage.Layout.Column = 4;
-            app.instrImage.HorizontalAlignment = 'right';
-            app.instrImage.VerticalAlignment = 'top';
-
-            % Create AspectostcnicosLabel
-            app.AspectostcnicosLabel = uilabel(app.Tab2_PanelGrid);
-            app.AspectostcnicosLabel.VerticalAlignment = 'bottom';
-            app.AspectostcnicosLabel.FontSize = 10;
-            app.AspectostcnicosLabel.Layout.Row = 1;
-            app.AspectostcnicosLabel.Layout.Column = 3;
-            app.AspectostcnicosLabel.Text = 'Aspectos técnicos:';
-
-            % Create Tab1_Grid
-            app.Tab1_Grid = uigridlayout(app.SubGrid1);
-            app.Tab1_Grid.ColumnWidth = {2, 146, '1x', 0};
-            app.Tab1_Grid.RowHeight = {16, 5, 16, '1x', 16, 5, 16};
-            app.Tab1_Grid.ColumnSpacing = 5;
-            app.Tab1_Grid.RowSpacing = 0;
-            app.Tab1_Grid.Padding = [0 0 0 0];
-            app.Tab1_Grid.Layout.Row = 4;
-            app.Tab1_Grid.Layout.Column = 1;
-            app.Tab1_Grid.BackgroundColor = [1 1 1];
-
-            % Create Tree
-            app.Tree = uitree(app.Tab1_Grid);
-            app.Tree.SelectionChangedFcn = createCallbackFcn(app, @TreeSelectionChanged, true);
-            app.Tree.FontSize = 11;
-            app.Tree.Layout.Row = [1 7];
-            app.Tree.Layout.Column = [1 3];
-
-            % Create TreeNode_Receiver
-            app.TreeNode_Receiver = uitreenode(app.Tree);
-            app.TreeNode_Receiver.Text = 'RECEPTOR';
-
-            % Create TreeNode_GPS
-            app.TreeNode_GPS = uitreenode(app.Tree);
-            app.TreeNode_GPS.Text = 'GPS';
-
-            % Create Image_add
-            app.Image_add = uiimage(app.Tab1_Grid);
-            app.Image_add.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_add, true);
-            app.Image_add.Enable = 'off';
-            app.Image_add.Tooltip = {'Adiciona novo instrumento'};
-            app.Image_add.Layout.Row = 1;
-            app.Image_add.Layout.Column = 4;
-            app.Image_add.ImageSource = 'addFileWithPlus_32.png';
-
-            % Create Image_del
-            app.Image_del = uiimage(app.Tab1_Grid);
-            app.Image_del.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_del, true);
-            app.Image_del.Enable = 'off';
-            app.Image_del.Tooltip = {'Exclui instrumento selecionado'};
-            app.Image_del.Layout.Row = 3;
-            app.Image_del.Layout.Column = 4;
-            app.Image_del.ImageSource = 'Delete_32Red.png';
-
-            % Create Image_upArrow
-            app.Image_upArrow = uiimage(app.Tab1_Grid);
-            app.Image_upArrow.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
-            app.Image_upArrow.Enable = 'off';
-            app.Image_upArrow.Tooltip = {'Troca ordem do instrumento selecionado'};
-            app.Image_upArrow.Layout.Row = 5;
-            app.Image_upArrow.Layout.Column = 4;
-            app.Image_upArrow.ImageSource = 'ArrowUp_32.png';
-
-            % Create Image_downArrow
-            app.Image_downArrow = uiimage(app.Tab1_Grid);
-            app.Image_downArrow.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
-            app.Image_downArrow.Enable = 'off';
-            app.Image_downArrow.Tooltip = {'Troca ordem do instrumento selecionado'};
-            app.Image_downArrow.Layout.Row = 7;
-            app.Image_downArrow.Layout.Column = 4;
-            app.Image_downArrow.ImageSource = 'ArrowDown_32.png';
 
             % Create DockModule
             app.DockModule = uigridlayout(app.GridLayout);

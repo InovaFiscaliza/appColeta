@@ -216,9 +216,21 @@ classdef winAddTask_exported < matlab.apps.AppBase
             appName = class(app);
             switch tabIndex
                 case 1
-                    ui.CustomizationBase.getElementsDataTag({app.MetaData});
+                    elToModify = {
+                        app.Document;
+                        app.MetaData
+                    };
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
+
                     try
                         ui.TextView.startup(app.jsBackDoor, app.MetaData, appName);
+                    catch
+                    end
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.Document.UserData.id, 'style', struct('background', 'none')) ...
+                        });
                     catch
                     end
 
@@ -239,10 +251,20 @@ classdef winAddTask_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function initializeAppProperties(app)
             app.receiverObj = app.mainApp.receiverObj;
-            app.gpsObj      = app.mainApp.gpsObj;
-            app.EB500Map    = app.mainApp.EB500Obj.SelectivityMap;            
-            app.switchList  = struct2table(jsondecode(fileread(fullfile(app.mainApp.rootFolder, 'config', 'switchList.json'))));
-            app.EMSatObj    = app.mainApp.EMSatObj;
+            app.gpsObj = app.mainApp.gpsObj;
+            app.EB500Map = app.mainApp.EB500Obj.SelectivityMap;            
+            app.EMSatObj = app.mainApp.EMSatObj;
+
+            app.switchList = struct2table(jsondecode(fileread(fullfile(app.mainApp.rootFolder, 'config', 'switchList.json'))));
+
+            tgtList = app.EMSatObj.TargetList;
+            app.targetList = {};
+            for ii = 1:numel(tgtList)
+                if ~isempty(tgtList(ii).Target)
+                    app.targetList = [app.targetList, {tgtList(ii).Target.Name}];
+                end
+            end
+            app.targetList = unique(app.targetList);
         end
 
         %-----------------------------------------------------------------%
@@ -254,28 +276,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function applyInitialLayout(app)
-            startup_tgtList(app)
-            startup_Layout(app)
-        end
-    end
-
-
-    methods (Access = private)
-        %-----------------------------------------------------------------%
-        function startup_tgtList(app)
-            tgtList = app.EMSatObj.TargetList;
-
-            app.targetList = {};
-            for ii = 1:numel(tgtList)
-                if ~isempty(tgtList(ii).Target)
-                    app.targetList = [app.targetList, {tgtList(ii).Target.Name}];
-                end
-            end
-            app.targetList = unique(app.targetList);
-        end
-
-        %-----------------------------------------------------------------%
-        function startup_Layout(app)
             % ## RECEPTORES ##
             % Inicialmente, identifica-se a lista de RECEPTORES disponíveis
             % p/ realização de uma tarefa de monitoração. Isso precisa ser
@@ -284,7 +284,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             receiverIndexes = find(app.receiverObj.List.Enable)';
             receiverList = {};
             for receiverIndex = receiverIndexes
-                receiverSocket = InstrumentSocket(app, app.receiverObj.List.Parameters{receiverIndex});
+                receiverSocket = getReceiverEndpoint(app, app.receiverObj.List.Parameters{receiverIndex});
                 receiverList{end+1} = sprintf('ID %d: %s - %s', receiverIndex, app.receiverObj.List.Name{receiverIndex}, receiverSocket);
             end
             app.Receiver_List.Items = receiverList;
@@ -292,7 +292,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Caso se trate da edição de uma tarefa, seleciona-se o receptor
             % em uso, caso ainda disponível.
             if strcmp(app.infoEdition.type, 'edit')    
-                selectedReceiverSocket = InstrumentSocket(app, app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Selection.Parameters{1});
+                selectedReceiverSocket = getReceiverEndpoint(app, app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Selection.Parameters{1});
                 selectedReceiverName   = sprintf('%s - %s', app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Selection.Name{1}, selectedReceiverSocket);
                 selectedReceiverIndex  = find(contains(receiverList, selectedReceiverName), 1);
 
@@ -380,9 +380,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
             else
                 % O campo "EditedFlag" não existe originalmente no arquivo 
                 % "taskList.json", devendo ser criado.
-                for ii = 1:numel(app.taskList)
-                    for jj = 1:numel(app.taskList(ii).Band)
-                        app.taskList(ii).Band(jj).EditedFlag = 0;
+                for taskIdx = 1:numel(app.taskList)
+                    for bandIdx = 1:numel(app.taskList(taskIdx).Band)
+                        app.taskList(taskIdx).Band(bandIdx).EditedFlag = 0;
                     end
                 end
             end
@@ -399,74 +399,65 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 app.GPS_FixedStation.Visible = false;
             end
         end
+    end
 
+
+    methods (Access = private)
         %-----------------------------------------------------------------%
-        function checkStackingOrder(app)
-            currentOrder   = arrayfun(@(x) str2double(x.Tag), app.GridLayout.Children);
-            referenceOrder = (1:numel(currentOrder))';
+        function receiverEndPoint = getReceiverEndpoint(~, receiverParameters)
+            parameters = jsondecode(receiverParameters);
 
-            if ~isequal(currentOrder, referenceOrder)
-                [~, newOrderIndex] = sort(currentOrder);        
-                app.GridLayout.Children  = app.GridLayout.Children(newOrderIndex);
-            end
-        end
+            if isfield(parameters, 'IP') && isfield(parameters, 'Port')
+                receiverEndPoint = sprintf('%s:%s', parameters.IP, parameters.Port);
 
-        %-----------------------------------------------------------------%
-        function instrumentSocket = InstrumentSocket(app, instrumentParameters)
-            Parameters = jsondecode(instrumentParameters);
+            elseif isfield(parameters, 'IP')
+                receiverEndPoint = parameters.IP;
 
-            if isfield(Parameters, 'IP') && isfield(Parameters, 'Port')
-                instrumentSocket = sprintf('%s:%s', Parameters.IP, Parameters.Port);
-            elseif isfield(Parameters, 'IP')
-                instrumentSocket = Parameters.IP;
             else
-                instrumentSocket = Parameters.Port;
+                receiverEndPoint = parameters.Port;
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function [instrHandle, msgError] = ConnectivityTest_Receiver_Aux(app, emitNotification)
-            receiverName = SelectedReceiverName(app);
+        function varargout = testInstrumentConnectivity(app, family, emitNotification)
+            arguments
+                app 
+                family {mustBeMember(family, {'receiver', 'gps'})}
+                emitNotification (1, 1) logical = false
+            end
 
-            idx1 = str2double(char(extractBetween(app.Receiver_List.Value, 'ID', ':')));
-            idx2 = find(strcmp(app.receiverObj.Config.Name, receiverName), 1);
+            switch family
+                case 'receiver'
+                    receiverName = getSelectedReceiverName(app);
+        
+                    idx1 = str2double(char(extractBetween(app.Receiver_List.Value, 'ID', ':')));
+                    idx2 = find(strcmp(app.receiverObj.Config.Name, receiverName), 1);
+        
+                    receiverConfig = struct( ...
+                        'Type', app.receiverObj.List.Type{idx1},  ...
+                        'Tag', app.receiverObj.Config.Tag{idx2}, ...
+                        'Parameters', jsondecode(app.receiverObj.List.Parameters{idx1}) ...
+                    );
+        
+                    [receiverHandle, notification] = testConnectivity(app.receiverObj, receiverConfig, emitNotification);
+                    varargout = {receiverHandle};
 
-            instrSelected = struct('Type',       app.receiverObj.List.Type{idx1},  ...
-                                   'Tag',        app.receiverObj.Config.Tag{idx2}, ...
-                                   'Parameters', jsondecode(app.receiverObj.List.Parameters{idx1}));
-
-            [instrHandle, notification] = testConnectivity(app.receiverObj, instrSelected, emitNotification);
-            msgError = '';
+                case 'gps'
+                    idx1 = str2double(char(extractBetween(app.GPS_List.Value, 'ID', ':'))) - numel(app.Receiver_List.Items);
+        
+                    gpsConfig = struct( ...
+                        'Type', app.gpsObj.List.Type{idx1}, ...
+                        'Parameters', jsondecode(app.gpsObj.List.Parameters{idx1}) ...
+                    );
+                    
+                    [gpsHandle, gps, notification] = testConnectivity(app.gpsObj, gpsConfig, emitNotification);
+                    varargout = {gpsHandle, gps};
+            end
 
             if ~isempty(notification)
                 ui.Dialog(app.UIFigure, notification.type, notification.message);
-                if strcmp(notification.type, 'error')
-                    msgError = notification.message;
-                end
             end
         end
-
-
-        %-----------------------------------------------------------------%
-        function [instrHandle, gpsData, errorMsg] = ConnectivityTest_GPS_Aux(app, MessageBoxFlag)
-
-            idx1 = str2double(char(extractBetween(app.GPS_List.Value, 'ID', ':'))) - numel(app.Receiver_List.Items);
-
-            instrSelected = struct('Type',       app.gpsObj.List.Type{idx1}, ...
-                                   'Parameters', jsondecode(app.gpsObj.List.Parameters{idx1}));
-            
-            [instrHandle, gpsData, notification] = testConnectivity(app.gpsObj, instrSelected, MessageBoxFlag);
-            errorMsg = '';
-
-            if ~isempty(notification)
-                ui.Dialog(app.UIFigure, notification.type, notification.message);
-                if strcmp(notification.type, 'error')
-                    errorMsg = notification.message;
-                end
-            end
-        end
-
 
         %-----------------------------------------------------------------%
         function AntennaConfig_Layout(app, Type)
@@ -481,31 +472,29 @@ classdef winAddTask_exported < matlab.apps.AppBase
             end
         end
 
-
         %-----------------------------------------------------------------%
         function AntennaConfig_TrackingMode_Aux(app)
             app.Antenna_TrackingMode.Items = {'LookAngles', 'Manual'};
             app.Band_TargetList.Value = '';
             
             initialAntenna = app.Band_Antenna.Value;
-            switchIndex    = SwitchIndex(app, 'default');
+            switchIndex    = getAntennaSwitchIndex(app, 'default');
             set(app.Band_Antenna, 'Items', app.switchList.Antennas{switchIndex}, 'Value', initialAntenna)
         end
 
-
         %-----------------------------------------------------------------%
-        function BandViewTreeBuilding(app, idxTask)
+        function buildTreeBands(app, taskIdx)
             delete(app.Band_Tree.Children);
 
-            for ii = 1:numel(app.taskList(idxTask).Band)
+            for bandIdx = 1:numel(app.taskList(taskIdx).Band)
                 node = uitreenode( ...
                     app.Band_Tree, ...
-                    'Text', sprintf('ID %d: %.3f - %.3f MHz', app.taskList(idxTask).Band(ii).ID, app.taskList(idxTask).Band(ii).FreqStart / 1e+6, app.taskList(idxTask).Band(ii).FreqStop / 1e+6), ...
-                    'NodeData', ii, ...
+                    'Text', sprintf('Id %d: %.3f – %.3f MHz', app.taskList(taskIdx).Band(bandIdx).ID, app.taskList(taskIdx).Band(bandIdx).FreqStart / 1e+6, app.taskList(taskIdx).Band(bandIdx).FreqStop / 1e+6), ...
+                    'NodeData', bandIdx, ...
                     'Icon', 'Playback_32.png' ...
                 );
 
-                if strcmp(app.TaskType.Value, 'Rompimento de Máscara Espectral') && app.taskList(idxTask).Band(ii).MaskTrigger.Status
+                if strcmp(app.TaskType.Value, 'Rompimento de Máscara Espectral') && app.taskList(taskIdx).Band(bandIdx).MaskTrigger.Status
                     node.Icon = "Occupancy_32.png";
                 end
             end
@@ -513,11 +502,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Band_Tree.SelectedNodes = app.Band_Tree.Children(1);
         end
 
-
         %-----------------------------------------------------------------%
         function BandView_SatelliteList(app)            
             if isempty(app.Band_TargetList.Value)
-                switchIndex = SwitchIndex(app, 'default');
+                switchIndex = getAntennaSwitchIndex(app, 'default');
 
                 switch app.AntennaSwitch_Name.Value                    
                     case 'EMSat'
@@ -557,7 +545,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function BandView_EditablesParameters_Visibility(app)
-            idx3 = SelectedReceiverIndex(app);
+            idx3 = getSelectedReceiverIndex(app);
 
             switch app.receiverObj.Config.connectFlag(idx3)
                 % Anritsu MS2720T, Keysight N9344C, Keysight N9936B, R&S FSL, R&S FSVR, R&S FSW, and Tektronix SA2500
@@ -601,7 +589,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function instrSettings = BandView_EditablesParameters_GetValues(app, idx1, idx2)
-            idx3 = SelectedReceiverIndex(app);
+            idx3 = getSelectedReceiverIndex(app);
 
             instrSettings = struct('StepWidth_Items',   [], 'StepWidth',       [], ...
                                    'DataPoints_Limits', [], 'DataPoints',      [], ...
@@ -762,7 +750,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function BandView_EditablesParameters_ShowValues(app, idx1, idx2)
-            idx3 = SelectedReceiverIndex(app);
+            idx3 = getSelectedReceiverIndex(app);
             
             if ~app.taskList(idx1).Band(idx2).EditedFlag
                 BandView_EditablesParameters_SaveValues(app, idx1, idx2)
@@ -863,37 +851,37 @@ classdef winAddTask_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function idxTask = SelectedTaskIndex(app)
-            [~, idxTask] = ismember(app.TaskName.Value, app.TaskName.Items);
+        function taskIdx = getSelectedTaskIndex(app)
+            [~, taskIdx] = ismember(app.TaskName.Value, app.TaskName.Items);
         end
 
         %-----------------------------------------------------------------%
-        function idxReceiver = SelectedReceiverIndex(app)
-            receiverName = SelectedReceiverName(app);            
-            idxReceiver  = find(strcmp(app.receiverObj.Config.Name, receiverName));
+        function receiverIdx = getSelectedReceiverIndex(app)
+            receiverName = getSelectedReceiverName(app);            
+            receiverIdx  = find(strcmp(app.receiverObj.Config.Name, receiverName));
 
             % O R&S EB500 tem dois registros em "ReceiverLib.json". Um relacionado
             % às tarefas normais e outro à tarefa "DT (Level+Azimuth)".
-            if numel(idxReceiver) > 1
-                connectFlagList = app.receiverObj.Config.connectFlag(idxReceiver);
+            if numel(receiverIdx) > 1
+                connectFlagList = app.receiverObj.Config.connectFlag(receiverIdx);
 
                 switch app.TaskType.Value
                     case 'Drive-test (Level+Azimuth)'
-                        idxReceiver = idxReceiver(connectFlagList == 3);
+                        receiverIdx = receiverIdx(connectFlagList == 3);
                     otherwise
-                        idxReceiver = idxReceiver(connectFlagList ~= 3);
+                        receiverIdx = receiverIdx(connectFlagList ~= 3);
                 end
-                idxReceiver = idxReceiver(1);
+                receiverIdx = receiverIdx(1);
             end
         end
 
         %-----------------------------------------------------------------%
-        function receiverName = SelectedReceiverName(app)
+        function receiverName = getSelectedReceiverName(app)
             receiverName = char(extractBetween(app.Receiver_List.Value, ': ', ' -'));
         end
 
         %-----------------------------------------------------------------%
-        function idxSwitch = SwitchIndex(app, sourceType)
+        function switchIdx = getAntennaSwitchIndex(app, sourceType)
             % Se o modo comutador está ativado, identifica-se o seu índice
             % na tabela app.switchList. Isso permite, por exemplo, identificar
             % lista de antenas controladas pelo comutador.
@@ -902,16 +890,16 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % podem ser usadas numa monitoração.
 
             if strcmp(sourceType, 'ReceiverChanged') || app.AntennaSwitch_Mode.Value
-                receiverName = SelectedReceiverName(app);
-                idxSwitch    = find(strcmp(app.switchList.Receiver, receiverName), 1);
+                receiverName = getSelectedReceiverName(app);
+                switchIdx = find(strcmp(app.switchList.Receiver, receiverName), 1);
             else
-                idxSwitch    = find(strcmp(app.switchList.Switch, 'none'), 1);
+                switchIdx = find(strcmp(app.switchList.Switch, 'none'), 1);
             end
         end
 
         %-----------------------------------------------------------------%
-        function MainButtonPushed_Validations(app)
-            idx1 = SelectedTaskIndex(app);
+        function validateTaskSpec(app)
+            taskIdx = getSelectedTaskIndex(app);
 
             % VALIDATIONS
             % (a) SELECTED SPECTRAL MASK FILE
@@ -929,10 +917,11 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         error('Uma monitoração do tipo "%s" é limitada ao receptor R&S EB500.', app.TaskType.Value)
 
                     else
-                        jj = [];
-                        for ii = 1:numel(app.taskList(idx1).Band)
-                            FreqSpan  = app.taskList(idx1).Band(ii).FreqStop - app.taskList(idx1).Band(ii).FreqStart;
-                            StepWidth = class.Constants.FreqStr2NumConversion(app.taskList(idx1).Band(ii).instrStepWidth);
+                        bandsWithInvalidSpanIdxs = [];
+                        
+                        for bandIdx = 1:numel(app.taskList(taskIdx).Band)
+                            span = app.taskList(taskIdx).Band(bandIdx).FreqStop - app.taskList(taskIdx).Band(bandIdx).FreqStart;
+                            step = class.Constants.FreqStr2NumConversion(app.taskList(taskIdx).Band(bandIdx).instrStepWidth);
 
                             % Retorna erro se escolhido um Span diferente de 1, 
                             % 2, 5, 10 ou 20 MHz. E retorna erro se for selecionado 
@@ -944,21 +933,22 @@ classdef winAddTask_exported < matlab.apps.AppBase
                             % valores foram ajustados diretamente no EB500 GUI 
                             % porque o manual parece estar desatualizado.
 
-                            spanIdx   = find(app.mainApp.EB500Obj.FFMSpanStepMap.Span == FreqSpan, 1);
+                            spanIdx = find(app.mainApp.EB500Obj.FFMSpanStepMap.Span == span, 1);
                             if isempty(spanIdx)
-                                jj = [jj, ii];
+                                bandsWithInvalidSpanIdxs = [bandsWithInvalidSpanIdxs, bandIdx];
+
                             else
                                 minStep = app.mainApp.EB500Obj.FFMSpanStepMap.minStepWidth(spanIdx);
                                 maxStep = app.mainApp.EB500Obj.FFMSpanStepMap.maxStepWidth(spanIdx);
 
-                                if (StepWidth < minStep) || (StepWidth > maxStep)
-                                    jj = [jj, ii];
+                                if (step < minStep) || (step > maxStep)
+                                    bandsWithInvalidSpanIdxs = [bandsWithInvalidSpanIdxs, bandIdx];
                                 end
                             end
                         end
     
-                        if ~isempty(jj)
-                            error('Inserido valores inválidos para ao menos um dos seguintes parâmetros: "Span" ou "StepWidth".\nID: %s\n\nOs valores permitidos de "Span" são 1, 2, 5, 10 ou 20 MHz. Já o <i>range</i> de valores permitidos de "StepWidth" dependem do valor do "Span".', strjoin(string(jj), ', '))
+                        if ~isempty(bandsWithInvalidSpanIdxs)
+                            error('Inserido valores inválidos para ao menos um dos seguintes parâmetros: "Span" ou "StepWidth".\nID: %s\n\nOs valores permitidos de "Span" são 1, 2, 5, 10 ou 20 MHz. Já o <i>range</i> de valores permitidos de "StepWidth" dependem do valor do "Span".', strjoin(string(bandsWithInvalidSpanIdxs), ', '))
                         end
                     end
                 
@@ -971,35 +961,36 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % (b) VALID OBSERVATION PERIOD
             switch app.ObservationType.Value
                 case 'Período específico'
-                    BeginTime = app.SpecificTime_DatePicker1.Value + hours(app.SpecificTime_Spinner1.Value) + minutes(app.SpecificTime_Spinner2.Value);
-                    EndTime   = app.SpecificTime_DatePicker2.Value + hours(app.SpecificTime_Spinner3.Value) + minutes(app.SpecificTime_Spinner4.Value);
+                    beginTime = app.SpecificTime_DatePicker1.Value + hours(app.SpecificTime_Spinner1.Value) + minutes(app.SpecificTime_Spinner2.Value);
+                    endTime   = app.SpecificTime_DatePicker2.Value + hours(app.SpecificTime_Spinner3.Value) + minutes(app.SpecificTime_Spinner4.Value);
                     
-                    if isnat(BeginTime) || isnat(EndTime) || (BeginTime > EndTime) || (EndTime < datetime('now'))
+                    if isnat(beginTime) || isnat(endTime) || (beginTime > endTime) || (endTime < datetime('now'))
                         error('Período de observação inválido.')
                     end
 
                 case 'Quantidade específica de amostras'
-                    jj = [];
-                    for ii = 1:numel(app.taskList(idx1).Band)
-                        if app.taskList(idx1).Band(ii).instrObservationSamples <= 1
-                            jj = [jj, ii];
+                    bandsWithInvalidObservationSamplesIdxs = [];
+
+                    for bandIdx = 1:numel(app.taskList(taskIdx).Band)
+                        if app.taskList(taskIdx).Band(bandIdx).instrObservationSamples <= 1
+                            bandsWithInvalidObservationSamplesIdxs = [bandsWithInvalidObservationSamplesIdxs, bandIdx];
                         end
                     end
 
-                    if ~isempty(jj)
-                        error('Quantidade inválida de varreduras da(s) faixa(s) de frequência indicada(s) a seguir.\nID: %s\n\nO valor mínimo são duas varreduras.', strjoin(string(jj), ', '))
+                    if ~isempty(bandsWithInvalidObservationSamplesIdxs)
+                        error('Quantidade inválida de varreduras da(s) faixa(s) de frequência indicada(s) a seguir.\nID: %s\n\nO valor mínimo são duas varreduras.', strjoin(string(bandsWithInvalidObservationSamplesIdxs), ', '))
                     end
             end
 
             % (c) COORDINATES DIFFERENT FROM (-1,-1)
-            if strcmp(app.GPS_List.Value, 'ID 0: Manual') && (app.GPS_manualLatitude.Value == -1) && (app.GPS_manualLongitude.Value == -1)
-                error('Coordenadas geográficas inválidas.')
+            if strcmp(app.GPS_List.Value, 'ID 0: Manual') && ~gpsLib.isRefPointInBrazil(struct('Latitude', app.GPS_manualLatitude.Value, 'Longitude', app.GPS_manualLongitude.Value))
+                error('Coordenadas geográficas inválidas por remeter a local fora do país.')
             end
 
             % (d) REVISIT TIME (GPS x BANDS)
             if ~strcmp(app.GPS_List.Value, 'ID 0: Manual')
-                RevisitTimeArray = [app.GPS_RevisitTime.Value, [app.taskList(idx1).Band.RevisitTime]];
-                if isequal(find(RevisitTimeArray == min(RevisitTimeArray)), 1)
+                revisitTimeArray = [app.GPS_RevisitTime.Value, [app.taskList(taskIdx).Band.RevisitTime]];
+                if isequal(find(revisitTimeArray == min(revisitTimeArray)), 1)
                     error('O tempo de revisita do GPS não pode ser inferior ao mínimo tempo de revisita da(s) faixa(s) de frequência.')
                 end
             end
@@ -1007,31 +998,32 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % (e) ADDED CONFIG PARAMETERS FOR EACH ANTENNA TO BE USED
             if isempty(app.AntennaList_Tree.Children)
                 error('Não configurados os parâmetros de instalação da(s) antena(s) em uso.')
+
             elseif ~app.AntennaSwitch_Mode.Value && (numel(app.AntennaList_Tree.Children) > 1)
                 error('A configuração dos parâmetros de instalação de mais de uma antena é possível apenas quando habilitado o comutador.')
             end
 
             if app.AntennaSwitch_Mode.Value
-                jj = [];
-                AntennaList = {};
+                bandsWithoutAntennaIdxs = [];
+                antennaList = {};
 
-                for ii = 1:numel(app.taskList(idx1).Band)
-                    if isempty(app.taskList(idx1).Band(ii).instrAntenna)
-                        jj = [jj, ii];
+                for bandIdx = 1:numel(app.taskList(taskIdx).Band)
+                    if isempty(app.taskList(taskIdx).Band(bandIdx).instrAntenna)
+                        bandsWithoutAntennaIdxs = [bandsWithoutAntennaIdxs, bandIdx];
                     else
-                        AntennaList{end+1} = app.taskList(idx1).Band(ii).instrAntenna;
+                        antennaList{end+1} = app.taskList(taskIdx).Band(bandIdx).instrAntenna;
                     end
                 end
-                AntennaList = unique(AntennaList);
+                antennaList = unique(antennaList);
 
-                if ~isempty(jj)
-                    error('Não selecionada a antena da(s) faixa(s) de frequência indicada(s) a seguir.\nID: %s', strjoin(string(jj), ', '))
+                if ~isempty(bandsWithoutAntennaIdxs)
+                    error('Não selecionada a antena da(s) faixa(s) de frequência indicada(s) a seguir.\nID: %s', strjoin(string(bandsWithoutAntennaIdxs), ', '))
                 else
-                    AntennaMetaData = {app.AntennaList_Tree.Children.Text};
+                    antennaMetaData = {app.AntennaList_Tree.Children.Text};
     
-                    idx2 = contains(AntennaList, AntennaMetaData);
-                    if ~all(idx2)
-                        error('Não foram configurados os parâmetros de instalação da(s) antena(s) indicada(s) a seguir.\nAntenas: %s', strjoin(AntennaList(~idx2), ', '))
+                    antennaIdx = contains(antennaList, antennaMetaData);
+                    if ~all(antennaIdx)
+                        error('Não foram configurados os parâmetros de instalação da(s) antena(s) indicada(s) a seguir.\nAntenas: %s', strjoin(antennaList(~antennaIdx), ', '))
                     end
                 end
 
@@ -1043,11 +1035,11 @@ classdef winAddTask_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function MainButtonPushed_ObservationSamples(app)
-            idx1 = SelectedTaskIndex(app);
+        function disableObservationSampleLimit(app)
+            taskIdx = getSelectedTaskIndex(app);
 
-            for ii = 1:numel(app.taskList(idx1).Band)
-                app.taskList(idx1).Band(ii).instrObservationSamples = -1;
+            for bandIdx = 1:numel(app.taskList(taskIdx).Band)
+                app.taskList(taskIdx).Band(bandIdx).instrObservationSamples = -1;
             end
         end
     end
@@ -1116,7 +1108,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % (A) VALIDATIONS
             try
-                MainButtonPushed_Validations(app)
+                validateTaskSpec(app)
+
             catch ME
                 ui.Dialog(app.UIFigure, 'error', ME.message);
                 app.progressDialog.Visible = 'hidden';
@@ -1124,8 +1117,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
             end
 
             % (B) GENERAL ASPECTS OF THE SELECTED TASK
-            idx1 = SelectedTaskIndex(app);
-            idx2 = SelectedReceiverIndex(app);
+            taskIdx = getSelectedTaskIndex(app);
+            receiverIdx = getSelectedReceiverIndex(app);
 
             % Type
             taskType     = app.TaskType.Value;
@@ -1134,7 +1127,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             end
             
             % BitsPerSample
-            app.taskList(idx1).BitsPerSample = str2double(extractBefore(app.BitsPerPoint.Value, 'bits'));
+            app.taskList(taskIdx).BitsPerSample = str2double(extractBefore(app.BitsPerPoint.Value, 'bits'));
 
             % Observation
             switch app.ObservationType.Value
@@ -1150,24 +1143,24 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         Duration_EndTime = datestr(now+seconds(Duration_sec), 'dd/mm/yyyy HH:MM:ss');
                     end
 
-                    app.taskList(idx1).Observation = struct('Type',      'Duration',                          ...
+                    app.taskList(taskIdx).Observation = struct('Type',      'Duration',                          ...
                                                             'BeginTime', datestr(now, 'dd/mm/yyyy HH:MM:ss'), ...
                                                             'EndTime',   Duration_EndTime,                    ...
                                                             'Duration',  Duration_sec);
-                    MainButtonPushed_ObservationSamples(app)
+                    disableObservationSampleLimit(app)
 
                 case 'Período específico'
                     BeginTime = app.SpecificTime_DatePicker1.Value + hours(app.SpecificTime_Spinner1.Value) + minutes(app.SpecificTime_Spinner2.Value);
                     EndTime   = app.SpecificTime_DatePicker2.Value + hours(app.SpecificTime_Spinner3.Value) + minutes(app.SpecificTime_Spinner4.Value);
 
-                    app.taskList(idx1).Observation = struct('Type',      'Time',                                    ...
+                    app.taskList(taskIdx).Observation = struct('Type',      'Time',                                    ...
                                                             'BeginTime', datestr(BeginTime, 'dd/mm/yyyy HH:MM:ss'), ...
                                                             'EndTime',   datestr(EndTime,   'dd/mm/yyyy HH:MM:ss'), ...
                                                             'Duration',  []);
-                    MainButtonPushed_ObservationSamples(app)
+                    disableObservationSampleLimit(app)
 
                 case 'Quantidade específica de amostras'
-                    app.taskList(idx1).Observation = struct('Type',      'Samples',                           ...
+                    app.taskList(taskIdx).Observation = struct('Type',      'Samples',                           ...
                                                             'BeginTime', datestr(now, 'dd/mm/yyyy HH:MM:ss'), ...
                                                             'EndTime',   '',                                  ...
                                                             'Duration',  []);
@@ -1176,7 +1169,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % GPS
             switch app.GPS_List.Value
                 case 'ID 0: Manual'
-                    app.taskList(idx1).GPS = struct('Type',        'Manual',                      ...
+                    app.taskList(taskIdx).GPS = struct('Type',        'Manual',                      ...
                                                     'Latitude',    app.GPS_manualLatitude.Value,  ...
                                                     'Longitude',   app.GPS_manualLongitude.Value, ...
                                                     'RevisitTime', []);
@@ -1185,7 +1178,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     else;                                                   GPSType = 'External';
                     end
 
-                    app.taskList(idx1).GPS = struct('Type',        GPSType, ...
+                    app.taskList(taskIdx).GPS = struct('Type',        GPSType, ...
                                                     'Latitude',    [],      ...
                                                     'Longitude',   [],      ...
                                                     'RevisitTime', app.GPS_RevisitTime.Value);
@@ -1196,10 +1189,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % tarefa do tipo "Drive-test (Level+Azimuth)", garantindo que
             % essa informação não seja inserida no arquivo binário.
             if ~contains(taskType, 'Drive-test (Level+Azimuth)')
-                for ii = 1:numel(app.taskList(idx1).Band)
-                    app.taskList(idx1).Band(ii).DF_SquelchMode  = '';
-                    app.taskList(idx1).Band(ii).DF_SquelchValue = [];
-                    app.taskList(idx1).Band(ii).DF_MeasTime     = [];
+                for ii = 1:numel(app.taskList(taskIdx).Band)
+                    app.taskList(taskIdx).Band(ii).DF_SquelchMode  = '';
+                    app.taskList(taskIdx).Band(ii).DF_SquelchValue = [];
+                    app.taskList(taskIdx).Band(ii).DF_MeasTime     = [];
                 end
             end
 
@@ -1210,45 +1203,48 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 idx3 = str2double(char(extractBetween(app.Receiver_List.Value, 'ID', ':')));
                 sReceiver = app.receiverObj.List(idx3,:);
 
-                [hReceiver, errorMsg] = ConnectivityTest_Receiver_Aux(app, 0);
-                % if ~isempty(errorMsg)
-                %     error(errorMsg)
-                % end
+                receiverHandle = testInstrumentConnectivity(app, 'receiver');
+                if ~isempty(receiverHandle)
+                    if ~strcmp(receiverHandle.UserData.SyncMode, app.Receiver_SyncRef.Value)
+                        error([ ...
+                            'O receptor selecionado está envolvido em outra(s) ' ...
+                            'tarefa(s), com modo de sincronismo diferente do ' ...
+                            'selecionado, o que não é permitido.' ...
+                        ])
 
-                if ~isempty(hReceiver) && hReceiver.UserData.nTasks > 0
-                    if ~strcmp(hReceiver.UserData.SyncMode, app.Receiver_SyncRef.Value)
-                        error('O receptor selecionado está envolvido em outra(s) tarefa(s), com modo de sincronismo diferente do selecionado, o que não é permitido.')
                     elseif strcmp(app.Receiver_RstCommand.Value, 'On')
-                        error('Na atual tarefa foi definido que no seu início deve ser dado o comando de RESET no receptor, o que não é permitido quando este receptor já está envolvido em outra(s) tarefa(s).')
+                        error([ ...
+                            'Na atual tarefa foi definido que no seu início ' ...
+                            'deve ser dado o comando de RESET no receptor, o ' ...
+                            'que não é permitido quando este receptor já está ' ...
+                            'envolvido em outra(s) tarefa(s).' ...
+                        ])
                     end
                 end
 
 
                 % STREAMING (UDP SOCKET)
-                hStreaming = [];
-                if ismember(app.receiverObj.Config.connectFlag(idx2), [2, 3])
+                streamHandle = [];
+                if ismember(app.receiverObj.Config.connectFlag(receiverIdx), [2, 3])
                     [app.mainApp.udpPortArray, udpIndex] = fcn.udpSockets(app.mainApp.udpPortArray, app.mainApp.EB500Obj.udpPort);
                     if ~isempty(udpIndex)
-                        hStreaming = app.mainApp.udpPortArray{udpIndex};
+                        streamHandle = app.mainApp.udpPortArray{udpIndex};
                     end
                 end
 
                 % GPS
                 sGPS = [];
-                hGPS = [];
+                gpsHandle = [];
                 if ~ismember(app.GPS_List.Value, {'ID 0: Manual', app.Receiver_List.Value})
                     idx4 = str2double(char(extractBetween(app.GPS_List.Value, 'ID', ':'))) - numel(app.Receiver_List.Items);
                     sGPS = app.gpsObj.List(idx4,:);
 
-                    [hGPS, ~, errorMsg] = ConnectivityTest_GPS_Aux(app, 0);
-                    % if ~isempty(errorMsg)
-                    %     error(errorMsg)
-                    % end
+                    gpsHandle = testInstrumentConnectivity(app, 'gps');
                 end
 
                 % ANTENNA (MATRIX SWITCH & ANTENNA/LNB POSITION)
-                switchIndex     = SwitchIndex(app, 'default');
-                antennaList     = app.switchList.Antennas{switchIndex};
+                switchIdx = getAntennaSwitchIndex(app, 'default');
+                antennaList = app.switchList.Antennas{switchIdx};
                 antennaMetaData = struct('Name', {}, 'TrackingMode', {}, 'Target', {}, 'Height', {}, 'Azimuth', {}, 'Elevation', {}, 'Polarization', {});
 
                 for kk = 1:numel(app.AntennaList_Tree.Children)
@@ -1276,20 +1272,15 @@ classdef winAddTask_exported < matlab.apps.AppBase
             end
 
             % newTask
-            newTask                     = class.taskClass;
-            newTask.Type                = taskType;
-            newTask.Script              = app.taskList(idx1);
-            newTask.MaskFile            = app.MaskFile_Button.Tag;            
-            newTask.Receiver(1).Handle  = hReceiver;
-            newTask.Receiver.Selection  = sReceiver;
-            newTask.Receiver.Config     = app.receiverObj.Config(idx2,:);
-            newTask.Receiver.Reset      = app.Receiver_RstCommand.Value;
-            newTask.Receiver.Sync       = app.Receiver_SyncRef.Value;
-            newTask.Streaming(1).Handle = hStreaming;
-            newTask.GPS(1).Handle       = hGPS;
-            newTask.GPS.Selection       = sGPS;
-            newTask.Antenna(1).Switch   = struct('Name', app.AntennaSwitch_Name.Value, 'OutputPort', app.switchList.SwitchOutputPort(switchIndex));
-            newTask.Antenna.MetaData    = antennaMetaData;
+            newTask = model.TaskSpec( ...
+                taskType, ...
+                app.taskList(taskIdx), ...
+                app.MaskFile_Button.Tag, ...
+                struct('Handle', receiverHandle, 'Selection', sReceiver, 'Config', app.receiverObj.Config(receiverIdx,:), 'Reset', app.Receiver_RstCommand.Value, 'Sync', app.Receiver_SyncRef.Value), ...
+                struct('Handle', streamHandle), ...
+                struct('Handle', gpsHandle, 'Selection', sGPS), ...
+                struct('Switch', struct('Name', app.AntennaSwitch_Name.Value, 'OutputPort', app.switchList.SwitchOutputPort(switchIdx)), 'MetaData', antennaMetaData) ...
+            );
             
             ipcMainMatlabCallsHandler(app.mainApp, app, 'onTaskAddingOrEditing', 'TASK:ADD', app.infoEdition, newTask)
 
@@ -1303,7 +1294,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % - TAB 2: Árvore e metadados do fluxo selecionado; e
             % - TAB 3: Metadados do fluxo selecionado (peculiaridades receptor).
             
-            idxTask = SelectedTaskIndex(app);
+            idxTask = getSelectedTaskIndex(app);
 
             app.BitsPerPoint.Value = sprintf('%d bits', app.taskList(idxTask).BitsPerSample);
 
@@ -1339,7 +1330,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             end
             ObservationTypeValueChanged(app)
             
-            BandViewTreeBuilding(app, idxTask)
+            buildTreeBands(app, idxTask)
             ReceiverValueChanged(app)            
             BandViewTreeSelectionChanged(app)
 
@@ -1369,8 +1360,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             end
 
-            idx1 = SelectedTaskIndex(app);
-            BandViewTreeBuilding(app, idx1)
+            idx1 = getSelectedTaskIndex(app);
+            buildTreeBands(app, idx1)
 
             % A alteração do tipo de tarefa - caso envolva a tarefa "Drive-test"
             % - tem impacto no tempo de revisita do GPS. Importante, portanto, 
@@ -1432,9 +1423,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Value changed function: Receiver_List
         function ReceiverValueChanged(app, event)
             
-            idxTask     = SelectedTaskIndex(app);
+            idxTask     = getSelectedTaskIndex(app);
             idxBand     = app.Band_Tree.SelectedNodes.NodeData;
-            idxReceiver = SelectedReceiverIndex(app);
+            idxReceiver = getSelectedReceiverIndex(app);
             
             % ## GPS ##
             % A lista de GPS é formada pelo "ID 0: Manual", o GPS do receptor
@@ -1476,7 +1467,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             set(app.AntennaSwitch_Mode, 'Enable', 0, 'Value', 0)
             set(app.AntennaSwitch_Name, 'Enable', 0, 'Value', '')
             
-            idxSwitch = SwitchIndex(app, 'ReceiverChanged');            
+            idxSwitch = getAntennaSwitchIndex(app, 'ReceiverChanged');            
             if ~isempty(idxSwitch)
                 set(app.AntennaSwitch_Mode, 'Enable', 1, 'Value', app.switchList.SwitchDefaultStatus(idxSwitch))                
             end
@@ -1515,7 +1506,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     set(app.GPS_manualLongitudeLabel, 'Enable', true)
                     set(app.GPS_RevisitTimeLabel,     'Enable', true)
 
-                    idxTask = SelectedTaskIndex(app);
+                    idxTask = getSelectedTaskIndex(app);
                     switch app.TaskType.Value
                         case {'Drive-test', 'Drive-test (Level+Azimuth)'}
                             gpsEditable  = false;
@@ -1550,66 +1541,66 @@ classdef winAddTask_exported < matlab.apps.AppBase
             switch event.Source
                 case app.Receiver_Connectivity
                     app.progressDialog.Visible = 'visible';
-                    ConnectivityTest_Receiver_Aux(app, 1);            
+                    testInstrumentConnectivity(app, 'receiver', true);            
                     app.progressDialog.Visible = 'hidden';
 
                 case app.GPS_Connectivity
-                    if strcmp(app.GPS_List.Value, 'ID 0: Manual') && (app.GPS_manualLatitude.Value == -1) && (app.GPS_manualLongitude.Value == -1)
-                        ui.Dialog(app.UIFigure, 'warning', 'Coordenadas geográficas inválidas.');
+                    if strcmp(app.GPS_List.Value, 'ID 0: Manual') && ~gpsLib.isRefPointInBrazil(struct('Latitude', app.GPS_manualLatitude.Value, 'Longitude', app.GPS_manualLongitude.Value))
+                        ui.Dialog(app.UIFigure, 'warning', 'Coordenadas geográficas inválidas por remeter a local fora do país.');
                         return
                     end
         
-                    gps = struct('Status',     0, ...
-                                 'Latitude',  -1, ...
-                                 'Longitude', -1, ...
-                                 'TimeStamp', '');
-        
                     app.progressDialog.Visible = 'visible';
+
+                    gps = struct('Status', 0, 'Latitude', -1, 'Longitude', -1, 'TimeStamp', '');
         
                     try
                         if strcmp(app.Receiver_List.Value, app.GPS_List.Value)
-                            instrHandle = ConnectivityTest_Receiver_Aux(app, 0);
-                            if ~isempty(instrHandle)
-                                gps = model.GPS.fetchGPSCoordinates('Built-in', instrHandle, instrHandle.UserData.IDN);
+                            receiverHandle = testInstrumentConnectivity(app, 'receiver');
+                            if ~isempty(receiverHandle)
+                                gps = model.GPS.fetchGPSCoordinates('Built-in', receiverHandle, receiverHandle.UserData.IDN);
                             end
             
                         elseif strcmp(app.GPS_List.Value, 'ID 0: Manual')
-                            gps = struct('Status',    1,                             ...
-                                         'Latitude',  app.GPS_manualLatitude.Value,  ...
-                                         'Longitude', app.GPS_manualLongitude.Value, ...
-                                         'TimeStamp', '');
+                            gps.Status = 1;
+
+                            % Inicialmente trunca os valores de lat e lng
+                            % em seis casas decimais...
+                            app.GPS_manualLatitude.Value  = round(gps.Latitude,  6);
+                            app.GPS_manualLongitude.Value = round(gps.Longitude, 6);
+
+                            gps.Latitude = app.GPS_manualLatitude.Value;
+                            gps.Longitude = app.GPS_manualLongitude.Value;
             
                         else
-                            instrHandle = ConnectivityTest_GPS_Aux(app, 0);
-                            if ~isempty(instrHandle)
-                                gps = model.GPS.fetchGPSCoordinates('External', instrHandle);
-                            end
+                            [~, gps] = testInstrumentConnectivity(app, 'gps');
                         end
             
                         if gps.Status
                             [cityName, cityDistance] = gpsLib.findNearestCity(gps);
-        
-                            if isempty(gps.TimeStamp); gps.TimeStamp = 'NA';
+
+                            warningMsg = { ...
+                                sprintf('Status: %d', gps.Status), ...
+                                sprintf('Latitude: %.6fº', gps.Latitude), ...
+                                sprintf('Longitude: %.6fº', gps.Longitude) ...
+                            };
+
+                            if ~isempty(gps.TimeStamp)
+                                warningMsg{end+1} = sprintf('Timestamp: %s', gps.TimeStamp);
                             end
-        
-                            msg = sprintf(['Status: %.0f\n'    ...
-                                           'Latitude: %.6f\n'  ...
-                                           'Longitude: %.6f\n' ...
-                                           'Timestamp: %s\n\n' ...
-                                           'Nota:\nCoordenadas geográficas distam <b>%.1f km</b> da sede do município <b>%s</b>.'], ...
-                                           gps.Status, gps.Latitude, gps.Longitude, gps.TimeStamp, cityDistance, cityName);
+
+                            if ~isempty(cityName) && ~isempty(cityDistance)
+                                warningMsg{end+1} = sprintf('Nota:\nCoordenadas geográficas distam <b>%.1f km</b> da sede do município <b>%s</b>.', cityDistance, cityName);
+                            end
                             
-                            ui.Dialog(app.UIFigure, 'warning', msg);
-                            
-                            app.GPS_manualLatitude.Value  = round(gps.Latitude,  6);
-                            app.GPS_manualLongitude.Value = round(gps.Longitude, 6);
+                            ui.Dialog(app.UIFigure, 'warning', strjoin(warningMsg, '<br>'));
             
                         else
                             error('<b>Não recebida informação válida do instrumento acerca das coordenadas geográficas do local de monitoração.</b>\n%s', jsonencode(gps))
                         end
         
                     catch ME
-                        ui.Dialog(app.UIFigure, 'error', getReport(ME));
+                        ui.Dialog(app.UIFigure, 'error', ME.message);
                     end
         
                     app.progressDialog.Visible = 'hidden';
@@ -1620,9 +1611,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Value changed function: AntennaSwitch_Mode
         function AntennaSwitchModeValueChanged(app, event)
             
-            idxTask   = SelectedTaskIndex(app);
+            idxTask   = getSelectedTaskIndex(app);
             idxBand   = app.Band_Tree.SelectedNodes.NodeData;
-            idxSwitch = SwitchIndex(app, 'default');
+            idxSwitch = getAntennaSwitchIndex(app, 'default');
 
             if app.AntennaSwitch_Mode.Value
                 set(app.AntennaSwitch_Name,        'Enable', 1, 'Value', app.switchList.Switch{idxSwitch})                
@@ -1817,7 +1808,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Selection changed function: Band_Tree
         function BandViewTreeSelectionChanged(app, event)
 
-            idxTask = SelectedTaskIndex(app);
+            idxTask = getSelectedTaskIndex(app);
             idxBand = app.Band_Tree.SelectedNodes.NodeData;
 
             app.MetaData.Text = util.HtmlTextGenerator.AddTask_BandView(app.taskList, idxTask, idxBand);
@@ -1832,7 +1823,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Image clicked function: Band_Refresh
         function BandViewRefreshImageClicked(app, event)
 
-            idxTask = SelectedTaskIndex(app);
+            idxTask = getSelectedTaskIndex(app);
             idxBand = app.Band_Tree.SelectedNodes.NodeData;
 
             app.taskList(idxTask).Band(idxBand).EditedFlag = 0;
@@ -1844,7 +1835,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % ...and 15 other components
         function BandViewParameterValueChanged(app, event)
 
-            idxTask = SelectedTaskIndex(app);
+            idxTask = getSelectedTaskIndex(app);
             idxBand = app.Band_Tree.SelectedNodes.NodeData;
 
             switch event.Source
@@ -2062,7 +2053,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {20, 320, 20, '1x', 22, 16, 10, 8, 2};
+            app.GridLayout.ColumnWidth = {20, 320, 21, '1x', 22, 16, 10, 8, 2};
             app.GridLayout.RowHeight = {2, 8, 10, 14, 20, '1x', 20, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
@@ -2733,7 +2724,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Document = uigridlayout(app.GridLayout);
             app.Document.ColumnWidth = {310, 120, '1x', 22};
             app.Document.RowHeight = {17, 22, 19, 208, 19, 69, 19, 22, '1x'};
-            app.Document.ColumnSpacing = 20;
+            app.Document.ColumnSpacing = 21;
             app.Document.RowSpacing = 5;
             app.Document.Padding = [0 11 0 0];
             app.Document.Tag = '4';
