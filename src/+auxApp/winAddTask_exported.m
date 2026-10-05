@@ -292,8 +292,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Caso se trate da edição de uma tarefa, seleciona-se o receptor
             % em uso, caso ainda disponível.
             if strcmp(app.infoEdition.type, 'edit')    
-                selectedReceiverSocket = getReceiverEndpoint(app, app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Selection.Parameters{1});
-                selectedReceiverName   = sprintf('%s - %s', app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Selection.Name{1}, selectedReceiverSocket);
+                selectedReceiverSocket = getReceiverEndpoint(app, app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Receiver.Selection.Parameters{1});
+                selectedReceiverName   = sprintf('%s - %s', app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Receiver.Selection.Name{1}, selectedReceiverSocket);
                 selectedReceiverIndex  = find(contains(receiverList, selectedReceiverName), 1);
 
                 if ~isempty(selectedReceiverIndex)
@@ -309,20 +309,20 @@ classdef winAddTask_exported < matlab.apps.AppBase
             TaskValueChanged(app)
 
             if strcmp(app.infoEdition.type, 'edit')
-                app.TaskType.Value = replace(app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Type, ' (PRÉVIA)', '');
-                if contains(app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Type, '(PRÉVIA)')                    
+                app.TaskType.Value = replace(app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Type, ' (PRÉVIA)', '');
+                if contains(app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Type, '(PRÉVIA)')                    
                     app.PreviewTaskCheckbox.Value = true;
                 end                
                 TaskTypeValueChanged(app)
 
                 if strcmp(app.TaskType.Value, 'Rompimento de Máscara Espectral')
-                    set(app.MaskFile_Button, 'Enable', 1, 'Tag', app.mainApp.specObj(app.infoEdition.idx).TaskSpec.MaskFile)
+                    set(app.MaskFile_Button, 'Enable', 1, 'Tag', app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.MaskFile)
                 end
 
-                app.Receiver_RstCommand.Value = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Reset;
-                app.Receiver_SyncRef.Value    = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Receiver.Sync;
+                app.Receiver_RstCommand.Value = app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Receiver.Reset;
+                app.Receiver_SyncRef.Value    = app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Receiver.Sync;
 
-                gpsMetaData = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Script.GPS;
+                gpsMetaData = app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Script.GPS;
                 if strcmp(gpsMetaData.Type, 'Manual')
                     app.GPS_List.Value            = 'ID 0: Manual';
                     app.GPS_manualLatitude.Value  = gpsMetaData.Latitude;
@@ -331,13 +331,13 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     GPSValueChanged(app)
                 end
 
-                switchMetaData = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Antenna.Switch;
+                switchMetaData = app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Antenna.Switch;
                 if ~isempty(switchMetaData.Name)
                     app.AntennaSwitch_Mode.Value = 1;
                     AntennaSwitchModeValueChanged(app)
                 end
 
-                antennaList = app.mainApp.specObj(app.infoEdition.idx).TaskSpec.Antenna.MetaData;
+                antennaList = app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Antenna.MetaData;
                 for kk = 1:numel(antennaList)
                     antennaMetaData = antennaList(kk);
 
@@ -881,6 +881,30 @@ classdef winAddTask_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
+        function syncMode = getRunningReceiverSyncMode(app, receiverHandle)
+            % Retorna o SyncMode do receptor caso haja tarefa em andamento
+            % que o utilize (exceto a tarefa em edição). Caso contrário, ''.
+            syncMode = '';
+
+            tasks = app.mainApp.TaskController.Tasks;
+            for taskIdx = 1:numel(tasks)
+                if strcmp(app.infoEdition.type, 'edit') && (taskIdx == app.infoEdition.idx)
+                    continue
+                end
+
+                if ~strcmp(tasks(taskIdx).Status, 'Em andamento')
+                    continue
+                end
+
+                taskReceiver = tasks(taskIdx).Connections.receiver;
+                if ~isempty(taskReceiver) && isvalid(taskReceiver) && isequal(taskReceiver, receiverHandle)
+                    syncMode = receiverHandle.UserData.SyncMode;
+                    break
+                end
+            end
+        end
+
+        %-----------------------------------------------------------------%
         function switchIdx = getAntennaSwitchIndex(app, sourceType)
             % Se o modo comutador está ativado, identifica-se o seu índice
             % na tabela app.switchList. Isso permite, por exemplo, identificar
@@ -1058,7 +1082,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         app.taskList   = mainApp.taskList;
                         app.okButton.Text = 'Inclui tarefa';
                     case 'edit'
-                        app.taskList   = class.taskList.app2raw(mainApp.specObj(editionType.idx).TaskSpec.Script);
+                        app.taskList   = class.taskList.app2raw(mainApp.TaskController.Tasks(editionType.idx).TaskSpec.Script);
                         app.okButton.Text = 'Edita tarefa';
                 end
 
@@ -1205,20 +1229,29 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
                 receiverHandle = testInstrumentConnectivity(app, 'receiver');
                 if ~isempty(receiverHandle)
-                    if ~strcmp(receiverHandle.UserData.SyncMode, app.Receiver_SyncRef.Value)
-                        error([ ...
-                            'O receptor selecionado está envolvido em outra(s) ' ...
-                            'tarefa(s), com modo de sincronismo diferente do ' ...
-                            'selecionado, o que não é permitido.' ...
-                        ])
+                    runningSyncMode = getRunningReceiverSyncMode(app, receiverHandle);
 
-                    elseif strcmp(app.Receiver_RstCommand.Value, 'On')
+                    if ~isempty(runningSyncMode) && strcmp(app.Receiver_RstCommand.Value, 'On')
                         error([ ...
                             'Na atual tarefa foi definido que no seu início ' ...
                             'deve ser dado o comando de RESET no receptor, o ' ...
                             'que não é permitido quando este receptor já está ' ...
-                            'envolvido em outra(s) tarefa(s).' ...
+                            'envolvido em tarefa(s) em andamento.' ...
                         ])
+                    end
+
+                    if ~isempty(runningSyncMode) && ~strcmp(runningSyncMode, app.Receiver_SyncRef.Value)
+                        app.progressDialog.Visible = 'hidden';
+                        selection = uiconfirm(app.UIFigure, ...
+                            sprintf('O receptor selecionado está em uso por tarefa(s) em andamento com sincronismo "%s", diferente do selecionado ("%s").\n\nDeseja desconsiderar o sincronismo selecionado e adotar o das tarefas em andamento?', runningSyncMode, app.Receiver_SyncRef.Value), ...
+                            'appColeta', 'Options', {'Adotar sincronismo em andamento', 'Cancelar'}, 'DefaultOption', 2, 'CancelOption', 2, 'Icon', 'warning');
+
+                        if strcmp(selection, 'Cancelar')
+                            return
+                        end
+
+                        app.progressDialog.Visible = 'visible';
+                        app.Receiver_SyncRef.Value = runningSyncMode;
                     end
                 end
 
@@ -2053,7 +2086,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {20, 320, 21, '1x', 22, 16, 10, 8, 2};
+            app.GridLayout.ColumnWidth = {20, 320, 21, '1x', 22, 5, 11, 10, 8, 2};
             app.GridLayout.RowHeight = {2, 8, 10, 14, 20, '1x', 20, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
@@ -2066,7 +2099,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.SubTabGroup.SelectionChangedFcn = createCallbackFcn(app, @SubTabGroupSelectionChanged, true);
             app.SubTabGroup.Tag = '1';
             app.SubTabGroup.Layout.Row = [4 6];
-            app.SubTabGroup.Layout.Column = [2 6];
+            app.SubTabGroup.Layout.Column = [2 7];
 
             % Create SubTab1
             app.SubTab1 = uitab(app.SubTabGroup);
@@ -2706,7 +2739,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Toolbar.Padding = [10 6 10 6];
             app.Toolbar.Tag = '2';
             app.Toolbar.Layout.Row = 8;
-            app.Toolbar.Layout.Column = [1 9];
+            app.Toolbar.Layout.Column = [1 10];
 
             % Create okButton
             app.okButton = uibutton(app.Toolbar, 'push');
@@ -2729,7 +2762,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.Document.Padding = [0 11 0 0];
             app.Document.Tag = '4';
             app.Document.Layout.Row = 6;
-            app.Document.Layout.Column = [4 5];
+            app.Document.Layout.Column = [4 6];
             app.Document.BackgroundColor = [1 1 1];
 
             % Create Band_TreeLabel
@@ -3196,9 +3229,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.DockModule.ColumnSpacing = 2;
             app.DockModule.Padding = [5 2 5 2];
             app.DockModule.Tag = '5';
-            app.DockModule.Visible = 'off';
             app.DockModule.Layout.Row = [2 4];
-            app.DockModule.Layout.Column = [5 8];
+            app.DockModule.Layout.Column = [5 9];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
             % Create dockModule_Close

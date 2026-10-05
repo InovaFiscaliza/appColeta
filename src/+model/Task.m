@@ -83,7 +83,6 @@ classdef Task < matlab.mixin.Copyable
                 specificAspects()
                 
                 obj(idx).Status = 'Na fila';
-                obj(idx).LogEntries(end+1) = struct('level', 'warning', 'timestamp', obj(idx).Timing.createdAt, 'message', strjoin(warnMsg, '\n\n'));
                 obj(idx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(datetime('now')), 'message', 'Incluída na fila a tarefa.');
 
             catch ME
