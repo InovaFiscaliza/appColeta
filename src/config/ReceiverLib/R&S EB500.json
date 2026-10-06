@@ -12,7 +12,7 @@
             "defaultPort": 5555,
             "terminator": "LF",
             "traceData": {
-                "acquisitionMode": "polling",
+                "acquisitionMode": "streaming",
                 "dataType": "level"
             }
         },
@@ -20,9 +20,9 @@
             "legacy": {
                 "initReset": "*RST",
                 "initStartup": "*CLS;:SYST:COMM:LAN:PING 0;:SYST:ANT:COMP \"ADD107\",\"COG@ADD107\";:SYST:ANT:COMP \"ADD207\",\"COG@ADD207\";:TRAC:UDP:DELete ALL;:ROUTe:AUTO 0;:OUTPut:AUXMode AUTO;:MEASure:APPL RX;:FREQ:MODE PSC;:FUNCtion:CONCurrent OFF;:MEAS:MODE PER;:SYSTem:GPS:DATA:AUTO 1;:INITiate:IMMediate",
-                "initSweepMode": "INITiate:CONTinuous %SweepMode%",
-                "setBandConfig": "CALCulate:IFPan:AVERage:TYPE %Trace%;:FREQuency:PSCan:START %FreqStart%;:FREQuency:PSCan:STOP %FreqStop%;:PSCan:STEP %StepWidth%;:CALCulate:IFPan:SELectivity %Selectivity%;:INPut:ATTenuation:MODE %SensitivityMode%;:INPut:ATTenuation:AUTO %AttenuationMode%",
-                "setAttenuation": "INPut:ATTenuation %AttenuationValue%",
+                "initSweepMode": "INITiate:CONTinuous %sweepMode%",
+                "setBandConfig": "CALCulate:IFPan:AVERage:TYPE %traceMode%;:FREQuency:PSCan:START %freqStart%;:FREQuency:PSCan:STOP %freqStop%;:PSCan:STEP %stepWidth%;:CALCulate:IFPan:SELectivity %selectivity%;:INPut:ATTenuation:MODE %sensitivityMode%;:INPut:ATTenuation:AUTO %attenuationMode%",
+                "setAttenuation": "INPut:ATTenuation %attenuationValue%",
                 "setVideoBandWidth": "",
                 "queryIdentification": "*IDN?",
                 "queryStatus": "SYSTEM:ERROR:ALL?",
@@ -128,13 +128,13 @@
                     "name": "freqStart",
                     "write": "FREQuency:PSCan:START %FreqStart%",
                     "read": "FREQuency:PSCan:START?",
-                    "requireMatch": false
+                    "requireMatch": true
                 },
                 {
                     "name": "freqStop",
                     "write": "FREQuency:PSCan:STOP %FreqStop%",
                     "read": "FREQuency:PSCan:STOP?",
-                    "requireMatch": false
+                    "requireMatch": true
                 },
                 {
                     "name": "maxFreqRange",
@@ -158,7 +158,7 @@
                     "name": "resolutionValue",
                     "write": "CALCulate:IFPan:AVERage:TYPE %Trace%;:FREQuency:PSCan:START %FreqStart%;:FREQuency:PSCan:STOP %FreqStop%;:PSCan:STEP %StepWidth%;:CALCulate:IFPan:SELectivity %Selectivity%;:INPut:ATTenuation:MODE %SensitivityMode%;:INPut:ATTenuation:AUTO %AttenuationMode%",
                     "read": "CALCulate:IFPan:BANDwidth?",
-                    "requireMatch": false
+                    "requireMatch": true
                 },
                 {
                     "name": "selectivity",
@@ -182,7 +182,7 @@
                     "name": "stepWidth",
                     "write": "PSCan:STEP %StepWidth%",
                     "read": "PSCan:STEP?",
-                    "requireMatch": false
+                    "requireMatch": true
                 },
                 {
                     "name": "sweepMode",
@@ -194,7 +194,7 @@
                     "name": "traceMode",
                     "write": "CALCulate:IFPan:AVERage:TYPE %Trace%",
                     "read": "CALCulate:IFPan:AVERage:TYPE?",
-                    "requireMatch": false
+                    "requireMatch": true
                 }
             ]
         },
@@ -211,7 +211,7 @@
             },
             "sweepMode": {
                 "items": "Streaming",
-                "values": "OFF"
+                "values": "ON"
             },
             "traceMode": {
                 "items": "ClearWrite,Average,MaxHold,MinHold",
@@ -231,18 +231,19 @@
                 "TCP/UDP IP Socket"
             ],
             "defaultPort": 5555,
+            "terminator": "LF",
             "traceData": {
-                "acquisitionMode": "polling",
-                "dataType": "level"
+                "acquisitionMode": "streaming",
+                "dataType": "level+azimuth"
             }
         },
         "communication": {
             "legacy": {
                 "initReset": "*RST",
                 "initStartup": "*CLS;:SYST:COMM:LAN:PING 0;:SYST:ANT:COMP \"ADD107\",\"COG@ADD107\";:SYST:ANT:COMP \"ADD207\",\"COG@ADD207\";:TRAC:UDP:DELete ALL;:ROUTe:AUTO 0;:OUTPut:AUXMode AUTO;:MEASure:APPL DF;:FREQ:MODE CW;:FUNCtion:CONCurrent OFF;:MEAS:MODE PER;:SYSTem:GPS:DATA:AUTO 1",
-                "initSweepMode": "INITiate:CONTinuous %SweepMode%",
-                "setBandConfig": "CALC:IFPan:AVERage:TYPE %Trace%;:FREQ %FreqCenter%;:FREQ:SPAN %FreqSpan%;:CALC:IFPan:STEP %StepWidth%;:CALC:IFPan:SELectivity %Selectivity%;:INPut:ATTenuation:MODE %SensitivityMode%;:INPut:ATTenuation:AUTO %AttenuationMode%;:MEAS:DF:MODE %DF_SquelchMode%;:MEAS:DF:THR %DF_SquelchValue%;:MEAS:DF:TIME %DF_MeasTime%",
-                "setAttenuation": "INPut:ATTenuation %AttenuationValue%",
+                "initSweepMode": "INITiate:CONTinuous %sweepMode%",
+                "setBandConfig": "CALC:IFPan:AVERage:TYPE %traceMode%;:FREQ %freqCenter%;:FREQ:SPAN %freqSpan%;:CALC:IFPan:STEP %stepWidth%;:CALC:IFPan:SELectivity %selectivity%;:INPut:ATTenuation:MODE %sensitivityMode%;:INPut:ATTenuation:AUTO %attenuationMode%;:MEAS:DF:MODE %dfSquelchMode%;:MEAS:DF:THR %dfSquelchValue%;:MEAS:DF:TIME %dfMeasTime%",
+                "setAttenuation": "INPut:ATTenuation %attenuationValue%",
                 "setVideoBandWidth": "",
                 "queryIdentification": "*IDN?",
                 "queryStatus": "SYSTEM:ERROR:ALL?",
@@ -385,7 +386,7 @@
                     "name": "resolutionValue",
                     "write": "CALC:IFPan:AVERage:TYPE %Trace%;:FREQ %FreqCenter%;:FREQ:SPAN %FreqSpan%;:CALC:IFPan:STEP %StepWidth%;:CALC:IFPan:SELectivity %Selectivity%;:INPut:ATTenuation:MODE %SensitivityMode%;:INPut:ATTenuation:AUTO %AttenuationMode%;:MEAS:DF:MODE %DF_SquelchMode%;:MEAS:DF:THR %DF_SquelchValue%;:MEAS:DF:TIME %DF_MeasTime%",
                     "read": "CALC:IFPan:BANDwidth?",
-                    "requireMatch": false
+                    "requireMatch": true
                 },
                 {
                     "name": "selectivity",
@@ -409,7 +410,7 @@
                     "name": "stepWidth",
                     "write": "CALC:IFPan:STEP %StepWidth%",
                     "read": "CALC:IFPan:STEP?",
-                    "requireMatch": false
+                    "requireMatch": true
                 },
                 {
                     "name": "sweepMode",
@@ -421,7 +422,7 @@
                     "name": "traceMode",
                     "write": "CALC:IFPan:AVERage:TYPE %Trace%",
                     "read": "CALC:IFPan:AVERage:TYPE?",
-                    "requireMatch": false
+                    "requireMatch": true
                 }
             ]
         },
@@ -438,7 +439,7 @@
             },
             "sweepMode": {
                 "items": "Streaming",
-                "values": "OFF"
+                "values": "ON"
             },
             "traceMode": {
                 "items": "ClearWrite,Average,MaxHold,MinHold",

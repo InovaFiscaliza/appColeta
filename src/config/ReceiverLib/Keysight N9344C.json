@@ -19,8 +19,8 @@
         "legacy": {
             "initReset": "*RST",
             "initStartup": "*CLS;:INSTrument SA;:FORMat:DATA REAL;:AVERage:TYPE VOLT;:SYSTem:CONFigure:GPS 1",
-            "initSweepMode": "INITiate:CONTinuous %SweepMode%",
-            "setBandConfig": "TRACe1:MODE %Trace%;:AVERage:TRACe1:STATe %AverageMode%;:AVERage:TRACe1:COUNt %AverageCount%;:DETector:TRACe1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:BANDwidth:RESolution %ResolutionValue%;:POWer:RF:HSENsitive %SensitivityMode%;:POWer:RF:ATTenuation %AttenuationValue%;:POWer:RF:ATTenuation:AUTO %AttenuationMode%",
+            "initSweepMode": "INITiate:CONTinuous %sweepMode%",
+            "setBandConfig": "TRACe1:MODE %traceMode%;:AVERage:TRACe1:STATe %averageMode%;:AVERage:TRACe1:COUNt %averageCount%;:DETector:TRACe1:FUNCtion %detector%;:UNIT:POWer %levelUnit%;:FREQuency:STARt %freqStart%;:FREQuency:STOP %freqStop%;:BANDwidth:RESolution %resolutionValue%;:POWer:RF:HSENsitive %sensitivityMode%;:POWer:RF:ATTenuation %attenuationValue%;:POWer:RF:ATTenuation:AUTO %attenuationMode%",
             "setAttenuation": "",
             "setVideoBandWidth": "",
             "queryIdentification": "*IDN?",
@@ -142,25 +142,25 @@
                 "name": "detector",
                 "write": "DETector:TRACe1:FUNCtion %Detector%",
                 "read": "DETector:TRACe1:FUNCtion?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "freqStart",
                 "write": "FREQuency:STARt %FreqStart%",
                 "read": "FREQuency:STARt?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "freqStop",
                 "write": "FREQuency:STOP %FreqStop%",
                 "read": "FREQuency:STOP?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "levelUnit",
                 "write": "UNIT:POWer %LevelUnit%",
                 "read": "UNIT:POWer?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "reset",
@@ -178,7 +178,7 @@
                 "name": "resolutionValue",
                 "write": "BANDwidth:RESolution %ResolutionValue%",
                 "read": "BANDwidth:RESolution?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "sampleTimeValue",
@@ -208,7 +208,7 @@
                 "name": "traceMode",
                 "write": "TRACe1:MODE %Trace%",
                 "read": "TRACe1:MODE?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "videoBandWidth",

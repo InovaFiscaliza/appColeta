@@ -545,11 +545,11 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function BandView_EditablesParameters_Visibility(app)
-            idx3 = getSelectedReceiverIndex(app);
+            receiverDriver = getSelectedReceiverDriver(app);
 
-            switch app.receiverObj.Config.connectFlag(idx3)
+            switch receiverDriver.IsStreaming
                 % Anritsu MS2720T, Keysight N9344C, Keysight N9936B, R&S FSL, R&S FSVR, R&S FSW, and Tektronix SA2500
-                case 1
+                case false
                     app.Band_ReceiverGrid.RowHeight(2:3)   = {22,0};
                     set(findobj(groot, 'Parent', app.Band_ReceiverGrid, 'Tag', 'task_Set1'), 'Enable', 1)
                     set(findobj(groot, 'Parent', app.Band_ReceiverGrid, 'Tag', 'task_Set2'), 'Enable', 0)
@@ -558,7 +558,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     app.Band_SelectivityLabel.Visible      = 0;
                     app.Band_Selectivity.Visible           = 0;
 
-                    if ~isempty(app.receiverObj.Config.scpiVBW_Options{idx3})
+                    if receiverDriver.HasVideoBandWidth
                         app.Band_VBWLabel.Visible          = 1;
                         app.Band_VBW.Visible               = 1;
                     else
@@ -572,7 +572,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     app.Band_IntegrationTime.Visible       = 0;
 
                 % R&S EB500
-                case {2, 3}
+                case true
                     app.Band_ReceiverGrid.RowHeight(2:3)   = {0,22};
                     set(findobj(groot, 'Parent', app.Band_ReceiverGrid, 'Tag', 'task_Set1'), 'Enable', 0)
                     set(findobj(groot, 'Parent', app.Band_ReceiverGrid, 'Tag', 'task_Set2'), 'Enable', 1)
@@ -589,7 +589,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function instrSettings = BandView_EditablesParameters_GetValues(app, idx1, idx2)
-            idx3 = getSelectedReceiverIndex(app);
+            receiverDriver = getSelectedReceiverDriver(app);
+            features       = receiverDriver.Definition.features;
 
             instrSettings = struct('StepWidth_Items',   [], 'StepWidth',       [], ...
                                    'DataPoints_Limits', [], 'DataPoints',      [], ...
@@ -606,22 +607,22 @@ classdef winAddTask_exported < matlab.apps.AppBase
             span = app.taskList(idx1).Band(idx2).FreqStop - app.taskList(idx1).Band(idx2).FreqStart;            
             
             instrSettings.AttMode         = 'Auto';
-            instrSettings.AttFactor_Items = strsplit(app.receiverObj.Config.Attenuation_Values{idx3}, ',');
+            instrSettings.AttFactor_Items = strsplit(features.attenuationValues, ',');
             instrSettings.AttFactor       = instrSettings.AttFactor_Items{1};
-            instrSettings.Detector_Items  = strsplit(app.receiverObj.Config.Detector_Items{idx3}, ',');
+            instrSettings.Detector_Items  = strsplit(features.detector.items, ',');
 
-            switch app.receiverObj.Config.connectFlag(idx3)
+            switch receiverDriver.IsStreaming
                 % Anritsu MS2720T, Keysight N9344C, Keysight N9936B, R&S FSL, R&S FSVR, R&S FSW, and Tektronix SA2500
-                case 1
+                case false
                     % RBW
-                    instrSettings.Resolution_Items = strsplit(app.receiverObj.Config.Resolution_Values{idx3}, ',');
+                    instrSettings.Resolution_Items = strsplit(features.resolutions, ',');
                     rbwValues                      = str2double(extractBefore(instrSettings.Resolution_Items, 'kHz'))*1000;
                     [~, rbwIndex]                  = min(abs(rbwValues - app.taskList(idx1).Band(idx2).Resolution));
                     instrSettings.Resolution       = instrSettings.Resolution_Items{rbwIndex};
 
                     % VBW
-                    if ~isempty(app.receiverObj.Config.scpiVBW_Options{idx3})
-                        instrSettings.VBW_Items = strsplit(app.receiverObj.Config.VBW_Values{idx3}, ',');
+                    if receiverDriver.HasVideoBandWidth
+                        instrSettings.VBW_Items = strsplit(features.videoBandWidths, ',');
 
                         switch app.taskList(idx1).Band(idx2).VBW
                             case 'auto'
@@ -641,7 +642,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     end
 
                     % Others parameters...
-                    instrSettings.DataPoints_Limits = app.receiverObj.Config.DataPoints_Limits{idx3};
+                    instrSettings.DataPoints_Limits = features.dataPoints;
 
                     DataPoints = round(span/app.taskList(idx1).Band(idx2).StepWidth + 1);
                     if     DataPoints < instrSettings.DataPoints_Limits(1); instrSettings.DataPoints = instrSettings.DataPoints_Limits(1);
@@ -669,8 +670,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     end
 
                 % R&S EB500
-                case {2, 3}
-                    instrSettings.StepWidth_Items   = strsplit(app.receiverObj.Config.StepWidth_Values{idx3}, ',');
+                case true
+                    instrSettings.StepWidth_Items   = strsplit(features.stepWidths, ',');
                     instrSettings.Selectivity_Items = {'Normal', 'Narrow', 'Sharp'};
 
                     stepValues = [];
@@ -750,7 +751,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function BandView_EditablesParameters_ShowValues(app, idx1, idx2)
-            idx3 = getSelectedReceiverIndex(app);
+            receiverDriver = getSelectedReceiverDriver(app);
             
             if ~app.taskList(idx1).Band(idx2).EditedFlag
                 BandView_EditablesParameters_SaveValues(app, idx1, idx2)
@@ -758,10 +759,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 app.Band_Refresh.Visible = 1;
             end
 
-            switch app.receiverObj.Config.connectFlag(idx3)
+            switch receiverDriver.IsStreaming
                 % Anritsu MS2720T, Keysight N9344C, Keysight N9936B, R&S FSL, R&S FSVR, R&S FSW, and Tektronix SA2500
-                case 1
-                    if fix(diff(app.receiverObj.Config.DataPoints_Limits{idx3}))
+                case false
+                    if fix(diff(receiverDriver.Definition.features.dataPoints))
                         set(app.Band_StepWidth1,  'Editable', 1, ...
                                                   'Value',  app.taskList(idx1).Band(idx2).instrStepWidth / 1000);
                         set(app.Band_DataPoints1, 'Limits', app.taskList(idx1).Band(idx2).instrDataPoints_Limits, ...
@@ -770,14 +771,14 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         set(app.Band_StepWidth1,  'Editable', 0, ...
                                                   'Value',  app.taskList(idx1).Band(idx2).instrStepWidth / 1000);
                         set(app.Band_DataPoints1, 'Limits', app.taskList(idx1).Band(idx2).instrDataPoints_Limits, ...
-                                                  'Value',  app.receiverObj.Config.DataPoints_Limits{idx3}(1))
+                                                  'Value',  receiverDriver.Definition.features.dataPoints(1))
                     end
 
                     app.Band_IntegrationTimeLabel.Visible = 0;
                     app.Band_IntegrationTime.Visible      = 0;
 
                 % R&S EB500
-                case {2, 3}
+                case true
                     set(app.Band_StepWidth2, 'Items', app.taskList(idx1).Band(idx2).instrStepWidth_Items, ...
                                              'Value', app.taskList(idx1).Band(idx2).instrStepWidth)
                     app.Band_DataPoints2.Value = app.taskList(idx1).Band(idx2).instrDataPoints;
@@ -856,23 +857,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function receiverIdx = getSelectedReceiverIndex(app)
-            receiverName = getSelectedReceiverName(app);            
-            receiverIdx  = find(strcmp(app.receiverObj.Config.Name, receiverName));
-
-            % O R&S EB500 tem dois registros em "ReceiverLib.json". Um relacionado
-            % às tarefas normais e outro à tarefa "DT (Level+Azimuth)".
-            if numel(receiverIdx) > 1
-                connectFlagList = app.receiverObj.Config.connectFlag(receiverIdx);
-
-                switch app.TaskType.Value
-                    case 'Drive-test (Level+Azimuth)'
-                        receiverIdx = receiverIdx(connectFlagList == 3);
-                    otherwise
-                        receiverIdx = receiverIdx(connectFlagList ~= 3);
-                end
-                receiverIdx = receiverIdx(1);
-            end
+        function receiverDriver = getSelectedReceiverDriver(app)
+            receiverName   = getSelectedReceiverName(app);
+            definition     = findDefinition(app.receiverObj, receiverName, app.TaskType.Value);
+            receiverDriver = model.ReceiverDriver(definition);
         end
 
         %-----------------------------------------------------------------%
@@ -1142,7 +1130,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % (B) GENERAL ASPECTS OF THE SELECTED TASK
             taskIdx = getSelectedTaskIndex(app);
-            receiverIdx = getSelectedReceiverIndex(app);
+            receiverDriver = getSelectedReceiverDriver(app);
 
             % Type
             taskType     = app.TaskType.Value;
@@ -1258,7 +1246,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
                 % STREAMING (UDP SOCKET)
                 streamHandle = [];
-                if ismember(app.receiverObj.Config.connectFlag(receiverIdx), [2, 3])
+                if receiverDriver.IsStreaming
                     [app.mainApp.udpPortArray, udpIndex] = fcn.udpSockets(app.mainApp.udpPortArray, app.mainApp.EB500Obj.udpPort);
                     if ~isempty(udpIndex)
                         streamHandle = app.mainApp.udpPortArray{udpIndex};
@@ -1309,7 +1297,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 taskType, ...
                 app.taskList(taskIdx), ...
                 app.MaskFile_Button.Tag, ...
-                struct('Handle', receiverHandle, 'Selection', sReceiver, 'Config', app.receiverObj.Config(receiverIdx,:), 'Reset', app.Receiver_RstCommand.Value, 'Sync', app.Receiver_SyncRef.Value), ...
+                struct('Handle', receiverHandle, 'Selection', sReceiver, 'Config', receiverDriver.Definition, 'Reset', app.Receiver_RstCommand.Value, 'Sync', app.Receiver_SyncRef.Value), ...
                 struct('Handle', streamHandle), ...
                 struct('Handle', gpsHandle, 'Selection', sGPS), ...
                 struct('Switch', struct('Name', app.AntennaSwitch_Name.Value, 'OutputPort', app.switchList.SwitchOutputPort(switchIdx)), 'MetaData', antennaMetaData) ...
@@ -1458,7 +1446,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             
             idxTask     = getSelectedTaskIndex(app);
             idxBand     = app.Band_Tree.SelectedNodes.NodeData;
-            idxReceiver = getSelectedReceiverIndex(app);
+            receiverDriver = getSelectedReceiverDriver(app);
             
             % ## GPS ##
             % A lista de GPS é formada pelo "ID 0: Manual", o GPS do receptor
@@ -1466,7 +1454,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Os GPSs externos são representados por "IDs virtuais", que não 
             % se confundem com os IDs de receptores.
             gpsList     = {'ID 0: Manual'};
-            if ~isempty(app.receiverObj.Config.scpiGPS{idxReceiver})
+            if receiverDriver.HasGps
                 gpsList{end+1} = app.Receiver_List.Value;
             end
 
@@ -1489,7 +1477,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Se o GPS não foi editado, escolhe-se como valor inicial o do
             % próprio receptor selecionado, caso este possui um GPS embarcado.
-            if ~isempty(app.receiverObj.Config.scpiGPS{idxReceiver})
+            if receiverDriver.HasGps
                 if ~strcmp(app.taskList(idxTask).GPS.Type, 'manual')
                     app.GPS_List.Value = app.Receiver_List.Value;
                 end
@@ -1507,7 +1495,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             AntennaSwitchModeValueChanged(app)
             
             % ## RECEIVER SYNC ##
-            app.Receiver_SyncRef.Items = strsplit(app.receiverObj.Config.SyncOptions{idxReceiver}, ',');
+            app.Receiver_SyncRef.Items = strsplit(receiverDriver.Definition.features.sweepMode.items, ',');
 
             % ## RECEIVER CUSTOM PARAMETERS ##
             % Caso se trate de uma nova tarefa, toda vez que for alterado o

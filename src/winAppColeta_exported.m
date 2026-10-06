@@ -1242,7 +1242,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                 % Warning: Variable 'Tasks' originally saved as a model.Task cannot be instantiated as an object and will be read in as a uint32.
 
-                if exist('Tasks', 'var') && isa(tasks, 'model.Task') && ~isempty(tasks)
+                if exist('tasks', 'var') && isa(tasks, 'model.Task') && ~isempty(tasks)
                     for ii = 1:numel(tasks)
                         tasks(ii) = initializeTaskReceiver(tasks(ii));
                         tasks(ii) = resolveStreamingHandle(app.TaskController, tasks(ii));

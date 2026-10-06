@@ -1,5 +1,7 @@
 classdef Receiver < handle
     properties
+        % Uma linha por registro de "config/ReceiverLib/<name>.json"; a coluna
+        % "Definition" traz o registro completo (usado por model.ReceiverDriver).
         Config
 
         List = table( ...
@@ -19,12 +21,33 @@ classdef Receiver < handle
     methods
         %-----------------------------------------------------------------%
         function obj = Receiver(rootFolder)
-            obj.Config = struct2table(jsondecode(fileread(fullfile(rootFolder, 'config', 'ReceiverLib.json'))));
+            obj.Config = loadDefinitions(obj, rootFolder);
             obj.List   = fileRead(obj, rootFolder);
 
             if ~isdeployed()
                 arrayfun(@(x) delete(x), tcpclientfind())
                 arrayfun(@(x) delete(x), udpportfind())
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function tempList = fileRead(obj, rootFolder)
+            appName = class.Constants.appName;
+            [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
+
+            try
+                tempList = fcn.instrumentListRead(fullfile(programDataFolder, 'instrumentList.json'));
+            catch ME
+                tempList = fcn.instrumentListRead(fullfile(projectFolder,     'instrumentList.json'));
+            end
+
+            tempList(~strcmp(tempList.Family, 'Receiver'), :) = [];
+            if height(tempList)
+                if ~any(tempList.Enable)
+                    tempList.Enable(1) = 1;
+                end
+            else
+                tempList(end+1, :) = defaultInstrument(obj);
             end
         end
 
@@ -72,6 +95,19 @@ classdef Receiver < handle
             % Consulta se há objeto "tcpclient" criado para o instrumento:
             idn = '';
             msgError = '';
+            idx = [];
+
+            if isfield(receiver, 'Definition')
+                definition = receiver.Definition;
+            else
+                definition = findDefinitionByTag(obj, tag);
+            end
+
+            if isempty(definition)
+                msgError = sprintf('O receptor "%s" não consta da biblioteca de receptores.', tag);
+                return
+            end
+
             idx = find(strcmp(obj.Table.Socket, socketTag), 1);
 
             if ~isempty(idx)
@@ -89,7 +125,7 @@ classdef Receiver < handle
                             transportHandle.connect
                         end
 
-                        idn = connectionStatus(obj, receiverHandle);
+                        idn = identify(model.ReceiverDriver(definition, receiverHandle));
                         break
 
                     catch ME
@@ -120,7 +156,7 @@ classdef Receiver < handle
                     switch type
                         case {'TCPIP Socket', 'TCP/UDP IP Socket'}
                             receiverHandle = tcpclient(ip, port);
-                            idn = connectionStatus(obj, receiverHandle);
+                            idn = identify(model.ReceiverDriver(definition, receiverHandle));
 
                         otherwise
                             error('appColeta supports only TCPIP Socket connection type.')
@@ -169,32 +205,13 @@ classdef Receiver < handle
         end
 
         %-----------------------------------------------------------------%
-        function msgError = reconnectAttempt(obj, instrSelected, connectFlag, startUp, specificSCPI)
-
-            [idx, msgError] = connect(obj, instrSelected);
-
-            % Se ocorrer alguma queda de energia e o receptor desligar, ao
-            % religar, o receptor voltará às suas configurações de fábrica,
-            % o que demandará, portanto, a sua reconfiguração (FreqStart,
-            % FreqStop, Resolution etc).
+        function msgError = reconnectAttempt(obj, receiverConfig, definition, bandCommands)
+            receiverConfig.Definition = definition;
+            [idx, msgError] = connect(obj, receiverConfig);
 
             if isempty(msgError)
                 try
-                    receiverHandle = obj.Table.Handle{idx};
-
-                    if ismember(connectFlag, [2, 3])
-                        class.EB500Lib.OperationMode(receiverHandle, connectFlag)
-                    end
-
-                    writeline(receiverHandle, startUp);
-                    pause(.001)
-
-                    writeline(receiverHandle, specificSCPI.configSET);
-                    pause(.001)
-
-                    if ~isempty(specificSCPI.attSET)
-                        writeline(receiverHandle, specificSCPI.attSET);
-                    end
+                    restoreConfiguration(model.ReceiverDriver(definition, obj.Table.Handle{idx}), bandCommands)
 
                 catch ME
                     msgError = ME.message;
@@ -221,31 +238,33 @@ classdef Receiver < handle
                 end
             end
         end
+
+        %-----------------------------------------------------------------%
+        function definition = findDefinition(obj, receiverName, taskType)
+            % O R&S EB500 tem dois registros em "ReceiverLib", um relacionado 
+            % às tarefas normais e outro à tarefa "Drive-test (Level+Azimuth)".
+
+            idx = find(strcmp(obj.Config.Name, receiverName));
+
+            if numel(idx) > 1
+                isLevelAzimuth = cellfun(@(x) strcmp(x.connection.traceData.dataType, 'level+azimuth'), obj.Config.Definition(idx));
+
+                if contains(taskType, 'Drive-test (Level+Azimuth)')
+                    idx = idx(isLevelAzimuth);
+                else
+                    idx = idx(~isLevelAzimuth);
+                end
+            end
+
+            definition = [];
+            if ~isempty(idx)
+                definition = obj.Config.Definition{idx(1)};
+            end
+        end
     end
 
 
     methods (Access = protected)
-        %-----------------------------------------------------------------%
-        function tempList = fileRead(obj, rootFolder)
-            appName = class.Constants.appName;
-            [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
-
-            try
-                tempList = fcn.instrumentListRead(fullfile(programDataFolder, 'instrumentList.json'));
-            catch ME
-                tempList = fcn.instrumentListRead(fullfile(projectFolder,     'instrumentList.json'));
-            end
-
-            tempList(~strcmp(tempList.Family, 'Receiver'), :) = [];
-            if height(tempList)
-                if ~any(tempList.Enable)
-                    tempList.Enable(1) = 1;
-                end
-            else
-                tempList(end+1, :) = defaultInstrument(obj);
-            end
-        end
-
         %-----------------------------------------------------------------%
         function instrument = defaultInstrument(~)
             instrument = {'Receiver', 'Tektronix SA2500', 'TCPIP Socket', '{"IP":"127.0.0.1","Port":"34835","Timeout":5}', 'Modo servidor/cliente. Loopback (127.0.0.1).', 1};
@@ -290,33 +309,40 @@ classdef Receiver < handle
         end
 
         %-----------------------------------------------------------------%
-        function idn = connectionStatus(~, receiverHandle)
-            idn = '';            
+        function config = loadDefinitions(~, rootFolder)
+            configFolder = fullfile(rootFolder, 'config');
+            library      = jsondecode(fileread(fullfile(configFolder, 'ReceiverLib-v2.json')));
 
-            % A ideia de usar writeline/readline (com loop, criando artificialmente 
-            % um Timeout) é fazer duas operações de comunicações com o socket (notei 
-            % que em alguns sockets desconectados, a primeira operação de escrita é realizada
-            % normalmente, retornando erro apenas numa segunda operação). Isso evita, também,
-            % o Timeout padrão do writeread (10 segundos).
-
-            flush(receiverHandle)
-            writeline(receiverHandle, '*IDN?')
-
-            statusTic = tic;
-            t = toc(statusTic);
-            while t < class.Constants.idnTimeout
-                if receiverHandle.NumBytesAvailable
-                    idn = readline(receiverHandle);
-                    if ~isempty(idn)
-                        idn = replace(strtrim(idn), {'"', ''''}, {'', ''});
-                        break
-                    end
+            % O arquivo de um instrumento contém um registro ou, quando o instrumento
+            % tem mais de um modo de operação (R&S EB500), um array de registros.
+            definitions = {};
+            for ii = 1:numel(library.instrumentNames)
+                records = jsondecode(fileread(fullfile(configFolder, 'ReceiverLib', [library.instrumentNames{ii} '.json'])));
+                if isstruct(records)
+                    records = num2cell(records);
                 end
-                t = toc(statusTic);
+
+                definitions = [definitions; records(:)];
             end
-            
-            if isempty(idn)
-                error('ReceiverLib:EmptyIDN', 'Empty identification')
+
+            config = table( ...
+                cellfun(@(x) x.family, definitions, 'UniformOutput', false), ...
+                cellfun(@(x) x.name,   definitions, 'UniformOutput', false), ...
+                cellfun(@(x) x.tag,    definitions, 'UniformOutput', false), ...
+                cellfun(@(x) x.band,   definitions, 'UniformOutput', false), ...
+                cellfun(@(x) x.image,  definitions, 'UniformOutput', false), ...
+                definitions, ...
+                'VariableNames', {'Family', 'Name', 'Tag', 'Band', 'Image', 'Definition'} ...
+            );
+        end
+
+        %-----------------------------------------------------------------%
+        function definition = findDefinitionByTag(obj, tag)
+            idx = find(strcmp(obj.Config.Tag, tag), 1);
+
+            definition = [];
+            if ~isempty(idx)
+                definition = obj.Config.Definition{idx};
             end
         end
 

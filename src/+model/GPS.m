@@ -34,6 +34,20 @@ classdef GPS < handle
         end
 
         %-----------------------------------------------------------------%
+        function tempList = fileRead(~, rootFolder)
+            appName = class.Constants.appName;
+            [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
+
+            try
+                tempList = fcn.instrumentListRead(fullfile(programDataFolder, 'instrumentList.json'));
+            catch ME
+                tempList = fcn.instrumentListRead(fullfile(projectFolder,     'instrumentList.json'));
+            end
+
+            tempList(~strcmp(tempList.Family, 'GPS'), :) = [];
+        end
+
+        %-----------------------------------------------------------------%
         function [gpsHandleIdx, errorMsg] = connect(obj, gpsConfig)
             % Características do instrumento em que se deseja controlar:
             gpsType = gpsConfig.Type;
@@ -172,20 +186,6 @@ classdef GPS < handle
 
 
     methods (Access = protected)
-        %-----------------------------------------------------------------%
-        function tempList = fileRead(~, rootFolder)
-            appName = class.Constants.appName;
-            [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
-
-            try
-                tempList = fcn.instrumentListRead(fullfile(programDataFolder, 'instrumentList.json'));
-            catch ME
-                tempList = fcn.instrumentListRead(fullfile(projectFolder,     'instrumentList.json'));
-            end
-
-            tempList(~strcmp(tempList.Family, 'GPS'), :) = [];
-        end
-
         %-----------------------------------------------------------------%
         function [ip, port, baudRate, timeout] = missingParameters(obj, Parameters)
             % IP

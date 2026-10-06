@@ -134,6 +134,7 @@ classdef TaskController < handle
                     receiverHandle   = obj.Tasks(taskIdx).Connections.receiver;
                     udpPortHandle  = obj.Tasks(taskIdx).Connections.stream;
                     gpsHandle        = obj.Tasks(taskIdx).Connections.gps;
+                    receiverDriver   = model.ReceiverDriver(obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
 
                     configMode  = true;
 
@@ -152,7 +153,7 @@ classdef TaskController < handle
                             % tarefa já possui, no seu datagrama, a informação
                             % das coordenadas.
 
-                            if obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag ~= 3
+                            if ~receiverDriver.IsLevelAzimuth
                                 acquireGpsData(obj, taskIdx, receiverHandle, gpsHandle, sampleTimestamp);
                             end
 
@@ -166,24 +167,20 @@ classdef TaskController < handle
                                 % RECEIVER RECONFIGURATION (IF APPLICABLE)
                                 if numActiveTasks > 1 || numBands > 1 || forceConfiguration
                                     if configMode
-                                        if ismember(obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag, [2, 3])
-                                            class.EB500Lib.OperationMode(receiverHandle, obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag)
-                                        end
+                                        setOperationMode(receiverDriver)
                                         configMode = false;
                                     end
 
-                                    configureBand(obj, taskIdx, bandIdx, receiverHandle)
+                                    configureBand(receiverDriver, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI)
                                     forceConfiguration = false;
                                 end
 
-                                attenuationFactor = -1;
-                                if ~isempty(obj.Tasks(taskIdx).ReceiverCommands.query)
                                 % Bloco try/catch protege eventual erro, o que não causará dano à
                                 % monitoração em si por se tratar de informação não essencial.
-                                    try
-                                        attenuationFactor = str2double(fcn.WriteRead(receiverHandle, obj.Tasks(taskIdx).ReceiverCommands.query));
-                                    catch
-                                    end
+                                attenuationFactor = -1;
+                                try
+                                    attenuationFactor = queryAttenuation(receiverDriver);
+                                catch
                                 end
 
                                 % maskTriggered: registra se foi evidenciado rompimento da máscara espectral.
@@ -285,8 +282,7 @@ classdef TaskController < handle
 
                                 msgError = reconnectAttempt(obj.App.receiverObj, ...
                                     obj.Tasks(taskIdx).Connections.receiver.UserData.Config, ...
-                                    obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag, ...
-                                    obj.Tasks(taskIdx).TaskSpec.Receiver.Config.StartUp{1},  ...
+                                    obj.Tasks(taskIdx).TaskSpec.Receiver.Config, ...
                                     obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI ...
                                 );
 
@@ -478,11 +474,7 @@ classdef TaskController < handle
             % Usada tanto no início de uma tarefa quanto na reconexão de
             % tarefas persistidas.
 
-            receiverName = task.TaskSpec.Receiver.Selection.Name{1};
-            taskType = task.TaskSpec.Type;
-
-            receiverIdx = findReceiverIndex(obj, receiverName, taskType);
-            if ismember(obj.App.receiverObj.Config.connectFlag(receiverIdx), [2, 3])
+            if model.ReceiverDriver(task.TaskSpec.Receiver.Config).IsStreaming
                 [obj.UDPPortArray, udpPortIdx] = fcn.udpSockets(obj.UDPPortArray, obj.App.EB500Obj.udpPort);
                 if ~isempty(udpPortIdx)
                     task.TaskSpec.Streaming.Handle = obj.UDPPortArray{udpPortIdx};
@@ -519,11 +511,24 @@ classdef TaskController < handle
         function startTask(obj, idx)
             taskSpec = obj.Tasks(idx).TaskSpec;
 
+            % Uma tarefa criada com o receptor indisponível, ou cuja configuração foi
+            % recusada, não tem as bandas inicializadas.
+            if isempty(obj.Tasks(idx).Bands)
+                [receiverIdx, msgError] = connect(obj.App.receiverObj, buildReceiverConfig(obj.Tasks(idx)));
+                if ~isempty(msgError)
+                    error(msgError)
+                end
+
+                msgError = reinitializeReceiver(obj.Tasks(idx), obj.App.receiverObj.Table.Handle{receiverIdx}, obj.App.EMSatObj, obj.App.ERMxObj);
+                if ~isempty(msgError)
+                    error(msgError)
+                end
+            end
+
             % RECEIVER
             msgError = reconnectAttempt(obj.App.receiverObj, ...
                 buildReceiverConfig(obj.Tasks(idx)), ...
-                obj.Tasks(idx).TaskSpec.Receiver.Config.connectFlag, ...
-                obj.Tasks(idx).TaskSpec.Receiver.Config.StartUp{1}, ...
+                obj.Tasks(idx).TaskSpec.Receiver.Config, ...
                 obj.Tasks(idx).Bands(1).SpecificSCPI ...
             );
 
@@ -535,7 +540,7 @@ classdef TaskController < handle
 
             % STREAMING
             if isempty(obj.Tasks(idx).Connections.stream)
-                if ismember(taskSpec.Receiver.Config.connectFlag, [2, 3])
+                if model.ReceiverDriver(taskSpec.Receiver.Config).IsStreaming
                     obj.Tasks(idx) = resolveStreamingHandle(obj, obj.Tasks(idx));
                 end
             else
@@ -647,20 +652,6 @@ classdef TaskController < handle
         end
 
         %-----------------------------------------------------------------%
-        function idx = findReceiverIndex(obj, receiverName, taskType)
-            idx = find(strcmp(obj.App.receiverObj.Config.Name, receiverName));
-            if numel(idx) > 1
-                connectFlagList = obj.App.receiverObj.Config.connectFlag(idx);
-                if contains(taskType, 'Drive-test (Level+Azimuth)')
-                    idx = idx(connectFlagList == 3);
-                else
-                    idx = idx(connectFlagList ~= 3);
-                end
-                idx = idx(1);
-            end
-        end
-
-        %-----------------------------------------------------------------%
         function acquireGpsData(obj, taskIdx, receiverHandle, gpsHandle, timestamp)
             % O controle de erro do RECEPTOR se dá no método "runLoop".
             %
@@ -742,22 +733,21 @@ classdef TaskController < handle
         end
 
         %-----------------------------------------------------------------%
-        function configureBand(obj, taskIdx, bandIdx, receiverHandle)
-            writeline(receiverHandle, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.configSET);
-            pause(.001)
-
-            if ~isempty(obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.attSET)
-                writeline(receiverHandle, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI.attSET);
-            end
-        end
-
-        %-----------------------------------------------------------------%
         function traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, timestamp)
             timeout  = class.Constants.Timeout;
             acquired = false;
 
-            switch obj.Tasks(taskIdx).TaskSpec.Receiver.Config.connectFlag
-                case 1 % Analisadores de espectro (R&S, KeySight, Tektronix, Anritsu)
+            receiverDriver = model.ReceiverDriver(obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
+            if ~receiverDriver.IsStreaming
+                traceSource = 'polling';
+            elseif receiverDriver.IsLevelAzimuth
+                traceSource = 'level+azimuth';
+            else
+                traceSource = 'streaming';
+            end
+
+            switch traceSource
+                case 'polling' % Analisadores de espectro (R&S, KeySight, Tektronix, Anritsu)
                     acquisitionTic = tic;
                     elapsed = 0;
 
@@ -765,8 +755,7 @@ classdef TaskController < handle
                         elapsed = toc(acquisitionTic);
 
                         try
-                            writeline(receiverHandle, obj.Tasks(taskIdx).ReceiverCommands.data);
-                            traceData = readbinblock(receiverHandle, 'single');
+                            traceData = fetchTraceData(receiverDriver);
 
                             if numel(traceData) == obj.Tasks(taskIdx).Bands(bandIdx).DataPoints
                                 if strcmp(obj.Tasks(taskIdx).TaskSpec.Receiver.Sync, 'Continuous Sweep')
@@ -788,7 +777,7 @@ classdef TaskController < handle
                         end
                     end
 
-                case 2 % R&S EB500: Tarefas ordinárias
+                case 'streaming' % R&S EB500: Tarefas ordinárias
 
                     taskInfo = struct( ...
                         'Type',       obj.Tasks(taskIdx).TaskSpec.Type, ...
@@ -801,7 +790,7 @@ classdef TaskController < handle
 
                     [traceData, acquired] = class.EB500Lib.DatagramRead_PSCAN(taskInfo, receiverHandle, udpPortHandle);
 
-                case 3 % R&S EB500 - Tarefa "Drive-test (Level+Azimuth)"
+                case 'level+azimuth' % R&S EB500 - Tarefa "Drive-test (Level+Azimuth)"
                     taskInfo = struct( ...
                         'Type',       obj.Tasks(taskIdx).TaskSpec.Type, ...
                         'FreqCenter', (obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart + obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop)/2, ...

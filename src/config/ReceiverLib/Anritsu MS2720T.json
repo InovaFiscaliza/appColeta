@@ -19,9 +19,9 @@
         "legacy": {
             "initReset": "SYSTem:PRESET",
             "initStartup": "*CLS;:INSTrument \"SPA\";:FORMat:DATA REAL,32;:BANDwidth:VIDeo:TYPE LIN;:SWEep:MODE FAST;:GPS ON",
-            "initSweepMode": "INITiate:CONTinuous %SweepMode%",
-            "setBandConfig": "AVERage:COUNt %AverageCount%;:AVERage:TYPE %Trace%;:DETector:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:BANDwidth:RESolution %ResolutionValue%;:POWer:RF:GAIN:STATe %Preamp%;:POWer:RF:ATTenuation:AUTO %AttenuationMode%",
-            "setAttenuation": "POWer:RF:ATTenuation %AttenuationValue%",
+            "initSweepMode": "INITiate:CONTinuous %sweepMode%",
+            "setBandConfig": "AVERage:COUNt %averageCount%;:AVERage:TYPE %traceMode%;:DETector:FUNCtion %detector%;:UNIT:POWer %levelUnit%;:FREQuency:STARt %freqStart%;:FREQuency:STOP %freqStop%;:BANDwidth:RESolution %resolutionValue%;:POWer:RF:GAIN:STATe %preamp%;:POWer:RF:ATTenuation:AUTO %attenuationMode%",
+            "setAttenuation": "POWer:RF:ATTenuation %attenuationValue%",
             "setVideoBandWidth": "",
             "queryIdentification": "*IDN?",
             "queryStatus": "",
@@ -135,25 +135,25 @@
                 "name": "detector",
                 "write": "DETector:FUNCtion %Detector%",
                 "read": "DETector:FUNCtion?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "freqStart",
                 "write": "FREQuency:STARt %FreqStart%",
                 "read": "FREQuency:STARt?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "freqStop",
                 "write": "FREQuency:STOP %FreqStop%",
                 "read": "FREQuency:STOP?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "levelUnit",
                 "write": "UNIT:POWer %LevelUnit%",
                 "read": "UNIT:POWer?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "preamp",
@@ -177,7 +177,7 @@
                 "name": "resolutionValue",
                 "write": "BANDwidth:RESolution %ResolutionValue%",
                 "read": "BANDwidth:RESolution?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "sampleTimeValue",
@@ -201,7 +201,7 @@
                 "name": "traceMode",
                 "write": "AVERage:TYPE %Trace%",
                 "read": "AVERage:TYPE?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "videoBandWidth",

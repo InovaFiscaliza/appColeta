@@ -19,8 +19,8 @@
         "legacy": {
             "initReset": "*RST",
             "initStartup": "*CLS;:INSTrument \"SA\";:FORMat:DATA REAL,32;:AVERage:TYPE VOLT;:DISP:WIND:TRAC1:Y:AUTO;:SYSTem:GPS:STATe INT",
-            "initSweepMode": "INITiate:CONTinuous %SweepMode%",
-            "setBandConfig": "TRACe1:TYPE %Trace%;:AVERage:COUNt %AverageCount%;:DETector:FUNCtion %Detector%;:AMPLitude:UNIT %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%;:POWer:RF:GAIN %Preamp%;:POWer:RF:ATTenuation %AttenuationValue%;:POWer:RF:ATTenuation:AUTO %AttenuationMode%",
+            "initSweepMode": "INITiate:CONTinuous %sweepMode%",
+            "setBandConfig": "TRACe1:TYPE %traceMode%;:AVERage:COUNt %averageCount%;:DETector:FUNCtion %detector%;:AMPLitude:UNIT %levelUnit%;:FREQuency:STARt %freqStart%;:FREQuency:STOP %freqStop%;:SWEep:POINTS %dataPoints%;:BANDwidth:RESolution %resolutionValue%;:POWer:RF:GAIN %preamp%;:POWer:RF:ATTenuation %attenuationValue%;:POWer:RF:ATTenuation:AUTO %attenuationMode%",
             "setAttenuation": "",
             "setVideoBandWidth": "",
             "queryIdentification": "*IDN?",
@@ -137,31 +137,31 @@
                 "name": "dataPoints",
                 "write": "SWEep:POINTS %DataPoints%",
                 "read": "SWEep:POINTS?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "detector",
                 "write": "DETector:FUNCtion %Detector%",
                 "read": "DETector:FUNCtion?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "freqStart",
                 "write": "FREQuency:STARt %FreqStart%",
                 "read": "FREQuency:STARt?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "freqStop",
                 "write": "FREQuency:STOP %FreqStop%",
                 "read": "FREQuency:STOP?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "levelUnit",
                 "write": "AMPLitude:UNIT %LevelUnit%",
                 "read": "AMPLitude:UNIT?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "preamp",
@@ -185,7 +185,7 @@
                 "name": "resolutionValue",
                 "write": "BANDwidth:RESolution %ResolutionValue%",
                 "read": "BANDwidth:RESolution?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "sampleTimeMode",
@@ -215,7 +215,7 @@
                 "name": "traceMode",
                 "write": "TRACe1:TYPE %Trace%",
                 "read": "TRACe1:TYPE?",
-                "requireMatch": false
+                "requireMatch": true
             },
             {
                 "name": "videoBandWidth",

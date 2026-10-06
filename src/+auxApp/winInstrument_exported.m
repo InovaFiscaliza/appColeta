@@ -248,7 +248,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             switch app.Family.Value
                 case 'Receiver'
                     idx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
-                    app.Type.Items = app.receiverObj.Config.connectType(idx);
+                    app.Type.Items = app.receiverObj.Config.Definition{idx}.connection.types;
 
                 case 'GPS'
                     idx = strcmp(app.gpsObj.Config.Name, app.Name.Value);
@@ -281,7 +281,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             switch app.Family.Value
                 case 'Receiver'
                     idx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
-                    app.Port.Value = num2str(app.receiverObj.Config.connectPort(idx));
+                    app.Port.Value = num2str(app.receiverObj.Config.Definition{idx}.connection.defaultPort);
 
                 case 'GPS'
                     if ~portValidation
