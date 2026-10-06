@@ -22,13 +22,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         Tab1_Task                matlab.ui.container.Tab
         Tab1Grid                 matlab.ui.container.GridLayout
         Toolbar                  matlab.ui.container.GridLayout
-        tool_RevisitTime         matlab.ui.control.Label
-        tool_ButtonLOG           matlab.ui.control.Image
-        tool_Separator2          matlab.ui.control.Image
-        tool_ButtonDel           matlab.ui.control.Image
-        tool_ButtonPlay          matlab.ui.control.Image
-        tool_Separator1          matlab.ui.control.Image
-        tool_LeftPanel           matlab.ui.control.Image
+        RevisitTimeInfo          matlab.ui.control.Label
+        SelectedTaskInfo         matlab.ui.control.Label
+        SelectedTaskSeparator    matlab.ui.control.Image
+        TableVisibility          matlab.ui.control.Image
+        PanelLeftVisibility      matlab.ui.control.Image
         Document                 matlab.ui.container.GridLayout
         TaskStatusGrid           matlab.ui.container.GridLayout
         GPSLastFixPanel          matlab.ui.container.Panel
@@ -140,9 +138,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             try
                 switch event.HTMLEventName
                     % MATLAB-JS BRIDGE (matlabJSBridge.js)
-                    case {'Play', 'Stop', 'Delete'}
-                        uialert(app.UIFigure, sprintf('HTMLEventName: %s, HTMLEventData: %d', event.HTMLEventName, event.HTMLEventData), '', 'Icon', 'success')
-
                     case 'renderer'
                         MFilePath   = fileparts(mfilename('fullpath'));
                         parpoolFlag = false;
@@ -207,6 +202,25 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         resourceStaticURL = event.HTMLEventData;
                         if ~isempty(resourceStaticURL)
                             app.General.AppVersion.application.resourceStaticURL = resourceStaticURL;
+                        end
+
+                    case {'onStartTaskRequest', 'onStopTaskRequest', 'onDeleteTaskRequest', 'onViewLogRequest'}
+                        % event.HTMLEventData é o índice da tarefa (linha da tabela).
+                        taskIdx = event.HTMLEventData;
+
+                        if taskIdx < 1 || taskIdx > numel(app.TaskController.Tasks)
+                            return
+                        end
+
+                        switch event.HTMLEventName
+                            case 'onStartTaskRequest'
+                                startOrReplayTask(app, taskIdx)
+                            case 'onStopTaskRequest'
+                                stopTask(app, taskIdx)
+                            case 'onDeleteTaskRequest'
+                                deleteTask(app, taskIdx)
+                            case 'onViewLogRequest'
+                                showTaskLog(app, taskIdx)
                         end
 
                     case 'auxApp.winAddTask.AntennaList_Tree'
@@ -441,10 +455,17 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         app.MetaData;
                         app.AxesToolbar;
                         ...
-                        app.tool_LeftPanel;
-                        app.tool_ButtonPlay;
-                        app.tool_ButtonDel;
-                        app.tool_ButtonLOG
+                        app.axesTool_RestoreView;
+                        app.axesTool_ExportGraphics;
+                        app.axesTool_PlotSource;
+                        app.axesTool_MinHold;
+                        app.axesTool_Average;
+                        app.axesTool_MaxHold;
+                        app.axesTool_Peak;
+                        app.axesTool_Waterfall;
+                        ...
+                        app.PanelLeftVisibility;
+                        app.TableVisibility
                     };
                     ui.CustomizationBase.getElementsDataTag(elToModify);
 
@@ -457,10 +478,18 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
                             struct('appName', appName, 'dataTag', app.AxesToolbar.UserData.id, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0')), ...
                             struct('appName', appName, 'dataTag', app.SpectrumFlowList.UserData.id, 'selector', 'input', 'styleImportant', struct('height', '44px'), 'dropDownBackgroundColor', struct('items', 'rgba(183, 49, 44, 0.75)', 'selectedItem', 'rgb(108, 4, 4)')), ...
-                            struct('appName', appName, 'dataTag', app.tool_LeftPanel.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonPlay.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Inicia ou interrompe tarefa')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonDel.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exclui tarefa')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonLOG.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'LOG tarefa')) ...
+                            ...
+                            struct('appName', appName, 'dataTag', app.axesTool_RestoreView.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Restaura limites iniciais dos eixos')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_ExportGraphics.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta plot')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_PlotSource.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Seleciona tipo de plot')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_MinHold.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "MinHold"')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_Average.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "Average"')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_MaxHold.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "MaxHold"')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_Peak.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Excursão de pico')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_Waterfall.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe waterfall')), ...
+                            ...
+                            struct('appName', appName, 'dataTag', app.PanelLeftVisibility.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
+                            struct('appName', appName, 'dataTag', app.TableVisibility.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade da tabela')) ...
                         });
                     catch
                     end
@@ -518,8 +547,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Ideia é identificar URL de pasta estática servida pelo backend, de 
             % forma que possam ser inseridas imagens em uilabel (como ui.TextView).
             try
-                [~, resourceName, resourceExt] = fileparts(app.tool_ButtonPlay.ImageSource);
-                sendEventToHTMLSource(app.jsBackDoor, 'findResourceStaticURL', struct('resourceName', [resourceName resourceExt], 'resourceTag', 'img', 'resourceId', app.tool_ButtonPlay.UserData.id))
+                [~, resourceName, resourceExt] = fileparts(app.PanelLeftVisibility.ImageSource);
+                sendEventToHTMLSource(app.jsBackDoor, 'findResourceStaticURL', struct('resourceName', [resourceName resourceExt], 'resourceTag', 'img', 'resourceId', app.PanelLeftVisibility.UserData.id))
             catch
             end
         end
@@ -568,6 +597,9 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axesTool_MaxHold.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'MaxHold_32Filled.png', 'Off', 'MaxHold_32.png'));
             app.axesTool_Peak.UserData       = struct('id', '', 'status', false);
             app.axesTool_Waterfall.UserData  = struct('id', '', 'status', false);
+
+            app.PanelLeftVisibility.UserData.status = true;
+            app.TableVisibility.UserData.status = true;
             
             initializeAxes(app)
 
@@ -610,10 +642,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
 
                 operation = {
-                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStartTaskRequest'''',   ''''HTMLEventData'''', %d))'')">▶&ensp;</a>', app.appHandleNameInBase, taskIdx);
+                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStartTaskRequest'''',   ''''HTMLEventData'''', %d))'')">▶️</a>', app.appHandleNameInBase, taskIdx);
                     sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStopTaskRequest'''',    ''''HTMLEventData'''', %d))'')">⬛</a>', app.appHandleNameInBase, taskIdx);
                     sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onDeleteTaskRequest'''',  ''''HTMLEventData'''', %d))'')">❌</a>', app.appHandleNameInBase, taskIdx);
-                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onViewLogRequest'''',     ''''HTMLEventData'''', %d))'')">≡ Log</a>', app.appHandleNameInBase, taskIdx)
+                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onViewLogRequest'''',     ''''HTMLEventData'''', %d))'')">📋</a>', app.appHandleNameInBase, taskIdx)
                 };
 
                 if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
@@ -644,7 +676,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         
             selectedBandIdx = 1;
             loadSelectedTask(app, selectedBandIdx)
-            updateToolbar(app)
             
             drawnow
         end
@@ -745,23 +776,19 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                 updateGPSStatus(app, app.TaskController.Tasks(taskIdx).GPSLastFix)
 
-                app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).nSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
-
-                switch app.TaskController.Tasks(taskIdx).Status
-                    case 'Na fila'
-                        set(app.tool_ButtonPlay, 'Enable', 'off', 'ImageSource', 'play_32.png')
-                    case 'Em andamento'
-                        set(app.tool_ButtonPlay, 'Enable', 'on',  'ImageSource', 'stop_32.png')
-                    otherwise
-                        set(app.tool_ButtonPlay, 'Enable', 'on',  'ImageSource', 'play_32.png')
-                end
+                app.SelectedTaskInfo.Text = sprintf('Tarefa "<b>%s</b>"\nFaixa %d de %d: %.3f – %.3f MHz', app.TaskController.Tasks(taskIdx).TaskSpec.Script.Name, bandIdx, numel(app.TaskController.Tasks(taskIdx).Bands), app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart / 1e+6, app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop  / 1e+6);
+                app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).nSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
 
             else
                 app.Sweeps.Text = string(-1);
                 app.RecordingIcon.Visible = 'off';
                 updateGPSStatus(app, [])
-                app.tool_RevisitTime.Text = '';
+                
+                app.SelectedTaskInfo.Text = '';
+                app.RevisitTimeInfo.Text = '';
             end
+
+            app.SelectedTaskSeparator.Visible = ~isempty(app.SelectedTaskInfo.Text);
         end
 
         %-----------------------------------------------------------------%
@@ -824,7 +851,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function updateMaskStatus(app, maskTrigger, taskIdx, bandIdx)
             taskTable = app.UITable.Data;
             hasSelection = ~isempty(taskTable) && ~isempty(taskIdx);
-            hasBands = false;
             hasMask = false;
 
             if hasSelection
@@ -878,6 +904,74 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             else
                 app.MaskStatus.Text = replace(app.MaskStatus.Text, [extractBefore(app.MaskStatus.Text, 'VALIDAÇÕES') 'VALIDAÇÕES'], sprintf('<b style="color: #a2142f; font-size: 14;">%.0f</b> \nVALIDAÇÕES', validations));
             end
+        end
+
+
+        %-----------------------------------------------------------------%
+        % ## EXECUÇÃO DAS TAREFAS ##
+        %-----------------------------------------------------------------%
+        function startOrReplayTask(app, taskIdx)
+            switch app.TaskController.Tasks(taskIdx).Status
+                case {'Cancelada', 'Erro', 'Concluída'}
+                    timestamp = datetime('now');
+
+                    switch app.TaskController.Tasks(taskIdx).TaskSpec.Script.Observation.Type
+                        case 'Duration'
+                            app.TaskController.Tasks(taskIdx).Timing.startedAt = timestamp;
+                            app.TaskController.Tasks(taskIdx).Timing.endedAt   = timestamp + seconds(app.TaskController.Tasks(taskIdx).TaskSpec.Script.Observation.Duration);
+
+                        case 'Time'
+                            if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Concluída')
+                                ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Concluída" somente poderá ser executada novamente se o tipo do período de observação for "Duração" ou "Quantidade específica de amostras".');
+                                return
+                            end
+
+                        case 'Samples'
+                            app.TaskController.Tasks(taskIdx).Timing.startedAt = timestamp;
+                            app.TaskController.Tasks(taskIdx).Timing.endedAt   = NaT;
+                    end
+
+                    app.TaskController.Tasks(taskIdx).Status = 'Na fila';
+                    app.TaskController.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(timestamp), 'message', 'Reincluída na fila a tarefa.');
+
+                    resetTaskBands(app.TaskController, taskIdx, 1)
+                    taskSchedulerTimerFcn(app)
+
+                case 'Na fila'
+                    ui.Dialog(app.UIFigure, 'warning', 'A tarefa já está na fila de execução.');
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function stopTask(app, taskIdx)
+            if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
+                updateTaskStatus(app.TaskController, taskIdx, 'cancellationRequested');
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function deleteTask(app, taskIdx)
+            if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
+                ui.Dialog(app.UIFigure, 'warning', 'A tarefa precisa ser interrompida antes da tentativa de exclusão.');
+                return
+            end
+
+            if all(~strcmp({app.TaskController.Tasks.Status}, 'Em andamento')) && app.TaskController.IsRunning
+                app.TaskController.IsRunning = false;
+            end
+
+            if ~app.TaskController.IsRunning
+                app.TaskController.Tasks(taskIdx) = [];
+                refreshTaskTable(app)
+            else
+                ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa poderá ser excluída, sendo eliminada da lista de tarefas, somente se não estiver sendo executada nenhuma tarefa.');
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function showTaskLog(app, taskIdx)
+            log = util.HtmlTextGenerator.LOG(app.TaskController.Tasks, taskIdx);
+            ui.Dialog(app.UIFigure, 'warning', log);
         end
 
 
@@ -1095,14 +1189,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function updateToolbar(app)
-            hasTask = ~isempty(app.TaskController.Tasks);
             isLevel = strcmp(app.axesTool_PlotSource.Value, 'Nível');
-
-            set([ ...
-                app.tool_ButtonPlay, ...
-                app.tool_ButtonDel, ...
-                app.tool_ButtonLOG ...
-            ], 'Enable', hasTask)
 
             set([ ...
                 app.axesTool_MinHold, ...
@@ -1261,7 +1348,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     if app.SpectrumFlowList.Value == bandIdx
                         updatePlot(app, taskIdx, bandIdx)
                         updateMaskStatus(app, maskTrigger, taskIdx, bandIdx)
-                        app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).nSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
+                        app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).nSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
                         app.Sweeps.Text = string(app.TaskController.Tasks(taskIdx).Bands(bandIdx).File.WritedSamples);
                         drawnow
                     end
@@ -1524,6 +1611,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             
             taskIdx = app.UITable.Selection;
             bandIdx = app.SpectrumFlowList.Value;
+
+            if isempty(app.TaskController.Tasks(taskIdx).Bands)
+                return
+            end
             
             if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall)
                 waterfallIdx = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx;
@@ -1557,6 +1648,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             taskIdx = app.UITable.Selection;
             bandIdx = app.SpectrumFlowList.Value;
+
+            if isempty(app.TaskController.Tasks(taskIdx).Bands)
+                return
+            end
 
             if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall)
                 waterfallIdx = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx;
@@ -1620,100 +1715,31 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: tool_LeftPanel
-        function onToolbarPanelVisibilityImageClicked(app, event)
+        % Image clicked function: PanelLeftVisibility, TableVisibility
+        function onToolbarButtonToogleVisibility(app, event)
             
-            if app.Document.ColumnWidth{1}
-                app.tool_LeftPanel.ImageSource = 'layout-sidebar-left-off.svg';
-                app.Document.ColumnWidth(1:2) = {0,0};
-            else
-                app.tool_LeftPanel.ImageSource = 'layout-sidebar-left.svg';
-                app.Document.ColumnWidth(1:2) = {320,10};
+            switch event.Source
+                case app.PanelLeftVisibility
+                    app.PanelLeftVisibility.UserData.status = ~app.PanelLeftVisibility.UserData.status;
+                    if app.PanelLeftVisibility.UserData.status
+                        app.PanelLeftVisibility.ImageSource = 'layout-sidebar-left.svg';
+                        app.Document.ColumnWidth(1:2) = {320,10};
+                    else
+                        app.PanelLeftVisibility.ImageSource = 'layout-sidebar-left-off.svg';
+                        app.Document.ColumnWidth(1:2) = {0,0};
+                    end
+
+                case app.TableVisibility
+                    app.TableVisibility.UserData.status = ~app.TableVisibility.UserData.status;
+                    if app.TableVisibility.UserData.status
+                        app.Document.RowHeight(1:2) = {144,10};
+                        app.UITable.Visible = 'on';
+                    else
+                        app.Document.RowHeight(1:2) = {0,0};
+                        app.UITable.Visible = 'off';
+                    end
             end
             
-        end
-
-        % Image clicked function: tool_ButtonPlay
-        function onToolbarToggleTaskStatusButtonPushed(app, event)
-            
-            taskIdx = app.UITable.Selection;
-
-            if taskIdx 
-                switch app.TaskController.Tasks(taskIdx).Status
-                    %-----------------------------------------------------%
-                    % PLAY
-                    %-----------------------------------------------------%
-                    case {'Cancelada', 'Erro', 'Concluída'}
-                        Timestamp = datetime('now');
-        
-                        switch app.TaskController.Tasks(taskIdx).TaskSpec.Script.Observation.Type
-                            case 'Duration'
-                                app.TaskController.Tasks(taskIdx).Timing.startedAt = Timestamp;
-                                app.TaskController.Tasks(taskIdx).Timing.endedAt   = Timestamp + seconds(app.TaskController.Tasks(taskIdx).TaskSpec.Script.Observation.Duration);
-            
-                            case 'Time'
-                                if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Concluída')
-                                    ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Concluída" somente poderá ser executada novamente se o tipo do período de observação for "Duração" ou "Quantidade específica de amostras".');
-                                    return
-                                end
-            
-                            case 'Samples'
-                                app.TaskController.Tasks(taskIdx).Timing.startedAt = Timestamp;
-                                app.TaskController.Tasks(taskIdx).Timing.endedAt   = NaT;
-                        end
-        
-                        app.TaskController.Tasks(taskIdx).Status = 'Na fila';
-                        app.TaskController.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(Timestamp), 'message', 'Reincluída na fila a tarefa.');
-
-                        resetTaskBands(app.TaskController, taskIdx, 1)
-                        taskSchedulerTimerFcn(app)
-
-                    %-----------------------------------------------------%
-                    % STOP
-                    %-----------------------------------------------------%
-                    case 'Em andamento'
-                        updateTaskStatus(app.TaskController, taskIdx, 'cancellationRequested');
-                end
-            end
-            
-        end
-
-        % Image clicked function: tool_ButtonDel
-        function onToolbarDelTaskButtonPushed(app, event)
-            
-            taskIdx = app.UITable.Selection;
-
-            if taskIdx
-                switch app.TaskController.Tasks(taskIdx).Status
-                    case 'Em andamento'
-                        ui.Dialog(app.UIFigure, 'warning', 'A tarefa precisa ser interrompida antes da tentativa de exclusão.');
-
-                    otherwise
-                        if all(~strcmp({app.TaskController.Tasks.Status}, 'Em andamento')) && app.TaskController.IsRunning
-                            app.TaskController.IsRunning = false;
-                        end
-
-                        if ~app.TaskController.IsRunning
-                            app.TaskController.Tasks(taskIdx) = [];    
-                            refreshTaskTable(app)
-                        else
-                            ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa poderá ser excluída, sendo eliminada da lista de tarefas, somente se não estiver sendo executada nenhuma tarefa.');
-                        end
-                end
-            end
-
-        end
-
-        % Image clicked function: tool_ButtonLOG
-        function onToolbarShowTaskLogButtonPushed(app, event)
-
-            taskIdx = app.UITable.Selection;
-
-            if taskIdx
-                log = util.HtmlTextGenerator.LOG(app.TaskController.Tasks, taskIdx);
-                ui.Dialog(app.UIFigure, 'warning', log);
-            end
-
         end
     end
 
@@ -1766,7 +1792,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Document
             app.Document = uigridlayout(app.Tab1Grid);
             app.Document.ColumnWidth = {320, 10, 5, 292, '1x', 10, 130};
-            app.Document.RowHeight = {130, 10, 17, 5, 2, 20, 5, '1x'};
+            app.Document.RowHeight = {144, 10, 17, 5, 2, 20, 5, '1x'};
             app.Document.ColumnSpacing = 0;
             app.Document.RowSpacing = 0;
             app.Document.Padding = [20 20 20 50];
@@ -1830,12 +1856,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % Create axesTool_RestoreView
             app.axesTool_RestoreView = uiimage(app.AxesToolbar);
+            app.axesTool_RestoreView.ScaleMethod = 'none';
             app.axesTool_RestoreView.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarRestoreViewImageClicked, true);
-            app.axesTool_RestoreView.Tag = 'MinHold';
-            app.axesTool_RestoreView.Tooltip = {'RestoreView'};
             app.axesTool_RestoreView.Layout.Row = 2;
             app.axesTool_RestoreView.Layout.Column = 2;
-            app.axesTool_RestoreView.VerticalAlignment = 'bottom';
             app.axesTool_RestoreView.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Home_18.png');
 
             % Create axesTool_ExportGraphics
@@ -1851,10 +1875,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axesTool_PlotSource.Items = {'Nível'};
             app.axesTool_PlotSource.ValueChangedFcn = createCallbackFcn(app, @onAxesToolbarPlotSourceImageClicked, true);
             app.axesTool_PlotSource.Enable = 'off';
-            app.axesTool_PlotSource.Tooltip = {'Fonte de dados'};
             app.axesTool_PlotSource.FontSize = 11;
-            app.axesTool_PlotSource.FontColor = [0.129411764705882 0.129411764705882 0.129411764705882];
-            app.axesTool_PlotSource.BackgroundColor = [1 1 1];
             app.axesTool_PlotSource.Layout.Row = [1 3];
             app.axesTool_PlotSource.Layout.Column = 5;
             app.axesTool_PlotSource.Value = 'Nível';
@@ -1862,54 +1883,42 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create axesTool_MinHold
             app.axesTool_MinHold = uiimage(app.AxesToolbar);
             app.axesTool_MinHold.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarTraceModeImageClicked, true);
-            app.axesTool_MinHold.Tag = 'MinHold';
-            app.axesTool_MinHold.Tooltip = {'MinHold'};
+            app.axesTool_MinHold.Enable = 'off';
             app.axesTool_MinHold.Layout.Row = 2;
             app.axesTool_MinHold.Layout.Column = 7;
-            app.axesTool_MinHold.VerticalAlignment = 'bottom';
             app.axesTool_MinHold.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'MinHold_32.png');
 
             % Create axesTool_Average
             app.axesTool_Average = uiimage(app.AxesToolbar);
             app.axesTool_Average.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarTraceModeImageClicked, true);
-            app.axesTool_Average.Tag = 'Average';
-            app.axesTool_Average.Tooltip = {'Média'};
+            app.axesTool_Average.Enable = 'off';
             app.axesTool_Average.Layout.Row = 2;
             app.axesTool_Average.Layout.Column = 8;
-            app.axesTool_Average.VerticalAlignment = 'bottom';
             app.axesTool_Average.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Average_32.png');
 
             % Create axesTool_MaxHold
             app.axesTool_MaxHold = uiimage(app.AxesToolbar);
             app.axesTool_MaxHold.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarTraceModeImageClicked, true);
-            app.axesTool_MaxHold.Tag = 'MaxHold';
-            app.axesTool_MaxHold.Tooltip = {'MaxHold'};
+            app.axesTool_MaxHold.Enable = 'off';
             app.axesTool_MaxHold.Layout.Row = 2;
             app.axesTool_MaxHold.Layout.Column = 9;
-            app.axesTool_MaxHold.VerticalAlignment = 'bottom';
             app.axesTool_MaxHold.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'MaxHold_32.png');
 
             % Create axesTool_Peak
             app.axesTool_Peak = uiimage(app.AxesToolbar);
             app.axesTool_Peak.ScaleMethod = 'none';
             app.axesTool_Peak.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarTraceModeImageClicked, true);
-            app.axesTool_Peak.Tag = 'Persistance';
-            app.axesTool_Peak.Tooltip = {'Excursão de pico'};
+            app.axesTool_Peak.Enable = 'off';
             app.axesTool_Peak.Layout.Row = 2;
             app.axesTool_Peak.Layout.Column = 10;
-            app.axesTool_Peak.VerticalAlignment = 'bottom';
             app.axesTool_Peak.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Detection_18.png');
 
             % Create axesTool_Waterfall
             app.axesTool_Waterfall = uiimage(app.AxesToolbar);
             app.axesTool_Waterfall.ScaleMethod = 'none';
             app.axesTool_Waterfall.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarShowWaterfallImageClicked, true);
-            app.axesTool_Waterfall.Tag = 'Waterfall';
-            app.axesTool_Waterfall.Tooltip = {'Waterfall'};
             app.axesTool_Waterfall.Layout.Row = 2;
             app.axesTool_Waterfall.Layout.Column = 11;
-            app.axesTool_Waterfall.HorizontalAlignment = 'left';
-            app.axesTool_Waterfall.VerticalAlignment = 'bottom';
             app.axesTool_Waterfall.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Waterfall_24.png');
 
             % Create TaskStatusGrid
@@ -1934,7 +1943,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.SweepsGrid.ColumnSpacing = 0;
             app.SweepsGrid.RowSpacing = 0;
             app.SweepsGrid.Padding = [5 5 5 5];
-            app.SweepsGrid.Tag = 'COLORLOCKED';
             app.SweepsGrid.BackgroundColor = [1 1 1];
 
             % Create SweepsLabel
@@ -1999,7 +2007,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.MaskGrid.ColumnSpacing = 2;
             app.MaskGrid.RowSpacing = 0;
             app.MaskGrid.Padding = [5 5 5 5];
-            app.MaskGrid.Tag = 'COLORLOCKED';
             app.MaskGrid.BackgroundColor = [1 1 1];
 
             % Create MaskLabel
@@ -2037,7 +2044,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.GPSLastFixGrid.ColumnSpacing = 0;
             app.GPSLastFixGrid.RowSpacing = 0;
             app.GPSLastFixGrid.Padding = [5 5 5 5];
-            app.GPSLastFixGrid.Tag = 'COLORLOCKED';
             app.GPSLastFixGrid.BackgroundColor = [1 1 1];
 
             % Create GPSLastFixLabel
@@ -2100,7 +2106,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % Create Toolbar
             app.Toolbar = uigridlayout(app.Tab1Grid);
-            app.Toolbar.ColumnWidth = {22, 5, 22, 22, 5, 22, '1x'};
+            app.Toolbar.ColumnWidth = {22, 22, 5, '1x', '1x'};
             app.Toolbar.RowHeight = {4, 17, 2};
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.RowSpacing = 0;
@@ -2108,66 +2114,45 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Toolbar.Layout.Row = 2;
             app.Toolbar.Layout.Column = 1;
 
-            % Create tool_LeftPanel
-            app.tool_LeftPanel = uiimage(app.Toolbar);
-            app.tool_LeftPanel.ScaleMethod = 'none';
-            app.tool_LeftPanel.ImageClickedFcn = createCallbackFcn(app, @onToolbarPanelVisibilityImageClicked, true);
-            app.tool_LeftPanel.Tooltip = {''};
-            app.tool_LeftPanel.Layout.Row = [1 3];
-            app.tool_LeftPanel.Layout.Column = 1;
-            app.tool_LeftPanel.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'layout-sidebar-left.svg');
+            % Create PanelLeftVisibility
+            app.PanelLeftVisibility = uiimage(app.Toolbar);
+            app.PanelLeftVisibility.ScaleMethod = 'none';
+            app.PanelLeftVisibility.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonToogleVisibility, true);
+            app.PanelLeftVisibility.Layout.Row = [1 3];
+            app.PanelLeftVisibility.Layout.Column = 1;
+            app.PanelLeftVisibility.ImageSource = 'layout-sidebar-left.svg';
 
-            % Create tool_Separator1
-            app.tool_Separator1 = uiimage(app.Toolbar);
-            app.tool_Separator1.ScaleMethod = 'none';
-            app.tool_Separator1.Enable = 'off';
-            app.tool_Separator1.Layout.Row = [1 3];
-            app.tool_Separator1.Layout.Column = 2;
-            app.tool_Separator1.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV.svg');
+            % Create TableVisibility
+            app.TableVisibility = uiimage(app.Toolbar);
+            app.TableVisibility.ScaleMethod = 'none';
+            app.TableVisibility.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonToogleVisibility, true);
+            app.TableVisibility.Layout.Row = [1 3];
+            app.TableVisibility.Layout.Column = 2;
+            app.TableVisibility.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'View_16.png');
 
-            % Create tool_ButtonPlay
-            app.tool_ButtonPlay = uiimage(app.Toolbar);
-            app.tool_ButtonPlay.ImageClickedFcn = createCallbackFcn(app, @onToolbarToggleTaskStatusButtonPushed, true);
-            app.tool_ButtonPlay.Enable = 'off';
-            app.tool_ButtonPlay.Tooltip = {''};
-            app.tool_ButtonPlay.Layout.Row = 2;
-            app.tool_ButtonPlay.Layout.Column = 3;
-            app.tool_ButtonPlay.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'play_32.png');
+            % Create SelectedTaskSeparator
+            app.SelectedTaskSeparator = uiimage(app.Toolbar);
+            app.SelectedTaskSeparator.Enable = 'off';
+            app.SelectedTaskSeparator.Visible = 'off';
+            app.SelectedTaskSeparator.Layout.Row = [1 3];
+            app.SelectedTaskSeparator.Layout.Column = 3;
+            app.SelectedTaskSeparator.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV.svg');
 
-            % Create tool_ButtonDel
-            app.tool_ButtonDel = uiimage(app.Toolbar);
-            app.tool_ButtonDel.ImageClickedFcn = createCallbackFcn(app, @onToolbarDelTaskButtonPushed, true);
-            app.tool_ButtonDel.Enable = 'off';
-            app.tool_ButtonDel.Tooltip = {''};
-            app.tool_ButtonDel.Layout.Row = 2;
-            app.tool_ButtonDel.Layout.Column = 4;
-            app.tool_ButtonDel.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Delete_32Red.png');
+            % Create SelectedTaskInfo
+            app.SelectedTaskInfo = uilabel(app.Toolbar);
+            app.SelectedTaskInfo.FontSize = 10;
+            app.SelectedTaskInfo.Layout.Row = [1 3];
+            app.SelectedTaskInfo.Layout.Column = 4;
+            app.SelectedTaskInfo.Interpreter = 'html';
+            app.SelectedTaskInfo.Text = '';
 
-            % Create tool_Separator2
-            app.tool_Separator2 = uiimage(app.Toolbar);
-            app.tool_Separator2.ScaleMethod = 'none';
-            app.tool_Separator2.Enable = 'off';
-            app.tool_Separator2.Layout.Row = [1 3];
-            app.tool_Separator2.Layout.Column = 5;
-            app.tool_Separator2.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV.svg');
-
-            % Create tool_ButtonLOG
-            app.tool_ButtonLOG = uiimage(app.Toolbar);
-            app.tool_ButtonLOG.ImageClickedFcn = createCallbackFcn(app, @onToolbarShowTaskLogButtonPushed, true);
-            app.tool_ButtonLOG.Enable = 'off';
-            app.tool_ButtonLOG.Tooltip = {''};
-            app.tool_ButtonLOG.Layout.Row = 2;
-            app.tool_ButtonLOG.Layout.Column = 6;
-            app.tool_ButtonLOG.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LOG_32.png');
-
-            % Create tool_RevisitTime
-            app.tool_RevisitTime = uilabel(app.Toolbar);
-            app.tool_RevisitTime.HorizontalAlignment = 'right';
-            app.tool_RevisitTime.WordWrap = 'on';
-            app.tool_RevisitTime.FontSize = 10;
-            app.tool_RevisitTime.Layout.Row = [1 3];
-            app.tool_RevisitTime.Layout.Column = 7;
-            app.tool_RevisitTime.Text = '';
+            % Create RevisitTimeInfo
+            app.RevisitTimeInfo = uilabel(app.Toolbar);
+            app.RevisitTimeInfo.HorizontalAlignment = 'right';
+            app.RevisitTimeInfo.FontSize = 10;
+            app.RevisitTimeInfo.Layout.Row = [1 3];
+            app.RevisitTimeInfo.Layout.Column = 5;
+            app.RevisitTimeInfo.Text = '';
 
             % Create Tab2_InstrumentList
             app.Tab2_InstrumentList = uitab(app.TabGroup);
@@ -2201,7 +2186,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.NavBar.ColumnSpacing = 5;
             app.NavBar.RowSpacing = 0;
             app.NavBar.Padding = [10 5 5 5];
-            app.NavBar.Tag = 'COLORLOCKED';
             app.NavBar.Layout.Row = 1;
             app.NavBar.Layout.Column = 1;
             app.NavBar.BackgroundColor = [0.2 0.2 0.2];
@@ -2324,7 +2308,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.FigurePosition.ScaleMethod = 'none';
             app.FigurePosition.ImageClickedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.FigurePosition.Visible = 'off';
-            app.FigurePosition.Tooltip = {'Reposiciona janela'};
             app.FigurePosition.Layout.Row = 3;
             app.FigurePosition.Layout.Column = 15;
             app.FigurePosition.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'screen-normal-24px-white.svg');
@@ -2333,7 +2316,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.AppInfo = uiimage(app.NavBar);
             app.AppInfo.ScaleMethod = 'none';
             app.AppInfo.ImageClickedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
-            app.AppInfo.Tooltip = {'Informações gerais'};
             app.AppInfo.Layout.Row = 3;
             app.AppInfo.Layout.Column = 16;
             app.AppInfo.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'kebab-vertical-24px-white.svg');

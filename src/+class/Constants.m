@@ -6,12 +6,7 @@ classdef (Abstract) Constants
         appVersion = '1.64.0'
 
         windowSize = [1244, 660]
-        windowMinSize = [ 750, 660]
-
-        userPaths = { ...
-            fullfile(getenv('USERPROFILE'), 'Documents'); ...
-            fullfile(getenv('USERPROFILE'), 'Downloads') ...
-        }
+        windowMinSize = [950, 660]
 
         yMinLimRange = 30                                                   % Minimum y-Axis limit range
         yMaxLimRange = 100                                                  % Maximum y-Axis limit range
