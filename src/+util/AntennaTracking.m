@@ -26,7 +26,7 @@ classdef (Abstract) AntennaTracking
         function verifyPointing(callingApp, context, antennaMetaData, progressDialog)
             arguments
                 callingApp
-                context {mustBeMember(context, {'mainApp', 'TASK:ADD'})}
+                context {mustBeMember(context, {'mainApp', 'TASK_ADD'})}
                 antennaMetaData
                 progressDialog
             end
@@ -73,7 +73,7 @@ classdef (Abstract) AntennaTracking
                         end
 
                         if isMispointed
-                            if strcmp(context, 'TASK:ADD')
+                            if strcmp(context, 'TASK_ADD')
                                 message = sprintf([ ...
                                     '<font style="font-size:11;">%s\n\nPosição atual:'            ...
                                     '\n• <span style="color: #808080;">Azimute</span>: %.3fº'     ...
@@ -103,7 +103,7 @@ classdef (Abstract) AntennaTracking
                         end
 
                     case 'Manual'
-                        if strcmp(context, 'TASK:ADD')
+                        if strcmp(context, 'TASK_ADD')
                             message = sprintf([ ...
                                 '<font style="font-size:11;">O apontamento do conjunto ' ...
                                 'antena/LNB "%s" deverá ser realizado manualmente.\n\n' ...

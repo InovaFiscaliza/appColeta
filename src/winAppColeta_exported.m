@@ -72,7 +72,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
     properties (Access = private)
         %-----------------------------------------------------------------%
         Role = 'mainApp'
-        Context = 'TASK:VIEW'
+        Context = 'TASK_VIEW'
         appHandleNameInBase
     end
 
@@ -224,7 +224,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         end
 
                     case 'auxApp.winAddTask.AntennaList_Tree'
-                        ipcMainMatlabCallAuxiliarApp(app, 'TASK:ADD', 'MATLAB', 'deleteAddedAntenna')
+                        ipcMainMatlabCallAuxiliarApp(app, 'TASK_ADD', 'MATLAB', 'deleteAddedAntenna')
 
                     otherwise
                         error('winAppColeta:UnexpectedEvent', 'Unexpected event "%s"', event.HTMLEventName)
@@ -250,7 +250,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         auxAppTag = varargin{1};
                         varargout{1} = {app};
 
-                        if strcmp(auxAppTag, 'TASK:ADD')
+                        if strcmp(auxAppTag, 'TASK_ADD')
                             [auxAppIsOpen, auxAppHandle] = checkStatusModule(app.tabGroupController, auxAppTag);
 
                             if auxAppIsOpen
@@ -294,7 +294,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                         error('winAppColeta:UnexpectedCall', 'Unexpected call "%s"', eventName)
                                 end
 
-                            % auxApp.winTaskList (TASK:EDIT)
+                            % auxApp.winTaskList (TASK_EDIT)
                             case {'auxApp.winTaskList', 'auxApp.winTaskList_exported'}
                                 switch eventName
                                     case 'onTaskListEdit'
@@ -304,7 +304,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                         error('winAppColeta:UnexpectedCall', 'Unexpected call "%s"', eventName)
                                 end
 
-                            % auxApp.winAddTask (TASK:ADD)
+                            % auxApp.winAddTask (TASK_ADD)
                             case {'auxApp.winAddTask', 'auxApp.winAddTask_exported'}
                                 switch eventName
                                     case 'onTaskAddingOrEditing'
@@ -367,7 +367,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 app
                 callingApp
                 auxAppName char {mustBeMember(auxAppName, {'Tracking'})}
-                context    char {mustBeMember(context, {'mainApp', 'TASK:VIEW', 'TASK:EDIT', 'TASK:ADD', 'INSTRUMENT', 'SERVER', 'CONFIG'})}
+                context    char {mustBeMember(context, {'mainApp', 'TASK_VIEW', 'TASK_EDIT', 'TASK_ADD', 'INSTRUMENT', 'SERVER', 'CONFIG'})}
             end
 
             arguments (Repeating)
@@ -513,7 +513,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             mkdir(tempDir)
             app.General_I.fileFolder.tempPath  = tempDir;
             app.General_I.fileFolder.MFilePath = MFilePath;
-            app.General_I.stationInfo.Computer = appEngine.util.OperationSystem("computerName");
+            app.General_I.context.CONFIG.station.computer = appEngine.util.OperationSystem("computerName");
 
             switch app.executionMode
                 case 'webApp'
@@ -570,7 +570,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.TaskController = model.TaskController(app);
             registerTaskControllerListeners(app)
 
-            if app.General.tcpServer.Status
+            if app.General.context.SERVER.status
                 try
                     app.tcpServer = class.tcpServerLib(app);
                 catch
@@ -614,7 +614,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             updateWarningLampVisibility(app)
             createTaskSchedulerTimer(app)
 
-            if app.General.startupInfo
+            if app.General.context.CONFIG.restoreLastSession
                 restoreTasksFromFile(app)
             end
         end
@@ -1213,7 +1213,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.UIAxes2 = plot.axesCreation(axesContainer, 'Cartesian', {'Visible', 0, 'Layer', 'top', 'Box', 'on', 'XGrid', 'off', 'XMinorGrid', 'off', 'YGrid', 'off', 'YMinorGrid', 'off', 'UserData', struct('CLimMode', 'auto', 'Colormap', '')});
             app.UIAxes2.Layout.Tile = 4;
 
-            colormap(app.UIAxes2, app.General.Plot.Waterfall.Colormap);
+            colormap(app.UIAxes2, app.General.plot.waterfall.Colormap);
             plot.axesColorbar(app.UIAxes2, "eastoutside", {'Visible', false})
 
             xlabel(app.UIAxes1, 'Frequência (MHz)')
@@ -1359,12 +1359,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 taskIdx = evt.TaskId;
                 gpsData = evt.Payload;
     
-                % As coordenadas da estação - registradas em app.General.stationInfo
+                % As coordenadas da estação - registradas em app.General.context.CONFIG.station
                 % - são atualizadas apenas se a estação for do tipo móvel ("Mobile") 
                 % e as novas coordenadas geográficas forem válidas.
-                if strcmp(app.General.stationInfo.Type, 'Mobile') && gpsData.Status
-                    app.General.stationInfo.Latitude  = gpsData.Latitude;
-                    app.General.stationInfo.Longitude = gpsData.Longitude;
+                if strcmp(app.General.context.CONFIG.station.type, 'Mobile') && gpsData.Status
+                    app.General.context.CONFIG.station.latitude  = gpsData.Latitude;
+                    app.General.context.CONFIG.station.longitude = gpsData.Longitude;
                 end
     
                 if app.UITable.Selection == taskIdx
@@ -1444,7 +1444,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
             end
 
-            if app.General.startupInfo
+            if app.General.context.CONFIG.restoreLastSession
                 saveTasksToFile(app)
             else
                 [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
@@ -1453,7 +1453,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
             end
 
-            if app.General.stationInfo.Type == "Mobile"
+            if app.General.context.CONFIG.station.type == "Mobile"
                 appEngine.util.generalSettingsSave(class.Constants.appName, app.rootFolder, app.General_I, app.executionMode)
             end
 
@@ -1485,7 +1485,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         % selecionada. 
                         idx = app.UITable.Selection;
         
-                        if  ~checkStatusModule(app.tabGroupController, 'TASK:ADD') && app.Tab1Button.Value && ~isempty(idx)
+                        if  ~checkStatusModule(app.tabGroupController, 'TASK_ADD') && app.Tab1Button.Value && ~isempty(idx)
                             msgQuestion   = 'Deseja criar uma nova tarefa, ou editar a tarefa selecionada em tabela?';
                             userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', msgQuestion, {'Criar nova', 'Editar selecionada', 'Cancelar'}, 1, 3);
                             switch userSelection
@@ -1524,10 +1524,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             end
 
             function inputArguments = resolveAuxAppInputArguments(auxAppName)
-                mustBeMember(auxAppName, {'TASK:VIEW', 'INSTRUMENT', 'TASK:EDIT', 'TASK:ADD', 'SERVER', 'CONFIG'})
+                mustBeMember(auxAppName, {'TASK_VIEW', 'INSTRUMENT', 'TASK_EDIT', 'TASK_ADD', 'SERVER', 'CONFIG'})
 
                 switch auxAppName
-                    case 'TASK:ADD'
+                    case 'TASK_ADD'
                         [~, idxApp] = ismember(auxAppName, app.tabGroupController.Components.Tag);
                         appHandle   = app.tabGroupController.Components.appHandle{idxApp};
                         if ~isempty(appHandle) && isvalid(appHandle)
@@ -1778,7 +1778,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab1_Task
             app.Tab1_Task = uitab(app.TabGroup);
             app.Tab1_Task.AutoResizeChildren = 'off';
-            app.Tab1_Task.Title = 'TASK:VIEW';
+            app.Tab1_Task.Title = 'TASK_VIEW';
 
             % Create Tab1Grid
             app.Tab1Grid = uigridlayout(app.Tab1_Task);
@@ -2162,12 +2162,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab3_TaskEdition
             app.Tab3_TaskEdition = uitab(app.TabGroup);
             app.Tab3_TaskEdition.AutoResizeChildren = 'off';
-            app.Tab3_TaskEdition.Title = 'TASK:EDIT';
+            app.Tab3_TaskEdition.Title = 'TASK_EDIT';
 
             % Create Tab4_TaskAdd
             app.Tab4_TaskAdd = uitab(app.TabGroup);
             app.Tab4_TaskAdd.AutoResizeChildren = 'off';
-            app.Tab4_TaskAdd.Title = 'TASK:ADD';
+            app.Tab4_TaskAdd.Title = 'TASK_ADD';
 
             % Create Tab5_Server
             app.Tab5_Server = uitab(app.TabGroup);
@@ -2203,7 +2203,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab1Button
             app.Tab1Button = uibutton(app.NavBar, 'state');
             app.Tab1Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
-            app.Tab1Button.Tag = 'TASK:VIEW';
+            app.Tab1Button.Tag = 'TASK_VIEW';
             app.Tab1Button.Tooltip = {'Acompanha execução de tarefas'};
             app.Tab1Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'run-all-24px-yellow.svg');
             app.Tab1Button.Text = '';
@@ -2237,7 +2237,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab3Button
             app.Tab3Button = uibutton(app.NavBar, 'state');
             app.Tab3Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
-            app.Tab3Button.Tag = 'TASK:EDIT';
+            app.Tab3Button.Tag = 'TASK_EDIT';
             app.Tab3Button.Tooltip = {'Edita lista de tarefas'};
             app.Tab3Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'server-process.svg');
             app.Tab3Button.Text = '';
@@ -2249,7 +2249,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab4Button
             app.Tab4Button = uibutton(app.NavBar, 'state');
             app.Tab4Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
-            app.Tab4Button.Tag = 'TASK:ADD';
+            app.Tab4Button.Tag = 'TASK_ADD';
             app.Tab4Button.Tooltip = {'Adiciona nova tarefa'};
             app.Tab4Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'empty-window.svg');
             app.Tab4Button.Text = '';

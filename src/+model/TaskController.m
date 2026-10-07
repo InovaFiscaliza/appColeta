@@ -246,7 +246,7 @@ classdef TaskController < handle
                                 if isempty(obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp)
                                     obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = obj.RevisitInfo.GlobalRevisitTime * revisitFactor;
                                 else
-                                    obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = ((obj.App.General.Integration.SampleTime-1)*obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime + seconds(sampleTimestamp-obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp))/obj.App.General.Integration.SampleTime;
+                                    obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = ((obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds-1)*obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime + seconds(sampleTimestamp-obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp))/obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds;
                                 end
                                 obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp = sampleTimestamp;
 
@@ -640,7 +640,7 @@ classdef TaskController < handle
 
                 % WATERFALL MATRIX
                 dataPoints     = taskSpec.Script.Band(bandIdx).instrDataPoints;
-                waterfallDepth = obj.App.General.Plot.Waterfall.Depth;
+                waterfallDepth = obj.App.General.plot.waterfall.Depth;
                 if strcmp(taskSpec.Script.Observation.Type, 'Samples')
                     waterfallDepth = min([waterfallDepth, taskSpec.Script.Band(bandIdx).instrObservationSamples]);
                 end

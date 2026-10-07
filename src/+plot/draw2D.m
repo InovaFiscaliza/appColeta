@@ -9,7 +9,7 @@ classdef (Abstract) draw2D
                 case 'MinHold'
                     hPlot.YData = min(hPlot.YData, newArray);
                 case 'Average'
-                    hPlot.YData = ((generalSettings.Integration.Trace-1)*hPlot.YData + newArray) / generalSettings.Integration.Trace;
+                    hPlot.YData = ((generalSettings.context.TASK_VIEW.integration.traceMode-1)*hPlot.YData + newArray) / generalSettings.context.TASK_VIEW.integration.traceMode;
                 case 'MaxHold'
                     hPlot.YData = max(hPlot.YData, newArray);
             end
@@ -17,7 +17,7 @@ classdef (Abstract) draw2D
 
         %-----------------------------------------------------------------%
         function hPlot = clearWrite(hAxes, xArray, newArray, levelUnit, plotTag, generalSettings, varargin)
-            hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.ClearWrite.Color, 'Tag', plotTag, varargin{:});
+            hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.plot.clearWrite.Color, 'Tag', plotTag, varargin{:});
             plot.datatipModel(hPlot, levelUnit)
         end
 
@@ -25,14 +25,14 @@ classdef (Abstract) draw2D
         function hPlot = minHold(hAxes, specObj, jj, xArray, newArray, levelUnit, generalSettings)        
             switch specObj.Status
                 case 'Em andamento'
-                    hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.MinHold.Color, 'Tag', 'MinHold');                    
+                    hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.plot.minHold.Color, 'Tag', 'MinHold');                    
                 otherwise
                     idx = find(all(specObj.Bands(jj).Waterfall.Matrix == -1000, 2), 1);
                     if isempty(idx)
                         idx = specObj.Bands(jj).Waterfall.Depth+1;
                     end
         
-                    hPlot = plot(hAxes, xArray, min(specObj.Bands(jj).Waterfall.Matrix(1:idx-1,:), [], 1), 'Color', generalSettings.Plot.MinHold.Color, 'Tag', 'MinHold');
+                    hPlot = plot(hAxes, xArray, min(specObj.Bands(jj).Waterfall.Matrix(1:idx-1,:), [], 1), 'Color', generalSettings.plot.minHold.Color, 'Tag', 'MinHold');
             end
             plot.datatipModel(hPlot, levelUnit)
         end
@@ -41,14 +41,14 @@ classdef (Abstract) draw2D
         function hPlot = Average(hAxes, specObj, kk, xArray, newArray, levelUnit, generalSettings)        
             switch specObj.Status
                 case 'Em andamento'
-                    hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.Average.Color, 'Tag', 'Average');                    
+                    hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.plot.average.Color, 'Tag', 'Average');                    
                 otherwise
                     idx = find(all(specObj.Bands(kk).Waterfall.Matrix == -1000, 2), 1);
                     if isempty(idx)
                         idx = specObj.Bands(kk).Waterfall.Depth+1;
                     end
         
-                    hPlot = plot(hAxes, xArray, mean(specObj.Bands(kk).Waterfall.Matrix(1:idx-1,:), 1), 'Color', generalSettings.Plot.Average.Color, 'Tag', 'Average');
+                    hPlot = plot(hAxes, xArray, mean(specObj.Bands(kk).Waterfall.Matrix(1:idx-1,:), 1), 'Color', generalSettings.plot.average.Color, 'Tag', 'Average');
             end
             plot.datatipModel(hPlot, levelUnit)
         end
@@ -57,14 +57,14 @@ classdef (Abstract) draw2D
         function hPlot = maxHold(hAxes, specObj, kk, xArray, newArray, levelUnit, generalSettings)        
             switch specObj.Status
                 case 'Em andamento'
-                    hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.Plot.MaxHold.Color, 'Tag', 'MaxHold');                    
+                    hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.plot.maxHold.Color, 'Tag', 'MaxHold');                    
                 otherwise
                     idx = find(all(specObj.Bands(kk).Waterfall.Matrix == -1000, 2), 1);
                     if isempty(idx)
                         idx = specObj.Bands(kk).Waterfall.Depth+1;
                     end
         
-                    hPlot = plot(hAxes, xArray, max(specObj.Bands(kk).Waterfall.Matrix(1:idx-1,:), [], 1), 'Color', generalSettings.Plot.MaxHold.Color, 'Tag', 'MaxHold');
+                    hPlot = plot(hAxes, xArray, max(specObj.Bands(kk).Waterfall.Matrix(1:idx-1,:), [], 1), 'Color', generalSettings.plot.maxHold.Color, 'Tag', 'MaxHold');
             end
             plot.datatipModel(hPlot, levelUnit)
         end

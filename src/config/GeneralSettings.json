@@ -1,5 +1,5 @@
 {
-    "version": 0.09,
+    "version": 0.11,
     "operationMode": {
         "Debug": false,
         "Dock": true,
@@ -22,17 +22,46 @@
         "DataHub_POST": "",
         "lastVisited": ""
     },
-    "Plot": {
-        "MinHold": {
-            "Fcn": "area",
+    "context": {
+        "TASK_VIEW": {
+            "integration": {
+                "traceMode": 10,
+                "sampleTimeSeconds": 10
+            }
+        },
+        "SERVER": {
+            "status": 0,
+            "ip": "",
+            "port": 8910,
+            "key": "123456",
+            "clientList": [
+                "Zabbix",
+                "Jupyter",
+                "Matlab"
+            ]
+        },
+        "CONFIG": {
+            "station": {
+                "name": "ERMx-DF-00",
+                "computer": "",
+                "type": "Fixed",
+                "latitude": -1,
+                "longitude": -1
+            },
+            "restoreLastSession": false
+        }
+    },
+    "plot": {
+        "minHold": {
+            "Function": "area",
             "LineStyle": "-",
             "LineWidth": 0.5,
             "Color": "#4A90E2",
             "EdgeColor": "#4A90E2",
             "FaceColor": "#4A90E2"
         },
-        "ClearWrite": {
-            "Fcn": "line",
+        "clearWrite": {
+            "Function": "line",
             "LineStyle": "-",
             "LineWidth": 0.5,
             "Color": "#ffff12",
@@ -45,24 +74,24 @@
             "MarkerSize": 14,
             "Visible": "on"
         },
-        "Average": {
-            "Fcn": "line",
+        "average": {
+            "Function": "line",
             "LineStyle": "-",
             "LineWidth": 0.5,
             "Color": "#00cc66",
             "EdgeColor": "#00cc66",
             "FaceColor": "#00cc66"
         },
-        "MaxHold": {
-            "Fcn": "line",
+        "maxHold": {
+            "Function": "line",
             "LineStyle": "-",
             "LineWidth": 0.5,
             "Color": "#FF5CAD",
             "EdgeColor": "#FF5CAD",
             "FaceColor": "#FF5CAD"
         },
-        "Waterfall": {
-            "Fcn": "image",
+        "waterfall": {
+            "Function": "image",
             "Decimation": "auto",
             "MeshStyle": "both",
             "Colormap": "hot",
@@ -70,29 +99,6 @@
             "LevelLimits": [0, 1],
             "Depth": 64
         }
-    },
-    "stationInfo": {
-        "Name": "ERMx-DF-00",
-        "Computer": "",
-        "Type": "Fixed",
-        "Latitude": -1,
-        "Longitude": -1
-    },
-    "startupInfo": false,
-    "tcpServer": {
-        "Status": 0,
-        "IP": "",
-        "Port": 8910,
-        "Key": "123456",
-        "ClientList": [
-            "Zabbix",
-            "Jupyter",
-            "Matlab"
-        ]
-    },
-    "Integration": {
-        "Trace": 10,
-        "SampleTime": 10
     },
     "reportLib": {
         "system": "eFiscaliza",

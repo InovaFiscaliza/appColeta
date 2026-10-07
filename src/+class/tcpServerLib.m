@@ -39,8 +39,8 @@ classdef tcpServerLib < handle
 
         %-----------------------------------------------------------------%
         function ConnectAttempt(obj, src, evt, app)
-            IP   = app.General.tcpServer.IP;
-            Port = app.General.tcpServer.Port;
+            IP   = app.General.context.SERVER.ip;
+            Port = app.General.context.SERVER.port;
 
             try
                 if isa(obj.Server, 'tcpserver.internal.TCPServer')
@@ -110,14 +110,14 @@ classdef tcpServerLib < handle
     
                             % Verifica se o cliente passou o valor correto de "Key".
                             % (configurado no arquivo "GeneralSettings.json")
-                            if ~strcmp(decodedMsg.Key, app.General.tcpServer.Key)
+                            if ~strcmp(decodedMsg.Key, app.General.context.SERVER.key)
                                 error('tcpServerLib:IncorrectKey', 'Incorrect key')
                             end
     
                             % Verifica se o nome do cliente está na lista de possíveis 
                             % nomes que o servidor se comunica.
                             % (configurado no arquivo "GeneralSettings.json")
-                            if ~isempty(app.General.tcpServer.ClientList) && ~ismember(decodedMsg.ClientName, app.General.tcpServer.ClientList)
+                            if ~isempty(app.General.context.SERVER.clientList) && ~ismember(decodedMsg.ClientName, app.General.context.SERVER.clientList)
                                 error('tcpServerLib:UnauthorizedClient', 'Unauthorized client')
                             end
             
@@ -178,15 +178,25 @@ classdef tcpServerLib < handle
 
         %-----------------------------------------------------------------%
         function answer = StationInfo(obj)
-            app = obj.App;
-            answer = struct('stationInfo',  app.General.stationInfo);
+            answer = struct('stationInfo',  stationInfoPayload(obj));
+        end
+
+
+        %-----------------------------------------------------------------%
+        function stationInfo = stationInfoPayload(obj)
+            % Mantém os nomes de campo do protocolo TCP consumido por clientes externos.
+            station = obj.App.General.context.CONFIG.station;
+            stationInfo = struct('Name',      station.name,      ...
+                                 'Computer',  station.computer,  ...
+                                 'Type',      station.type,      ...
+                                 'Latitude',  station.latitude,  ...
+                                 'Longitude', station.longitude);
         end
 
 
         %-----------------------------------------------------------------%
         function answer = Diagnostic(obj)
-            app = obj.App;
-            answer = struct('stationInfo',  app.General.stationInfo, ...
+            answer = struct('stationInfo',  stationInfoPayload(obj), ...
                             'Diagnostic',   struct('appColeta', struct('Release', matlabRelease.Release, ...
                                                                        'Version', class.Constants.appVersion), ...
                                                    'EnvVariables', [], ...
@@ -286,7 +296,7 @@ classdef tcpServerLib < handle
         %-----------------------------------------------------------------%
         function answer = PositionList(obj)
             app = obj.App;
-            answer = struct('stationInfo',  app.General.stationInfo, ...
+            answer = struct('stationInfo',  stationInfoPayload(obj), ...
                             'positionList', struct('IDN', {}, 'gpsType', {}, 'gpsStatus', {}, 'Latitude', {}, 'Longitude', {}));
 
             tasks = app.TaskController.Tasks;
@@ -304,7 +314,7 @@ classdef tcpServerLib < handle
         function answer = TaskList(obj)            
             app = obj.App;
 
-            answer = struct('stationInfo', app.General.stationInfo, ...
+            answer = struct('stationInfo', stationInfoPayload(obj), ...
                             'taskList',    struct('IDN', {}, 'TaskName', {}, 'Observation', {}, 'Band', {}, 'MaskTable', {}, 'Status', {}));
             
             tasks = app.TaskController.Tasks;

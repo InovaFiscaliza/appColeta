@@ -162,8 +162,8 @@ classdef winConfig_exported < matlab.apps.AppBase
             projectFilePath   = fullfile(projectFolder, 'GeneralSettings.json');
             projectGeneral    = jsondecode(fileread(projectFilePath));
 
-            app.defaultValues = struct('Plot',        projectGeneral.Plot, ...
-                                       'Integration', projectGeneral.Integration);
+            app.defaultValues = struct('plot',        projectGeneral.plot, ...
+                                       'integration', projectGeneral.context.TASK_VIEW.integration);
 
             app.general_FileLock.UserData    = struct('status', false);
             app.general_versionLock.UserData = struct('status', false);
@@ -199,41 +199,41 @@ classdef winConfig_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function updatePanel_ERMx(app)
             % ERMx
-            app.general_stationName.Value       = app.mainApp.General.stationInfo.Name;
-            app.general_stationType.Items       = {app.mainApp.General.stationInfo.Type};
-            app.general_stationLatitude.Value   = app.mainApp.General.stationInfo.Latitude;
-            app.general_stationLongitude.Value  = app.mainApp.General.stationInfo.Longitude;
-            app.general_lastSessionInfo.Value   = app.mainApp.General.startupInfo;
+            app.general_stationName.Value       = app.mainApp.General.context.CONFIG.station.name;
+            app.general_stationType.Items       = {app.mainApp.General.context.CONFIG.station.type};
+            app.general_stationLatitude.Value   = app.mainApp.General.context.CONFIG.station.latitude;
+            app.general_stationLongitude.Value  = app.mainApp.General.context.CONFIG.station.longitude;
+            app.general_lastSessionInfo.Value   = app.mainApp.General.context.CONFIG.restoreLastSession;
 
             % WEBSERVICE
-            switch app.mainApp.General.tcpServer.Status
+            switch app.mainApp.General.context.SERVER.status
                 case 1; app.server_Status.Value = 'ON';
                 case 0; app.server_Status.Value = 'OFF';
             end
 
-            app.server_Key.Value                = app.mainApp.General.tcpServer.Key;
-            app.server_ClientList.Value         = strjoin(app.mainApp.General.tcpServer.ClientList, ', ');
-            app.server_IP.Value                 = app.mainApp.General.tcpServer.IP;
-            app.server_Port.Value               = app.mainApp.General.tcpServer.Port;
+            app.server_Key.Value                = app.mainApp.General.context.SERVER.key;
+            app.server_ClientList.Value         = strjoin(app.mainApp.General.context.SERVER.clientList, ', ');
+            app.server_IP.Value                 = app.mainApp.General.context.SERVER.ip;
+            app.server_Port.Value               = app.mainApp.General.context.SERVER.port;
         end
 
         %-----------------------------------------------------------------%
         function updatePanel_Plot(app)
             app.plot_TiledSpacing.Value      = app.mainApp.UIAxes1.Parent.TileSpacing;
 
-            app.plot_colorsMinHold.Value     = app.mainApp.General.Plot.MinHold.Color;
-            app.plot_colorsAverage.Value     = app.mainApp.General.Plot.Average.Color;
-            app.plot_colorsMaxHold.Value     = app.mainApp.General.Plot.MaxHold.Color;
-            app.plot_colorsClearWrite.Value  = app.mainApp.General.Plot.ClearWrite.Color;
+            app.plot_colorsMinHold.Value     = app.mainApp.General.plot.minHold.Color;
+            app.plot_colorsAverage.Value     = app.mainApp.General.plot.average.Color;
+            app.plot_colorsMaxHold.Value     = app.mainApp.General.plot.maxHold.Color;
+            app.plot_colorsClearWrite.Value  = app.mainApp.General.plot.clearWrite.Color;
             
-            app.plot_WaterfallColormap.Items = unique([app.plot_WaterfallColormap.Items, {app.mainApp.General.Plot.Waterfall.Colormap}]);
-            app.plot_WaterfallColormap.Value = app.mainApp.General.Plot.Waterfall.Colormap;
+            app.plot_WaterfallColormap.Items = unique([app.plot_WaterfallColormap.Items, {app.mainApp.General.plot.waterfall.Colormap}]);
+            app.plot_WaterfallColormap.Value = app.mainApp.General.plot.waterfall.Colormap;
 
-            app.plot_WaterfallDepth.Items    = unique([app.plot_WaterfallDepth.Items, {num2str(app.mainApp.General.Plot.Waterfall.Depth)}], 'stable');
-            app.plot_WaterfallDepth.Value    = {num2str(app.mainApp.General.Plot.Waterfall.Depth)};
+            app.plot_WaterfallDepth.Items    = unique([app.plot_WaterfallDepth.Items, {num2str(app.mainApp.General.plot.waterfall.Depth)}], 'stable');
+            app.plot_WaterfallDepth.Value    = {num2str(app.mainApp.General.plot.waterfall.Depth)};
 
-            app.plot_IntegrationTrace.Value  = app.mainApp.General.Integration.Trace;
-            app.plot_IntegrationTime.Value   = app.mainApp.General.Integration.SampleTime;
+            app.plot_IntegrationTrace.Value  = app.mainApp.General.context.TASK_VIEW.integration.traceMode;
+            app.plot_IntegrationTime.Value   = app.mainApp.General.context.TASK_VIEW.integration.sampleTimeSeconds;
 
             if checkEdition(app, 'PLOT')
                 app.configPlotRefresh.Visible = 1;
@@ -255,8 +255,8 @@ classdef winConfig_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function editionFlag = checkEdition(app, tabName)
             editionFlag   = false;
-            currentValues = struct('Plot',        app.mainApp.General.Plot, ...
-                                   'Integration', app.mainApp.General.Integration);
+            currentValues = struct('plot',        app.mainApp.General.plot, ...
+                                   'integration', app.mainApp.General.context.TASK_VIEW.integration);
 
             switch tabName
                 case 'ERMx'
@@ -453,65 +453,63 @@ classdef winConfig_exported < matlab.apps.AppBase
                             end
                     end
 
-                    app.mainApp.General.stationInfo.Name      = app.general_stationName.Value;
+                    app.mainApp.General.context.CONFIG.station.name = app.general_stationName.Value;
 
                 case app.general_stationType
-                    app.mainApp.General.stationInfo.Type      = app.general_stationType.Value;
+                    app.mainApp.General.context.CONFIG.station.type = app.general_stationType.Value;
 
                 case app.general_stationLatitude
                     closeAddTaskModuleFlag = true;
-                    app.mainApp.General.stationInfo.Latitude  = app.general_stationLatitude.Value;
+                    app.mainApp.General.context.CONFIG.station.latitude = app.general_stationLatitude.Value;
 
                 case app.general_stationLongitude
                     closeAddTaskModuleFlag = true;
-                    app.mainApp.General.stationInfo.Longitude = app.general_stationLongitude.Value;                    
+                    app.mainApp.General.context.CONFIG.station.longitude = app.general_stationLongitude.Value;
 
                 case app.general_lastSessionInfo
-                    app.mainApp.General.startupInfo           = app.general_lastSessionInfo.Value;                    
+                    app.mainApp.General.context.CONFIG.restoreLastSession = app.general_lastSessionInfo.Value;
 
                 case app.server_Status
                     switch app.server_Status.Value
-                        case 'ON';  app.mainApp.General.tcpServer.Status = 1;
-                        case 'OFF'; app.mainApp.General.tcpServer.Status = 0;
+                        case 'ON';  app.mainApp.General.context.SERVER.status = 1;
+                        case 'OFF'; app.mainApp.General.context.SERVER.status = 0;
                     end
 
                 case app.server_Key
                     app.server_Key.Value = replace(app.server_Key.Value, ' ', '');
-                    app.mainApp.General.tcpServer.Key = app.server_Key.Value;
+                    app.mainApp.General.context.SERVER.key = app.server_Key.Value;
 
                 case app.server_ClientList
                     app.server_ClientList.Value = replace(app.server_ClientList.Value, ' ', '');
                     
                     if isempty(app.server_ClientList.Value)
-                        app.mainApp.General.tcpServer.ClientList = {};
+                        app.mainApp.General.context.SERVER.clientList = {};
                     else
-                        app.mainApp.General.tcpServer.ClientList = strsplit(app.server_ClientList.Value, ',');
+                        app.mainApp.General.context.SERVER.clientList = strsplit(app.server_ClientList.Value, ',');
                     end
 
-                    app.server_ClientList.Value = strjoin(app.mainApp.General.tcpServer.ClientList, ', ');
+                    app.server_ClientList.Value = strjoin(app.mainApp.General.context.SERVER.clientList, ', ');
 
                 case app.server_IP
                     app.server_IP.Value = strtrim(app.server_IP.Value);
 
                     if IPv4Validation(app, app.server_IP.Value) || isempty(app.server_IP.Value)
-                        app.mainApp.General.tcpServer.IP = app.server_IP.Value;
+                        app.mainApp.General.context.SERVER.ip = app.server_IP.Value;
                     else
                         app.server_IP.Value = event.PreviousValue;
                         ui.Dialog(app.UIFigure, 'warning', 'Endereço inválido (IPv4).');
                     end
 
                 case app.server_Port
-                    app.mainApp.General.tcpServer.Port = app.server_Port.Value;
+                    app.mainApp.General.context.SERVER.port = app.server_Port.Value;
             end
 
             if closeAddTaskModuleFlag
-                ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK_ADD')
             end
             
-            app.mainApp.General_I.stationInfo   = app.mainApp.General.stationInfo;
-            app.mainApp.General_I.startupInfo   = app.mainApp.General.startupInfo;
-            app.mainApp.General_I.tcpServer     = app.mainApp.General.tcpServer;
-
+            app.mainApp.General_I.context.CONFIG = app.mainApp.General.context.CONFIG;
+            app.mainApp.General_I.context.SERVER = app.mainApp.General.context.SERVER;
             saveGeneralSettings(app)
 
         end
@@ -557,24 +555,24 @@ classdef winConfig_exported < matlab.apps.AppBase
                 switch event.Source
                     case app.plot_colorsMinHold
                         plotTag = 'MinHold';
-                        app.mainApp.General.Plot.MinHold.Color    = selectedColor;
+                        app.mainApp.General.plot.minHold.Color    = selectedColor;
                     case app.plot_colorsAverage
                         plotTag = 'Average';
-                        app.mainApp.General.Plot.Average.Color    = selectedColor;
+                        app.mainApp.General.plot.average.Color    = selectedColor;
                     case app.plot_colorsMaxHold
                         plotTag = 'MaxHold';
-                        app.mainApp.General.Plot.MaxHold.Color    = selectedColor;
+                        app.mainApp.General.plot.maxHold.Color    = selectedColor;
                     case app.plot_colorsClearWrite
                         plotTag = 'ClearWrite';
-                        app.mainApp.General.Plot.ClearWrite.Color = selectedColor;
+                        app.mainApp.General.plot.clearWrite.Color = selectedColor;
                 end
 
                 ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', plotTag)
             end
 
-            app.mainApp.General_I.Plot = app.mainApp.General.Plot;
+            app.mainApp.General_I.plot = app.mainApp.General.plot;
             saveGeneralSettings(app)
-            
+
             updatePanel_Plot(app)
 
         end
@@ -586,20 +584,20 @@ classdef winConfig_exported < matlab.apps.AppBase
             switch event.Source
                 case app.plot_WaterfallColormap
                     ipcMainMatlabCallsHandler(app.mainApp, app, 'onWaterfallColormapChange', app.plot_WaterfallColormap.Value)
-                    app.mainApp.General.Plot.Waterfall.Colormap = app.plot_WaterfallColormap.Value;
+                    app.mainApp.General.plot.waterfall.Colormap = app.plot_WaterfallColormap.Value;
 
                 case app.plot_WaterfallDepth
-                    app.mainApp.General.Plot.Waterfall.Depth    = str2double(app.plot_WaterfallDepth.Value);
+                    app.mainApp.General.plot.waterfall.Depth = str2double(app.plot_WaterfallDepth.Value);
                 
                 case app.plot_IntegrationTrace
-                    app.mainApp.General.Integration.Trace       = app.plot_IntegrationTrace.Value;
+                    app.mainApp.General.context.TASK_VIEW.integration.traceMode = app.plot_IntegrationTrace.Value;
 
                 case app.plot_IntegrationTime
-                    app.mainApp.General.Integration.SampleTime  = app.plot_IntegrationTime.Value;
+                    app.mainApp.General.context.TASK_VIEW.integration.sampleTimeSeconds = app.plot_IntegrationTime.Value;
             end
 
-            app.mainApp.General_I.Plot        = app.mainApp.General.Plot;
-            app.mainApp.General_I.Integration = app.mainApp.General.Integration;
+            app.mainApp.General_I.plot = app.mainApp.General.plot;
+            app.mainApp.General_I.context.TASK_VIEW = app.mainApp.General.context.TASK_VIEW;
             saveGeneralSettings(app)
 
             updatePanel_Plot(app)
@@ -614,15 +612,14 @@ classdef winConfig_exported < matlab.apps.AppBase
                 return
             
             else                
-                app.mainApp.General.Plot          = app.defaultValues.Plot;
-                app.mainApp.General.Integration   = app.defaultValues.Integration;
+                app.mainApp.General.plot = app.defaultValues.plot;
+                app.mainApp.General.context.TASK_VIEW.integration = app.defaultValues.integration;
 
-                app.mainApp.General_I.Plot        = app.mainApp.General.Plot;
-                app.mainApp.General_I.Integration = app.mainApp.General.Integration;
+                app.mainApp.General_I.plot = app.mainApp.General.plot;
+                app.mainApp.General_I.context.TASK_VIEW = app.mainApp.General.context.TASK_VIEW;
+                saveGeneralSettings(app)
                 
                 updatePanel_Plot(app)
-                saveGeneralSettings(app)
-    
                 ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', 'ClrWrite')
             end
 

@@ -389,9 +389,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
             % Visibilidade do botão "Pin", que possibilita importação das 
             % coordenadas geográficas da estação.
-            if strcmp(app.mainApp.General.stationInfo.Type, 'Fixed')  && ...
-                    (app.mainApp.General.stationInfo.Latitude  ~= -1) && ...
-                    (app.mainApp.General.stationInfo.Longitude ~= -1)
+            if strcmp(app.mainApp.General.context.CONFIG.station.type, 'Fixed')  && ...
+                    (app.mainApp.General.context.CONFIG.station.latitude  ~= -1) && ...
+                    (app.mainApp.General.context.CONFIG.station.longitude ~= -1)
                 app.GPS_List.Layout.Column   = 1;
                 app.GPS_FixedStation.Visible = true;
             else
@@ -1084,7 +1084,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK_ADD')
             delete(app)
             
         end
@@ -1283,7 +1283,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 end
 
                 if strcmp(app.AntennaSwitch_Name.Value, 'EMSat')
-                    util.AntennaTracking.verifyPointing(app, 'TASK:ADD', antennaMetaData, app.progressDialog);
+                    util.AntennaTracking.verifyPointing(app, 'TASK_ADD', antennaMetaData, app.progressDialog);
                 end
 
             catch ME
@@ -1303,7 +1303,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 struct('Switch', struct('Name', app.AntennaSwitch_Name.Value, 'OutputPort', app.switchList.SwitchOutputPort(switchIdx)), 'MetaData', antennaMetaData) ...
             );
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'onTaskAddingOrEditing', 'TASK:ADD', app.infoEdition, newTask)
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'onTaskAddingOrEditing', 'TASK_ADD', app.infoEdition, newTask)
 
         end
 
@@ -1548,9 +1548,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Button pushed function: GPS_FixedStation
         function GPSPinButtonPushed(app, event)
             
-            app.GPS_List.Value            = 'ID 0: Manual';
-            app.GPS_manualLatitude.Value  = app.mainApp.General.stationInfo.Latitude;
-            app.GPS_manualLongitude.Value = app.mainApp.General.stationInfo.Longitude;
+            app.GPS_List.Value = 'ID 0: Manual';
+            app.GPS_manualLatitude.Value  = app.mainApp.General.context.CONFIG.station.latitude;
+            app.GPS_manualLongitude.Value = app.mainApp.General.context.CONFIG.station.longitude;
 
             GPSValueChanged(app)
 
@@ -3217,6 +3217,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.DockModule.ColumnSpacing = 2;
             app.DockModule.Padding = [5 2 5 2];
             app.DockModule.Tag = '5';
+            app.DockModule.Visible = 'off';
             app.DockModule.Layout.Row = [2 4];
             app.DockModule.Layout.Column = [5 9];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];

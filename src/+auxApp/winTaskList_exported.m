@@ -426,7 +426,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             ipcMainMatlabCallsHandler(app.mainApp, app, 'onTaskListEdit')
 
             % Fecha o módulo auxiliar "auxApp.winAddTask.mlapp", caso aberto.
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK_ADD')
         end
 
         %-----------------------------------------------------------------%
@@ -461,7 +461,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK_ADD')
             delete(app)
             
         end
