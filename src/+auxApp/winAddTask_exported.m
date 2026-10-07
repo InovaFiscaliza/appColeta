@@ -256,9 +256,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.EMSatObj = app.mainApp.EMSatObj;
 
             [projectFolder, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.mainApp.rootFolder);
-            switchFile = fullfile(programDataFolder, 'switchList.json');
+            switchFile = fullfile(programDataFolder, 'SwitchList.json');
             if ~isfile(switchFile)
-                switchFile = fullfile(projectFolder, 'switchList.json');
+                switchFile = fullfile(projectFolder, 'SwitchList.json');
             end
             app.switchList = struct2table(jsondecode(fileread(switchFile)));
 
@@ -384,7 +384,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 
             else
                 % O campo "EditedFlag" não existe originalmente no arquivo 
-                % "taskList.json", devendo ser criado.
+                % "TaskList.json", devendo ser criado.
                 for taskIdx = 1:numel(app.taskList)
                     for bandIdx = 1:numel(app.taskList(taskIdx).Band)
                         app.taskList(taskIdx).Band(bandIdx).EditedFlag = 0;

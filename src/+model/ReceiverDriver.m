@@ -144,9 +144,9 @@ classdef ReceiverDriver < handle
 
         %-----------------------------------------------------------------%
         function params = bandParameters(obj, rawBand, freqStart, freqStop)
-            % Converte a banda da tarefa (taskList.json) nos valores a serem
+            % Converte a banda da tarefa (TaskList.json) nos valores a serem
             % programados no receptor, nomeados conforme "communicationParameters"
-            % de "ReceiverLib-v2.json".
+            % de "ReceiverLib.json".
 
             features = obj.Definition.features;
 

@@ -36,9 +36,9 @@ classdef Receiver < handle
             [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
 
             try
-                tempList = util.InstrumentIO.readInstrumentList(fullfile(programDataFolder, 'instrumentList.json'));
+                tempList = util.InstrumentIO.readInstrumentList(fullfile(programDataFolder, 'InstrumentList.json'));
             catch ME
-                tempList = util.InstrumentIO.readInstrumentList(fullfile(projectFolder,     'instrumentList.json'));
+                tempList = util.InstrumentIO.readInstrumentList(fullfile(projectFolder,     'InstrumentList.json'));
             end
 
             tempList(~strcmp(tempList.Family, 'Receiver'), :) = [];
@@ -310,7 +310,7 @@ classdef Receiver < handle
 
         %-----------------------------------------------------------------%
         function config = loadDefinitions(~, resourcesFolder)
-            library      = jsondecode(fileread(fullfile(resourcesFolder, 'ReceiverLib-v2.json')));
+            library      = jsondecode(fileread(fullfile(resourcesFolder, 'ReceiverLib.json')));
 
             % O arquivo de um instrumento contém um registro ou, quando o instrumento
             % tem mais de um modo de operação (R&S EB500), um array de registros.

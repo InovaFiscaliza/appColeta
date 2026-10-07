@@ -471,7 +471,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             [~, programDataFolder] = appEngine.util.Path(appName, app.mainApp.rootFolder);
             saveNewFile(app, programDataFolder, false)
 
-            % Após salva a nova versão de "instrumentList.json", atualizam-se
+            % Após salva a nova versão de "InstrumentList.json", atualizam-se
             % as listas dos objetos HANDLE app.receiverObj e app.gpsObj.
             app.receiverObj.List = fileRead(app.receiverObj, app.mainApp.rootFolder);                
             gpsObjList = fileRead(app.gpsObj, app.mainApp.rootFolder);
@@ -509,9 +509,9 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             try
-                writematrix(jsonencode(fileList, 'PrettyPrint', true), fullfile(Folder, 'instrumentList.json'), 'FileType', 'text', 'QuoteStrings', 'none', 'WriteMode', 'overwrite', 'Encoding', 'UTF-8')
+                writematrix(jsonencode(fileList, 'PrettyPrint', true), fullfile(Folder, 'InstrumentList.json'), 'FileType', 'text', 'QuoteStrings', 'none', 'WriteMode', 'overwrite', 'Encoding', 'UTF-8')
                 if ShowAlert
-                    ui.Dialog(app.UIFigure, 'warning', sprintf('Arquivo <b>instrumentList.json</b> salvo na pasta "%s"', Folder));
+                    ui.Dialog(app.UIFigure, 'warning', sprintf('Arquivo <b>InstrumentList.json</b> salvo na pasta "%s"', Folder));
                 end
                 
             catch ME
@@ -554,7 +554,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             % porque no "MODO DE EDIÇÃO" todos os possíveis valores
             % estão disponíveis para escolha, enquanto que no "MODO DE
             % VISUALIZAÇÃO" ficará disponível apenas o valor indicado
-            % no "taskList.json".
+            % no "TaskList.json".
 
             %---------------------------------------------------------%
             % ## MODO DE VISUALIZAÇÃO ##
@@ -888,7 +888,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.progressDialog.Visible = 'visible';
 
             % O "idx1" se refere ao índice da tabela completa extraída de
-            % "instrumentList.json" (possivelmente já editada), incluindo 
+            % "InstrumentList.json" (possivelmente já editada), incluindo 
             % receptores e GPSs.
 
             [idx, msgError] = SelectionNodeValidation(app);
@@ -927,7 +927,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         function toolButtonPushed_edit(app, event)
             
             % Finalizada a edição, avalia-se se algum parâmetro foi, de fato, 
-            % alterado, salvando uma nova versão do arquivo "instrumentList.json",
+            % alterado, salvando uma nova versão do arquivo "InstrumentList.json",
             % caso necessário.             
             if ~isequal(app.instrumentList, app.editedList)
                 app.instrumentList = app.editedList;

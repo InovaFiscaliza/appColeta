@@ -1,10 +1,10 @@
 classdef (Abstract) TaskScriptIO
 
     % Essa classe abstrata reúne a leitura, validação e escrita do arquivo
-    % "taskList.json" (lista de scripts de tarefa). Substitui a antiga
+    % "TaskList.json" (lista de scripts de tarefa). Substitui a antiga
     % "class.taskList".
 
-    % Campo "Observation" do arquivo "taskList.json" possui a seguinte estrutura:
+    % Campo "Observation" do arquivo "TaskList.json" possui a seguinte estrutura:
     % (a) 'Type'        - 'Duration' | 'Time' | 'Samples'
     % (b) 'BeginTime'   - 'dd/mm/yyyy HH:MM:SS'
     % (c) 'EndTime'     - 'dd/mm/yyyy HH:MM:SS'
@@ -13,11 +13,11 @@ classdef (Abstract) TaskScriptIO
     % De forma geral,
     % - 'Duration': demanda apenas informação constante no campo 'Duration';
     % - 'Time'....: demanda apenas informações constantes nos campos 'BeginTime' e 'EndTime'; 
-    % - 'Samples'.: demanda apenas informações constantes nos campos 'ObservationSamples' de cada uma das faixas - vide campo 'Band' do arquivo "taskList.json".
+    % - 'Samples'.: demanda apenas informações constantes nos campos 'ObservationSamples' de cada uma das faixas - vide campo 'Band' do arquivo "TaskList.json".
     %
-    % Ao ler o arquivo taskList.json, o campo 'Duration' é editado para computar a duração da tarefa em segundos (valor numérico), o que somente é aplicável quando o tipo de observação for 'Duration'
+    % Ao ler o arquivo TaskList.json, o campo 'Duration' é editado para computar a duração da tarefa em segundos (valor numérico), o que somente é aplicável quando o tipo de observação for 'Duration'
 
-    % Campo "GPS" do arquivo "taskList.json" possui a seguinte estrutura:
+    % Campo "GPS" do arquivo "TaskList.json" possui a seguinte estrutura:
     % (a) 'Type'        - 'auto' | 'manual'
     % (b) 'Latitude'    - valor numérico, aplicável apenas quando 'Type' igual a 'manual'
     % (c) 'Longitude'   - valor numérico, aplicável apenas quando 'Type' igual a 'manual'
@@ -25,7 +25,7 @@ classdef (Abstract) TaskScriptIO
     %
     % Ao incluir uma tarefa, o campo 'Type', caso seja igual a 'auto', será alterado por 'Built-in' (GPS embarcado no receptor) ou 'External'.
 
-    % Campo "Band" do arquivo "taskList.json" possui estrutura com informações sobre a programação do receptor e lógica da tarefa. Em destaque:
+    % Campo "Band" do arquivo "TaskList.json" possui estrutura com informações sobre a programação do receptor e lógica da tarefa. Em destaque:
     % (a) 'RFMode'      - 'High Sensitivity' | 'Normal' | 'Low Distortion'
     % (b) 'TraceMode'   - 'ClearWrite' | 'Average' | 'MaxHold' | 'MinHold'
     % (c) 'Detector'    - 'Sample' | 'Average/RMS' | 'Positive Peak' | 'Negative Peak'
@@ -46,13 +46,13 @@ classdef (Abstract) TaskScriptIO
             [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
 
             try
-                [List, msgError] = util.TaskScriptIO.readScriptFile(fullfile(programDataFolder, 'taskList.json'), callerId);
+                [List, msgError] = util.TaskScriptIO.readScriptFile(fullfile(programDataFolder, 'TaskList.json'), callerId);
                 if ~isempty(msgError)
                     error(msgError)
                 end
 
             catch
-                List = util.TaskScriptIO.readScriptFile(fullfile(projectFolder, 'taskList.json'), callerId);
+                List = util.TaskScriptIO.readScriptFile(fullfile(projectFolder, 'TaskList.json'), callerId);
             end
         end
 
@@ -63,7 +63,7 @@ classdef (Abstract) TaskScriptIO
                 msgError = '';
 
                 % O trecho de código a seguir busca identificar a versão do 
-                % "taskList.json". No arquivo não há um campo indicando a
+                % "TaskList.json". No arquivo não há um campo indicando a
                 % sua versão, mas ao deserializar o arquivo da release R2022a,
                 % a estrutura resultante terá quatro campos: "Name", "BitsPerSample", 
                 % "Duration" e "Band". Por outro lado, o arquivo da release R2023a 
@@ -113,7 +113,7 @@ classdef (Abstract) TaskScriptIO
                 end
 
                 % Salva arquivo.
-                fileID = fopen(fullfile(FullFolder, 'taskList.json'), 'wt');
+                fileID = fopen(fullfile(FullFolder, 'TaskList.json'), 'wt');
                 fwrite(fileID, jsonencode(List, 'PrettyPrint', true));
                 fclose(fileID);
 

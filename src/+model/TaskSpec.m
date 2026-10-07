@@ -6,7 +6,7 @@ classdef TaskSpec
         % "Drive-test" ou "Rompimento de Máscara Espectral"
         Type
 
-        % Registro de "taskList.json", possivelmente editado, uma vez que os campos
+        % Registro de "TaskList.json", possivelmente editado, uma vez que os campos
         % "BitsPerSamples", "Observation" e "GPS" são editáveis.
         Script
 

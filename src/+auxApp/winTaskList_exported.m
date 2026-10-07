@@ -435,7 +435,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             if ShowAlert
                 if isempty(msgError)
-                    ui.Dialog(app.UIFigure, "warning", sprintf('Arquivo <b>taskList.json</b> salvo na pasta "%s"', Folder));
+                    ui.Dialog(app.UIFigure, "warning", sprintf('Arquivo <b>TaskList.json</b> salvo na pasta "%s"', Folder));
                 else
                     ui.Dialog(app.UIFigure, "error", msgError);
                 end
@@ -495,7 +495,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 % porque no "MODO DE EDIÇÃO" todos os possíveis valores
                 % estão disponíveis para escolha, enquanto que no "MODO DE
                 % VISUALIZAÇÃO" ficará disponível apenas o valor indicado
-                % no "taskList.json".
+                % no "TaskList.json".
 
                 %---------------------------------------------------------%
                 % ## MODO DE VISUALIZAÇÃO ##
@@ -616,7 +616,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.GPS_RevisitTime.Value     = 60;
             set(app.GPS_Grid.Children, Enable='on')
 
-            % Após a leitura do arquivo "taskList.json", uma tarefa com GPS
+            % Após a leitura do arquivo "TaskList.json", uma tarefa com GPS
             % automático tem informação vazia de coordenadas geográficas
             % (latitude, longitude). Ao editar o tipo de GPS, trocando de
             % automático para manual, os valores iniciais serão (-1,-1), os
@@ -879,7 +879,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         function toolButton_okPushed(app, event)
             
             % Finalizada a edição, avalia-se se algum parâmetro foi, de fato, 
-            % alterado, salvando uma nova versão do arquivo "taskList.json",
+            % alterado, salvando uma nova versão do arquivo "TaskList.json",
             % caso necessário.
 
             if ~isequal(app.taskList, app.editedList)

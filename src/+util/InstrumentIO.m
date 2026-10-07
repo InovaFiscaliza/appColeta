@@ -1,7 +1,7 @@
 classdef (Abstract) InstrumentIO
 
     % Essa classe abstrata reúne a leitura da lista de instrumentos
-    % ("instrumentList.json") e a comunicação pontual com um instrumento
+    % ("InstrumentList.json") e a comunicação pontual com um instrumento
     % por meio de socket.
 
     methods (Static = true)

@@ -557,7 +557,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function initializeAppProperties(app)
             % Um dos arquivos que compõem a subpasta "config", copiada para
             % "ProgramData/ANATEL/appColeta" na primeira execução, é o arquivo 
-            % "taskList.json".
+            % "TaskList.json".
             app.taskList = util.TaskScriptIO.loadScriptList(app.rootFolder, 'winAppColetaV2');
 
             % Others...
@@ -1269,7 +1269,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             function [task, msgError] = initializeTaskReceiver(task)
                 % Função quase idêntica a model.Receiver.testConnectivity.
                 % Uso de informação constante no objeto "model.Task" ao
-                % invés da constante em arquivo "instrumentList.json".
+                % invés da constante em arquivo "InstrumentList.json".
     
                 receiver = buildReceiverConfig(task);
                 [idx, msgError] = connect(app.receiverObj, receiver);

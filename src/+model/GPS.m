@@ -39,9 +39,9 @@ classdef GPS < handle
             [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
 
             try
-                tempList = util.InstrumentIO.readInstrumentList(fullfile(programDataFolder, 'instrumentList.json'));
+                tempList = util.InstrumentIO.readInstrumentList(fullfile(programDataFolder, 'InstrumentList.json'));
             catch ME
-                tempList = util.InstrumentIO.readInstrumentList(fullfile(projectFolder,     'instrumentList.json'));
+                tempList = util.InstrumentIO.readInstrumentList(fullfile(projectFolder,     'InstrumentList.json'));
             end
 
             tempList(~strcmp(tempList.Family, 'GPS'), :) = [];
