@@ -298,7 +298,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             case {'auxApp.winTaskList', 'auxApp.winTaskList_exported'}
                                 switch eventName
                                     case 'onTaskListEdit'
-                                        app.taskList = class.taskList.rawFileParser(app.rootFolder, 'winAppColetaV2');
+                                        app.taskList = util.TaskScriptIO.loadScriptList(app.rootFolder, 'winAppColetaV2');
         
                                     otherwise
                                         error('winAppColeta:UnexpectedCall', 'Unexpected call "%s"', eventName)
@@ -558,7 +558,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Um dos arquivos que compõem a subpasta "config", copiada para
             % "ProgramData/ANATEL/appColeta" na primeira execução, é o arquivo 
             % "taskList.json".
-            app.taskList = class.taskList.rawFileParser(app.rootFolder, 'winAppColetaV2');
+            app.taskList = util.TaskScriptIO.loadScriptList(app.rootFolder, 'winAppColetaV2');
 
             % Others...
             app.receiverObj = model.Receiver(app.rootFolder);

@@ -1067,10 +1067,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 app.infoEdition = editionType;
                 switch app.infoEdition.type
                     case 'new'
-                        app.taskList   = mainApp.taskList;
+                        app.taskList = mainApp.taskList;
                         app.okButton.Text = 'Inclui tarefa';
                     case 'edit'
-                        app.taskList   = class.taskList.app2raw(mainApp.TaskController.Tasks(editionType.idx).TaskSpec.Script);
+                        app.taskList = util.TaskScriptIO.toRawScript(mainApp.TaskController.Tasks(editionType.idx).TaskSpec.Script);
                         app.okButton.Text = 'Edita tarefa';
                 end
 

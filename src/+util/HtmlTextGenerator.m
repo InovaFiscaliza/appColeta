@@ -131,7 +131,7 @@ classdef (Abstract) HtmlTextGenerator
 
             if contains(Task.Type, 'Rompimento de Máscara Espectral')
                 maskTrigger = Task.Script.Band(bandIdx).MaskTrigger;
-                maskTrigger.StatusInfo = class.taskList.maskTriggerStatus(Task.Script.Band(bandIdx).MaskTrigger.Status);
+                maskTrigger.StatusInfo = util.TaskScriptIO.maskTriggerDescription(Task.Script.Band(bandIdx).MaskTrigger.Status);
 
                 dataStruct(end+1) = struct( ...
                     'group', 'TASKTRIGGER', ...

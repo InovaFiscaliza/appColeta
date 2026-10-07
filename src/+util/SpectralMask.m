@@ -1,7 +1,12 @@
-classdef (Abstract) maskLib
+classdef (Abstract) SpectralMask
+
+    % Essa classe abstrata reúne a leitura de arquivos de máscara espectral
+    % e a construção da máscara (vetor de limiares) usada pelo
+    % model.TaskController. Substitui a antiga "class.maskLib".
 
     methods (Static = true)
-        function maskInfo = FileRead(maskFile)
+        %-----------------------------------------------------------------%
+        function maskInfo = readMaskFile(maskFile)
             maskText = fileread(maskFile);
                 
             maskInfo.Table           = struct2table(regexp(maskText, '(?<FreqStart>\d*),(?<FreqStop>\d*),(?<THR>[-]{0,1}\d*)', 'names'));
@@ -22,21 +27,19 @@ classdef (Abstract) maskLib
             maskInfo.unmasked.Source(:)    = {'refMask'};        
         end
 
-
         %-----------------------------------------------------------------%
-        function maskArray = ArrayConstructor(maskInfo, Band)
+        function maskArray = buildMaskArray(maskInfo, Band)
             maskArray = ones(1, Band.instrDataPoints) * 1e+3;
             freqArray = linspace(Band.FreqStart /1e+6, Band.FreqStop / 1e+6, Band.instrDataPoints);
-            maskTable = class.maskLib.TableConstructor(maskInfo);
+            maskTable = util.SpectralMask.buildMaskTable(maskInfo);
             
             for ii = 1:height(maskTable)
                 maskArray(freqArray >= maskTable(ii,1) & freqArray <= maskTable(ii,2)) = maskTable(ii,3);
             end             
         end
-        
 
         %-----------------------------------------------------------------%
-        function maskTable = TableConstructor(maskInfo)            
+        function maskTable = buildMaskTable(maskInfo)            
             if isempty(maskInfo.unmasked)
                 if isempty(maskInfo.THR)
                     maskTable = [];

@@ -161,7 +161,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function initializeAppProperties(app)
-            app.taskList   = class.taskList.rawFileParser(app.mainApp.rootFolder, 'auxApp.winTaskList');
+            app.taskList   = util.TaskScriptIO.loadScriptList(app.mainApp.rootFolder, 'auxApp.winTaskList');
             app.editedList = app.taskList;
         end
 
@@ -431,7 +431,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function saveNewFile(app, Folder, ShowAlert)
-            msgError = class.taskList.raw2file(Folder, app.taskList);
+            msgError = util.TaskScriptIO.writeScriptFile(Folder, app.taskList);
 
             if ShowAlert
                 if isempty(msgError)
@@ -480,7 +480,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Name.Value            = app.editedList(idx1).Name;
             app.BitsPerPoint.Items    = {sprintf('%d bits', app.editedList(idx1).BitsPerSample)};
             
-            app.ObservationType.Items = {class.taskList.english2portuguese(app.editedList(idx1).Observation.Type)};
+            app.ObservationType.Items = {util.TaskScriptIO.observationTypeLabel(app.editedList(idx1).Observation.Type)};
             ObservationTimeLayout(app)
             
             app.gpsMode.Items         = {app.editedList(idx1).GPS.Type};
@@ -784,7 +784,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             figure(app.UIFigure)
 
             if File
-            [tempList, msgError] =  class.taskList.file2raw(fullfile(Folder, File), 'auxApp.winEditTaskList');
+            [tempList, msgError] =  util.TaskScriptIO.readScriptFile(fullfile(Folder, File), 'auxApp.winEditTaskList');
 
                 if isempty(msgError)
                     app.taskList   = [app.taskList; tempList];

@@ -1,4 +1,8 @@
-classdef taskList
+classdef (Abstract) TaskScriptIO
+
+    % Essa classe abstrata reúne a leitura, validação e escrita do arquivo
+    % "taskList.json" (lista de scripts de tarefa). Substitui a antiga
+    % "class.taskList".
 
     % Campo "Observation" do arquivo "taskList.json" possui a seguinte estrutura:
     % (a) 'Type'        - 'Duration' | 'Time' | 'Samples'
@@ -37,24 +41,23 @@ classdef taskList
 
     methods (Static)
         %-----------------------------------------------------------------%
-        function List = rawFileParser(rootFolder, callerId)
+        function List = loadScriptList(rootFolder, callerId)
             appName = class.Constants.appName;
             [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
 
             try
-                [List, msgError] = class.taskList.file2raw(fullfile(programDataFolder, 'taskList.json'), callerId);
+                [List, msgError] = util.TaskScriptIO.readScriptFile(fullfile(programDataFolder, 'taskList.json'), callerId);
                 if ~isempty(msgError)
                     error(msgError)
                 end
 
             catch
-                List = class.taskList.file2raw(fullfile(projectFolder, 'taskList.json'), callerId);
+                List = util.TaskScriptIO.readScriptFile(fullfile(projectFolder, 'taskList.json'), callerId);
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function [List, msgError] = file2raw(FileFullPath, srcFcn)
+        function [List, msgError] = readScriptFile(FileFullPath, srcFcn)
             try
                 List = jsondecode(fileread(FileFullPath));
                 msgError = '';
@@ -68,20 +71,19 @@ classdef taskList
                 % e "Band".
 
                 if isequal(fields(List), {'Name';'BitsPerSample';'Duration';'Band'})
-                    List = class.taskList.v1Parser(List);
+                    List = util.TaskScriptIO.parseScriptV1(List);
                 else
-                    List = class.taskList.v2Parser(List, srcFcn);
+                    List = util.TaskScriptIO.parseScriptV2(List, srcFcn);
                 end
 
             catch ME
-                List = class.taskList.DefaultTask();
+                List = util.TaskScriptIO.defaultScript();
                 msgError = ME.message;
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function msgError = raw2file(FullFolder, List)
+        function msgError = writeScriptFile(FullFolder, List)
             try
                 msgError = '';
                 
@@ -120,9 +122,8 @@ classdef taskList
             end
         end
 
-        
         %-----------------------------------------------------------------%
-        function List = DefaultTask()
+        function List = defaultScript()
             List = struct('Name', 'Tarefa 1',                                                                         ...
                           'BitsPerSample', 8,                                                                         ...
                           'Observation', struct('Type', 'Duration', 'BeginTime', '', 'EndTime', '', 'Duration', 600), ...
@@ -146,9 +147,8 @@ classdef taskList
                                                 'Enable',              1));
         end
 
-
         %-----------------------------------------------------------------%
-        function List = v1Parser(oldList)
+        function List = parseScriptV1(oldList)
             for ii = 1:numel(oldList)
                 List(ii,1).Name        = oldList(ii).Name;
                 List(ii).BitsPerSample = oldList(ii).BitsPerSample;
@@ -181,13 +181,12 @@ classdef taskList
                 end
 
                 % Validações finais.
-                List = class.taskList.ParserValidation(List, ii);
+                List = util.TaskScriptIO.normalizeScript(List, ii);
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function List = v2Parser(List, srcFcn)
+        function List = parseScriptV2(List, srcFcn)
             for ii = 1:numel(List)
                 switch List(ii).Observation.Type
                     case 'Duration'
@@ -227,13 +226,12 @@ classdef taskList
                 end
 
                 % Validações finais.
-                List = class.taskList.ParserValidation(List, ii);
+                List = util.TaskScriptIO.normalizeScript(List, ii);
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function List = ParserValidation(List, ii)
+        function List = normalizeScript(List, ii)
             % Garante que ao menos um fluxo esteja ativo.
             if ~any([List(ii).Band.Enable])
                 List(ii).Band(1).Enable = 1;
@@ -243,19 +241,17 @@ classdef taskList
             % além de garantir que será usado a representação esperada pelo app do símbolo "micro".
             for jj = 1:numel(List(ii).Band)
                 List(ii).Band(jj).ID = jj;
-                List(ii).Band(jj).LevelUnit = class.taskList.str2str(List(ii).Band(jj).LevelUnit);
+                List(ii).Band(jj).LevelUnit = util.TaskScriptIO.normalizeMicroSign(List(ii).Band(jj).LevelUnit);
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function Value = str2str(Value)
+        function Value = normalizeMicroSign(Value)
             Value = replace(Value, 'μ', 'µ');
         end
 
-
         %-----------------------------------------------------------------%
-        function Task = app2raw(Task)
+        function Task = toRawScript(Task)
             if ismember(Task.Observation.Type, {'Duration', 'Samples'})
                 Task.Observation.BeginTime = '';
                 Task.Observation.EndTime   = '';
@@ -266,9 +262,8 @@ classdef taskList
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function d = english2portuguese(varargin)
+        function d = observationTypeLabel(varargin)
             names  = ["Duration", ...
                       "Samples", ...
                       "Time"];
@@ -278,15 +273,13 @@ classdef taskList
         
             d = dictionary(names, values);
 
-
             if nargin
                 d = char(d(varargin{1}));
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function info = maskTriggerStatus(id)
+        function info = maskTriggerDescription(id)
             names  = 0:3;
             values = ["Informação coletada será escrita em arquivo, não sendo avaliado rompimento da máscara", ...
                       "Apenas avaliado rompimento da máscara", ...

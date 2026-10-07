@@ -603,8 +603,8 @@ classdef TaskController < handle
                 % MASK
                 obj.Tasks(idx).Bands(bandIdx).Mask = [];
                 if contains(taskSpec.Type, 'Rompimento de Máscara Espectral') && taskSpec.Script.Band(bandIdx).MaskTrigger.Status
-                    maskInfo  = class.maskLib.FileRead(taskSpec.MaskFile);
-                    maskArray = class.maskLib.ArrayConstructor(maskInfo, taskSpec.Script.Band(bandIdx));
+                    maskInfo  = util.SpectralMask.readMaskFile(taskSpec.MaskFile);
+                    maskArray = util.SpectralMask.buildMaskArray(maskInfo, taskSpec.Script.Band(bandIdx));
 
                     findPeaksConfig = taskSpec.Script.Band(bandIdx).MaskTrigger.FindPeaks;
                     if isempty(findPeaksConfig)
