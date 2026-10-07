@@ -1592,11 +1592,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
 
                             % Inicialmente trunca os valores de lat e lng
                             % em seis casas decimais...
-                            app.GPS_manualLatitude.Value  = round(gps.Latitude,  6);
-                            app.GPS_manualLongitude.Value = round(gps.Longitude, 6);
-
-                            gps.Latitude = app.GPS_manualLatitude.Value;
-                            gps.Longitude = app.GPS_manualLongitude.Value;
+                            gps.Latitude = round(app.GPS_manualLatitude.Value,  6);
+                            gps.Longitude = round(app.GPS_manualLongitude.Value, 6);
             
                         else
                             [~, gps] = testInstrumentConnectivity(app, 'gps');
