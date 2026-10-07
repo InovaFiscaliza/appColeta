@@ -64,6 +64,24 @@ classdef EB500Lib < handle
 
     methods(Static = true)
         %-----------------------------------------------------------------%
+        function isRunning = isGUIRunning()
+            % Ao executar o comando 'tasklist', a saída típica para o processo 
+            % EB500Gui.exe é:
+            % "EB500Gui.exe","3564","Console","2","119.648 K"
+
+            isRunning = false;
+            if ~ispc
+                return
+            end
+
+            [status, cmdout] = system('tasklist /FO CSV /NH');
+            if ~status
+                isRunning = ~isempty(regexpi(cmdout, 'EB500Gui', 'once'));
+            end
+        end
+
+
+        %-----------------------------------------------------------------%
         function OperationMode(hReceiver, ID)
             switch ID
                 case 2 % PSCAN

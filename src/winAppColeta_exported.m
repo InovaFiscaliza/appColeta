@@ -204,7 +204,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             app.General.AppVersion.application.resourceStaticURL = resourceStaticURL;
                         end
 
-                    case {'onStartTaskRequest', 'onStopTaskRequest', 'onDeleteTaskRequest', 'onViewLogRequest'}
+                    case {'onStartTaskRequest', 'onStopTaskRequest', 'onEditTaskRequested', 'onDeleteTaskRequest', 'onViewLogRequest'}
                         % event.HTMLEventData é o índice da tarefa (linha da tabela).
                         taskIdx = event.HTMLEventData;
 
@@ -217,6 +217,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                 startOrReplayTask(app, taskIdx)
                             case 'onStopTaskRequest'
                                 stopTask(app, taskIdx)
+                            case 'onEditTaskRequested'
+                                editTask(app, taskIdx)
                             case 'onDeleteTaskRequest'
                                 deleteTask(app, taskIdx)
                             case 'onViewLogRequest'
@@ -313,6 +315,17 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                         newTask     = varargin{3};
                 
                                         closeModule(app.tabGroupController, auxAppTag, app.General)
+
+                                        if contains(newTask.Type, 'Drive-test (Level+Azimuth)') && (strcmp(app.executionMode, 'webApp') || ~class.EB500Lib.isGUIRunning())
+                                            ui.Dialog(app.UIFigure, 'warning', [ ...
+                                                'A tarefa "Drive-test (Level+Azimuth)" usa comandos não ' ...
+                                                'documentados do receptor R&S EB500, sendo operacional ' ...
+                                                'apenas quando a aplicação EB500GUI está aberta. Não foi possível ' ...
+                                                'confirmar, entre os processos em execução neste computador, ' ...
+                                                'que esta aplicação está aberta, operação que deve ser realizada ' ...
+                                                'pelo usuário previamente ao início da execução da tarefa.' ...
+                                            ]);
+                                        end
                 
                                         % O try/catch possibilita a inclusão do progressDialog sem que 
                                         % exista o risco dele ficar visível, caso ocorra algum erro não
@@ -327,8 +340,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                             else
                                                 ui.Dialog(app.UIFigure, 'warning', msgError);
                                             end
-                                        catch ME
-                                            struct2table(ME.stack)
+                                        catch
                                         end
 
                                     otherwise
@@ -645,15 +657,22 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 operation = {
                     sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStartTaskRequest'''',   ''''HTMLEventData'''', %d))'')">▶️</a>', app.appHandleNameInBase, taskIdx);
                     sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStopTaskRequest'''',    ''''HTMLEventData'''', %d))'')">⬛</a>', app.appHandleNameInBase, taskIdx);
+                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onEditTaskRequested'''', ''''HTMLEventData'''', %d))'')">✏️</a>', app.appHandleNameInBase, taskIdx);
                     sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onDeleteTaskRequest'''',  ''''HTMLEventData'''', %d))'')">❌</a>', app.appHandleNameInBase, taskIdx);
                     sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onViewLogRequest'''',     ''''HTMLEventData'''', %d))'')">📋</a>', app.appHandleNameInBase, taskIdx)
                 };
 
-                if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
-                    operation(1) = [];
-                else
-                    operation(2) = [];
+                % Índices: 1 iniciar, 2 interromper, 3 editar, 4 excluir, 5 log.
+                taskStatus   = app.TaskController.Tasks(taskIdx).Status;
+                removedItems = 2;
+                if strcmp(taskStatus, 'Em andamento')
+                    removedItems = 1;
                 end
+
+                if ismember(taskStatus, {'Na fila', 'Em andamento'})
+                    removedItems(end+1) = 3;
+                end
+                operation(removedItems) = [];
         
                 taskTable(end+1,:) = { ...
                     app.TaskController.Tasks(taskIdx).TaskSpec.Script.Name, ...
@@ -951,6 +970,23 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
+        function editTask(app, taskIdx)
+            if ismember(app.TaskController.Tasks(taskIdx).Status, {'Na fila', 'Em andamento'})
+                ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Na fila" ou "Em andamento" não poderá ser editada.');
+                return
+            end
+
+            [isOpen, hApp] = checkStatusModule(app.tabGroupController, 'TASK_ADD');
+            if isOpen && ~(strcmp(hApp.infoEdition.type, 'edit') && hApp.infoEdition.idx == taskIdx)
+                ui.Dialog(app.UIFigure, 'warning', 'O módulo "TASK_ADD" já está aberto. Conclua ou feche a inclusão/edição em andamento antes de editar outra tarefa.');
+                return
+            end
+
+            app.Tab4Button.Value = true;
+            openModule(app.tabGroupController, app.Tab4Button, false, app.General, app, struct('type', 'edit', 'idx', taskIdx))
+        end
+
+        %-----------------------------------------------------------------%
         function deleteTask(app, taskIdx)
             if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
                 ui.Dialog(app.UIFigure, 'warning', 'A tarefa precisa ser interrompida antes da tentativa de exclusão.');
@@ -963,6 +999,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             if ~app.TaskController.IsRunning
                 app.TaskController.Tasks(taskIdx) = [];
+
+                % A exclusão reordena os índices da lista, invalidando a inclusão/edição em andamento.
+                if checkStatusModule(app.tabGroupController, 'TASK_ADD')
+                    closeModule(app.tabGroupController, 'TASK_ADD', app.General)
+                end
+
                 refreshTaskTable(app)
             else
                 ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa poderá ser excluída, sendo eliminada da lista de tarefas, somente se não estiver sendo executada nenhuma tarefa.');
@@ -1477,34 +1519,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     clickedButton  = event.Source;
                     auxAppTag      = clickedButton.Tag;
                     inputArguments = resolveAuxAppInputArguments(auxAppTag);
-        
-                    if event.Source == app.Tab4Button
-                        % A operação padrão, ao clicar em app.Tab4Button, é criar uma 
-                        % nova tarefa. Caso esteja selecionado o módulo de visualização 
-                        % de tarefas, e esteja selecionada uma tarefa, questiona-se se 
-                        % deve ser feito a inclusão de uma nova tarefa ou a edição da 
-                        % selecionada. 
-                        idx = app.UITable.Selection;
-        
-                        if  ~checkStatusModule(app.tabGroupController, 'TASK_ADD') && app.Tab1Button.Value && ~isempty(idx)
-                            msgQuestion   = 'Deseja criar uma nova tarefa, ou editar a tarefa selecionada em tabela?';
-                            userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', msgQuestion, {'Criar nova', 'Editar selecionada', 'Cancelar'}, 1, 3);
-                            switch userSelection
-                                case 'Editar selecionada'
-                                    if ismember(app.TaskController.Tasks(idx).Status, {'Na fila', 'Em andamento'})
-                                        ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Na fila" ou "Em andamento" não poderá ser editada.');
-                                        app.Tab4Button.Value = 0;
-                                        return
-                                    end
-        
-                                    inputArguments = {app, struct('type', 'edit', 'idx', idx)};
-        
-                                case 'Cancelar'
-                                    app.Tab4Button.Value = 0;
-                                    return
-                            end
-                        end
-                    end
         
                     openModule(app.tabGroupController, event.Source, event.PreviousValue, app.General, inputArguments{:})
 

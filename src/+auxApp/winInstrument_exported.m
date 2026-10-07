@@ -278,20 +278,25 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     portValidation = ~isnan(str2double(app.Port.Value));
             end
 
+            if ~portValidation
+                Layout_DefaultPort(app)
+            end
+
+            Layout_LocalhostCheckBox1(app)
+            Layout_LocalhostCheckBox2(app)
+        end
+
+        %-----------------------------------------------------------------%
+        function Layout_DefaultPort(app)
             switch app.Family.Value
                 case 'Receiver'
                     idx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
                     app.Port.Value = num2str(app.receiverObj.Config.Definition{idx}.connection.defaultPort);
 
                 case 'GPS'
-                    if ~portValidation
-                        idx = find(strcmp(app.gpsObj.Config.Name, app.Name.Value), 1);
-                        app.Port.Value = app.gpsObj.Config.connectPort{idx};
-                    end
+                    idx = find(strcmp(app.gpsObj.Config.Name, app.Name.Value), 1);
+                    app.Port.Value = app.gpsObj.Config.connectPort{idx};
             end
-
-            Layout_LocalhostCheckBox1(app)
-            Layout_LocalhostCheckBox2(app)
         end
 
         %-----------------------------------------------------------------%
@@ -702,7 +707,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 return
             end
 
-
             switch event.Source
                 %---------------------------------------------------------%
                 case app.Status
@@ -719,6 +723,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     app.editedList.Family{idx} = app.Family.Value;
                     app.editedList.Name{idx}   = app.Name.Value;
                     app.editedList.Type{idx}   = app.Type.Value;
+
+                    if strcmp(app.Family.Value, 'Receiver')
+                        Layout_DefaultPort(app)
+                    end
                     
                     Layout_InstrumentSpecifications(app)
                     ParameterUpdate(app)
@@ -729,6 +737,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                     app.editedList.Name{idx} = app.Name.Value;
                     app.editedList.Type{idx} = app.Type.Value;
+
+                    if strcmp(app.Family.Value, 'Receiver')
+                        Layout_DefaultPort(app)
+                    end
 
                     Layout_InstrumentSpecifications(app)
                     ParameterUpdate(app)
