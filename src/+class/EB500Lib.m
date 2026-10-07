@@ -15,7 +15,7 @@ classdef EB500Lib < handle
 
     methods
         %-----------------------------------------------------------------%
-        function obj = EB500Lib(RootFolder)
+        function obj = EB500Lib(resourcesFolder)
             % Selectivity x Resolution Mapping
             SelectivityMap = table('Size', [15, 3],                                 ...
                                    'VariableTypes', {'double', 'double', 'double'}, ...
@@ -53,7 +53,7 @@ classdef EB500Lib < handle
             obj.FFMSpanStepMap = FFMSpanStepMap;
 
             % Firmware version, udpPort & nDatagrams
-            tempStruct = jsondecode(fileread(fullfile(RootFolder, 'config', 'EB500Lib.json')));
+            tempStruct = jsondecode(fileread(fullfile(resourcesFolder, 'EB500Lib.json')));
 
             obj.Firmware   = tempStruct.Firmware;
             obj.udpPort    = tempStruct.udpPort;

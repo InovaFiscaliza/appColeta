@@ -1,6 +1,6 @@
 classdef Receiver < handle
     properties
-        % Uma linha por registro de "config/ReceiverLib/<name>.json"; a coluna
+        % Uma linha por registro de "resources/ReceiverLib/<name>.json"; a coluna
         % "Definition" traz o registro completo (usado por model.ReceiverDriver).
         Config
 
@@ -20,8 +20,8 @@ classdef Receiver < handle
 
     methods
         %-----------------------------------------------------------------%
-        function obj = Receiver(rootFolder)
-            obj.Config = loadDefinitions(obj, rootFolder);
+        function obj = Receiver(rootFolder, resourcesFolder)
+            obj.Config = loadDefinitions(obj, resourcesFolder);
             obj.List   = fileRead(obj, rootFolder);
 
             if ~isdeployed()
@@ -309,15 +309,14 @@ classdef Receiver < handle
         end
 
         %-----------------------------------------------------------------%
-        function config = loadDefinitions(~, rootFolder)
-            configFolder = fullfile(rootFolder, 'config');
-            library      = jsondecode(fileread(fullfile(configFolder, 'ReceiverLib-v2.json')));
+        function config = loadDefinitions(~, resourcesFolder)
+            library      = jsondecode(fileread(fullfile(resourcesFolder, 'ReceiverLib-v2.json')));
 
             % O arquivo de um instrumento contém um registro ou, quando o instrumento
             % tem mais de um modo de operação (R&S EB500), um array de registros.
             definitions = {};
             for ii = 1:numel(library.instrumentNames)
-                records = jsondecode(fileread(fullfile(configFolder, 'ReceiverLib', [library.instrumentNames{ii} '.json'])));
+                records = jsondecode(fileread(fullfile(resourcesFolder, 'ReceiverLib', [library.instrumentNames{ii} '.json'])));
                 if isstruct(records)
                     records = num2cell(records);
                 end

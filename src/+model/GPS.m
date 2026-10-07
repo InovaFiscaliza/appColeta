@@ -24,8 +24,8 @@ classdef GPS < handle
 
     methods
         %-----------------------------------------------------------------%
-        function obj = GPS(rootFolder)
-            obj.Config = struct2table(jsondecode(fileread(fullfile(rootFolder, 'config', 'GPSLib.json'))));
+        function obj = GPS(rootFolder, resourcesFolder)
+            obj.Config = struct2table(jsondecode(fileread(fullfile(resourcesFolder, 'GPSLib.json'))));
 
             tempList = fileRead(obj, rootFolder);
             if ~isempty(tempList)

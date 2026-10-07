@@ -561,11 +561,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.taskList = util.TaskScriptIO.loadScriptList(app.rootFolder, 'winAppColetaV2');
 
             % Others...
-            app.receiverObj = model.Receiver(app.rootFolder);
-            app.gpsObj = model.GPS(app.rootFolder);            
-            app.EB500Obj = class.EB500Lib(app.rootFolder);
+            resourcesFolder = fullfile(app.General.fileFolder.MFilePath, 'resources');
+            app.receiverObj = model.Receiver(app.rootFolder, resourcesFolder);
+            app.gpsObj = model.GPS(app.rootFolder, resourcesFolder);            
+            app.EB500Obj = class.EB500Lib(resourcesFolder);
             app.EMSatObj = class.EMSatLib(app.rootFolder);
-            app.ERMxObj = class.ERMxLib(app.rootFolder);            
+            app.ERMxObj = class.ERMxLib(resourcesFolder);            
 
             app.TaskController = model.TaskController(app);
             registerTaskControllerListeners(app)
@@ -1110,7 +1111,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         end
                 
                         if app.axesTool_Average.UserData.status
-                            app.PlotHandles.Average  = plot.draw2D.Average(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, LevelUnit, app.General);
+                            app.PlotHandles.Average  = plot.draw2D.average(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, LevelUnit, app.General);
                         end
                 
                         if app.axesTool_MaxHold.UserData.status
@@ -1180,7 +1181,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     app.RestoreView(2).YLim = app.UIAxes2.YLim;
                     app.RestoreView(2).CLim = app.UIAxes2.CLim;
 
-                    app.PlotHandles.Waterfall = plot.draw3D.Waterfall(app.UIAxes2, app.TaskController.Tasks(taskIdx), bandIdx, xArray);
+                    app.PlotHandles.Waterfall = plot.draw3D.waterfall(app.UIAxes2, app.TaskController.Tasks(taskIdx), bandIdx, xArray);
                 else
                     app.PlotHandles.Waterfall.CData = circshift(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.Matrix, -waterfallIdx);
                 end
@@ -1675,7 +1676,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                         case app.axesTool_Average
                             if event.Source.UserData.status
-                                app.PlotHandles.Average = plot.draw2D.Average(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, levelUnit, app.General);
+                                app.PlotHandles.Average = plot.draw2D.average(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, levelUnit, app.General);
                             else
                                 delete(app.PlotHandles.Average)
                                 app.PlotHandles.Average = [];

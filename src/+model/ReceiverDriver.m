@@ -4,7 +4,7 @@ classdef ReceiverDriver < handle
     % ## model.ReceiverDriver ##
     %
     % Concentra toda a comunicação do appColeta com um receptor, a partir
-    % do registro do instrumento em "config/ReceiverLib/<name>.json" (ver
+    % do registro do instrumento em "resources/ReceiverLib/<name>.json" (ver
     % model.Receiver). Os comandos são montados a partir de "communication":
     % "set" define as etapas, a ordem dos parâmetros de cada comando (unidos por
     % ';:'), a condição "when" e o "postDelay"; "parameters" traz o "write" e o

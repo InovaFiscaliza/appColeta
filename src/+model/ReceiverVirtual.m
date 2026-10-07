@@ -4,7 +4,7 @@ classdef ReceiverVirtual < handle
     % ## model.ReceiverVirtual ##
     %
     % Receptor virtual para testar o appColeta sem hardware: servidor TCP
-    % (tcpserver) que responde aos comandos SCPI de "config/ReceiverLib/<name>.json"
+    % (tcpserver) que responde aos comandos SCPI de "resources/ReceiverLib/<name>.json"
     % e, no caso do R&S EB500, transmite os traços por datagramas UDP no
     % formato lido por class.EB500Lib. O traço gerado é ruído gaussiano.
     %
@@ -53,16 +53,16 @@ classdef ReceiverVirtual < handle
                 source
                 options.Address (1, 1) string = "127.0.0.1"
                 options.Port double = []
-                options.RootFolder (1, 1) string = ""
+                options.ResourcesFolder (1, 1) string = ""
                 options.Verbose (1, 1) logical = true
             end
 
-            rootFolder = options.RootFolder;
-            if rootFolder == ""
-                rootFolder = fileparts(fileparts(mfilename('fullpath')));
+            resourcesFolder = options.ResourcesFolder;
+            if resourcesFolder == ""
+                resourcesFolder = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'resources');
             end
 
-            definitions = loadDefinitions(source, rootFolder);
+            definitions = loadDefinitions(source, resourcesFolder);
 
             obj.Verbose = options.Verbose;
             obj.Tag     = definitions{1}.tag;
@@ -77,7 +77,7 @@ classdef ReceiverVirtual < handle
 
             hasSelectivity = arrayfun(@(x) any(arrayfun(@(p) ismember('selectivity', p.Names), x.Patterns)), obj.Models);
             if any(hasSelectivity)
-                obj.SelectivityMap = class.EB500Lib(char(rootFolder)).SelectivityMap;
+                obj.SelectivityMap = class.EB500Lib(char(resourcesFolder)).SelectivityMap;
             end
 
             obj.Server = tcpserver(obj.Address, obj.Port, 'Timeout', 1, ...
@@ -494,7 +494,7 @@ end
 
 
 %-------------------------------------------------------------------------%
-function definitions = loadDefinitions(source, rootFolder)
+function definitions = loadDefinitions(source, resourcesFolder)
     if isstruct(source)
         definitions = {source};
         return
@@ -502,7 +502,7 @@ function definitions = loadDefinitions(source, rootFolder)
 
     filePath = char(source);
     if ~isfile(filePath)
-        filePath = fullfile(rootFolder, 'config', 'ReceiverLib', [filePath '.json']);
+        filePath = fullfile(resourcesFolder, 'ReceiverLib', [filePath '.json']);
     end
 
     % O arquivo do R&S EB500 tem um array com os registros RX e DF.

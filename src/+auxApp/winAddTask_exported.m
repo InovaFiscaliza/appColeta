@@ -255,7 +255,12 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.EB500Map = app.mainApp.EB500Obj.SelectivityMap;            
             app.EMSatObj = app.mainApp.EMSatObj;
 
-            app.switchList = struct2table(jsondecode(fileread(fullfile(app.mainApp.rootFolder, 'config', 'switchList.json'))));
+            [projectFolder, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.mainApp.rootFolder);
+            switchFile = fullfile(programDataFolder, 'switchList.json');
+            if ~isfile(switchFile)
+                switchFile = fullfile(projectFolder, 'switchList.json');
+            end
+            app.switchList = struct2table(jsondecode(fileread(switchFile)));
 
             tgtList = app.EMSatObj.TargetList;
             app.targetList = {};
@@ -2023,8 +2028,12 @@ classdef winAddTask_exported < matlab.apps.AppBase
             selection = uiconfirm(app.UIFigure, tgtListInfoHTML, 'appColeta', 'Interpreter', 'html', 'Options', {'Atualizar lista', 'Salvar planilha', 'Cancelar'}, 'DefaultOption', 3, 'CancelOption', 3, 'Icon', 'question');
 
             switch selection
-                case 'Atualizar lista'; movefile(FullFileName, fullfile(app.mainApp.rootFolder, 'config', 'EMSatLib.json'));
-                case 'Salvar planilha'; writetable(tgtTable_new, replace(FullFileName, '.json', '.xlsx'))
+                case 'Atualizar lista'
+                    [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.mainApp.rootFolder);
+                    movefile(FullFileName, fullfile(programDataFolder, 'EMSatLib.json'));
+
+                case 'Salvar planilha'
+                    writetable(tgtTable_new, replace(FullFileName, '.json', '.xlsx'))
             end
 
         end

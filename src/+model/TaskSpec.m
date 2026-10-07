@@ -15,7 +15,7 @@ classdef TaskSpec
         MaskFile
 
         % Handle para o objeto tcpclient criado, registro de "InstrumentList.json" 
-        % selecionado, registro de "config/ReceiverLib/<name>.json" relacionado ao instrumento 
+        % selecionado, registro de "resources/ReceiverLib/<name>.json" relacionado ao instrumento 
         % selecionado, e aspectos operacionais - envia comando de reset ("*RST")
         % antes do início da monitoração? instrumento operando no modo "SingleSweep" 
         % ou "ContinuousSweep"?

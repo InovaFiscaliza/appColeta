@@ -38,7 +38,7 @@ classdef (Abstract) draw2D
         end
 
         %-----------------------------------------------------------------%
-        function hPlot = Average(hAxes, specObj, kk, xArray, newArray, levelUnit, generalSettings)        
+        function hPlot = average(hAxes, specObj, kk, xArray, newArray, levelUnit, generalSettings)        
             switch specObj.Status
                 case 'Em andamento'
                     hPlot = plot(hAxes, xArray, newArray, 'Color', generalSettings.plot.average.Color, 'Tag', 'Average');                    

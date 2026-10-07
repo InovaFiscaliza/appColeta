@@ -13,8 +13,8 @@ classdef ERMxLib < handle
 
     methods
         %-----------------------------------------------------------------%
-        function obj = ERMxLib(RootFolder)
-            tempStruct  = jsondecode(fileread(fullfile(RootFolder, 'config', 'ERMxLib.json')));
+        function obj = ERMxLib(resourcesFolder)
+            tempStruct  = jsondecode(fileread(fullfile(resourcesFolder, 'ERMxLib.json')));
 
             obj.Switch  = tempStruct.Switch;
             obj.Antenna = tempStruct.Antenna;
