@@ -19,7 +19,7 @@ classdef Task < matlab.mixin.Copyable
         Connections = struct('receiver', [], 'stream',[], 'gps', [])
 
         GPSLastFix = struct('Status', 0, 'Latitude', -1, 'Longitude', -1, 'TimeStamp', '')
-        Bands = class.bandClass.empty
+        Bands = model.TaskBand.empty
 
         RetryPolicy = struct( ...
             'receiver', struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT), ...
@@ -108,7 +108,7 @@ classdef Task < matlab.mixin.Copyable
             function specificAspects(driver)
                 taskSpec  = obj(idx).TaskSpec;
                 rawBands  = taskSpec.Script.Band;
-                taskBands = class.bandClass.empty;
+                taskBands = model.TaskBand.empty;
             
                 % Teste de configuração para cada uma das bandas - em resumo, configura-se 
                 % os parâmetros (FreqStart, FreqStop, Resolution etc) e, posteriormente, 
@@ -160,7 +160,7 @@ classdef Task < matlab.mixin.Copyable
             
                     % Programa a banda no receptor e confirma que os parâmetros foram aceitos.
                     params = bandParameters(driver, rawBands(ii), freqStart, freqStop);
-                    [taskBands(ii).SpecificSCPI, taskBands(ii).rawMetaData] = applyBandConfig(driver, params);
+                    [taskBands(ii).ScpiCommands, taskBands(ii).ReceiverState] = applyBandConfig(driver, params);
 
                     taskBands(ii).DataPoints   = params.dataPoints;
                     taskBands(ii).FlipArray    = flipArray;

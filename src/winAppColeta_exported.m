@@ -761,14 +761,14 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     end
                 end
 
-                if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).File)
-                    recordedSweeps = app.TaskController.Tasks(taskIdx).Bands(bandIdx).File.WritedSamples;
+                if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).OutputFile)
+                    recordedSweeps = app.TaskController.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples;
                 else
                     recordedSweeps = -1;
                 end
                 app.Sweeps.Text = string(recordedSweeps);
 
-                if ~contains(app.TaskController.Tasks(taskIdx).TaskSpec.Type, 'PRÉVIA') && strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento') && app.TaskController.Tasks(taskIdx).Bands(bandIdx).Status
+                if ~contains(app.TaskController.Tasks(taskIdx).TaskSpec.Type, 'PRÉVIA') && strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento') && app.TaskController.Tasks(taskIdx).Bands(bandIdx).IsActive
                     app.RecordingIcon.Visible = 'on';
                 else
                     app.RecordingIcon.Visible = 'off';
@@ -777,7 +777,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 updateGPSStatus(app, app.TaskController.Tasks(taskIdx).GPSLastFix)
 
                 app.SelectedTaskInfo.Text = sprintf('Tarefa "<b>%s</b>"\nFaixa %d de %d: %.3f – %.3f MHz', app.TaskController.Tasks(taskIdx).TaskSpec.Script.Name, bandIdx, numel(app.TaskController.Tasks(taskIdx).Bands), app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart / 1e+6, app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop  / 1e+6);
-                app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).nSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
+                app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).NumSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
 
             else
                 app.Sweeps.Text = string(-1);
@@ -1125,7 +1125,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         ylabel(app.UIAxes1, 'Azimute (º)');
                         set(app.UIAxes1, XLim=[freqStart, freqStop], YLim=[0, 360], YScale='linear')
 
-                        app.PlotHandles.ClearWrite = plot.draw2D.clearWrite(app.UIAxes1, xArray, app.TaskController.Tasks(taskIdx).Bands(bandIdx).Azimuth, LevelUnit, 'ClrWrite', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
+                        app.PlotHandles.ClearWrite = plot.draw2D.clearWrite(app.UIAxes1, xArray, app.TaskController.Tasks(taskIdx).Bands(bandIdx).AzimuthTrace, LevelUnit, 'ClrWrite', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
 
                     case 'Máscara'
                         ylabel(app.UIAxes1, 'Rompimento (%)');
@@ -1160,7 +1160,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         end
 
                     case 'Azimute'
-                        plot.draw2D.update(app.PlotHandles.ClearWrite, app.TaskController.Tasks(taskIdx).Bands(bandIdx).Azimuth, app.General)
+                        plot.draw2D.update(app.PlotHandles.ClearWrite, app.TaskController.Tasks(taskIdx).Bands(bandIdx).AzimuthTrace, app.General)
 
                     case 'Máscara'
                         KK = 100/app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Validations;
@@ -1348,8 +1348,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     if app.SpectrumFlowList.Value == bandIdx
                         updatePlot(app, taskIdx, bandIdx)
                         updateMaskStatus(app, maskTrigger, taskIdx, bandIdx)
-                        app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).nSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
-                        app.Sweeps.Text = string(app.TaskController.Tasks(taskIdx).Bands(bandIdx).File.WritedSamples);
+                        app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).NumSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
+                        app.Sweeps.Text = string(app.TaskController.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples);
                         drawnow
                     end
                 end

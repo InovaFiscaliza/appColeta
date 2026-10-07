@@ -24,7 +24,7 @@ classdef (Abstract) TaskAnalysis
                     end
 
                     bandTimes = [tasks(taskIdx).TaskSpec.Script.Band.RevisitTime];
-                    bandTimes(~[tasks(taskIdx).Bands.Status]) = -1;
+                    bandTimes(~[tasks(taskIdx).Bands.IsActive]) = -1;
 
                     revisitInfo.Band(taskIdx) = struct('RevisitTimes',   [gpsRevisitTime, bandTimes], ...
                                                        'RevisitFactors', []);

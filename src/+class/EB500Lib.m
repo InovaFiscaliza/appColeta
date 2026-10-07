@@ -85,7 +85,7 @@ classdef EB500Lib < handle
             for ii = 1:numel(specObj.Bands)
                 specDatagram = [];
                 
-                writeline(hReceiver, specObj.Bands(ii).SpecificSCPI.configSET);
+                writeline(hReceiver, specObj.Bands(ii).ScpiCommands.configSET);
 
                 flush(hStreaming)
                 class.EB500Lib.DatagramRead_OnOff('PSCAN', 'Open', udpPort, hReceiver)

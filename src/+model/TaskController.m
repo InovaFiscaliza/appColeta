@@ -171,7 +171,7 @@ classdef TaskController < handle
                                         configMode = false;
                                     end
 
-                                    configureBand(receiverDriver, obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI)
+                                    configureBand(receiverDriver, obj.Tasks(taskIdx).Bands(bandIdx).ScpiCommands)
                                     forceConfiguration = false;
                                 end
 
@@ -189,7 +189,7 @@ classdef TaskController < handle
                                 if isempty(obj.Tasks(taskIdx).Bands(bandIdx).Mask)
                                     % SINGLE TRACE
                                     traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, sampleTimestamp);
-                                    obj.Tasks(taskIdx).Bands(bandIdx).nSweeps = obj.Tasks(taskIdx).Bands(bandIdx).nSweeps+1;
+                                    obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps = obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps+1;
 
                                 else
                                     % BURST OF TRACES
@@ -198,7 +198,7 @@ classdef TaskController < handle
 
                                     for sweepIdx = 1:burstSweeps
                                         traceData(sweepIdx,:) = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, sampleTimestamp);
-                                        obj.Tasks(taskIdx).Bands(bandIdx).nSweeps = obj.Tasks(taskIdx).Bands(bandIdx).nSweeps+1;
+                                        obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps = obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps+1;
                                     end
 
                                     averagedTrace = mean(traceData, 1);
@@ -219,7 +219,7 @@ classdef TaskController < handle
 
                                             if isRegularTask
                                                 writematrix(jsonencode(rmfield(obj.Tasks(taskIdx).Bands(bandIdx).Mask, {'Table', 'Array', 'Validations', 'BrokenArray', 'FindPeaks'})), ...
-                                                    replace(obj.Tasks(taskIdx).Bands(bandIdx).File.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
+                                                    replace(obj.Tasks(taskIdx).Bands(bandIdx).OutputFile.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
                                             end
 
                                             maskTriggered = 1;
@@ -239,21 +239,21 @@ classdef TaskController < handle
 
                                 [~, ~, numDims] = size(traceData);
                                 if numDims > 1
-                                    obj.Tasks(taskIdx).Bands(bandIdx).Azimuth = traceData(:,:,2);
+                                    obj.Tasks(taskIdx).Bands(bandIdx).AzimuthTrace = traceData(:,:,2);
                                 end
 
                                 % ESTIMATED REVISIT TIME
-                                if isempty(obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp)
+                                if isempty(obj.Tasks(taskIdx).Bands(bandIdx).LastTimestamp)
                                     obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = obj.RevisitInfo.GlobalRevisitTime * revisitFactor;
                                 else
-                                    obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = ((obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds-1)*obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime + seconds(sampleTimestamp-obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp))/obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds;
+                                    obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = ((obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds-1)*obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime + seconds(sampleTimestamp-obj.Tasks(taskIdx).Bands(bandIdx).LastTimestamp))/obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds;
                                 end
-                                obj.Tasks(taskIdx).Bands(bandIdx).LastTimeStamp = sampleTimestamp;
+                                obj.Tasks(taskIdx).Bands(bandIdx).LastTimestamp = sampleTimestamp;
 
                                 % FILE
                                 if isRegularTask && (isempty(obj.Tasks(taskIdx).Bands(bandIdx).Mask) || ismember(obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).MaskTrigger.Status, [0, 3]) || ((obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).MaskTrigger.Status == 2) && maskTriggered))
                                     class.RFlookBinLib.EditFile(obj.Tasks(taskIdx), bandIdx, traceData, attenuationFactor, sampleTimestamp)
-                                    obj.Tasks(taskIdx).Bands(bandIdx).File.WritedSamples = obj.Tasks(taskIdx).Bands(bandIdx).File.WritedSamples + 1;
+                                    obj.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples = obj.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples + 1;
                                 end
 
                                 % PLOT, WRITEDSAMPLES & MASKINFO (IF APPLICABLE)
@@ -283,7 +283,7 @@ classdef TaskController < handle
                                 msgError = reconnectAttempt(obj.App.receiverObj, ...
                                     obj.Tasks(taskIdx).Connections.receiver.UserData.Config, ...
                                     obj.Tasks(taskIdx).TaskSpec.Receiver.Config, ...
-                                    obj.Tasks(taskIdx).Bands(bandIdx).SpecificSCPI ...
+                                    obj.Tasks(taskIdx).Bands(bandIdx).ScpiCommands ...
                                 );
 
                                 if ~isempty(msgError)
@@ -364,17 +364,17 @@ classdef TaskController < handle
 
                         for bandIdx = 1:numel(obj.Tasks(taskIdx).Bands)
                             obj.Tasks(taskIdx) = class.RFlookBinLib.CloseFile(obj.Tasks(taskIdx), bandIdx);
-                            obj.Tasks(taskIdx).Bands(bandIdx).Status = false;
+                            obj.Tasks(taskIdx).Bands(bandIdx).IsActive = false;
                         end
 
                     else
                         if strcmp(obj.Tasks(taskIdx).TaskSpec.Script.Observation.Type, 'Samples')
                             bandCompletionFlags = [];
                             for bandIdx = 1:numel(obj.Tasks(taskIdx).Bands)
-                                if obj.Tasks(taskIdx).Bands(bandIdx).Status
-                                    if obj.Tasks(taskIdx).Bands(bandIdx).nSweeps == obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrObservationSamples
+                                if obj.Tasks(taskIdx).Bands(bandIdx).IsActive
+                                    if obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps == obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrObservationSamples
                                         obj.Tasks(taskIdx) = class.RFlookBinLib.CloseFile(obj.Tasks(taskIdx), bandIdx);
-                                        obj.Tasks(taskIdx).Bands(bandIdx).Status = false;
+                                        obj.Tasks(taskIdx).Bands(bandIdx).IsActive = false;
                                         bandCompletionFlags(end+1) = true;
 
                                     else
@@ -460,11 +460,11 @@ classdef TaskController < handle
         function resetTaskBands(obj, idx, resetSweepCount)
             for bandIdx = 1:numel(obj.Tasks(idx).Bands)
                 obj.Tasks(idx).Bands(bandIdx).SyncModeRef = '';
-                obj.Tasks(idx).Bands(bandIdx).LastTimeStamp = [];
-                obj.Tasks(idx).Bands(bandIdx).Status = true;
+                obj.Tasks(idx).Bands(bandIdx).LastTimestamp = [];
+                obj.Tasks(idx).Bands(bandIdx).IsActive = true;
 
                 if resetSweepCount
-                    obj.Tasks(idx).Bands(bandIdx).nSweeps = 0;
+                    obj.Tasks(idx).Bands(bandIdx).NumSweeps = 0;
                 end
             end
         end
@@ -529,7 +529,7 @@ classdef TaskController < handle
             msgError = reconnectAttempt(obj.App.receiverObj, ...
                 buildReceiverConfig(obj.Tasks(idx)), ...
                 obj.Tasks(idx).TaskSpec.Receiver.Config, ...
-                obj.Tasks(idx).Bands(1).SpecificSCPI ...
+                obj.Tasks(idx).Bands(1).ScpiCommands ...
             );
 
             if ~isempty(msgError)
@@ -618,7 +618,7 @@ classdef TaskController < handle
                 end
 
                 % FILE
-                obj.Tasks(idx).Bands(bandIdx).File = struct( ...
+                obj.Tasks(idx).Bands(bandIdx).OutputFile = struct( ...
                     'Fileversion', class.Constants.fileVersion,     ...
                     'Basename', sprintf('%s_ID%.0f', baseName, bandId), ...
                     'Filecount', 0, ...
@@ -626,15 +626,15 @@ classdef TaskController < handle
                     'CurrentFile', [] ...
                 );
 
-                [obj.Tasks(idx).Bands(bandIdx).File.Filecount, ...
-                 obj.Tasks(idx).Bands(bandIdx).File.CurrentFile] = class.RFlookBinLib.OpenFile(obj.Tasks(idx), bandIdx, obj.App.General.fileFolder.userPath);
+                [obj.Tasks(idx).Bands(bandIdx).OutputFile.Filecount, ...
+                 obj.Tasks(idx).Bands(bandIdx).OutputFile.CurrentFile] = class.RFlookBinLib.OpenFile(obj.Tasks(idx), bandIdx, obj.App.General.fileFolder.userPath);
 
-                logMsg = sprintf('ID: %.0f\nscpiSet_Config: "%s"\nscpiSet_Att: "%s"\nrawMetaData: "%s"\nFilename (base): %s', ...
+                logMsg = sprintf('ID: %.0f\nscpiSet_Config: "%s"\nscpiSet_Att: "%s"\nReceiverState: "%s"\nFilename (base): %s', ...
                     bandId, ...
-                    obj.Tasks(idx).Bands(bandIdx).SpecificSCPI.configSET, ...
-                    obj.Tasks(idx).Bands(bandIdx).SpecificSCPI.attSET, ...
-                    obj.Tasks(idx).Bands(bandIdx).rawMetaData, ...
-                    obj.Tasks(idx).Bands(bandIdx).File.Basename ...
+                    obj.Tasks(idx).Bands(bandIdx).ScpiCommands.configSET, ...
+                    obj.Tasks(idx).Bands(bandIdx).ScpiCommands.attSET, ...
+                    obj.Tasks(idx).Bands(bandIdx).ReceiverState, ...
+                    obj.Tasks(idx).Bands(bandIdx).OutputFile.Basename ...
                 );
                 obj.Tasks(idx).LogEntries(end+1) = struct('level', 'startup', 'timestamp', datestr(now), 'message', logMsg);
 
