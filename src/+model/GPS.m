@@ -1,4 +1,11 @@
 classdef GPS < handle
+
+    %---------------------------------------------------------------------%
+    % ## model.GPS ##
+    %
+    % Concentra lista de receptores GPS disponíveis e gerencia suas conexões.
+    %---------------------------------------------------------------------%
+
     properties
         Config
         

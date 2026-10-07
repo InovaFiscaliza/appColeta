@@ -1,7 +1,43 @@
 classdef Receiver < handle
+
+    %---------------------------------------------------------------------%
+    % ## model.Receiver ##
+    %
+    % Concentra lista de receptores disponíveis e gerencia suas conexões.
+    %
+    % O objeto "tcpclient" possui uma propriedade privada da classe - "TCPCustomClient" -, o qual armazena o objeto "TCPCustomClient".
+    % É essa propriedade que possibilita acesso ao objeto "TCPClient".
+    %
+    % O objeto "TCPClient" possui as propriedades "Connect" (true|false) e "ConnectionStatus" ('Connected'|'Disconnected') que registram o 
+    % estado da conexão, o qual só é alterado quando realizada alguma operação de escrita (write, writeline etc) ou leitura no objeto "tcpclient".
+    %
+    % O MATLAB retorna os seguintes erros em operações de escrita e leitura de um objeto "tcpclient" desconectado:
+    % 'MATLAB:networklib:tcpclient:connectTerminated'  (write)
+    % 'transportclients:string:writeFailed'            (writeline|writeread)
+    % 'network:tcpclient:sendFailed'                   (write|writeline)
+    % 'transportclients:string:timeoutToken'           (writeread)
+    % 'transportclients:string:invalidConnectionState' (read|readline)
+    %
+    % E esse objeto "TCPClient" possui os métodos "connect" e "disconnect", os quais tentam alterar ativamente o estado da conexão.
+    %
+    % O controle da conexão do appColeta com o objeto "tcpclient" pode ser feito com a exclusão do objeto (delete/clear) e posterior
+    % recriação, ou por meio da alteração do seu estado (método "connect" do objeto "TCPClient").
+    %
+    % Notei, contudo, que o objeto "TCPCustomClient" às vezes é deletado, desvinculando o objeto "tcpclient" do "TCPClient". Quando isso
+    % acontece, o MATLAB retorna os seguintes erros:
+    % 'MATLAB:networklib:tcpclient:writeFailed'        (write)
+    % 'MATLAB:class:InvalidHandle'                     (writeline|writeread|read|readline)
+    % 'testmeaslib:CustomDisplay:PropertyError'        (acesso à propriedade)
+    %
+    % Nesse caso, o objeto "tcpclient" deve ser recriado. Não é adequado armazenar um handle pro objeto "TCPClient" porque, mesmo
+    % existente, ele pode não mais estar relacionado ao objeto "tcpclient".
+    %
+    % Na maioria das vezes, contudo, isso não ocorre, e aí basta chamar o método "connect" do objeto "TCPClient". Se a conexão não for
+    % reestabelecida, o MATLAB retorna o erro:
+    % 'network:tcpclient:connectFailed'
+    %---------------------------------------------------------------------%
+
     properties
-        % Uma linha por registro de "resources/ReceiverLib/<name>.json"; a coluna
-        % "Definition" traz o registro completo (usado por model.ReceiverDriver).
         Config
 
         List = table( ...
@@ -51,39 +87,6 @@ classdef Receiver < handle
             end
         end
 
-        %-----------------------------------------------------------------%
-        % ## tcpclient ##
-        % O objeto "tcpclient" possui uma propriedade privada da classe - "TCPCustomClient" -, o qual armazena o objeto "TCPCustomClient".
-        % É essa propriedade que possibilita acesso ao objeto "TCPClient".
-        %
-        % ## TCPClient ##
-        % O objeto "TCPClient" possui as propriedades "Connect" (true|false) e "ConnectionStatus" ('Connected'|'Disconnected') que registram o 
-        % estado da conexão, o qual só é alterado quando realizada alguma operação de escrita (write, writeline etc) ou leitura no objeto "tcpclient".
-        %
-        % O MATLAB retorna os seguintes erros em operações de escrita e leitura de um objeto "tcpclient" desconectado:
-        % 'MATLAB:networklib:tcpclient:connectTerminated'  (write)
-        % 'transportclients:string:writeFailed'            (writeline|writeread)
-        % 'network:tcpclient:sendFailed'                   (write|writeline)
-        % 'transportclients:string:timeoutToken'           (writeread)
-        % 'transportclients:string:invalidConnectionState' (read|readline)
-        %
-        % E esse objeto "TCPClient" possui os métodos "connect" e "disconnect", os quais tentam alterar ativamente o estado da conexão.
-        %
-        % O controle da conexão do appColeta com o objeto "tcpclient" pode ser feito com a exclusão do objeto (delete/clear) e posterior
-        % recriação, ou por meio da alteração do seu estado (método "connect" do objeto "TCPClient").
-        %
-        % Notei, contudo, que o objeto "TCPCustomClient" às vezes é deletado, desvinculando o objeto "tcpclient" do "TCPClient". Quando isso
-        % acontece, o MATLAB retorna os seguintes erros:
-        % 'MATLAB:networklib:tcpclient:writeFailed'        (write)
-        % 'MATLAB:class:InvalidHandle'                     (writeline|writeread|read|readline)
-        % 'testmeaslib:CustomDisplay:PropertyError'        (acesso à propriedade)
-        %
-        % Nesse caso, o objeto "tcpclient" deve ser recriado. Não é adequado armazenar um handle pro objeto "TCPClient" porque, mesmo
-        % existente, ele pode não mais estar relacionado ao objeto "tcpclient".
-        %
-        % Na maioria das vezes, contudo, isso não ocorre, e aí basta chamar o método "connect" do objeto "TCPClient". Se a conexão não for
-        % reestabelecida, o MATLAB retorna o erro:
-        % 'network:tcpclient:connectFailed'
         %-----------------------------------------------------------------%
         function [idx, msgError] = connect(obj, receiver)
             % Características do instrumento em que se deseja controlar:
@@ -267,30 +270,42 @@ classdef Receiver < handle
     methods (Access = protected)
         %-----------------------------------------------------------------%
         function instrument = defaultInstrument(~)
-            instrument = {'Receiver', 'Tektronix SA2500', 'TCPIP Socket', '{"IP":"127.0.0.1","Port":"34835","Timeout":5}', 'Modo servidor/cliente. Loopback (127.0.0.1).', 1};
+            instrument = { ...
+                'Receiver', ...
+                'Tektronix SA2500', ...
+                'TCPIP Socket', ...
+                '{ "IP": "127.0.0.1", "Port": "34835", "Timeout": 5 }', ...
+                'Modo servidor/cliente. Loopback (127.0.0.1).', ...
+                1 ...
+            };
         end
 
         %-----------------------------------------------------------------%
         function [ip, port, timeout, localhostPublicIP, localhostLocalIP] = missingParameters(~, Parameters)
             % IP
-            if isfield(Parameters, 'IP');                 ip = Parameters.IP;
-            else;                                         ip = '';
+            ip = '';
+            if isfield(Parameters, 'IP')
+                ip = Parameters.IP;
             end
 
-            if strcmpi(ip, 'localhost');                  ip = '127.0.0.1';
+            if strcmpi(ip, 'localhost')
+                ip = '127.0.0.1';
             end
         
             % Port
-            if isfield(Parameters, 'Port');               port = Parameters.Port;
-            else;                                         port = [];
+            port = [];
+            if isfield(Parameters, 'Port')
+                port = Parameters.Port;                   
             end
             
-            if ~isnumeric(port);                          port = str2double(port);
+            if ~isnumeric(port)
+                port = str2double(port);
             end
 
             % Timeout
-            if isfield(Parameters, 'Timeout');            timeout = Parameters.Timeout;
-            else;                                         timeout = class.Constants.Timeout;
+            timeout = class.Constants.Timeout;
+            if isfield(Parameters, 'Timeout')
+                timeout = Parameters.Timeout;
             end
         
             % localhostPublicIP & localhostLocalIP

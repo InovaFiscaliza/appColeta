@@ -1,9 +1,5 @@
 classdef TaskBand
 
-    % Author.: Eric Magalhães Delgado
-    % Date...: July 15, 2023
-    % Version: 1.00
-
     %---------------------------------------------------------------------%
     % ## model.TaskBand ##
     %
