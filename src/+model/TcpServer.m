@@ -1,4 +1,12 @@
-classdef tcpServerLib < handle
+classdef TcpServer < handle
+
+    %---------------------------------------------------------------------%
+    % ## model.TcpServer ##
+    %
+    % Servidor TCP que responde a requisições de clientes externos (Zabbix,
+    % Jupyter, MATLAB) com informações da estação e da lista de tarefas.
+    % Substitui a antiga "class.tcpServerLib".
+    %---------------------------------------------------------------------%
 
     properties
         App
@@ -9,8 +17,8 @@ classdef tcpServerLib < handle
         % de reconexão, caso aplicável.
         Timer
         
-        Time
-        LOG  = table('Size', [0, 8],                                                                                    ...
+        StartTime
+        Log  = table('Size', [0, 8],                                                                                    ...
                      'VariableTypes', {'string', 'string', 'double', 'string', 'string', 'string', 'double', 'string'}, ...
                      'VariableNames', {'Timestamp', 'ClientAddress', 'ClientPort', 'Message', 'ClientName', 'Request', 'NumBytesWritten', 'Status'});
     end
@@ -18,29 +26,30 @@ classdef tcpServerLib < handle
 
     methods
         %-----------------------------------------------------------------%
-        function obj = tcpServerLib(app)
-            obj.App  = app;
-            obj.Time = datetime('now', 'Format', 'dd/MM/yyyy HH:mm:ss');
+        function obj = TcpServer(app)
+            obj.App       = app;
+            obj.StartTime = datetime('now', 'Format', 'dd/MM/yyyy HH:mm:ss');
             
-            TimerCreation(obj, app)
+            createStatusTimer(obj)
         end
+    end
 
 
+    methods (Access = protected)
         %-----------------------------------------------------------------%
-        function TimerCreation(obj, app)
+        function createStatusTimer(obj)
             obj.Timer = timer("ExecutionMode", "fixedSpacing",                  ...
                               "BusyMode",      "queue",                         ...
                               "StartDelay",    0,                               ...
                               "Period",        class.Constants.tcpServerPeriod, ...
-                              "TimerFcn",      {@obj.ConnectAttempt, app});
+                              "TimerFcn",      @(~,~)ensureConnection(obj));
             start(obj.Timer)
         end
 
-
         %-----------------------------------------------------------------%
-        function ConnectAttempt(obj, src, evt, app)
-            IP   = app.General.context.SERVER.ip;
-            Port = app.General.context.SERVER.port;
+        function ensureConnection(obj)
+            IP   = obj.App.General.context.SERVER.ip;
+            Port = obj.App.General.context.SERVER.port;
 
             try
                 if isa(obj.Server, 'tcpserver.internal.TCPServer')
@@ -62,16 +71,15 @@ classdef tcpServerLib < handle
                     end
                     
                     configureTerminator(obj.Server, "CR/LF")
-                    configureCallback(obj.Server, "terminator", @(~,~)obj.receivedMessage)
+                    configureCallback(obj.Server, "terminator", @(~,~)onMessageReceived(obj))
                 end
 
             catch
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function receivedMessage(obj)
+        function onMessageReceived(obj)
             app = obj.App;
 
         % O servidor se comunica com apenas um único cliente, negando tentativas 
@@ -123,49 +131,45 @@ classdef tcpServerLib < handle
             
                             % Requisições...
                             switch decodedMsg.Request
-                                case 'StationInfo';  msg = StationInfo(obj);
-                                case 'Diagnostic';   msg = Diagnostic(obj);
-                                case 'PositionList'; msg = PositionList(obj);
-                                case 'TaskList';     msg = TaskList(obj);
+                                case 'StationInfo';  msg = answerStationInfo(obj);
+                                case 'Diagnostic';   msg = answerDiagnostic(obj);
+                                case 'PositionList'; msg = answerPositionList(obj);
+                                case 'TaskList';     msg = answerTaskList(obj);
                                 otherwise;           error('tcpServerLib:UnexpectedRequest', 'Unexpected Request')
                             end
     
                             sendMessageToClient(obj, struct('Request', decodedMsg.Request, 'Answer', msg))
-                            logTableFill(obj, rawMsg, decodedMsg, 'success')
+                            appendLog(obj, rawMsg, decodedMsg, 'success')
                             
                         catch ME
                             sendMessageToClient(obj, struct('Request', rawMsg{ii}, 'Answer', ME.identifier))
-                            logTableFill(obj, rawMsg, rawMsg{ii}, ME.message)
+                            appendLog(obj, rawMsg, rawMsg{ii}, ME.message)
                         end
                     end
     
                 else
                     sendMessageToClient(obj, struct('Request', rawMsg, 'Answer', 'Invalid request'))
-                    logTableFill(obj, rawMsg, '', 'tcpServerLib:EmptyRequest')
+                    appendLog(obj, rawMsg, '', 'tcpServerLib:EmptyRequest')
                 end
             end
         end
-    end
 
-
-    methods (Access = protected)
         %-----------------------------------------------------------------%
         function sendMessageToClient(obj, structMsg)
             writeline(obj.Server, ['<JSON>' jsonencode(structMsg) '</JSON>'])
         end
 
-
         %-----------------------------------------------------------------%
-        function logTableFill(obj, rawMsg, decodedMsg, statusMsg)
+        function appendLog(obj, rawMsg, decodedMsg, statusMsg)
             if isfield(decodedMsg, 'ClientName'); ClientName = decodedMsg.ClientName;
             else;                                 ClientName = '-';
             end
 
-            if isfield(decodedMsg, 'ClientName'); Request    = decodedMsg.Request;
+            if isfield(decodedMsg, 'Request');    Request    = decodedMsg.Request;
             else;                                 Request    = '-';
             end
 
-            obj.LOG(end+1,:) = {datestr(now),               ...
+            obj.Log(end+1,:) = {datestr(now),               ...
                                 obj.Server.ClientAddress,   ...
                                 obj.Server.ClientPort,      ...
                                 rawMsg,                     ...
@@ -175,28 +179,14 @@ classdef tcpServerLib < handle
                                 statusMsg};
         end
 
-
         %-----------------------------------------------------------------%
-        function answer = StationInfo(obj)
-            answer = struct('stationInfo',  stationInfoPayload(obj));
+        function answer = answerStationInfo(obj)
+            answer = struct('stationInfo', obj.App.General.context.CONFIG.station);
         end
 
-
         %-----------------------------------------------------------------%
-        function stationInfo = stationInfoPayload(obj)
-            % Mantém os nomes de campo do protocolo TCP consumido por clientes externos.
-            station = obj.App.General.context.CONFIG.station;
-            stationInfo = struct('Name',      station.name,      ...
-                                 'Computer',  station.computer,  ...
-                                 'Type',      station.type,      ...
-                                 'Latitude',  station.latitude,  ...
-                                 'Longitude', station.longitude);
-        end
-
-
-        %-----------------------------------------------------------------%
-        function answer = Diagnostic(obj)
-            answer = struct('stationInfo',  stationInfoPayload(obj), ...
+        function answer = answerDiagnostic(obj)
+            answer = struct('stationInfo',  obj.App.General.context.CONFIG.station, ...
                             'Diagnostic',   struct('appColeta', struct('Release', matlabRelease.Release, ...
                                                                        'Version', class.Constants.appVersion), ...
                                                    'EnvVariables', [], ...
@@ -292,14 +282,12 @@ classdef tcpServerLib < handle
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function answer = PositionList(obj)
-            app = obj.App;
-            answer = struct('stationInfo',  stationInfoPayload(obj), ...
+        function answer = answerPositionList(obj)
+            answer = struct('stationInfo',  obj.App.General.context.CONFIG.station, ...
                             'positionList', struct('IDN', {}, 'gpsType', {}, 'gpsStatus', {}, 'Latitude', {}, 'Longitude', {}));
 
-            tasks = app.TaskController.Tasks;
+            tasks = obj.App.TaskController.Tasks;
             for ii = 1:numel(tasks)
                 answer.positionList(ii) = struct('IDN',       tasks(ii).ReceiverId,                 ...
                                                  'gpsType',   tasks(ii).TaskSpec.Script.GPS.Type, ...
@@ -309,15 +297,12 @@ classdef tcpServerLib < handle
             end
         end
 
-
         %-----------------------------------------------------------------%
-        function answer = TaskList(obj)            
-            app = obj.App;
-
-            answer = struct('stationInfo', stationInfoPayload(obj), ...
+        function answer = answerTaskList(obj)
+            answer = struct('stationInfo', obj.App.General.context.CONFIG.station, ...
                             'taskList',    struct('IDN', {}, 'TaskName', {}, 'Observation', {}, 'Band', {}, 'MaskTable', {}, 'Status', {}));
             
-            tasks = app.TaskController.Tasks;
+            tasks = obj.App.TaskController.Tasks;
             for ii = 1:numel(tasks)
                 answer.taskList(ii).IDN          = tasks(ii).ReceiverId;
                 answer.taskList(ii).TaskName     = tasks(ii).TaskSpec.Script.Name;

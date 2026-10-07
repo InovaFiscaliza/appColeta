@@ -110,9 +110,9 @@ classdef winServer_exported < matlab.apps.AppBase
                 app.communicationTableRefresh.Visible = 0;
 
                 app.toolLamp.Color = [.5 .5 .5];
-                app.toolLampLabel.Text = sprintf('Servidor ainda não está em execução, apesar do objeto "class.tcpServerLib" já ter sido criado. Será realizada uma nova tentativa para executá-lo a cada %d segundos.', class.Constants.tcpServerPeriod);
+                app.toolLampLabel.Text = sprintf('Servidor ainda não está em execução, apesar do objeto "model.TcpServer" já ter sido criado. Será realizada uma nova tentativa para executá-lo a cada %d segundos.', class.Constants.tcpServerPeriod);
 
-                app.communicationTable.Data = app.mainApp.tcpServer.LOG;
+                app.communicationTable.Data = app.mainApp.tcpServer.Log;
                 set(app.toolButton_edit, 'Text', 'Excluir objeto', 'Icon', 'Delete_32Red.png')
 
             else
@@ -120,9 +120,9 @@ classdef winServer_exported < matlab.apps.AppBase
                 app.communicationTableRefresh.Visible = 1;
 
                 app.toolLamp.Color = [.47 .67 .19];
-                app.toolLampLabel.Text = sprintf('Servidor em execução desde %s.', char(app.mainApp.tcpServer.Time));
+                app.toolLampLabel.Text = sprintf('Servidor em execução desde %s.', char(app.mainApp.tcpServer.StartTime));
 
-                app.communicationTable.Data = app.mainApp.tcpServer.LOG;
+                app.communicationTable.Data = app.mainApp.tcpServer.Log;
                 set(app.toolButton_edit, 'Text', 'Para servidor', 'Icon', 'stop_32.png')
             end
         end
@@ -155,7 +155,7 @@ classdef winServer_exported < matlab.apps.AppBase
         function toolButtonPushed_edit(app, event)
             
             if isempty(app.mainApp.tcpServer)
-                app.mainApp.tcpServer = class.tcpServerLib(app.mainApp);
+                app.mainApp.tcpServer = model.TcpServer(app.mainApp);
             
             else
                 stop(app.mainApp.tcpServer.Timer)

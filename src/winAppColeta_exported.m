@@ -572,7 +572,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             if app.General.context.SERVER.status
                 try
-                    app.tcpServer = class.tcpServerLib(app);
+                    app.tcpServer = model.TcpServer(app);
                 catch
                     app.tcpServer = [];
                 end
