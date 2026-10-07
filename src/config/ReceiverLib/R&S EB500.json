@@ -17,20 +17,6 @@
             }
         },
         "communication": {
-            "legacy": {
-                "initReset": "*RST",
-                "initStartup": "*CLS;:SYST:COMM:LAN:PING 0;:SYST:ANT:COMP \"ADD107\",\"COG@ADD107\";:SYST:ANT:COMP \"ADD207\",\"COG@ADD207\";:TRAC:UDP:DELete ALL;:ROUTe:AUTO 0;:OUTPut:AUXMode AUTO;:MEASure:APPL RX;:FREQ:MODE PSC;:FUNCtion:CONCurrent OFF;:MEAS:MODE PER;:SYSTem:GPS:DATA:AUTO 1;:INITiate:IMMediate",
-                "initSweepMode": "INITiate:CONTinuous %sweepMode%",
-                "setBandConfig": "CALCulate:IFPan:AVERage:TYPE %traceMode%;:FREQuency:PSCan:START %freqStart%;:FREQuency:PSCan:STOP %freqStop%;:PSCan:STEP %stepWidth%;:CALCulate:IFPan:SELectivity %selectivity%;:INPut:ATTenuation:MODE %sensitivityMode%;:INPut:ATTenuation:AUTO %attenuationMode%",
-                "setAttenuation": "INPut:ATTenuation %attenuationValue%",
-                "setVideoBandWidth": "",
-                "queryIdentification": "*IDN?",
-                "queryStatus": "SYSTEM:ERROR:ALL?",
-                "queryBandConfig": "CALCulate:IFPan:AVERage:TYPE?;:FREQuency:PSCan:START?;:FREQuency:PSCan:STOP?;:PSCan:STEP?;:CALCulate:IFPan:BANDwidth?;:CALCulate:IFPan:SELectivity?;:INPut:ATTenuation:MODE?;:INPut:ATTenuation:AUTO?;:INPut:ATTenuation?;:FREQuency:STARt? MIN;:FREQuency:STOP? MAX",
-                "queryAttenuation": "INPut:ATTenuation?",
-                "fetchTraceData": "",
-                "fetchGpsData": "SYSTem:GPS:DATA?"
-            },
             "set": [
                 {
                     "step": "initialization",
@@ -71,13 +57,9 @@
                                 "freqStart",
                                 "freqStop",
                                 "stepWidth",
-                                "resolutionValue",
                                 "selectivity",
                                 "sensitivityMode",
-                                "attenuationMode",
-                                "attenuationValue",
-                                "minFreqRange",
-                                "maxFreqRange"
+                                "attenuationMode"
                             ],
                             "mandatory": true,
                             "postDelay": 0.1
@@ -88,14 +70,7 @@
                                 "attenuationValue"
                             ],
                             "mandatory": false,
-                            "postDelay": 0
-                        },
-                        {
-                            "name": "videoBandWidth",
-                            "parameterNames": [
-                                "videoBandWidth"
-                            ],
-                            "mandatory": false,
+                            "when": "attenuationMode==0",
                             "postDelay": 0
                         }
                     ]
@@ -105,7 +80,20 @@
                 "identification": "*IDN?",
                 "status": "SYSTEM:ERROR:ALL?",
                 "bandConfig": "CALCulate:IFPan:AVERage:TYPE?;:FREQuency:PSCan:START?;:FREQuency:PSCan:STOP?;:PSCan:STEP?;:CALCulate:IFPan:BANDwidth?;:CALCulate:IFPan:SELectivity?;:INPut:ATTenuation:MODE?;:INPut:ATTenuation:AUTO?;:INPut:ATTenuation?;:FREQuency:STARt? MIN;:FREQuency:STOP? MAX",
-                "attenuation": "INPut:ATTenuation?"
+                "attenuation": "INPut:ATTenuation?",
+                "bandConfigParameterNames": [
+                    "traceMode",
+                    "freqStart",
+                    "freqStop",
+                    "stepWidth",
+                    "resolutionValue",
+                    "selectivity",
+                    "sensitivityMode",
+                    "attenuationMode",
+                    "attenuationValue",
+                    "minFreqRange",
+                    "maxFreqRange"
+                ]
             },
             "fetch": {
                 "traceData": "",
@@ -114,37 +102,37 @@
             "parameters": [
                 {
                     "name": "attenuationMode",
-                    "write": "INPut:ATTenuation:AUTO %AttenuationMode%",
+                    "write": "INPut:ATTenuation:AUTO %attenuationMode%",
                     "read": "INPut:ATTenuation:AUTO?",
                     "requireMatch": false
                 },
                 {
                     "name": "attenuationValue",
-                    "write": "INPut:ATTenuation:MODE %SensitivityMode%",
+                    "write": "INPut:ATTenuation %attenuationValue%",
                     "read": "INPut:ATTenuation?",
                     "requireMatch": false
                 },
                 {
                     "name": "freqStart",
-                    "write": "FREQuency:PSCan:START %FreqStart%",
+                    "write": "FREQuency:PSCan:START %freqStart%",
                     "read": "FREQuency:PSCan:START?",
                     "requireMatch": true
                 },
                 {
                     "name": "freqStop",
-                    "write": "FREQuency:PSCan:STOP %FreqStop%",
+                    "write": "FREQuency:PSCan:STOP %freqStop%",
                     "read": "FREQuency:PSCan:STOP?",
                     "requireMatch": true
                 },
                 {
                     "name": "maxFreqRange",
-                    "write": "CALCulate:IFPan:AVERage:TYPE %Trace%;:FREQuency:PSCan:START %FreqStart%;:FREQuency:PSCan:STOP %FreqStop%;:PSCan:STEP %StepWidth%;:CALCulate:IFPan:SELectivity %Selectivity%;:INPut:ATTenuation:MODE %SensitivityMode%;:INPut:ATTenuation:AUTO %AttenuationMode%",
+                    "write": "",
                     "read": "FREQuency:STOP? MAX",
                     "requireMatch": false
                 },
                 {
                     "name": "minFreqRange",
-                    "write": "CALCulate:IFPan:AVERage:TYPE %Trace%;:FREQuency:PSCan:START %FreqStart%;:FREQuency:PSCan:STOP %FreqStop%;:PSCan:STEP %StepWidth%;:CALCulate:IFPan:SELectivity %Selectivity%;:INPut:ATTenuation:MODE %SensitivityMode%;:INPut:ATTenuation:AUTO %AttenuationMode%",
+                    "write": "",
                     "read": "FREQuency:STARt? MIN",
                     "requireMatch": false
                 },
@@ -156,19 +144,19 @@
                 },
                 {
                     "name": "resolutionValue",
-                    "write": "CALCulate:IFPan:AVERage:TYPE %Trace%;:FREQuency:PSCan:START %FreqStart%;:FREQuency:PSCan:STOP %FreqStop%;:PSCan:STEP %StepWidth%;:CALCulate:IFPan:SELectivity %Selectivity%;:INPut:ATTenuation:MODE %SensitivityMode%;:INPut:ATTenuation:AUTO %AttenuationMode%",
+                    "write": "",
                     "read": "CALCulate:IFPan:BANDwidth?",
                     "requireMatch": true
                 },
                 {
                     "name": "selectivity",
-                    "write": "CALCulate:IFPan:SELectivity %Selectivity%",
+                    "write": "CALCulate:IFPan:SELectivity %selectivity%",
                     "read": "CALCulate:IFPan:SELectivity?",
                     "requireMatch": false
                 },
                 {
                     "name": "sensitivityMode",
-                    "write": "INPut:ATTenuation:MODE %SensitivityMode%",
+                    "write": "INPut:ATTenuation:MODE %sensitivityMode%",
                     "read": "INPut:ATTenuation:MODE?",
                     "requireMatch": false
                 },
@@ -180,19 +168,19 @@
                 },
                 {
                     "name": "stepWidth",
-                    "write": "PSCan:STEP %StepWidth%",
+                    "write": "PSCan:STEP %stepWidth%",
                     "read": "PSCan:STEP?",
                     "requireMatch": true
                 },
                 {
                     "name": "sweepMode",
-                    "write": "INITiate:CONTinuous %SweepMode%",
+                    "write": "INITiate:CONTinuous %sweepMode%",
                     "read": "",
                     "requireMatch": false
                 },
                 {
                     "name": "traceMode",
-                    "write": "CALCulate:IFPan:AVERage:TYPE %Trace%",
+                    "write": "CALCulate:IFPan:AVERage:TYPE %traceMode%",
                     "read": "CALCulate:IFPan:AVERage:TYPE?",
                     "requireMatch": true
                 }
@@ -238,20 +226,6 @@
             }
         },
         "communication": {
-            "legacy": {
-                "initReset": "*RST",
-                "initStartup": "*CLS;:SYST:COMM:LAN:PING 0;:SYST:ANT:COMP \"ADD107\",\"COG@ADD107\";:SYST:ANT:COMP \"ADD207\",\"COG@ADD207\";:TRAC:UDP:DELete ALL;:ROUTe:AUTO 0;:OUTPut:AUXMode AUTO;:MEASure:APPL DF;:FREQ:MODE CW;:FUNCtion:CONCurrent OFF;:MEAS:MODE PER;:SYSTem:GPS:DATA:AUTO 1",
-                "initSweepMode": "INITiate:CONTinuous %sweepMode%",
-                "setBandConfig": "CALC:IFPan:AVERage:TYPE %traceMode%;:FREQ %freqCenter%;:FREQ:SPAN %freqSpan%;:CALC:IFPan:STEP %stepWidth%;:CALC:IFPan:SELectivity %selectivity%;:INPut:ATTenuation:MODE %sensitivityMode%;:INPut:ATTenuation:AUTO %attenuationMode%;:MEAS:DF:MODE %dfSquelchMode%;:MEAS:DF:THR %dfSquelchValue%;:MEAS:DF:TIME %dfMeasTime%",
-                "setAttenuation": "INPut:ATTenuation %attenuationValue%",
-                "setVideoBandWidth": "",
-                "queryIdentification": "*IDN?",
-                "queryStatus": "SYSTEM:ERROR:ALL?",
-                "queryBandConfig": "CALC:IFPan:AVERage:TYPE?;:FREQ?;:FREQ:SPAN?;:CALC:IFPan:STEP?;:CALC:IFPan:BANDwidth?;:CALC:IFPan:SELectivity?;:INPut:ATTenuation:MODE?;:INPut:ATTenuation:AUTO?;:INPut:ATTenuation?;:MEAS:DF:MODE?;:MEAS:DF:THR?;:MEAS:DF:TIME?",
-                "queryAttenuation": "INPut:ATTenuation?",
-                "fetchTraceData": "",
-                "fetchGpsData": "SYSTem:GPS:DATA?"
-            },
             "set": [
                 {
                     "step": "initialization",
@@ -292,11 +266,9 @@
                                 "freqCenter",
                                 "freqSpan",
                                 "stepWidth",
-                                "resolutionValue",
                                 "selectivity",
                                 "sensitivityMode",
                                 "attenuationMode",
-                                "attenuationValue",
                                 "dfSquelchMode",
                                 "dfSquelchValue",
                                 "dfMeasTime"
@@ -310,14 +282,7 @@
                                 "attenuationValue"
                             ],
                             "mandatory": false,
-                            "postDelay": 0
-                        },
-                        {
-                            "name": "videoBandWidth",
-                            "parameterNames": [
-                                "videoBandWidth"
-                            ],
-                            "mandatory": false,
+                            "when": "attenuationMode==0",
                             "postDelay": 0
                         }
                     ]
@@ -327,7 +292,21 @@
                 "identification": "*IDN?",
                 "status": "SYSTEM:ERROR:ALL?",
                 "bandConfig": "CALC:IFPan:AVERage:TYPE?;:FREQ?;:FREQ:SPAN?;:CALC:IFPan:STEP?;:CALC:IFPan:BANDwidth?;:CALC:IFPan:SELectivity?;:INPut:ATTenuation:MODE?;:INPut:ATTenuation:AUTO?;:INPut:ATTenuation?;:MEAS:DF:MODE?;:MEAS:DF:THR?;:MEAS:DF:TIME?",
-                "attenuation": "INPut:ATTenuation?"
+                "attenuation": "INPut:ATTenuation?",
+                "bandConfigParameterNames": [
+                    "traceMode",
+                    "freqCenter",
+                    "freqSpan",
+                    "stepWidth",
+                    "resolutionValue",
+                    "selectivity",
+                    "sensitivityMode",
+                    "attenuationMode",
+                    "attenuationValue",
+                    "dfSquelchMode",
+                    "dfSquelchValue",
+                    "dfMeasTime"
+                ]
             },
             "fetch": {
                 "traceData": "",
@@ -336,43 +315,43 @@
             "parameters": [
                 {
                     "name": "attenuationMode",
-                    "write": "INPut:ATTenuation:AUTO %AttenuationMode%",
+                    "write": "INPut:ATTenuation:AUTO %attenuationMode%",
                     "read": "INPut:ATTenuation:AUTO?",
                     "requireMatch": false
                 },
                 {
                     "name": "attenuationValue",
-                    "write": "INPut:ATTenuation:MODE %SensitivityMode%",
+                    "write": "INPut:ATTenuation %attenuationValue%",
                     "read": "INPut:ATTenuation?",
                     "requireMatch": false
                 },
                 {
                     "name": "dfMeasTime",
-                    "write": "MEAS:DF:TIME %DF_MeasTime%",
+                    "write": "MEAS:DF:TIME %dfMeasTime%",
                     "read": "MEAS:DF:TIME?",
                     "requireMatch": false
                 },
                 {
                     "name": "dfSquelchMode",
-                    "write": "MEAS:DF:MODE %DF_SquelchMode%",
+                    "write": "MEAS:DF:MODE %dfSquelchMode%",
                     "read": "MEAS:DF:MODE?",
                     "requireMatch": false
                 },
                 {
                     "name": "dfSquelchValue",
-                    "write": "MEAS:DF:THR %DF_SquelchValue%",
+                    "write": "MEAS:DF:THR %dfSquelchValue%",
                     "read": "MEAS:DF:THR?",
                     "requireMatch": false
                 },
                 {
                     "name": "freqCenter",
-                    "write": "FREQ %FreqCenter%",
+                    "write": "FREQ %freqCenter%",
                     "read": "FREQ?",
                     "requireMatch": false
                 },
                 {
                     "name": "freqSpan",
-                    "write": "FREQ:SPAN %FreqSpan%",
+                    "write": "FREQ:SPAN %freqSpan%",
                     "read": "FREQ:SPAN?",
                     "requireMatch": false
                 },
@@ -384,19 +363,19 @@
                 },
                 {
                     "name": "resolutionValue",
-                    "write": "CALC:IFPan:AVERage:TYPE %Trace%;:FREQ %FreqCenter%;:FREQ:SPAN %FreqSpan%;:CALC:IFPan:STEP %StepWidth%;:CALC:IFPan:SELectivity %Selectivity%;:INPut:ATTenuation:MODE %SensitivityMode%;:INPut:ATTenuation:AUTO %AttenuationMode%;:MEAS:DF:MODE %DF_SquelchMode%;:MEAS:DF:THR %DF_SquelchValue%;:MEAS:DF:TIME %DF_MeasTime%",
+                    "write": "",
                     "read": "CALC:IFPan:BANDwidth?",
                     "requireMatch": true
                 },
                 {
                     "name": "selectivity",
-                    "write": "CALC:IFPan:SELectivity %Selectivity%",
+                    "write": "CALC:IFPan:SELectivity %selectivity%",
                     "read": "CALC:IFPan:SELectivity?",
                     "requireMatch": false
                 },
                 {
                     "name": "sensitivityMode",
-                    "write": "INPut:ATTenuation:MODE %SensitivityMode%",
+                    "write": "INPut:ATTenuation:MODE %sensitivityMode%",
                     "read": "INPut:ATTenuation:MODE?",
                     "requireMatch": false
                 },
@@ -408,19 +387,19 @@
                 },
                 {
                     "name": "stepWidth",
-                    "write": "CALC:IFPan:STEP %StepWidth%",
+                    "write": "CALC:IFPan:STEP %stepWidth%",
                     "read": "CALC:IFPan:STEP?",
                     "requireMatch": true
                 },
                 {
                     "name": "sweepMode",
-                    "write": "INITiate:CONTinuous %SweepMode%",
+                    "write": "INITiate:CONTinuous %sweepMode%",
                     "read": "",
                     "requireMatch": false
                 },
                 {
                     "name": "traceMode",
-                    "write": "CALC:IFPan:AVERage:TYPE %Trace%",
+                    "write": "CALC:IFPan:AVERage:TYPE %traceMode%",
                     "read": "CALC:IFPan:AVERage:TYPE?",
                     "requireMatch": true
                 }

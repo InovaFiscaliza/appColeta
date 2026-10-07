@@ -16,20 +16,6 @@
         }
     },
     "communication": {
-        "legacy": {
-            "initReset": "*RST",
-            "initStartup": "*CLS;:INSTrument SAN;:FORMat:DATA REAL,32;:AVERage:TYPE LINear",
-            "initSweepMode": "INITiate:CONTinuous %sweepMode%",
-            "setBandConfig": "DISPlay:WINDow:TRACe1:MODE %traceMode%;:SWEep:COUNt %averageCount%;:DETector1:FUNCtion %detector%;:UNIT:POWer %levelUnit%;:FREQuency:STARt %freqStart%;:FREQuency:STOP %freqStop%;:SWEep:POINTS %dataPoints%;:BANDwidth:RESolution %resolutionValue%%videoBandWidthCommand%;:INPut:GAIN:STATe %preamp%;:INPut:ATTenuation %attenuationValue%;:INPUT:ATTenuation:AUTO %attenuationMode%",
-            "setAttenuation": "",
-            "setVideoBandWidth": ";:BANDwidth:VIDeo:AUTO ON,;:BANDwidth:VIDeo %videoBandWidth%",
-            "queryIdentification": "*IDN?",
-            "queryStatus": "SYSTEM:ERROR?",
-            "queryBandConfig": "DISPlay:WINDow:TRACe1:MODE?;:SWEep:COUNt?;:DETector1:FUNCtion?;:UNIT:POWer?;:FREQuency:STARt?;:FREQuency:STOP?;:SWEep:POINTS?;:BANDwidth:RESolution:AUTO?;:BANDwidth:RESolution?;:INPut:GAIN:STATe?;:INPut:ATTenuation:AUTO?;:INPut:ATTenuation?;:SWEep:TIME?;:FREQuency:STARt? MIN;:FREQuency:STOP? MAX;:BANDwidth:VIDeo?",
-            "queryAttenuation": "INPut:ATTenuation?",
-            "fetchTraceData": "INITiate:IMMediate;*WAI;:TRACe:DATA? TRACe1",
-            "fetchGpsData": ""
-        },
         "set": [
             {
                 "step": "initialization",
@@ -73,34 +59,14 @@
                             "freqStart",
                             "freqStop",
                             "dataPoints",
-                            "resolutionMode",
                             "resolutionValue",
+                            "videoBandWidth",
                             "preamp",
-                            "attenuationMode",
                             "attenuationValue",
-                            "sampleTimeValue",
-                            "minFreqRange",
-                            "maxFreqRange",
-                            "videoBandWidth"
+                            "attenuationMode"
                         ],
                         "mandatory": true,
                         "postDelay": 0.1
-                    },
-                    {
-                        "name": "attenuationValue",
-                        "parameterNames": [
-                            "attenuationValue"
-                        ],
-                        "mandatory": false,
-                        "postDelay": 0
-                    },
-                    {
-                        "name": "videoBandWidth",
-                        "parameterNames": [
-                            "videoBandWidth"
-                        ],
-                        "mandatory": false,
-                        "postDelay": 0
                     }
                 ]
             }
@@ -109,7 +75,25 @@
             "identification": "*IDN?",
             "status": "SYSTEM:ERROR?",
             "bandConfig": "DISPlay:WINDow:TRACe1:MODE?;:SWEep:COUNt?;:DETector1:FUNCtion?;:UNIT:POWer?;:FREQuency:STARt?;:FREQuency:STOP?;:SWEep:POINTS?;:BANDwidth:RESolution:AUTO?;:BANDwidth:RESolution?;:INPut:GAIN:STATe?;:INPut:ATTenuation:AUTO?;:INPut:ATTenuation?;:SWEep:TIME?;:FREQuency:STARt? MIN;:FREQuency:STOP? MAX;:BANDwidth:VIDeo?",
-            "attenuation": "INPut:ATTenuation?"
+            "attenuation": "INPut:ATTenuation?",
+            "bandConfigParameterNames": [
+                "traceMode",
+                "averageCount",
+                "detector",
+                "levelUnit",
+                "freqStart",
+                "freqStop",
+                "dataPoints",
+                "resolutionMode",
+                "resolutionValue",
+                "preamp",
+                "attenuationMode",
+                "attenuationValue",
+                "sampleTimeValue",
+                "minFreqRange",
+                "maxFreqRange",
+                "videoBandWidth"
+            ]
         },
         "fetch": {
             "traceData": "INITiate:IMMediate;*WAI;:TRACe:DATA? TRACe1",
@@ -118,67 +102,67 @@
         "parameters": [
             {
                 "name": "attenuationMode",
-                "write": "INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "write": "INPUT:ATTenuation:AUTO %attenuationMode%",
                 "read": "INPut:ATTenuation:AUTO?",
                 "requireMatch": false
             },
             {
                 "name": "attenuationValue",
-                "write": "INPut:ATTenuation %AttenuationValue%",
+                "write": "INPut:ATTenuation %attenuationValue%",
                 "read": "INPut:ATTenuation?",
                 "requireMatch": false
             },
             {
                 "name": "averageCount",
-                "write": "SWEep:COUNt %AverageCount%",
+                "write": "SWEep:COUNt %averageCount%",
                 "read": "SWEep:COUNt?",
                 "requireMatch": false
             },
             {
                 "name": "dataPoints",
-                "write": "SWEep:POINTS %DataPoints%",
+                "write": "SWEep:POINTS %dataPoints%",
                 "read": "SWEep:POINTS?",
                 "requireMatch": true
             },
             {
                 "name": "detector",
-                "write": "DETector1:FUNCtion %Detector%",
+                "write": "DETector1:FUNCtion %detector%",
                 "read": "DETector1:FUNCtion?",
                 "requireMatch": true
             },
             {
                 "name": "freqStart",
-                "write": "FREQuency:STARt %FreqStart%",
+                "write": "FREQuency:STARt %freqStart%",
                 "read": "FREQuency:STARt?",
                 "requireMatch": true
             },
             {
                 "name": "freqStop",
-                "write": "FREQuency:STOP %FreqStop%",
+                "write": "FREQuency:STOP %freqStop%",
                 "read": "FREQuency:STOP?",
                 "requireMatch": true
             },
             {
                 "name": "levelUnit",
-                "write": "UNIT:POWer %LevelUnit%",
+                "write": "UNIT:POWer %levelUnit%",
                 "read": "UNIT:POWer?",
                 "requireMatch": true
             },
             {
                 "name": "maxFreqRange",
-                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "write": "",
                 "read": "FREQuency:STOP? MAX",
                 "requireMatch": false
             },
             {
                 "name": "minFreqRange",
-                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "write": "",
                 "read": "FREQuency:STARt? MIN",
                 "requireMatch": false
             },
             {
                 "name": "preamp",
-                "write": "INPut:GAIN:STATe %Preamp%",
+                "write": "INPut:GAIN:STATe %preamp%",
                 "read": "INPut:GAIN:STATe?",
                 "requireMatch": false
             },
@@ -190,19 +174,19 @@
             },
             {
                 "name": "resolutionMode",
-                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "write": "",
                 "read": "BANDwidth:RESolution:AUTO?",
                 "requireMatch": false
             },
             {
                 "name": "resolutionValue",
-                "write": "BANDwidth:RESolution %ResolutionValue%%VBWOption%",
+                "write": "BANDwidth:RESolution %resolutionValue%",
                 "read": "BANDwidth:RESolution?",
                 "requireMatch": true
             },
             {
                 "name": "sampleTimeValue",
-                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "write": "",
                 "read": "SWEep:TIME?",
                 "requireMatch": false
             },
@@ -214,19 +198,20 @@
             },
             {
                 "name": "sweepMode",
-                "write": "INITiate:CONTinuous %SweepMode%",
+                "write": "INITiate:CONTinuous %sweepMode%",
                 "read": "",
                 "requireMatch": false
             },
             {
                 "name": "traceMode",
-                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%",
+                "write": "DISPlay:WINDow:TRACe1:MODE %traceMode%",
                 "read": "DISPlay:WINDow:TRACe1:MODE?",
                 "requireMatch": true
             },
             {
                 "name": "videoBandWidth",
-                "write": "DISPlay:WINDow:TRACe1:MODE %Trace%;:SWEep:COUNt %AverageCount%;:DETector1:FUNCtion %Detector%;:UNIT:POWer %LevelUnit%;:FREQuency:STARt %FreqStart%;:FREQuency:STOP %FreqStop%;:SWEep:POINTS %DataPoints%;:BANDwidth:RESolution %ResolutionValue%%VBWOption%;:INPut:GAIN:STATe %Preamp%;:INPut:ATTenuation %AttenuationValue%;:INPUT:ATTenuation:AUTO %AttenuationMode%",
+                "write": "BANDwidth:VIDeo %videoBandWidth%",
+                "writeAuto": "BANDwidth:VIDeo:AUTO ON",
                 "read": "BANDwidth:VIDeo?",
                 "requireMatch": false
             }

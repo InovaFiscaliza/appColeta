@@ -2,7 +2,10 @@
 
 ## Contexto do Projeto
 
-Este é um projeto MATLAB com frontend desenvolvido em App Designer, executado via VS Code integrado com MATLAB.
+Este é um projeto MATLAB com frontend desenvolvido em App Designer, executado via VS Code integrado 
+com MATLAB. O app mantém em `C:\ProgramData\ANATEL\appColeta` (caso sistema operacional seja Windows) 
+um cache dos arquivos de `src/config`. Sempre que algum arquivo na pasta `src/config` for alterado, 
+incremente a versão em `src/config/GeneralSettings.json` para que o app atualize o cache.
 
 ## Dependências
 

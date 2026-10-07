@@ -855,7 +855,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             if File
                 try
-                    tempList = fcn.instrumentListRead(fullfile(Folder, File));
+                    tempList = util.InstrumentIO.readInstrumentList(fullfile(Folder, File));
 
                     if ~isempty(tempList)
                         app.instrumentList = [app.instrumentList; tempList];

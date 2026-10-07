@@ -1547,7 +1547,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             if isempty(event.Selection)
                 if ~isempty(event.PreviousSelection)
-                    app.UITable.Selection = event.Selection;
+                    app.UITable.Selection = event.PreviousSelection;
                 end
 
                 return

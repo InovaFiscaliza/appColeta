@@ -16,20 +16,6 @@
         }
     },
     "communication": {
-        "legacy": {
-            "initReset": "*RST",
-            "initStartup": "*CLS;:DISPlay:GENeral:MEASview:SELect SPEC;:FORMat:DATA BIN;:SYSTem:GPS INT",
-            "initSweepMode": "INITiate:CONTinuous %sweepMode%",
-            "setBandConfig": "TRACe1:SPECtrum:FUNCtion %traceMode%;:TRACe1:SPECtrum:AVERage:COUNt %averageCount%;:TRACe1:SPECtrum:DETection %detector%;:UNIT:POWer %levelUnit%;:SPECtrum:FREQuency:START %freqStart%;:SPECtrum:FREQuency:STOP %freqStop%;:SPECtrum:BANDwidth:RESolution %resolutionValue%;:INPut:GAIN:STATe %preamp%%autoLevel%",
-            "setAttenuation": "INPut:ATTenuation %attenuationValue%",
-            "setVideoBandWidth": "",
-            "queryIdentification": "*IDN?",
-            "queryStatus": "SYSTEM:ERROR?",
-            "queryBandConfig": "TRACe1:SPECtrum:FUNCtion?;:TRACe1:SPECtrum:AVERage:COUNt?;:TRACe1:SPECtrum:DETection?;:UNIT:POWer?;:SPECtrum:FREQuency:STARt?;:SPECtrum:FREQuency:STOP?;:SPECtrum:BANDwidth:RESolution:AUTO?;:SPECtrum:BANDwidth:RESolution?;:INPut:GAIN:STATe?;:INPut:ATTenuation?",
-            "queryAttenuation": "INPut:ATTenuation?",
-            "fetchTraceData": "INIT;*WAI;:FETCH:SPECTRUM:TRACE1?",
-            "fetchGpsData": "SYSTem:GPS:POSition?"
-        },
         "set": [
             {
                 "step": "initialization",
@@ -72,10 +58,9 @@
                             "levelUnit",
                             "freqStart",
                             "freqStop",
-                            "resolutionMode",
                             "resolutionValue",
                             "preamp",
-                            "attenuationValue"
+                            "autoLevel"
                         ],
                         "mandatory": true,
                         "postDelay": 0.3
@@ -86,14 +71,7 @@
                             "attenuationValue"
                         ],
                         "mandatory": false,
-                        "postDelay": 0
-                    },
-                    {
-                        "name": "videoBandWidth",
-                        "parameterNames": [
-                            "videoBandWidth"
-                        ],
-                        "mandatory": false,
+                        "when": "attenuationMode==0",
                         "postDelay": 0
                     }
                 ]
@@ -103,7 +81,19 @@
             "identification": "*IDN?",
             "status": "SYSTEM:ERROR?",
             "bandConfig": "TRACe1:SPECtrum:FUNCtion?;:TRACe1:SPECtrum:AVERage:COUNt?;:TRACe1:SPECtrum:DETection?;:UNIT:POWer?;:SPECtrum:FREQuency:STARt?;:SPECtrum:FREQuency:STOP?;:SPECtrum:BANDwidth:RESolution:AUTO?;:SPECtrum:BANDwidth:RESolution?;:INPut:GAIN:STATe?;:INPut:ATTenuation?",
-            "attenuation": "INPut:ATTenuation?"
+            "attenuation": "INPut:ATTenuation?",
+            "bandConfigParameterNames": [
+                "traceMode",
+                "averageCount",
+                "detector",
+                "levelUnit",
+                "freqStart",
+                "freqStop",
+                "resolutionMode",
+                "resolutionValue",
+                "preamp",
+                "attenuationValue"
+            ]
         },
         "fetch": {
             "traceData": "INIT;*WAI;:FETCH:SPECTRUM:TRACE1?",
@@ -112,7 +102,7 @@
         "parameters": [
             {
                 "name": "attenuationValue",
-                "write": "TRACe1:SPECtrum:FUNCtion %Trace%;:TRACe1:SPECtrum:AVERage:COUNt %AverageCount%;:TRACe1:SPECtrum:DETection %Detector%;:UNIT:POWer %LevelUnit%;:SPECtrum:FREQuency:START %FreqStart%;:SPECtrum:FREQuency:STOP %FreqStop%;:SPECtrum:BANDwidth:RESolution %ResolutionValue%;:INPut:GAIN:STATe %Preamp%%AutoLevel%",
+                "write": "INPut:ATTenuation %attenuationValue%",
                 "read": "INPut:ATTenuation?",
                 "requireMatch": false
             },
@@ -120,41 +110,42 @@
                 "name": "autoLevel",
                 "write": "INPut:ALEVel",
                 "read": "",
-                "requireMatch": false
+                "requireMatch": false,
+                "when": "attenuationMode==1"
             },
             {
                 "name": "averageCount",
-                "write": "TRACe1:SPECtrum:AVERage:COUNt %AverageCount%",
+                "write": "TRACe1:SPECtrum:AVERage:COUNt %averageCount%",
                 "read": "TRACe1:SPECtrum:AVERage:COUNt?",
                 "requireMatch": false
             },
             {
                 "name": "detector",
-                "write": "TRACe1:SPECtrum:DETection %Detector%",
+                "write": "TRACe1:SPECtrum:DETection %detector%",
                 "read": "TRACe1:SPECtrum:DETection?",
                 "requireMatch": true
             },
             {
                 "name": "freqStart",
-                "write": "SPECtrum:FREQuency:START %FreqStart%",
+                "write": "SPECtrum:FREQuency:START %freqStart%",
                 "read": "SPECtrum:FREQuency:STARt?",
                 "requireMatch": true
             },
             {
                 "name": "freqStop",
-                "write": "SPECtrum:FREQuency:STOP %FreqStop%",
+                "write": "SPECtrum:FREQuency:STOP %freqStop%",
                 "read": "SPECtrum:FREQuency:STOP?",
                 "requireMatch": true
             },
             {
                 "name": "levelUnit",
-                "write": "UNIT:POWer %LevelUnit%",
+                "write": "UNIT:POWer %levelUnit%",
                 "read": "UNIT:POWer?",
                 "requireMatch": true
             },
             {
                 "name": "preamp",
-                "write": "INPut:GAIN:STATe %Preamp%",
+                "write": "INPut:GAIN:STATe %preamp%",
                 "read": "INPut:GAIN:STATe?",
                 "requireMatch": false
             },
@@ -172,7 +163,7 @@
             },
             {
                 "name": "resolutionValue",
-                "write": "SPECtrum:BANDwidth:RESolution %ResolutionValue%",
+                "write": "SPECtrum:BANDwidth:RESolution %resolutionValue%",
                 "read": "SPECtrum:BANDwidth:RESolution?",
                 "requireMatch": true
             },
@@ -184,13 +175,13 @@
             },
             {
                 "name": "sweepMode",
-                "write": "INITiate:CONTinuous %SweepMode%",
+                "write": "INITiate:CONTinuous %sweepMode%",
                 "read": "",
                 "requireMatch": false
             },
             {
                 "name": "traceMode",
-                "write": "TRACe1:SPECtrum:FUNCtion %Trace%",
+                "write": "TRACe1:SPECtrum:FUNCtion %traceMode%",
                 "read": "TRACe1:SPECtrum:FUNCtion?",
                 "requireMatch": true
             }

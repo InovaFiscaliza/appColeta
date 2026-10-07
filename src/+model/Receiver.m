@@ -36,9 +36,9 @@ classdef Receiver < handle
             [projectFolder, programDataFolder] = appEngine.util.Path(appName, rootFolder);
 
             try
-                tempList = fcn.instrumentListRead(fullfile(programDataFolder, 'instrumentList.json'));
+                tempList = util.InstrumentIO.readInstrumentList(fullfile(programDataFolder, 'instrumentList.json'));
             catch ME
-                tempList = fcn.instrumentListRead(fullfile(projectFolder,     'instrumentList.json'));
+                tempList = util.InstrumentIO.readInstrumentList(fullfile(projectFolder,     'instrumentList.json'));
             end
 
             tempList(~strcmp(tempList.Family, 'Receiver'), :) = [];

@@ -25,7 +25,7 @@
     <fileset.resources>
       <file>C:\InovaFiscaliza\appColeta\src\+auxApp</file>
       <file>C:\InovaFiscaliza\appColeta\src\+class</file>
-      <file>C:\InovaFiscaliza\appColeta\src\+fcn</file>
+      <file>C:\InovaFiscaliza\appColeta\src\+model</file>
       <file>C:\InovaFiscaliza\appColeta\src\+plot</file>
       <file>C:\InovaFiscaliza\appColeta\src\+util</file>
       <file>C:\InovaFiscaliza\appColeta\src\config</file>

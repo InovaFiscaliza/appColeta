@@ -1247,7 +1247,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 % STREAMING (UDP SOCKET)
                 streamHandle = [];
                 if receiverDriver.IsStreaming
-                    [app.mainApp.udpPortArray, udpIndex] = fcn.udpSockets(app.mainApp.udpPortArray, app.mainApp.EB500Obj.udpPort);
+                    [app.mainApp.udpPortArray, udpIndex] = util.SocketPorts.findOrCreateUdpPort(app.mainApp.udpPortArray, app.mainApp.EB500Obj.udpPort);
                     if ~isempty(udpIndex)
                         streamHandle = app.mainApp.udpPortArray{udpIndex};
                     end
@@ -1283,7 +1283,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 end
 
                 if strcmp(app.AntennaSwitch_Name.Value, 'EMSat')
-                    fcn.antennaTracking(app, 'TASK:ADD', antennaMetaData, app.progressDialog);
+                    util.AntennaTracking.verifyPointing(app, 'TASK:ADD', antennaMetaData, app.progressDialog);
                 end
 
             catch ME

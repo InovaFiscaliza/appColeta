@@ -75,7 +75,8 @@ classdef ReceiverVirtual < handle
             obj.Models = compileModels(definitions);
             obj.State  = defaultState(obj.Models);
 
-            if any(arrayfun(@(x) isfield(x.Patterns, 'setBandConfig') && ismember('selectivity', x.Patterns.setBandConfig.Names), obj.Models))
+            hasSelectivity = arrayfun(@(x) any(arrayfun(@(p) ismember('selectivity', p.Names), x.Patterns)), obj.Models);
+            if any(hasSelectivity)
                 obj.SelectivityMap = class.EB500Lib(char(rootFolder)).SelectivityMap;
             end
 
@@ -138,32 +139,29 @@ classdef ReceiverVirtual < handle
             end
             logMessage(obj, 'RX', line)
 
-            exactKinds = {'queryIdentification', 'queryStatus', 'queryBandConfig', 'queryAttenuation', ...
-                          'fetchTraceData', 'initReset', 'initStartup'};
-
             for modelIdx = 1:numel(obj.Models)
-                legacy = obj.Models(modelIdx).Definition.communication.legacy;
+                exact = obj.Models(modelIdx).Exact;
 
-                for kind = exactKinds
-                    if ~isempty(legacy.(kind{1})) && strcmp(command, normalizeCommand(legacy.(kind{1})))
+                for kind = fieldnames(exact)'
+                    if ~isempty(exact.(kind{1})) && strcmp(command, exact.(kind{1}))
                         replyExact(obj, src, kind{1}, modelIdx)
                         return
                     end
                 end
             end
 
+            % Um comando composto (ex.: "bandConfig") é a união, por ';:', dos 
+            % comandos individuais dos parâmetros.
             rawCommand = strtrim(regexprep(line, '^\s*:', ''));
-            for modelIdx = 1:numel(obj.Models)
-                patterns = obj.Models(modelIdx).Patterns;
+            segments   = strtrim(strsplit(rawCommand, ';:'));
 
-                for kind = fieldnames(patterns)'
-                    tokens = regexp(rawCommand, patterns.(kind{1}).Regexp, 'names', 'once', 'ignorecase');
+            hasMatch = false;
+            for ii = 1:numel(segments)
+                hasMatch = applySegment(obj, segments{ii}) || hasMatch;
+            end
 
-                    if isstruct(tokens) && ~isempty(tokens) && ~isempty(fieldnames(tokens))
-                        updateState(obj, tokens)
-                        return
-                    end
-                end
+            if hasMatch
+                return
             end
 
             udpTokens = regexp(rawCommand, '^TRACE:UDP:TAG:(ON|OFF)\s+"([^"]*)"\s*,\s*(\d+)\s*,\s*(\w+)', 'tokens', 'once', 'ignorecase');
@@ -194,6 +192,26 @@ classdef ReceiverVirtual < handle
         end
 
         %-----------------------------------------------------------------%
+        function hasMatch = applySegment(obj, segment)
+            hasMatch = false;
+
+            for modelIdx = 1:numel(obj.Models)
+                for pattern = obj.Models(modelIdx).Patterns
+                    [tokens, matched] = regexp(segment, pattern.Regexp, 'names', 'match', 'once', 'ignorecase');
+
+                    if ~isempty(matched)
+                        if isstruct(tokens) && ~isempty(fieldnames(tokens))
+                            updateState(obj, tokens)
+                        end
+
+                        hasMatch = true;
+                        return
+                    end
+                end
+            end
+        end
+
+        %-----------------------------------------------------------------%
         function replyExact(obj, src, kind, modelIdx)
             switch kind
                 case 'queryIdentification'
@@ -204,7 +222,7 @@ classdef ReceiverVirtual < handle
                     reply(obj, src, '0,"No error"')
 
                 case 'queryBandConfig'
-                    names  = obj.Models(modelIdx).BandParameterNames;
+                    names  = obj.Models(modelIdx).AnswerNames;
                     values = cellfun(@(x) obj.State.(x), names, 'UniformOutput', false);
                     reply(obj, src, strjoin(values, ';'))
 
@@ -497,24 +515,39 @@ end
 
 %-------------------------------------------------------------------------%
 function models = compileModels(definitions)
-    models = struct('Definition', {}, 'Patterns', {}, 'BandParameterNames', {});
+    models = struct('Definition', {}, 'Exact', {}, 'Patterns', {}, 'AnswerNames', {});
 
     for ii = 1:numel(definitions)
-        legacy = definitions{ii}.communication.legacy;
+        communication = definitions{ii}.communication;
+        parameters    = model.ReceiverDriver.parametersOf(definitions{ii});
 
-        patterns = struct();
-        for kind = {'setBandConfig', 'setAttenuation', 'initSweepMode'}
-            if ~isempty(legacy.(kind{1}))
-                patterns.(kind{1}) = compileTemplate(legacy.(kind{1}));
+        exact = struct( ...
+            'queryIdentification', normalizeCommand(communication.query.identification), ...
+            'queryStatus',         normalizeCommand(communication.query.status), ...
+            'queryBandConfig',     normalizeCommand(communication.query.bandConfig), ...
+            'queryAttenuation',    normalizeCommand(communication.query.attenuation), ...
+            'fetchTraceData',      normalizeCommand(communication.fetch.traceData), ...
+            'initReset',           normalizeCommand(parameters(strcmp({parameters.name}, 'reset')).write), ...
+            'initStartup',         normalizeCommand(parameters(strcmp({parameters.name}, 'startup')).write) ...
+        );
+
+        patterns = struct('Regexp', {}, 'Names', {});
+        for jj = 1:numel(parameters)
+            if ismember(parameters(jj).name, {'reset', 'startup'})
+                continue
+            end
+
+            for template = {parameters(jj).write, parameters(jj).writeAuto}
+                if ~isempty(template{1})
+                    patterns(end+1) = compileTemplate(template{1}); %#ok<AGROW>
+                end
             end
         end
 
-        steps    = definitions{ii}.communication.set;
-        commands = steps(strcmp({steps.step}, 'acquisition')).commands;
-
-        models(ii).Definition         = definitions{ii};
-        models(ii).Patterns           = patterns;
-        models(ii).BandParameterNames = commands(strcmp({commands.name}, 'bandConfig')).parameterNames;
+        models(ii).Definition  = definitions{ii};
+        models(ii).Exact       = exact;
+        models(ii).Patterns    = patterns;
+        models(ii).AnswerNames = cellstr(communication.query.bandConfigParameterNames);
     end
 end
 
@@ -557,12 +590,12 @@ function state = defaultState(models)
     state = struct();
 
     for ii = 1:numel(models)
-        for jj = 1:numel(models(ii).BandParameterNames)
-            state.(models(ii).BandParameterNames{jj}) = '0';
+        for name = models(ii).AnswerNames(:)'
+            state.(name{1}) = '0';
         end
 
-        for kind = fieldnames(models(ii).Patterns)'
-            for name = models(ii).Patterns.(kind{1}).Names
+        for pattern = models(ii).Patterns
+            for name = pattern.Names
                 state.(name{1}) = '0';
             end
         end

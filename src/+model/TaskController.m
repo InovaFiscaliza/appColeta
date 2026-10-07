@@ -97,7 +97,7 @@ classdef TaskController < handle
                 numActiveTasks = sum(strcmp({obj.Tasks.Status}, 'Em andamento'));
 
                 if isEditing
-                    obj.RevisitInfo = fcn.RevisitFactors(obj.Tasks);
+                    obj.RevisitInfo = util.TaskAnalysis.computeRevisitFactors(obj.Tasks);
                     notify(obj, 'RevisitInfoChanged')
 
                     forceConfiguration = (numActiveTasks == 1);
@@ -211,7 +211,7 @@ classdef TaskController < handle
                                     if any(maskExceedance)
                                         obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenArray = obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenArray + maskExceedance;
 
-                                        peaksTable = fcn.FindPeaks(obj.Tasks(taskIdx), bandIdx, averagedTrace, maskExceedance);
+                                        peaksTable = util.TaskAnalysis.findMaskPeaks(obj.Tasks(taskIdx), bandIdx, averagedTrace, maskExceedance);
                                         if ~isempty(peaksTable)
                                             obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenCount = obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenCount + 1;
                                             obj.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks       = peaksTable;
@@ -475,7 +475,7 @@ classdef TaskController < handle
             % tarefas persistidas.
 
             if model.ReceiverDriver(task.TaskSpec.Receiver.Config).IsStreaming
-                [obj.UDPPortArray, udpPortIdx] = fcn.udpSockets(obj.UDPPortArray, obj.App.EB500Obj.udpPort);
+                [obj.UDPPortArray, udpPortIdx] = util.SocketPorts.findOrCreateUdpPort(obj.UDPPortArray, obj.App.EB500Obj.udpPort);
                 if ~isempty(udpPortIdx)
                     task.TaskSpec.Streaming.Handle = obj.UDPPortArray{udpPortIdx};
                     task.Connections.stream = task.TaskSpec.Streaming.Handle;
@@ -565,7 +565,7 @@ classdef TaskController < handle
 
             % ANTENNA TRACKING (EMSat)
             if strcmp(taskSpec.Antenna.Switch.Name, 'EMSat')
-                fcn.antennaTracking(obj.App, 'mainApp', taskSpec.Antenna.MetaData, obj.App.progressDialog);
+                util.AntennaTracking.verifyPointing(obj.App, 'mainApp', taskSpec.Antenna.MetaData, obj.App.progressDialog);
             end
 
             % MASK, FILE & WATERFALL MATRIX

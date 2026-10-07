@@ -55,7 +55,7 @@ classdef tcpServerLib < handle
                     end
 
                 else
-                    fcn.tcpSockets_PortRelease(Port)
+                    util.SocketPorts.releasePort(Port)
     
                     if ~isempty(IP); obj.Server = tcpserver(IP, Port);
                     else;            obj.Server = tcpserver(Port);

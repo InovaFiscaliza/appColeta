@@ -164,7 +164,7 @@ classdef Task < matlab.mixin.Copyable
 
                     taskBands(ii).DataPoints   = params.dataPoints;
                     taskBands(ii).FlipArray    = flipArray;
-                    taskBands(ii).Antenna      = fcn.antennaParser(taskSpec.Antenna.MetaData, antennaName);
+                    taskBands(ii).Antenna      = util.AntennaTracking.parseAntennaTarget(taskSpec.Antenna.MetaData, antennaName);
             
                     switch taskSpec.Antenna.Switch.Name
                         case 'EMSat'

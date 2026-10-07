@@ -5,9 +5,10 @@ classdef ReceiverDriver < handle
     %
     % Concentra toda a comunicação do appColeta com um receptor, a partir
     % do registro do instrumento em "config/ReceiverLib/<name>.json" (ver
-    % model.Receiver). Os comandos em uso hoje ficam em "communication.legacy";
-    % "set" (postDelay e ordem dos parâmetros de "bandConfig") e "parameters"
-    % ("requireMatch" e "autoLevel") complementam a informação.
+    % model.Receiver). Os comandos são montados a partir de "communication":
+    % "set" define as etapas, a ordem dos parâmetros de cada comando (unidos por
+    % ';:'), a condição "when" e o "postDelay"; "parameters" traz o "write" e o
+    % "read" de cada parâmetro; "query" e "fetch" trazem as demais requisições.
     %
     % driver = model.ReceiverDriver(definition, receiverHandle);
     %---------------------------------------------------------------------%
@@ -58,12 +59,13 @@ classdef ReceiverDriver < handle
 
         %-----------------------------------------------------------------%
         function value = get.HasVideoBandWidth(obj)
-            value = ~isempty(obj.Definition.communication.legacy.setVideoBandWidth);
+            command = findCommand(obj, 'acquisition', 'bandConfig');
+            value   = any(strcmp(cellstr(command.parameterNames), 'videoBandWidth'));
         end
 
         %-----------------------------------------------------------------%
         function value = get.HasGps(obj)
-            value = ~isempty(obj.Definition.communication.legacy.fetchGpsData);
+            value = ~isempty(obj.Definition.communication.fetch.gpsData);
         end
 
         %-----------------------------------------------------------------%
@@ -77,7 +79,7 @@ classdef ReceiverDriver < handle
             idn = '';
 
             flush(obj.Handle)
-            writeline(obj.Handle, obj.Definition.communication.legacy.queryIdentification)
+            writeline(obj.Handle, obj.Definition.communication.query.identification)
 
             statusTic = tic;
             t = toc(statusTic);
@@ -98,18 +100,31 @@ classdef ReceiverDriver < handle
         end
 
         %-----------------------------------------------------------------%
-        function initialize(obj, resetEnabled, syncMode)
-            legacy = obj.Definition.communication.legacy;
+        function commands = buildInitCommands(obj, resetEnabled, syncMode)
+            params   = struct('sweepMode', sweepModeValue(obj, syncMode));
+            commands = struct('Name', {}, 'Text', {}, 'PostDelay', {});
 
-            if resetEnabled
-                writeline(obj.Handle, legacy.initReset);
-                if ~obj.IsVirtual
-                    pause(commandPostDelay(obj, 'initialization', 'reset'))
+            for command = model.ReceiverDriver.commandsOf(obj.Definition, 'initialization')'
+                if strcmp(command.name, 'reset') && ~resetEnabled
+                    continue
+                end
+
+                text = composeCommand(obj, command, params);
+                if ~isempty(text)
+                    commands(end+1) = struct('Name', command.name, 'Text', text, 'PostDelay', command.postDelay); %#ok<AGROW>
                 end
             end
+        end
 
-            writeline(obj.Handle, legacy.initStartup);
-            writeline(obj.Handle, fillTemplate(obj, legacy.initSweepMode, struct('sweepMode', sweepModeValue(obj, syncMode))));
+        %-----------------------------------------------------------------%
+        function initialize(obj, resetEnabled, syncMode)
+            for command = buildInitCommands(obj, resetEnabled, syncMode)
+                writeline(obj.Handle, command.Text);
+
+                if ~obj.IsVirtual && (command.PostDelay > 0)
+                    pause(command.PostDelay)
+                end
+            end
         end
 
         %-----------------------------------------------------------------%
@@ -164,16 +179,7 @@ classdef ReceiverDriver < handle
             params.resolutionMode  = 0;
             params.resolutionValue = str2double(extractBefore(rawBand.instrResolution, ' kHz')) .* 1e+3;
             params.selectivity     = rawBand.instrSelectivity;
-
-            params.videoBandWidthCommand = '';
-            if obj.HasVideoBandWidth
-                fragments = splitList(obj.Definition.communication.legacy.setVideoBandWidth);
-                if strcmp(rawBand.instrVBW, 'auto')
-                    params.videoBandWidthCommand = fragments{1};
-                else
-                    params.videoBandWidthCommand = replace(fragments{2}, '%videoBandWidth%', rawBand.instrVBW);
-                end
-            end
+            params.videoBandWidth  = rawBand.instrVBW;
 
             params.sensitivityMode = '';
             if ~isempty(rawBand.instrSensitivityMode)
@@ -182,11 +188,9 @@ classdef ReceiverDriver < handle
 
             params.preamp = double(strcmp(rawBand.instrPreamp, 'On'));
 
-            params.autoLevel = '';
             if strcmp(rawBand.instrAttMode, 'Auto')
                 params.attenuationMode  = 1;
                 params.attenuationValue = 0;
-                params.autoLevel        = autoLevelCommand(obj);
             else
                 params.attenuationMode  = 0;
                 params.attenuationValue = str2double(extractBefore(rawBand.instrAttFactor, ' dB'));
@@ -201,30 +205,38 @@ classdef ReceiverDriver < handle
         end
 
         %-----------------------------------------------------------------%
+        function commands = buildBandCommands(obj, params)
+            % "configSET" é o comando "bandConfig"; "attSET", o comando "attenuationValue",
+            % que só existe, e só é enviado, nos receptores que não aceitam o valor da
+            % atenuação junto aos demais parâmetros.
+
+            commands = struct('configSET', '', 'attSET', '');
+
+            for command = model.ReceiverDriver.commandsOf(obj.Definition, 'acquisition')'
+                text = composeCommand(obj, command, params);
+
+                switch command.name
+                    case 'bandConfig'
+                        commands.configSET = text;
+                    case 'attenuationValue'
+                        commands.attSET = text;
+                end
+            end
+        end
+
+        %-----------------------------------------------------------------%
         function [commands, rawMetaData] = applyBandConfig(obj, params)
             % Programa a banda no receptor e confirma, consultando-o, que os
             % parâmetros com "requireMatch" foram aceitos. A ordem dos campos
-            % da resposta é a de "parameterNames" do comando "bandConfig".
+            % da resposta é a de "query.bandConfigParameterNames".
 
-            legacy = obj.Definition.communication.legacy;
+            commands = buildBandCommands(obj, params);
 
-            commands = struct( ...
-                'configSET', fillTemplate(obj, legacy.setBandConfig, params), ...
-                'attSET', '' ...
-            );
-
-            writeline(obj.Handle, commands.configSET);
-            if ~obj.IsVirtual
-                pause(commandPostDelay(obj, 'acquisition', 'bandConfig'))
-            end
-
-            if ~params.attenuationMode && ~isempty(legacy.setAttenuation)
-                commands.attSET = fillTemplate(obj, legacy.setAttenuation, params);
-                writeline(obj.Handle, commands.attSET);
-            end
+            sendBandCommand(obj, 'bandConfig', commands.configSET)
+            sendBandCommand(obj, 'attenuationValue', commands.attSET)
 
             flush(obj.Handle)
-            writeline(obj.Handle, legacy.queryBandConfig);
+            writeline(obj.Handle, obj.Definition.communication.query.bandConfig);
 
             rawAnswer = '';
 
@@ -254,7 +266,7 @@ classdef ReceiverDriver < handle
             end
             rawMetaData = jsonencode(answer);
 
-            parameters = obj.Definition.communication.parameters;
+            parameters = model.ReceiverDriver.parametersOf(obj.Definition);
             for ii = 1:numel(parameterNames)
                 parameterName = parameterNames{ii};
                 parameterIdx  = find(strcmp({parameters.name}, parameterName), 1);
@@ -294,7 +306,8 @@ classdef ReceiverDriver < handle
 
             setOperationMode(obj)
 
-            writeline(obj.Handle, obj.Definition.communication.legacy.initStartup);
+            startup = findCommand(obj, 'initialization', 'startup');
+            writeline(obj.Handle, composeCommand(obj, startup, struct()));
             pause(.001)
 
             configureBand(obj, commands)
@@ -304,16 +317,39 @@ classdef ReceiverDriver < handle
         function attenuation = queryAttenuation(obj)
             attenuation = -1;
 
-            command = obj.Definition.communication.legacy.queryAttenuation;
+            command = obj.Definition.communication.query.attenuation;
             if ~isempty(command)
-                attenuation = str2double(fcn.WriteRead(obj.Handle, command));
+                attenuation = str2double(util.InstrumentIO.queryInstrument(obj.Handle, command));
             end
         end
 
         %-----------------------------------------------------------------%
         function traceData = fetchTraceData(obj)
-            writeline(obj.Handle, obj.Definition.communication.legacy.fetchTraceData);
+            writeline(obj.Handle, obj.Definition.communication.fetch.traceData);
             traceData = readbinblock(obj.Handle, 'single');
+        end
+    end
+
+
+    methods (Static)
+        %-----------------------------------------------------------------%
+        function parameters = parametersOf(definition)
+            % O jsondecode devolve um cell, e não um struct array, quando os
+            % objetos não têm as mesmas chaves ("writeAuto" e "when" são opcionais).
+
+            parameters = normalizeStructs(definition.communication.parameters, ...
+                {'name', 'write', 'writeAuto', 'read', 'requireMatch', 'when'}, ...
+                {'', '', '', '', false, ''});
+        end
+
+        %-----------------------------------------------------------------%
+        function commands = commandsOf(definition, stepName)
+            steps    = definition.communication.set;
+            stepIdx  = find(strcmp({steps.step}, stepName), 1);
+
+            commands = normalizeStructs(steps(stepIdx).commands, ...
+                {'name', 'parameterNames', 'mandatory', 'postDelay', 'when'}, ...
+                {'', {}, false, 0, ''});
         end
     end
 
@@ -329,6 +365,65 @@ classdef ReceiverDriver < handle
         end
 
         %-----------------------------------------------------------------%
+        function text = composeCommand(obj, command, params)
+            % Une os "write" dos parâmetros do comando com ';:', respeitando a
+            % ordem de "parameterNames" e as condições "when".
+
+            text = '';
+            if ~evaluateCondition(command.when, params)
+                return
+            end
+
+            parameters = model.ReceiverDriver.parametersOf(obj.Definition);
+            parts      = {};
+
+            for name = cellstr(command.parameterNames)'
+                parameterIdx = find(strcmp({parameters.name}, name{1}), 1);
+                if isempty(parameterIdx)
+                    error('ReceiverLib:UnknownParameter', 'Parâmetro "%s" não consta em "parameters".', name{1})
+                end
+
+                parameter = parameters(parameterIdx);
+                if ~evaluateCondition(parameter.when, params)
+                    continue
+                end
+
+                template = parameter.write;
+                if ~isempty(parameter.writeAuto) && isfield(params, name{1}) && ischar(params.(name{1})) && strcmp(params.(name{1}), 'auto')
+                    template = parameter.writeAuto;
+                end
+
+                if ~isempty(template)
+                    parts{end+1} = fillTemplate(obj, template, params); %#ok<AGROW>
+                end
+            end
+
+            text = strjoin(parts, ';:');
+        end
+
+        %-----------------------------------------------------------------%
+        function sendBandCommand(obj, name, text)
+            if isempty(text)
+                return
+            end
+
+            writeline(obj.Handle, text);
+
+            if ~obj.IsVirtual
+                delay = commandPostDelay(obj, 'acquisition', name);
+                if delay > 0
+                    pause(delay)
+                end
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function command = findCommand(obj, stepName, commandName)
+            commands = model.ReceiverDriver.commandsOf(obj.Definition, stepName);
+            command  = commands(strcmp({commands.name}, commandName));
+        end
+
+        %-----------------------------------------------------------------%
         function value = sweepModeValue(obj, syncMode)
             sweepMode = obj.Definition.features.sweepMode;
 
@@ -341,45 +436,59 @@ classdef ReceiverDriver < handle
         end
 
         %-----------------------------------------------------------------%
-        function command = autoLevelCommand(obj)
-            command = '';
-
-            parameters   = obj.Definition.communication.parameters;
-            parameterIdx = find(strcmp({parameters.name}, 'autoLevel'), 1);
-
-            if ~isempty(parameterIdx) && ~isempty(parameters(parameterIdx).write)
-                command = [';:' parameters(parameterIdx).write];
-            end
-        end
-
-        %-----------------------------------------------------------------%
         function names = bandConfigParameterNames(obj)
-            commands = acquisitionCommands(obj);
-            names    = commands(strcmp({commands.name}, 'bandConfig')).parameterNames;
+            names = cellstr(obj.Definition.communication.query.bandConfigParameterNames);
         end
 
         %-----------------------------------------------------------------%
         function delay = commandPostDelay(obj, stepName, commandName)
-            delay = 0;
+            command = findCommand(obj, stepName, commandName);
+            delay   = command.postDelay;
+        end
+    end
+end
 
-            if strcmp(stepName, 'acquisition')
-                commands = acquisitionCommands(obj);
-            else
-                steps    = obj.Definition.communication.set;
-                commands = steps(strcmp({steps.step}, stepName)).commands;
-            end
 
-            commandIdx = find(strcmp({commands.name}, commandName), 1);
-            if ~isempty(commandIdx)
-                delay = commands(commandIdx).postDelay;
+%-------------------------------------------------------------------------%
+function items = normalizeStructs(raw, fields, defaults)
+    if iscell(raw)
+        list = raw(:);
+    else
+        list = num2cell(raw(:));
+    end
+
+    items = repmat(cell2struct(defaults(:), fields(:), 1), numel(list), 1);
+    for ii = 1:numel(list)
+        for jj = 1:numel(fields)
+            if isfield(list{ii}, fields{jj})
+                items(ii).(fields{jj}) = list{ii}.(fields{jj});
             end
         end
+    end
+end
 
-        %-----------------------------------------------------------------%
-        function commands = acquisitionCommands(obj)
-            steps    = obj.Definition.communication.set;
-            commands = steps(strcmp({steps.step}, 'acquisition')).commands;
-        end
+%-------------------------------------------------------------------------%
+function isTrue = evaluateCondition(condition, params)
+    % Formato: "<parametro>==<número>" ou "<parametro>~=<número>".
+
+    isTrue = true;
+    if isempty(condition)
+        return
+    end
+
+    tokens = regexp(condition, '^\s*(\w+)\s*(==|~=)\s*(-?[\d.]+)\s*$', 'tokens', 'once');
+    if isempty(tokens)
+        error('ReceiverLib:InvalidCondition', 'Condição "when" inválida: %s', condition)
+    end
+
+    if ~isfield(params, tokens{1})
+        isTrue = false;
+        return
+    end
+
+    isTrue = (params.(tokens{1}) == str2double(tokens{3}));
+    if strcmp(tokens{2}, '~=')
+        isTrue = ~isTrue;
     end
 end
 
