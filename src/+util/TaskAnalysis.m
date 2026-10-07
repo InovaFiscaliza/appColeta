@@ -56,17 +56,17 @@ classdef (Abstract) TaskAnalysis
             peaksTable = [];
 
             peakAttributes = task.Bands(bandIdx).Mask.FindPeaks;
-            freqStart      = task.TaskSpec.Script.Band(bandIdx).FreqStart;
-            freqStop       = task.TaskSpec.Script.Band(bandIdx).FreqStop;
-            numPoints      = numel(smoothedTrace);
+            freqStart = task.TaskSpec.Script.Band(bandIdx).FreqStart;
+            freqStop  = task.TaskSpec.Script.Band(bandIdx).FreqStop;
+            numPoints = numel(smoothedTrace);
 
             % Frequency = freqStep * Index + freqOffset
-            freqStep   = (freqStop-freqStart)/(numPoints-1);
+            freqStep = (freqStop-freqStart)/(numPoints-1);
             freqOffset = freqStart-freqStep;
 
-            [peakIdxRanges, peakProminences] = matlab.findpeaks(smoothedTrace, 'MinPeakProminence', peakAttributes.Prominence,              ...
+            [peakIdxRanges, peakProminences] = matlab.findpeaks(smoothedTrace, 'MinPeakProminence', peakAttributes.Prominence, ...
                                                                                'MinPeakDistance',   1000 * peakAttributes.Distance / freqStep, ...
-                                                                               'MinPeakWidth',      1000 * peakAttributes.BW / freqStep,       ...
+                                                                               'MinPeakWidth',      1000 * peakAttributes.BW / freqStep, ...
                                                                                'SortStr',           'descend');
 
             for peakIdx = height(peakIdxRanges):-1:1
@@ -79,10 +79,13 @@ classdef (Abstract) TaskAnalysis
 
             if ~isempty(peakIdxRanges)
                 peakCenterIdxs = mean(peakIdxRanges, 2);
-                peakFreqCenter = (freqStep .* peakCenterIdxs + freqOffset) ./ 1e+6;             % Em MHz
-                peakWidth      = (peakIdxRanges(:,2)-peakIdxRanges(:,1)) * freqStep / 1e+3;     % Em kHz
+                peakFreqCenter = (freqStep .* peakCenterIdxs + freqOffset) ./ 1e+6; % Em MHz
+                peakWidth = (peakIdxRanges(:,2)-peakIdxRanges(:,1)) * freqStep / 1e+3; % Em kHz
 
-                peaksTable = table(round(peakCenterIdxs), round(peakFreqCenter, 3), round(peakWidth, 1), round(peakProminences, 1), 'VariableNames', {'idx', 'FreqCenter', 'BW', 'Prominence'});
+                peaksTable = table( ...
+                    round(peakCenterIdxs), round(peakFreqCenter, 3), round(peakWidth, 1), round(peakProminences, 1), ...
+                    'VariableNames', {'FrequencyIdx', 'Frequency', 'BandWidthkHz', 'Prominence'} ...
+                );
             end
         end
     end

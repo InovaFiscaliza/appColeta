@@ -881,8 +881,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             if maskTrigger
                 if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks)
                     numPeaks = sprintf(' (%d)', height(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks));
-                    freqCenter = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks.FreqCenter(1);
-                    bandWidth = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks.BW(1);
+                    freqCenter = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks.Frequency(1);
+                    bandWidth = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks.BandWidthkHz(1);
                     prominence = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks.Prominence(1);
                     dayTimeStamp = extractBefore(char(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.TimeStamp), ' ');
                     hourTimeStamp = extractAfter(char(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.TimeStamp), ' ');
