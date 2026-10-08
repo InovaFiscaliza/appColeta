@@ -73,7 +73,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         Role = 'mainApp'
         Context = 'TASK_VIEW'
-        appHandleNameInBase
+        AppHandleNameInBase
     end
 
 
@@ -647,45 +647,55 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 'VariableTypes', {'string', 'string', 'string', 'string', 'string', 'string', 'cell'}, ...
                 'VariableNames', {'Name', 'Receiver', 'Created', 'BeginTime', 'EndTime', 'Status', 'Operation'} ...
             );
+
+            hasTask = ~isempty(app.TaskController.Tasks);
+
+            if hasTask
+                % Verifica se o handle para o app continua ativo no workspace
+                % base do MATLAB, possibilitando que clicks na uitable sejam 
+                % capturados corretamente.
+                appHandleNameInBase = app.AppHandleNameInBase;
+                if isempty(appHandleNameInBase) || ~evalin('base', sprintf('exist("%s", "var") && isa(%s, "%s") && isvalid(%s)', appHandleNameInBase, appHandleNameInBase, class(app), appHandleNameInBase))
+                    app.AppHandleNameInBase = ui.Table.exportAppHandleToBaseWorkspace(app);
+                end
+                
+                for taskIdx = 1:numel(app.TaskController.Tasks)
+                    endedAt = '-';
+                    if ~isnat(app.TaskController.Tasks(taskIdx).Timing.endedAt) && ~isinf(app.TaskController.Tasks(taskIdx).Timing.endedAt)
+                        endedAt = datestr(app.TaskController.Tasks(taskIdx).Timing.endedAt, 'dd/mm/yyyy HH:MM:SS');
+                    end
+    
+                    operation = {
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStartTaskRequest'''',  ''''HTMLEventData'''', %d))'')">▶️</a>', app.AppHandleNameInBase, taskIdx);
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStopTaskRequest'''',   ''''HTMLEventData'''', %d))'')">⬛</a>', app.AppHandleNameInBase, taskIdx);
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onEditTaskRequested'''', ''''HTMLEventData'''', %d))'')">✏️</a>', app.AppHandleNameInBase, taskIdx);
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onDeleteTaskRequest'''', ''''HTMLEventData'''', %d))'')">❌</a>', app.AppHandleNameInBase, taskIdx);
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onViewLogRequest'''',    ''''HTMLEventData'''', %d))'')">📋</a>', app.AppHandleNameInBase, taskIdx)
+                    };
+    
+                    % Índices: 1 iniciar, 2 interromper, 3 editar, 4 excluir, 5 log.
+                    taskStatus   = app.TaskController.Tasks(taskIdx).Status;
+                    removedItems = 2;
+                    if strcmp(taskStatus, 'Em andamento')
+                        removedItems = 1;
+                    end
+    
+                    if ismember(taskStatus, {'Na fila', 'Em andamento'})
+                        removedItems(end+1) = 3;
+                    end
+                    operation(removedItems) = [];
             
-            for taskIdx = 1:numel(app.TaskController.Tasks)
-                endedAt = '-';
-                if ~isnat(app.TaskController.Tasks(taskIdx).Timing.endedAt) && ~isinf(app.TaskController.Tasks(taskIdx).Timing.endedAt)
-                    endedAt = datestr(app.TaskController.Tasks(taskIdx).Timing.endedAt, 'dd/mm/yyyy HH:MM:SS');
+                    taskTable(end+1,:) = { ...
+                        app.TaskController.Tasks(taskIdx).TaskSpec.Script.Name, ...
+                        app.TaskController.Tasks(taskIdx).ReceiverId, ...
+                        app.TaskController.Tasks(taskIdx).Timing.createdAt, ...
+                        datestr(app.TaskController.Tasks(taskIdx).Timing.startedAt, 'dd/mm/yyyy HH:MM:SS'), ...
+                        endedAt, ...
+                        app.TaskController.Tasks(taskIdx).Status, ...
+                        strjoin(operation, '&emsp;') ...
+                    };
                 end
 
-                operation = {
-                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStartTaskRequest'''',   ''''HTMLEventData'''', %d))'')">▶️</a>', app.appHandleNameInBase, taskIdx);
-                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStopTaskRequest'''',    ''''HTMLEventData'''', %d))'')">⬛</a>', app.appHandleNameInBase, taskIdx);
-                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onEditTaskRequested'''', ''''HTMLEventData'''', %d))'')">✏️</a>', app.appHandleNameInBase, taskIdx);
-                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onDeleteTaskRequest'''',  ''''HTMLEventData'''', %d))'')">❌</a>', app.appHandleNameInBase, taskIdx);
-                    sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onViewLogRequest'''',     ''''HTMLEventData'''', %d))'')">📋</a>', app.appHandleNameInBase, taskIdx)
-                };
-
-                % Índices: 1 iniciar, 2 interromper, 3 editar, 4 excluir, 5 log.
-                taskStatus   = app.TaskController.Tasks(taskIdx).Status;
-                removedItems = 2;
-                if strcmp(taskStatus, 'Em andamento')
-                    removedItems = 1;
-                end
-
-                if ismember(taskStatus, {'Na fila', 'Em andamento'})
-                    removedItems(end+1) = 3;
-                end
-                operation(removedItems) = [];
-        
-                taskTable(end+1,:) = { ...
-                    app.TaskController.Tasks(taskIdx).TaskSpec.Script.Name, ...
-                    app.TaskController.Tasks(taskIdx).ReceiverId, ...
-                    app.TaskController.Tasks(taskIdx).Timing.createdAt, ...
-                    datestr(app.TaskController.Tasks(taskIdx).Timing.startedAt, 'dd/mm/yyyy HH:MM:SS'), ...
-                    endedAt, ...
-                    app.TaskController.Tasks(taskIdx).Status, ...
-                    strjoin(operation, '&emsp;') ...
-                };
-            end
-
-            if ~isempty(taskTable)
                 if isempty(selectedTaskIdx) || selectedTaskIdx > height(taskTable)
                     selectedTaskIdx = 1;
                 end
@@ -1455,11 +1465,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             
             try
                 appEngine.boot(app, app.Role)
-                
-                % Registra handle deste app no workspace "base", o que possibilita 
-                % excluir registros de tabelas por meio de cliques na uitable.
-                app.appHandleNameInBase = ui.Table.exportAppHandleToBaseWorkspace(app);
-
             catch ME
                 ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
             end
@@ -1516,11 +1521,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             switch event.Source
                 case {app.Tab1Button, app.Tab2Button, app.Tab3Button, app.Tab4Button, app.Tab5Button, app.Tab6Button}
-                    clickedButton  = event.Source;
-                    auxAppTag      = clickedButton.Tag;
-                    inputArguments = resolveAuxAppInputArguments(auxAppTag);
-        
-                    openModule(app.tabGroupController, event.Source, event.PreviousValue, app.General, inputArguments{:})
+                    openModule(app.tabGroupController, event.Source, event.PreviousValue, app.General, app)
 
                 case app.FigurePosition
                     app.UIFigure.Position(3:4) = class.Constants.windowSize;
@@ -1536,23 +1537,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         "popup" ...
                     );
                     ui.Dialog(app.UIFigure, 'info', appInfo);
-            end
-
-            function inputArguments = resolveAuxAppInputArguments(auxAppName)
-                mustBeMember(auxAppName, {'TASK_VIEW', 'INSTRUMENT', 'TASK_EDIT', 'TASK_ADD', 'SERVER', 'CONFIG'})
-
-                switch auxAppName
-                    case 'TASK_ADD'
-                        [~, idxApp] = ismember(auxAppName, app.tabGroupController.Components.Tag);
-                        appHandle   = app.tabGroupController.Components.appHandle{idxApp};
-                        if ~isempty(appHandle) && isvalid(appHandle)
-                            inputArguments = {app, appHandle.infoEdition};
-                        else
-                            inputArguments = {app, struct('type', 'new')};
-                        end
-                    otherwise
-                        inputArguments = {app};
-                end
             end
             
         end

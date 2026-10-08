@@ -5,14 +5,14 @@ classdef winConfig_exported < matlab.apps.AppBase
         UIFigure                       matlab.ui.Figure
         GridLayout                     matlab.ui.container.GridLayout
         DockModule                     matlab.ui.container.GridLayout
-        dockModule_Undock              matlab.ui.control.Image
-        dockModule_Close               matlab.ui.control.Image
+        DockCloseButton                matlab.ui.control.Image
+        DockUndockButton               matlab.ui.control.Image
         SubTabGroup                    matlab.ui.container.TabGroup
         SubTab1                        matlab.ui.container.Tab
         SubGrid1                       matlab.ui.container.GridLayout
         openAuxiliarApp2Debug          matlab.ui.control.CheckBox
         openAuxiliarAppAsDocked        matlab.ui.control.CheckBox
-        tool_versionInfoRefresh        matlab.ui.control.Image
+        versionInfoRefresh             matlab.ui.control.Image
         versionInfo                    matlab.ui.control.Label
         versionInfoLabel               matlab.ui.control.Label
         SubTab2                        matlab.ui.container.Tab
@@ -90,6 +90,7 @@ classdef winConfig_exported < matlab.apps.AppBase
     properties (Access = private)
         %-----------------------------------------------------------------%
         Role = 'secondaryApp'
+        Context = 'CONFIG'
     end
 
 
@@ -135,15 +136,48 @@ classdef winConfig_exported < matlab.apps.AppBase
             
             switch tabIndex
                 case 1
-                    elDataTag = ui.CustomizationBase.getElementsDataTag({app.versionInfo});
-                    if ~isempty(elDataTag)
-                        ui.TextView.startup(app.jsBackDoor, app.versionInfo, class(app));
+                    appName = class(app);
+                    elToModify = {
+                        app.versionInfo;
+                        app.versionInfoRefresh;
+                        app.tool_openDevTools;
+                        app.DockUndockButton;
+                        app.DockCloseButton
+                    };
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
+
+                    try
+                        ui.TextView.startup(app.jsBackDoor, app.versionInfo, appName);
+                    catch
+                    end
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.versionInfoRefresh.UserData.id,  'tooltip', struct('defaultPosition', 'top', 'textContent', 'Verifica atualizações')), ...
+                            struct('appName', appName, 'dataTag', app.tool_openDevTools.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Abre DevTools')), ...
+                            struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
+                            struct('appName', appName, 'dataTag', app.DockCloseButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Fecha módulo')) ...
+                        });
+                    catch
                     end
 
                 case 2
                     updatePanel_ERMx(app)
 
                 case 3
+                    appName = class(app);
+                    elToModify = {
+                        app.configPlotRefresh
+                    };
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.configPlotRefresh.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Retorna às configurações iniciais')) ...
+                        });
+                    catch
+                    end
+
                     updatePanel_Plot(app)
 
                 case 4
@@ -172,9 +206,9 @@ classdef winConfig_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function initializeUIComponents(app)
             if ~strcmp(app.mainApp.executionMode, 'webApp')
-                app.dockModule_Undock.Enable       = 1;
+                app.DockUndockButton.Enable       = 1;
                 app.tool_openDevTools.Enable       = 1;
-                app.tool_versionInfoRefresh.Enable = 1;
+                app.versionInfoRefresh.Enable = 1;
                 app.openAuxiliarAppAsDocked.Enable = 1;
             end
 
@@ -307,18 +341,18 @@ classdef winConfig_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'CONFIG')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', app.Context)
             delete(app)
             
         end
 
-        % Image clicked function: dockModule_Close, dockModule_Undock
-        function DockModuleGroup_ButtonPushed(app, event)
+        % Image clicked function: DockCloseButton, DockUndockButton
+        function onDockModuleGroupButtonClicked(app, event)
             
             [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
 
             switch event.Source
-                case app.dockModule_Undock
+                case app.DockUndockButton
                     appGeneral = app.mainApp.General;
                     appGeneral.operationMode.Dock = false;
 
@@ -330,7 +364,7 @@ classdef winConfig_exported < matlab.apps.AppBase
                     
                     delete(app)
 
-                case app.dockModule_Close
+                case app.DockCloseButton
                     closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General)
             end
 
@@ -344,7 +378,7 @@ classdef winConfig_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: tool_versionInfoRefresh
+        % Image clicked function: versionInfoRefresh
         function Toolbar_AppEnvRefreshButtonPushed(app, event)
             
             app.progressDialog.Visible = 'visible';
@@ -685,7 +719,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.tool_openDevTools.ScaleMethod = 'none';
             app.tool_openDevTools.ImageClickedFcn = createCallbackFcn(app, @Toolbar_OpenDevToolsClicked, true);
             app.tool_openDevTools.Enable = 'off';
-            app.tool_openDevTools.Tooltip = {'Abre DevTools'};
+            app.tool_openDevTools.Tooltip = {''};
             app.tool_openDevTools.Layout.Row = 2;
             app.tool_openDevTools.Layout.Column = 3;
             app.tool_openDevTools.ImageSource = 'Debug_18.png';
@@ -730,16 +764,16 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.versionInfo.Interpreter = 'html';
             app.versionInfo.Text = '';
 
-            % Create tool_versionInfoRefresh
-            app.tool_versionInfoRefresh = uiimage(app.SubGrid1);
-            app.tool_versionInfoRefresh.ScaleMethod = 'none';
-            app.tool_versionInfoRefresh.ImageClickedFcn = createCallbackFcn(app, @Toolbar_AppEnvRefreshButtonPushed, true);
-            app.tool_versionInfoRefresh.Enable = 'off';
-            app.tool_versionInfoRefresh.Tooltip = {'Verifica atualizações'};
-            app.tool_versionInfoRefresh.Layout.Row = 1;
-            app.tool_versionInfoRefresh.Layout.Column = 2;
-            app.tool_versionInfoRefresh.VerticalAlignment = 'bottom';
-            app.tool_versionInfoRefresh.ImageSource = 'Refresh_18.png';
+            % Create versionInfoRefresh
+            app.versionInfoRefresh = uiimage(app.SubGrid1);
+            app.versionInfoRefresh.ScaleMethod = 'none';
+            app.versionInfoRefresh.ImageClickedFcn = createCallbackFcn(app, @Toolbar_AppEnvRefreshButtonPushed, true);
+            app.versionInfoRefresh.Enable = 'off';
+            app.versionInfoRefresh.Tooltip = {''};
+            app.versionInfoRefresh.Layout.Row = 1;
+            app.versionInfoRefresh.Layout.Column = 2;
+            app.versionInfoRefresh.VerticalAlignment = 'bottom';
+            app.versionInfoRefresh.ImageSource = 'Refresh_18.png';
 
             % Create openAuxiliarAppAsDocked
             app.openAuxiliarAppAsDocked = uicheckbox(app.SubGrid1);
@@ -1234,7 +1268,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.configPlotRefresh.ScaleMethod = 'none';
             app.configPlotRefresh.ImageClickedFcn = createCallbackFcn(app, @configPlotRefreshImageClicked, true);
             app.configPlotRefresh.Visible = 'off';
-            app.configPlotRefresh.Tooltip = {'Verifica atualizações'};
+            app.configPlotRefresh.Tooltip = {''};
             app.configPlotRefresh.Layout.Row = 3;
             app.configPlotRefresh.Layout.Column = 3;
             app.configPlotRefresh.VerticalAlignment = 'bottom';
@@ -1319,31 +1353,26 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.DockModule.RowHeight = {'1x'};
             app.DockModule.ColumnSpacing = 2;
             app.DockModule.Padding = [5 2 5 2];
-            app.DockModule.Visible = 'off';
             app.DockModule.Layout.Row = [2 4];
             app.DockModule.Layout.Column = [3 5];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
-            % Create dockModule_Close
-            app.dockModule_Close = uiimage(app.DockModule);
-            app.dockModule_Close.ScaleMethod = 'none';
-            app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
-            app.dockModule_Close.Tag = 'DRIVETEST';
-            app.dockModule_Close.Tooltip = {'Fecha módulo'};
-            app.dockModule_Close.Layout.Row = 1;
-            app.dockModule_Close.Layout.Column = 2;
-            app.dockModule_Close.ImageSource = 'Delete_12SVG_white.svg';
+            % Create DockUndockButton
+            app.DockUndockButton = uiimage(app.DockModule);
+            app.DockUndockButton.ScaleMethod = 'none';
+            app.DockUndockButton.ImageClickedFcn = createCallbackFcn(app, @onDockModuleGroupButtonClicked, true);
+            app.DockUndockButton.Enable = 'off';
+            app.DockUndockButton.Layout.Row = 1;
+            app.DockUndockButton.Layout.Column = 1;
+            app.DockUndockButton.ImageSource = 'Undock_18White.png';
 
-            % Create dockModule_Undock
-            app.dockModule_Undock = uiimage(app.DockModule);
-            app.dockModule_Undock.ScaleMethod = 'none';
-            app.dockModule_Undock.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
-            app.dockModule_Undock.Tag = 'DRIVETEST';
-            app.dockModule_Undock.Enable = 'off';
-            app.dockModule_Undock.Tooltip = {'Reabre módulo em outra janela'};
-            app.dockModule_Undock.Layout.Row = 1;
-            app.dockModule_Undock.Layout.Column = 1;
-            app.dockModule_Undock.ImageSource = 'Undock_18White.png';
+            % Create DockCloseButton
+            app.DockCloseButton = uiimage(app.DockModule);
+            app.DockCloseButton.ScaleMethod = 'none';
+            app.DockCloseButton.ImageClickedFcn = createCallbackFcn(app, @onDockModuleGroupButtonClicked, true);
+            app.DockCloseButton.Layout.Row = 1;
+            app.DockCloseButton.Layout.Column = 2;
+            app.DockCloseButton.ImageSource = 'Delete_12SVG_white.svg';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

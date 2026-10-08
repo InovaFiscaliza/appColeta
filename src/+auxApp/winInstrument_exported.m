@@ -5,21 +5,21 @@ classdef winInstrument_exported < matlab.apps.AppBase
         UIFigure                matlab.ui.Figure
         GridLayout              matlab.ui.container.GridLayout
         DockModule              matlab.ui.container.GridLayout
-        dockModule_Undock       matlab.ui.control.Image
-        dockModule_Close        matlab.ui.control.Image
+        DockCloseButton         matlab.ui.control.Image
+        DockUndockButton        matlab.ui.control.Image
         Toolbar                 matlab.ui.container.GridLayout
-        toolButton_edit         matlab.ui.control.Button
-        toolButton_connectTest  matlab.ui.control.Button
-        toolSeparator           matlab.ui.control.Image
-        toolButton_export       matlab.ui.control.Image
-        toolButton_open         matlab.ui.control.Image
+        ConfirmEditionButton    matlab.ui.control.Button
+        TestConnectivityButton  matlab.ui.control.Button
+        ButtonsSeparator        matlab.ui.control.Image
+        ExportButton            matlab.ui.control.Image
+        ImportButton            matlab.ui.control.Image
         SubTabGroup             matlab.ui.container.TabGroup
         SubTab1                 matlab.ui.container.Tab
         SubGrid1                matlab.ui.container.GridLayout
-        Tab2_PanelGrid          matlab.ui.container.GridLayout
-        InstrumentPhoto         matlab.ui.control.Image
-        InstrumentSpec          matlab.ui.control.Label
-        InstrumentSpecLabel     matlab.ui.control.Label
+        InstrumentGrid          matlab.ui.container.GridLayout
+        Image                   matlab.ui.control.Image
+        Features                matlab.ui.control.Label
+        FeaturesLabel           matlab.ui.control.Label
         ParametersPanel         matlab.ui.container.Panel
         ParametersGrid          matlab.ui.container.GridLayout
         LocalHostPanel          matlab.ui.container.Panel
@@ -37,8 +37,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
         PortLabel               matlab.ui.control.Label
         IP                      matlab.ui.control.EditField
         IPLabel                 matlab.ui.control.Label
-        Type                    matlab.ui.control.DropDown
-        TypeLabel               matlab.ui.control.Label
+        ConnectionType          matlab.ui.control.DropDown
+        ConnectionTypeLabel     matlab.ui.control.Label
         Description             matlab.ui.control.TextArea
         DescriptionLabel        matlab.ui.control.Label
         Name                    matlab.ui.control.DropDown
@@ -47,15 +47,15 @@ classdef winInstrument_exported < matlab.apps.AppBase
         FamilyLabel             matlab.ui.control.Label
         Status                  matlab.ui.control.DropDown
         StatusLabel             matlab.ui.control.Label
-        ModePanel               matlab.ui.container.ButtonGroup
-        ButtonGroupEdit         matlab.ui.control.RadioButton
-        ButtonGroupView         matlab.ui.control.RadioButton
+        ModeRadioGroup          matlab.ui.container.ButtonGroup
+        EditModeGroup           matlab.ui.control.RadioButton
+        ViewModeButton          matlab.ui.control.RadioButton
         ModePanelLabel          matlab.ui.control.Label
-        Tab1_Grid               matlab.ui.container.GridLayout
-        OperationArrowDown      matlab.ui.control.Image
-        OperationArrowUp        matlab.ui.control.Image
-        OperationDel            matlab.ui.control.Image
-        OperationAdd            matlab.ui.control.Image
+        TreeGrid                matlab.ui.container.GridLayout
+        TreeModeDown            matlab.ui.control.Image
+        TreeMoveUp              matlab.ui.control.Image
+        TreeDelNode             matlab.ui.control.Image
+        TreeAddNode             matlab.ui.control.Image
         Tree                    matlab.ui.container.Tree
         TreeNodeReceiver        matlab.ui.container.TreeNode
         TreeNodeGPS             matlab.ui.container.TreeNode
@@ -66,6 +66,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
     properties (Access = private)
         %-----------------------------------------------------------------%
         Role = 'secondaryApp'
+        Context = 'INSTRUMENT'
     end
 
 
@@ -109,11 +110,32 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.SubTabGroup.UserData.isTabInitialized(tabIndex) = true;
             
             switch tabIndex
-                case 1        
-                    elToModify = {app.InstrumentSpec};
-                    elDataTag  = ui.CustomizationBase.getElementsDataTag(elToModify);
-                    if ~isempty(elDataTag)
-                        ui.TextView.startup(app.jsBackDoor, elToModify{1}, class(app));
+                case 1
+                    appName = class(app);
+                    elToModify = {
+                        app.Features;
+                        app.ImportButton;
+                        app.ExportButton;
+                        app.TestConnectivityButton;
+                        app.DockUndockButton;
+                        app.DockCloseButton
+                    };
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
+
+                    try
+                        ui.TextView.startup(app.jsBackDoor, app.Features, appName);
+                    catch
+                    end
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.ImportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Importa lista de instrumentos')), ...
+                            struct('appName', appName, 'dataTag', app.ExportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta lista de instrumentos')), ...
+                            struct('appName', appName, 'dataTag', app.TestConnectivityButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Testa conectividade de instrumento selecionado')), ...
+                            struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
+                            struct('appName', appName, 'dataTag', app.DockCloseButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Fecha módulo')) ...
+                        });
+                    catch
                     end
 
                 otherwise
@@ -132,7 +154,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function initializeUIComponents(app)
             if ~strcmp(app.mainApp.executionMode, 'webApp')
-                app.dockModule_Undock.Enable = 1;
+                app.DockUndockButton.Enable = 1;
             end
         end
 
@@ -248,11 +270,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
             switch app.Family.Value
                 case 'Receiver'
                     idx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
-                    app.Type.Items = app.receiverObj.Config.Definition{idx}.connection.types;
+                    app.ConnectionType.Items = app.receiverObj.Config.Definition{idx}.connection.types;
 
                 case 'GPS'
                     idx = strcmp(app.gpsObj.Config.Name, app.Name.Value);
-                    app.Type.Items = app.gpsObj.Config.connectType(idx);
+                    app.ConnectionType.Items = app.gpsObj.Config.connectType(idx);
             end
 
             if strcmp(srcFcn, 'InstrumentParameterChanged')
@@ -262,7 +284,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function Layout_TypeValueChanged(app)
-            switch app.Type.Value
+            switch app.ConnectionType.Value
                 case 'Serial'
                     app.ParametersGrid.ColumnWidth([1 3]) = {0, '1x'};
                     app.BaudRateLabel.Visible = 'on';
@@ -303,7 +325,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         function Layout_LocalhostCheckBox1(app)
             app.LocalhostCheckBox.Enable = 0;
 
-            if app.ButtonGroupEdit.Value && strcmp(app.Type.Value, "TCP/UDP IP Socket")
+            if app.EditModeGroup.Value && strcmp(app.ConnectionType.Value, "TCP/UDP IP Socket")
                 app.LocalhostCheckBox.Enable = 1;
             end
         end
@@ -335,15 +357,15 @@ classdef winInstrument_exported < matlab.apps.AppBase
             idx1 = app.Tree.SelectedNodes.NodeData;
             [htmlContent, imgSource] = util.HtmlTextGenerator.Instrument(app.receiverObj, app.gpsObj, app.editedList, idx1);
 
-            app.InstrumentSpec.Text   = htmlContent;
-            set(app.InstrumentPhoto, 'ImageSource', imgSource, 'Visible', 'on')
+            app.Features.Text   = htmlContent;
+            set(app.Image, 'ImageSource', imgSource, 'Visible', 'on')
         end
 
         %-----------------------------------------------------------------%
         function ParameterUpdate(app)
             idx = app.Tree.SelectedNodes.NodeData;
 
-            switch app.Type.Value
+            switch app.ConnectionType.Value
                 case 'Serial'
                     app.editedList.Parameters{idx} = jsonencode(struct('Port',     app.Port.Value,     ...
                                                                        'BaudRate', app.BaudRate.Value, ...
@@ -411,7 +433,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         function Flag = PortValidation(app, event)
             Flag = 0;
 
-            switch app.Type.Value
+            switch app.ConnectionType.Value
                 case 'Serial'
                     portValidation = regexpi(app.Port.Value, 'COM\d+', 'match');
                     if isempty(portValidation)
@@ -543,9 +565,33 @@ classdef winInstrument_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'INSTRUMENT')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', app.Context)
             delete(app)
             
+        end
+
+        % Image clicked function: DockCloseButton, DockUndockButton
+        function onDockModuleGroupButtonClicked(app, event)
+            
+            [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
+
+            switch event.Source
+                case app.DockUndockButton
+                    appGeneral = app.mainApp.General;
+                    appGeneral.operationMode.Dock = false;
+                    
+                    inputArguments = ipcMainMatlabCallsHandler(app.mainApp, app, 'dockButtonPushed', auxAppTag);
+                    app.mainApp.tabGroupController.Components.appHandle{idx} = [];
+                    
+                    openModule(app.mainApp.tabGroupController, relatedButton, false, appGeneral, inputArguments{:})
+                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General, 'undock')
+                    
+                    delete(app)
+
+                case app.DockCloseButton
+                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General)
+            end
+
         end
 
         % Selection changed function: Tree
@@ -564,14 +610,14 @@ classdef winInstrument_exported < matlab.apps.AppBase
             %---------------------------------------------------------%
             % ## MODO DE VISUALIZAÇÃO ##
             %---------------------------------------------------------%
-            if app.ButtonGroupView.Value
+            if app.ViewModeButton.Value
                 if app.editedList.Enable(idx); app.Status.Items = {'ON'};
                 else;                          app.Status.Items = {'OFF'};
                 end
 
                 app.Family.Items = app.editedList.Family(idx);
                 app.Name.Items   = app.editedList.Name(idx);
-                app.Type.Items   = app.editedList.Type(idx);
+                app.ConnectionType.Items   = app.editedList.Type(idx);
 
             %---------------------------------------------------------%
             % ## MODO DE EDIÇÃO ##
@@ -587,7 +633,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 app.Name.Value = app.editedList.Name{idx};
                 Layout_NameChanged(app, 'InstrumentParameterChanged')
 
-                app.Type.Value = app.editedList.Type{idx};
+                app.ConnectionType.Value = app.editedList.Type{idx};
             end            
 
             % Ajustes nos outros campos (que não são listas suspensas), 
@@ -598,7 +644,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.LocalhostCheckBox.Value = 0;
 
             Parameters = jsondecode(app.editedList.Parameters{idx});
-            switch app.Type.Value
+            switch app.ConnectionType.Value
                 case 'Serial'
                     app.IP.Value       = '';
                     app.Port.Value     = Parameters.Port;
@@ -631,21 +677,21 @@ classdef winInstrument_exported < matlab.apps.AppBase
             
         end
 
-        % Selection changed function: ModePanel
+        % Selection changed function: ModeRadioGroup
         function ValueChanged_OperationMode(app, event)
             
             %-------------------------------------------------------------%
             % ## MODO DE VISUALIZAÇÃO ##
             %-------------------------------------------------------------%
-            if app.ButtonGroupView.Value
+            if app.ViewModeButton.Value
                 % Aspectos relacionados à indicação visual de que se trata 
                 % do modo de visualização:
 
-                set(findobj(app.Tab1_Grid, 'Type', 'uiimage'), Enable='off')
-                app.Tab1_Grid.ColumnWidth{end} = 0;
-                app.toolButton_edit.Visible  = 0;
-                app.toolButton_open.Enable   = 'on';
-                app.toolButton_export.Enable = 'on';                
+                set(findobj(app.TreeGrid, 'Type', 'uiimage'), Enable='off')
+                app.TreeGrid.ColumnWidth{end} = 0;
+                app.ConfirmEditionButton.Visible  = 0;
+                app.ImportButton.Enable   = 'on';
+                app.ExportButton.Enable = 'on';                
 
                 % Desabilita edição do conteúdo dos campos...
 
@@ -657,7 +703,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 set(app.Status, 'Items', {app.Status.Value})
                 set(app.Family, 'Items', {app.Family.Value})
                 set(app.Name,   'Items', {app.Name.Value})
-                set(app.Type,   'Items', {app.Type.Value})
+                set(app.ConnectionType,   'Items', {app.ConnectionType.Value})
 
                 % Essa última validação é essencial para desfazer alterações 
                 % que não foram salvas. Ou seja, o usuário fez alterações
@@ -676,11 +722,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 % Aspectos relacionados à indicação visual de que se trata 
                 % do modo de edição:
 
-                set(app.Tab1_Grid.Children, Enable='on')
-                app.Tab1_Grid.ColumnWidth{end} = 16;
-                app.toolButton_edit.Visible  = 1;
-                app.toolButton_open.Enable   = 'off';
-                app.toolButton_export.Enable = 'off';
+                set(app.TreeGrid.Children, Enable='on')
+                app.TreeGrid.ColumnWidth{end} = 16;
+                app.ConfirmEditionButton.Visible  = 1;
+                app.ImportButton.Enable   = 'off';
+                app.ExportButton.Enable = 'off';
 
                 % Habilita edição do conteúdo dos campos...
 
@@ -696,8 +742,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Value changed function: BaudRate, Description, Family, IP, 
-        % ...and 8 other components
+        % Value changed function: BaudRate, ConnectionType, Description, 
+        % ...and 9 other components
         function ValueChanged_Parameter(app, event)
             
             [idx, msgError] = SelectionNodeValidation(app);
@@ -722,7 +768,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     
                     app.editedList.Family{idx} = app.Family.Value;
                     app.editedList.Name{idx}   = app.Name.Value;
-                    app.editedList.Type{idx}   = app.Type.Value;
+                    app.editedList.Type{idx}   = app.ConnectionType.Value;
 
                     if strcmp(app.Family.Value, 'Receiver')
                         Layout_DefaultPort(app)
@@ -736,7 +782,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     Layout_NameChanged(app, 'InstrumentParameterChanged')
 
                     app.editedList.Name{idx} = app.Name.Value;
-                    app.editedList.Type{idx} = app.Type.Value;
+                    app.editedList.Type{idx} = app.ConnectionType.Value;
 
                     if strcmp(app.Family.Value, 'Receiver')
                         Layout_DefaultPort(app)
@@ -746,10 +792,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     ParameterUpdate(app)
 
                 %---------------------------------------------------------%
-                case app.Type
+                case app.ConnectionType
                     Layout_TypeValueChanged(app)                    
 
-                    app.editedList.Type{idx} = app.Type.Value;
+                    app.editedList.Type{idx} = app.ConnectionType.Value;
                     ParameterUpdate(app)
 
                 %---------------------------------------------------------%
@@ -791,7 +837,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             
         end
 
-        % Image clicked function: OperationAdd
+        % Image clicked function: TreeAddNode
         function ImageClicked_add(app, event)
             
             [idx, msgError] = SelectionNodeValidation(app);
@@ -806,7 +852,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: OperationDel
+        % Image clicked function: TreeDelNode
         function ImageClicked_del(app, event)
             
             [idx, msgError] = SelectionNodeValidation(app);
@@ -826,7 +872,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: OperationArrowDown, OperationArrowUp
+        % Image clicked function: TreeModeDown, TreeMoveUp
         function ImageClicked_UpDownArrows(app, event)
             
             [idx, msgError] = SelectionNodeValidation(app);
@@ -838,13 +884,13 @@ classdef winInstrument_exported < matlab.apps.AppBase
     
                 Flag     = 0;
                 switch event.Source
-                    case app.OperationArrowUp
+                    case app.TreeMoveUp
                         if idx2_old > 1
                             idx1_new = Parent.Children(idx2_old-1).NodeData;
                             Flag     = 1;
                         end
     
-                    case app.OperationArrowDown
+                    case app.TreeModeDown
                         if idx2_old < numel(Parent.Children)
                             idx1_new = Parent.Children(idx2_old+1).NodeData;
                             Flag     = 1;
@@ -859,7 +905,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: toolButton_open
+        % Image clicked function: ImportButton
         function toolButtonPushed_open(app, event)
             
             [File, Folder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
@@ -882,7 +928,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: toolButton_export
+        % Image clicked function: ExportButton
         function toolButtonPushed_export(app, event)
             
             Folder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de instrumentos');
@@ -894,7 +940,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Button pushed function: toolButton_connectTest
+        % Button pushed function: TestConnectivityButton
         function toolButtonPushed_connectTest(app, event)
             
             app.progressDialog.Visible = 'visible';
@@ -911,7 +957,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 switch app.Family.Value
                     case 'Receiver'
                         idx2 = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
-                        instrSelected = struct('Type',       app.Type.Value,                   ...
+                        instrSelected = struct('Type',       app.ConnectionType.Value,                   ...
                                                'Tag',        app.receiverObj.Config.Tag{idx2}, ...
                                                'Parameters', jsondecode(app.editedList.Parameters{idx1}));
     
@@ -921,7 +967,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                         end
     
                     case 'GPS'
-                        instrSelected = struct('Type',       app.Type.Value, ...
+                        instrSelected = struct('Type',       app.ConnectionType.Value, ...
                                                'Parameters', jsondecode(app.editedList.Parameters{idx1}));
     
                         [~, ~, notification] = testConnectivity(app.gpsObj, instrSelected, 1);
@@ -935,7 +981,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Button pushed function: toolButton_edit
+        % Button pushed function: ConfirmEditionButton
         function toolButtonPushed_edit(app, event)
             
             % Finalizada a edição, avalia-se se algum parâmetro foi, de fato, 
@@ -946,32 +992,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 update(app)
             end
             
-            app.ButtonGroupView.Value = 1;
+            app.ViewModeButton.Value = 1;
             ValueChanged_OperationMode(app)
-
-        end
-
-        % Image clicked function: dockModule_Close, dockModule_Undock
-        function DockModuleGroup_ButtonPushed(app, event)
-            
-            [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
-
-            switch event.Source
-                case app.dockModule_Undock
-                    appGeneral = app.mainApp.General;
-                    appGeneral.operationMode.Dock = false;
-                    
-                    inputArguments = ipcMainMatlabCallsHandler(app.mainApp, app, 'dockButtonPushed', auxAppTag);
-                    app.mainApp.tabGroupController.Components.appHandle{idx} = [];
-                    
-                    openModule(app.mainApp.tabGroupController, relatedButton, false, appGeneral, inputArguments{:})
-                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General, 'undock')
-                    
-                    delete(app)
-
-                case app.dockModule_Close
-                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General)
-            end
 
         end
     end
@@ -1046,19 +1068,19 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreeLabel.Layout.Column = 1;
             app.TreeLabel.Text = 'INSTRUMENTOS';
 
-            % Create Tab1_Grid
-            app.Tab1_Grid = uigridlayout(app.SubGrid1);
-            app.Tab1_Grid.ColumnWidth = {146, '1x', 0};
-            app.Tab1_Grid.RowHeight = {16, 5, 16, '1x', 16, 5, 16};
-            app.Tab1_Grid.ColumnSpacing = 5;
-            app.Tab1_Grid.RowSpacing = 0;
-            app.Tab1_Grid.Padding = [0 0 0 0];
-            app.Tab1_Grid.Layout.Row = 2;
-            app.Tab1_Grid.Layout.Column = 1;
-            app.Tab1_Grid.BackgroundColor = [1 1 1];
+            % Create TreeGrid
+            app.TreeGrid = uigridlayout(app.SubGrid1);
+            app.TreeGrid.ColumnWidth = {146, '1x', 0};
+            app.TreeGrid.RowHeight = {16, 5, 16, '1x', 16, 5, 16};
+            app.TreeGrid.ColumnSpacing = 5;
+            app.TreeGrid.RowSpacing = 0;
+            app.TreeGrid.Padding = [0 0 0 0];
+            app.TreeGrid.Layout.Row = 2;
+            app.TreeGrid.Layout.Column = 1;
+            app.TreeGrid.BackgroundColor = [1 1 1];
 
             % Create Tree
-            app.Tree = uitree(app.Tab1_Grid);
+            app.Tree = uitree(app.TreeGrid);
             app.Tree.SelectionChangedFcn = createCallbackFcn(app, @TreeSelectionChanged, true);
             app.Tree.FontSize = 11;
             app.Tree.Layout.Row = [1 7];
@@ -1072,41 +1094,41 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreeNodeGPS = uitreenode(app.Tree);
             app.TreeNodeGPS.Text = 'GPS';
 
-            % Create OperationAdd
-            app.OperationAdd = uiimage(app.Tab1_Grid);
-            app.OperationAdd.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_add, true);
-            app.OperationAdd.Enable = 'off';
-            app.OperationAdd.Tooltip = {'Adiciona novo instrumento'};
-            app.OperationAdd.Layout.Row = 1;
-            app.OperationAdd.Layout.Column = 3;
-            app.OperationAdd.ImageSource = 'addFileWithPlus_32.png';
+            % Create TreeAddNode
+            app.TreeAddNode = uiimage(app.TreeGrid);
+            app.TreeAddNode.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_add, true);
+            app.TreeAddNode.Enable = 'off';
+            app.TreeAddNode.Tooltip = {''};
+            app.TreeAddNode.Layout.Row = 1;
+            app.TreeAddNode.Layout.Column = 3;
+            app.TreeAddNode.ImageSource = 'addFileWithPlus_32.png';
 
-            % Create OperationDel
-            app.OperationDel = uiimage(app.Tab1_Grid);
-            app.OperationDel.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_del, true);
-            app.OperationDel.Enable = 'off';
-            app.OperationDel.Tooltip = {'Exclui instrumento selecionado'};
-            app.OperationDel.Layout.Row = 3;
-            app.OperationDel.Layout.Column = 3;
-            app.OperationDel.ImageSource = 'Delete_32Red.png';
+            % Create TreeDelNode
+            app.TreeDelNode = uiimage(app.TreeGrid);
+            app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_del, true);
+            app.TreeDelNode.Enable = 'off';
+            app.TreeDelNode.Tooltip = {''};
+            app.TreeDelNode.Layout.Row = 3;
+            app.TreeDelNode.Layout.Column = 3;
+            app.TreeDelNode.ImageSource = 'Delete_32Red.png';
 
-            % Create OperationArrowUp
-            app.OperationArrowUp = uiimage(app.Tab1_Grid);
-            app.OperationArrowUp.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
-            app.OperationArrowUp.Enable = 'off';
-            app.OperationArrowUp.Tooltip = {'Troca ordem do instrumento selecionado'};
-            app.OperationArrowUp.Layout.Row = 5;
-            app.OperationArrowUp.Layout.Column = 3;
-            app.OperationArrowUp.ImageSource = 'ArrowUp_32.png';
+            % Create TreeMoveUp
+            app.TreeMoveUp = uiimage(app.TreeGrid);
+            app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
+            app.TreeMoveUp.Enable = 'off';
+            app.TreeMoveUp.Tooltip = {''};
+            app.TreeMoveUp.Layout.Row = 5;
+            app.TreeMoveUp.Layout.Column = 3;
+            app.TreeMoveUp.ImageSource = 'ArrowUp_32.png';
 
-            % Create OperationArrowDown
-            app.OperationArrowDown = uiimage(app.Tab1_Grid);
-            app.OperationArrowDown.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
-            app.OperationArrowDown.Enable = 'off';
-            app.OperationArrowDown.Tooltip = {'Troca ordem do instrumento selecionado'};
-            app.OperationArrowDown.Layout.Row = 7;
-            app.OperationArrowDown.Layout.Column = 3;
-            app.OperationArrowDown.ImageSource = 'ArrowDown_32.png';
+            % Create TreeModeDown
+            app.TreeModeDown = uiimage(app.TreeGrid);
+            app.TreeModeDown.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
+            app.TreeModeDown.Enable = 'off';
+            app.TreeModeDown.Tooltip = {''};
+            app.TreeModeDown.Layout.Row = 7;
+            app.TreeModeDown.Layout.Column = 3;
+            app.TreeModeDown.ImageSource = 'ArrowDown_32.png';
 
             % Create ModePanelLabel
             app.ModePanelLabel = uilabel(app.SubGrid1);
@@ -1116,42 +1138,42 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.ModePanelLabel.Layout.Column = 1;
             app.ModePanelLabel.Text = 'MODO';
 
-            % Create ModePanel
-            app.ModePanel = uibuttongroup(app.SubGrid1);
-            app.ModePanel.AutoResizeChildren = 'off';
-            app.ModePanel.SelectionChangedFcn = createCallbackFcn(app, @ValueChanged_OperationMode, true);
-            app.ModePanel.BackgroundColor = [1 1 1];
-            app.ModePanel.Layout.Row = 4;
-            app.ModePanel.Layout.Column = 1;
-            app.ModePanel.FontSize = 10;
+            % Create ModeRadioGroup
+            app.ModeRadioGroup = uibuttongroup(app.SubGrid1);
+            app.ModeRadioGroup.AutoResizeChildren = 'off';
+            app.ModeRadioGroup.SelectionChangedFcn = createCallbackFcn(app, @ValueChanged_OperationMode, true);
+            app.ModeRadioGroup.BackgroundColor = [1 1 1];
+            app.ModeRadioGroup.Layout.Row = 4;
+            app.ModeRadioGroup.Layout.Column = 1;
+            app.ModeRadioGroup.FontSize = 10;
 
-            % Create ButtonGroupView
-            app.ButtonGroupView = uiradiobutton(app.ModePanel);
-            app.ButtonGroupView.Text = '<font style="color:#0000ff;">VISUALIZAR</font> lista';
-            app.ButtonGroupView.FontSize = 11;
-            app.ButtonGroupView.Interpreter = 'html';
-            app.ButtonGroupView.Position = [6 5 117 22];
-            app.ButtonGroupView.Value = true;
+            % Create ViewModeButton
+            app.ViewModeButton = uiradiobutton(app.ModeRadioGroup);
+            app.ViewModeButton.Text = '<font style="color:#0000ff;">VISUALIZAR</font> lista';
+            app.ViewModeButton.FontSize = 11;
+            app.ViewModeButton.Interpreter = 'html';
+            app.ViewModeButton.Position = [6 5 117 22];
+            app.ViewModeButton.Value = true;
 
-            % Create ButtonGroupEdit
-            app.ButtonGroupEdit = uiradiobutton(app.ModePanel);
-            app.ButtonGroupEdit.Text = '<font style="color:#a2142f;"><b>EDITAR</b></font> lista';
-            app.ButtonGroupEdit.FontSize = 11;
-            app.ButtonGroupEdit.Interpreter = 'html';
-            app.ButtonGroupEdit.Position = [150 5 92 22];
+            % Create EditModeGroup
+            app.EditModeGroup = uiradiobutton(app.ModeRadioGroup);
+            app.EditModeGroup.Text = '<font style="color:#a2142f;"><b>EDITAR</b></font> lista';
+            app.EditModeGroup.FontSize = 11;
+            app.EditModeGroup.Interpreter = 'html';
+            app.EditModeGroup.Position = [150 5 92 22];
 
-            % Create Tab2_PanelGrid
-            app.Tab2_PanelGrid = uigridlayout(app.SubGrid1);
-            app.Tab2_PanelGrid.ColumnWidth = {110, 190, 1, '1x', 140, 22};
-            app.Tab2_PanelGrid.RowHeight = {17, 22, 22, 22, 22, '1x', 22, 22, 150};
-            app.Tab2_PanelGrid.RowSpacing = 5;
-            app.Tab2_PanelGrid.Padding = [0 0 0 0];
-            app.Tab2_PanelGrid.Layout.Row = [1 4];
-            app.Tab2_PanelGrid.Layout.Column = 2;
-            app.Tab2_PanelGrid.BackgroundColor = [1 1 1];
+            % Create InstrumentGrid
+            app.InstrumentGrid = uigridlayout(app.SubGrid1);
+            app.InstrumentGrid.ColumnWidth = {110, 190, 1, '1x', 140, 22};
+            app.InstrumentGrid.RowHeight = {17, 22, 22, 22, 22, '1x', 22, 22, 150};
+            app.InstrumentGrid.RowSpacing = 5;
+            app.InstrumentGrid.Padding = [0 0 0 0];
+            app.InstrumentGrid.Layout.Row = [1 4];
+            app.InstrumentGrid.Layout.Column = 2;
+            app.InstrumentGrid.BackgroundColor = [1 1 1];
 
             % Create StatusLabel
-            app.StatusLabel = uilabel(app.Tab2_PanelGrid);
+            app.StatusLabel = uilabel(app.InstrumentGrid);
             app.StatusLabel.VerticalAlignment = 'bottom';
             app.StatusLabel.FontSize = 10;
             app.StatusLabel.FontColor = [0.149 0.149 0.149];
@@ -1160,7 +1182,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.StatusLabel.Text = 'ESTADO';
 
             % Create Status
-            app.Status = uidropdown(app.Tab2_PanelGrid);
+            app.Status = uidropdown(app.InstrumentGrid);
             app.Status.Items = {'ON', 'OFF'};
             app.Status.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
             app.Status.FontSize = 11;
@@ -1170,7 +1192,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Status.Value = 'ON';
 
             % Create FamilyLabel
-            app.FamilyLabel = uilabel(app.Tab2_PanelGrid);
+            app.FamilyLabel = uilabel(app.InstrumentGrid);
             app.FamilyLabel.VerticalAlignment = 'bottom';
             app.FamilyLabel.FontSize = 10;
             app.FamilyLabel.Layout.Row = 1;
@@ -1178,7 +1200,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.FamilyLabel.Text = 'FAMÍLIA';
 
             % Create Family
-            app.Family = uidropdown(app.Tab2_PanelGrid);
+            app.Family = uidropdown(app.InstrumentGrid);
             app.Family.Items = {};
             app.Family.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
             app.Family.FontSize = 11;
@@ -1188,7 +1210,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Family.Value = {};
 
             % Create NameLabel
-            app.NameLabel = uilabel(app.Tab2_PanelGrid);
+            app.NameLabel = uilabel(app.InstrumentGrid);
             app.NameLabel.VerticalAlignment = 'bottom';
             app.NameLabel.FontSize = 10;
             app.NameLabel.Layout.Row = 3;
@@ -1196,7 +1218,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.NameLabel.Text = 'FABRICANTE E MODELO';
 
             % Create Name
-            app.Name = uidropdown(app.Tab2_PanelGrid);
+            app.Name = uidropdown(app.InstrumentGrid);
             app.Name.Items = {};
             app.Name.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
             app.Name.FontSize = 11;
@@ -1206,41 +1228,41 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Name.Value = {};
 
             % Create DescriptionLabel
-            app.DescriptionLabel = uilabel(app.Tab2_PanelGrid);
+            app.DescriptionLabel = uilabel(app.InstrumentGrid);
             app.DescriptionLabel.VerticalAlignment = 'bottom';
             app.DescriptionLabel.FontSize = 10;
             app.DescriptionLabel.Layout.Row = 5;
-            app.DescriptionLabel.Layout.Column = 1;
+            app.DescriptionLabel.Layout.Column = [1 2];
             app.DescriptionLabel.Text = 'DESCRIÇÃO';
 
             % Create Description
-            app.Description = uitextarea(app.Tab2_PanelGrid);
+            app.Description = uitextarea(app.InstrumentGrid);
             app.Description.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
             app.Description.Editable = 'off';
             app.Description.FontSize = 11;
             app.Description.Layout.Row = 6;
             app.Description.Layout.Column = [1 2];
 
-            % Create TypeLabel
-            app.TypeLabel = uilabel(app.Tab2_PanelGrid);
-            app.TypeLabel.VerticalAlignment = 'bottom';
-            app.TypeLabel.FontSize = 10;
-            app.TypeLabel.Layout.Row = 7;
-            app.TypeLabel.Layout.Column = 1;
-            app.TypeLabel.Text = 'TIPO DE CONEXÃO';
+            % Create ConnectionTypeLabel
+            app.ConnectionTypeLabel = uilabel(app.InstrumentGrid);
+            app.ConnectionTypeLabel.VerticalAlignment = 'bottom';
+            app.ConnectionTypeLabel.FontSize = 10;
+            app.ConnectionTypeLabel.Layout.Row = 7;
+            app.ConnectionTypeLabel.Layout.Column = [1 2];
+            app.ConnectionTypeLabel.Text = 'TIPO DE CONEXÃO';
 
-            % Create Type
-            app.Type = uidropdown(app.Tab2_PanelGrid);
-            app.Type.Items = {};
-            app.Type.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
-            app.Type.FontSize = 11;
-            app.Type.BackgroundColor = [1 1 1];
-            app.Type.Layout.Row = 8;
-            app.Type.Layout.Column = [1 2];
-            app.Type.Value = {};
+            % Create ConnectionType
+            app.ConnectionType = uidropdown(app.InstrumentGrid);
+            app.ConnectionType.Items = {};
+            app.ConnectionType.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.ConnectionType.FontSize = 11;
+            app.ConnectionType.BackgroundColor = [1 1 1];
+            app.ConnectionType.Layout.Row = 8;
+            app.ConnectionType.Layout.Column = [1 2];
+            app.ConnectionType.Value = {};
 
             % Create ParametersPanel
-            app.ParametersPanel = uipanel(app.Tab2_PanelGrid);
+            app.ParametersPanel = uipanel(app.InstrumentGrid);
             app.ParametersPanel.AutoResizeChildren = 'off';
             app.ParametersPanel.Layout.Row = 9;
             app.ParametersPanel.Layout.Column = [1 2];
@@ -1380,35 +1402,35 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.IPublic.Layout.Row = 2;
             app.IPublic.Layout.Column = 2;
 
-            % Create InstrumentSpecLabel
-            app.InstrumentSpecLabel = uilabel(app.Tab2_PanelGrid);
-            app.InstrumentSpecLabel.VerticalAlignment = 'bottom';
-            app.InstrumentSpecLabel.FontSize = 10;
-            app.InstrumentSpecLabel.Layout.Row = 1;
-            app.InstrumentSpecLabel.Layout.Column = 4;
-            app.InstrumentSpecLabel.Text = 'ASPECTOS TÉCNICOS';
+            % Create FeaturesLabel
+            app.FeaturesLabel = uilabel(app.InstrumentGrid);
+            app.FeaturesLabel.VerticalAlignment = 'bottom';
+            app.FeaturesLabel.FontSize = 10;
+            app.FeaturesLabel.Layout.Row = 1;
+            app.FeaturesLabel.Layout.Column = [4 6];
+            app.FeaturesLabel.Text = 'ESPECIFICAÇÕES TÉCNICAS';
 
-            % Create InstrumentSpec
-            app.InstrumentSpec = uilabel(app.Tab2_PanelGrid);
-            app.InstrumentSpec.VerticalAlignment = 'top';
-            app.InstrumentSpec.WordWrap = 'on';
-            app.InstrumentSpec.FontSize = 11;
-            app.InstrumentSpec.Layout.Row = [2 9];
-            app.InstrumentSpec.Layout.Column = [4 6];
-            app.InstrumentSpec.Interpreter = 'html';
-            app.InstrumentSpec.Text = '';
+            % Create Features
+            app.Features = uilabel(app.InstrumentGrid);
+            app.Features.VerticalAlignment = 'top';
+            app.Features.WordWrap = 'on';
+            app.Features.FontSize = 11;
+            app.Features.Layout.Row = [2 9];
+            app.Features.Layout.Column = [4 6];
+            app.Features.Interpreter = 'html';
+            app.Features.Text = '';
 
-            % Create InstrumentPhoto
-            app.InstrumentPhoto = uiimage(app.Tab2_PanelGrid);
-            app.InstrumentPhoto.Visible = 'off';
-            app.InstrumentPhoto.Layout.Row = [3 5];
-            app.InstrumentPhoto.Layout.Column = 5;
-            app.InstrumentPhoto.HorizontalAlignment = 'right';
-            app.InstrumentPhoto.VerticalAlignment = 'top';
+            % Create Image
+            app.Image = uiimage(app.InstrumentGrid);
+            app.Image.Visible = 'off';
+            app.Image.Layout.Row = [3 5];
+            app.Image.Layout.Column = 5;
+            app.Image.HorizontalAlignment = 'right';
+            app.Image.VerticalAlignment = 'top';
 
             % Create Toolbar
             app.Toolbar = uigridlayout(app.GridLayout);
-            app.Toolbar.ColumnWidth = {22, 22, 5, 22, '1x', 110};
+            app.Toolbar.ColumnWidth = {22, 22, 5, 22, '1x', 116};
             app.Toolbar.RowHeight = {'1x'};
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.RowSpacing = 0;
@@ -1417,55 +1439,53 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Toolbar.Layout.Column = [1 6];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
-            % Create toolButton_open
-            app.toolButton_open = uiimage(app.Toolbar);
-            app.toolButton_open.ScaleMethod = 'none';
-            app.toolButton_open.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_open, true);
-            app.toolButton_open.Tooltip = {'Abre arquivo .json com lista de tarefas'};
-            app.toolButton_open.Layout.Row = 1;
-            app.toolButton_open.Layout.Column = 1;
-            app.toolButton_open.ImageSource = 'Import_16.png';
+            % Create ImportButton
+            app.ImportButton = uiimage(app.Toolbar);
+            app.ImportButton.ScaleMethod = 'none';
+            app.ImportButton.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_open, true);
+            app.ImportButton.Tooltip = {''};
+            app.ImportButton.Layout.Row = 1;
+            app.ImportButton.Layout.Column = 1;
+            app.ImportButton.ImageSource = 'Import_16.png';
 
-            % Create toolButton_export
-            app.toolButton_export = uiimage(app.Toolbar);
-            app.toolButton_export.ScaleMethod = 'none';
-            app.toolButton_export.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_export, true);
-            app.toolButton_export.Tooltip = {'Exporta arquivo .json com lista de tarefas'};
-            app.toolButton_export.Layout.Row = 1;
-            app.toolButton_export.Layout.Column = 2;
-            app.toolButton_export.ImageSource = 'Export_16.png';
+            % Create ExportButton
+            app.ExportButton = uiimage(app.Toolbar);
+            app.ExportButton.ScaleMethod = 'none';
+            app.ExportButton.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_export, true);
+            app.ExportButton.Tooltip = {''};
+            app.ExportButton.Layout.Row = 1;
+            app.ExportButton.Layout.Column = 2;
+            app.ExportButton.ImageSource = 'Export_16.png';
 
-            % Create toolSeparator
-            app.toolSeparator = uiimage(app.Toolbar);
-            app.toolSeparator.ScaleMethod = 'none';
-            app.toolSeparator.Enable = 'off';
-            app.toolSeparator.Layout.Row = 1;
-            app.toolSeparator.Layout.Column = 3;
-            app.toolSeparator.ImageSource = 'LineV.svg';
+            % Create ButtonsSeparator
+            app.ButtonsSeparator = uiimage(app.Toolbar);
+            app.ButtonsSeparator.ScaleMethod = 'none';
+            app.ButtonsSeparator.Enable = 'off';
+            app.ButtonsSeparator.Layout.Row = 1;
+            app.ButtonsSeparator.Layout.Column = 3;
+            app.ButtonsSeparator.ImageSource = 'LineV.svg';
 
-            % Create toolButton_connectTest
-            app.toolButton_connectTest = uibutton(app.Toolbar, 'push');
-            app.toolButton_connectTest.ButtonPushedFcn = createCallbackFcn(app, @toolButtonPushed_connectTest, true);
-            app.toolButton_connectTest.Icon = 'Connectivity_32.png';
-            app.toolButton_connectTest.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.toolButton_connectTest.Tooltip = {'Teste de conectividade'};
-            app.toolButton_connectTest.Layout.Row = 1;
-            app.toolButton_connectTest.Layout.Column = 4;
-            app.toolButton_connectTest.Text = '';
+            % Create TestConnectivityButton
+            app.TestConnectivityButton = uibutton(app.Toolbar, 'push');
+            app.TestConnectivityButton.ButtonPushedFcn = createCallbackFcn(app, @toolButtonPushed_connectTest, true);
+            app.TestConnectivityButton.Icon = 'Connectivity_32.png';
+            app.TestConnectivityButton.BackgroundColor = [0.9412 0.9412 0.9412];
+            app.TestConnectivityButton.Tooltip = {''};
+            app.TestConnectivityButton.Layout.Row = 1;
+            app.TestConnectivityButton.Layout.Column = 4;
+            app.TestConnectivityButton.Text = '';
 
-            % Create toolButton_edit
-            app.toolButton_edit = uibutton(app.Toolbar, 'push');
-            app.toolButton_edit.ButtonPushedFcn = createCallbackFcn(app, @toolButtonPushed_edit, true);
-            app.toolButton_edit.Icon = 'Edit_32White.png';
-            app.toolButton_edit.IconAlignment = 'right';
-            app.toolButton_edit.HorizontalAlignment = 'right';
-            app.toolButton_edit.BackgroundColor = [0.6392 0.0784 0.1804];
-            app.toolButton_edit.FontSize = 11;
-            app.toolButton_edit.FontColor = [1 1 1];
-            app.toolButton_edit.Visible = 'off';
-            app.toolButton_edit.Layout.Row = 1;
-            app.toolButton_edit.Layout.Column = 6;
-            app.toolButton_edit.Text = 'Confirma edição';
+            % Create ConfirmEditionButton
+            app.ConfirmEditionButton = uibutton(app.Toolbar, 'push');
+            app.ConfirmEditionButton.ButtonPushedFcn = createCallbackFcn(app, @toolButtonPushed_edit, true);
+            app.ConfirmEditionButton.Icon = 'save-16px-white.svg';
+            app.ConfirmEditionButton.BackgroundColor = [0.6392 0.0784 0.1804];
+            app.ConfirmEditionButton.FontSize = 11;
+            app.ConfirmEditionButton.FontColor = [1 1 1];
+            app.ConfirmEditionButton.Visible = 'off';
+            app.ConfirmEditionButton.Layout.Row = 1;
+            app.ConfirmEditionButton.Layout.Column = 6;
+            app.ConfirmEditionButton.Text = 'Salva alterações';
 
             % Create DockModule
             app.DockModule = uigridlayout(app.GridLayout);
@@ -1477,26 +1497,22 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.DockModule.Layout.Column = [3 5];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
-            % Create dockModule_Close
-            app.dockModule_Close = uiimage(app.DockModule);
-            app.dockModule_Close.ScaleMethod = 'none';
-            app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
-            app.dockModule_Close.Tag = 'DRIVETEST';
-            app.dockModule_Close.Tooltip = {'Fecha módulo'};
-            app.dockModule_Close.Layout.Row = 1;
-            app.dockModule_Close.Layout.Column = 2;
-            app.dockModule_Close.ImageSource = 'Delete_12SVG_white.svg';
+            % Create DockUndockButton
+            app.DockUndockButton = uiimage(app.DockModule);
+            app.DockUndockButton.ScaleMethod = 'none';
+            app.DockUndockButton.ImageClickedFcn = createCallbackFcn(app, @onDockModuleGroupButtonClicked, true);
+            app.DockUndockButton.Enable = 'off';
+            app.DockUndockButton.Layout.Row = 1;
+            app.DockUndockButton.Layout.Column = 1;
+            app.DockUndockButton.ImageSource = 'Undock_18White.png';
 
-            % Create dockModule_Undock
-            app.dockModule_Undock = uiimage(app.DockModule);
-            app.dockModule_Undock.ScaleMethod = 'none';
-            app.dockModule_Undock.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
-            app.dockModule_Undock.Tag = 'DRIVETEST';
-            app.dockModule_Undock.Enable = 'off';
-            app.dockModule_Undock.Tooltip = {'Reabre módulo em outra janela'};
-            app.dockModule_Undock.Layout.Row = 1;
-            app.dockModule_Undock.Layout.Column = 1;
-            app.dockModule_Undock.ImageSource = 'Undock_18White.png';
+            % Create DockCloseButton
+            app.DockCloseButton = uiimage(app.DockModule);
+            app.DockCloseButton.ScaleMethod = 'none';
+            app.DockCloseButton.ImageClickedFcn = createCallbackFcn(app, @onDockModuleGroupButtonClicked, true);
+            app.DockCloseButton.Layout.Row = 1;
+            app.DockCloseButton.Layout.Column = 2;
+            app.DockCloseButton.ImageSource = 'Delete_12SVG_white.svg';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

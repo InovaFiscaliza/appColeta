@@ -5,8 +5,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
         UIFigure                   matlab.ui.Figure
         GridLayout                 matlab.ui.container.GridLayout
         DockModule                 matlab.ui.container.GridLayout
-        dockModule_Undock          matlab.ui.control.Image
-        dockModule_Close           matlab.ui.control.Image
+        DockCloseButton            matlab.ui.control.Image
+        DockUndockButton           matlab.ui.control.Image
         SubTabGroup                matlab.ui.container.TabGroup
         SubTab1                    matlab.ui.container.Tab
         SubGrid1                   matlab.ui.container.GridLayout
@@ -91,26 +91,27 @@ classdef winTaskList_exported < matlab.apps.AppBase
         NameLabel                  matlab.ui.control.Label
         TreeLabel                  matlab.ui.control.Label
         TreeGrid                   matlab.ui.container.GridLayout
-        Image_downArrow            matlab.ui.control.Image
-        Image_upArrow              matlab.ui.control.Image
-        Image_del                  matlab.ui.control.Image
-        Image_addBand              matlab.ui.control.Image
-        Image_addTask              matlab.ui.control.Image
+        TreeMoveDown               matlab.ui.control.Image
+        TreeMoveUp                 matlab.ui.control.Image
+        TreeDelNode                matlab.ui.control.Image
+        TreeAddBandNode            matlab.ui.control.Image
+        TreeAddTaskNode            matlab.ui.control.Image
         Tree                       matlab.ui.container.Tree
         ModePanel                  matlab.ui.container.ButtonGroup
         ModeButtonEdit             matlab.ui.control.RadioButton
         ModeButtonView             matlab.ui.control.RadioButton
         ModePanelLabel             matlab.ui.control.Label
         Toolbar                    matlab.ui.container.GridLayout
-        toolButton_ok              matlab.ui.control.Button
-        toolButton_export          matlab.ui.control.Image
-        toolButton_open            matlab.ui.control.Image
+        ConfirmEditionButton       matlab.ui.control.Button
+        ExportButton               matlab.ui.control.Image
+        ImportButton               matlab.ui.control.Image
     end
 
     
     properties (Access = private)
         %-----------------------------------------------------------------%
         Role = 'secondaryApp'
+        Context = 'TASK_EDIT'
     end
 
 
@@ -152,7 +153,24 @@ classdef winTaskList_exported < matlab.apps.AppBase
             
             switch tabIndex
                 case 1
-                    % ...
+                    appName = class(app);
+                    elToModify = {
+                        app.ImportButton;
+                        app.ExportButton;
+                        app.DockUndockButton;
+                        app.DockCloseButton
+                    };
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.ImportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Importa lista de tarefas')), ...
+                            struct('appName', appName, 'dataTag', app.ExportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta lista de tarefas')), ...
+                            struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
+                            struct('appName', appName, 'dataTag', app.DockCloseButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Fecha módulo')) ...
+                        });
+                    catch
+                    end
 
                 otherwise
                     % ...
@@ -168,7 +186,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function initializeUIComponents(app)
             if ~strcmp(app.mainApp.executionMode, 'webApp')
-                app.dockModule_Undock.Enable = 1;
+                app.DockUndockButton.Enable = 1;
             end
         end
 
@@ -461,9 +479,33 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK_ADD')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', app.Context)
             delete(app)
             
+        end
+
+        % Image clicked function: DockCloseButton, DockUndockButton
+        function onDockModuleGroupButtonClicked(app, event)
+            
+            [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
+
+            switch event.Source
+                case app.DockUndockButton
+                    appGeneral = app.mainApp.General;
+                    appGeneral.operationMode.Dock = false;
+                    
+                    inputArguments = ipcMainMatlabCallsHandler(app.mainApp, app, 'dockButtonPushed', auxAppTag);
+                    app.mainApp.tabGroupController.Components.appHandle{idx} = [];
+                    
+                    openModule(app.mainApp.tabGroupController, relatedButton, false, appGeneral, inputArguments{:})
+                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General, 'undock')
+                    
+                    delete(app)
+
+                case app.DockCloseButton
+                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General)
+            end
+
         end
 
         % Selection changed function: Tree
@@ -699,9 +741,9 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 % do modo de visualização:
                 set(findobj(app.TreeGrid, 'Type', 'uiimage'), 'Enable', 'off')
                 app.TreeGrid.ColumnWidth{end} = 0;                
-                app.toolButton_ok.Visible  = 0;
-                app.toolButton_open.Enable   = 'on';
-                app.toolButton_export.Enable = 'on';
+                app.ConfirmEditionButton.Visible  = 0;
+                app.ImportButton.Enable   = 'on';
+                app.ExportButton.Enable = 'on';
 
                 % Desabilita edição do conteúdo dos campos...
                 app.Name.Editable            = 'off';
@@ -739,9 +781,9 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 % do modo de edição:
                 set(app.TreeGrid.Children, 'Enable', 'on')
                 app.TreeGrid.ColumnWidth{end} = 16;                
-                app.toolButton_ok.Visible  = 1;
-                app.toolButton_open.Enable   = 'off';
-                app.toolButton_export.Enable = 'off';
+                app.ConfirmEditionButton.Visible  = 1;
+                app.ImportButton.Enable   = 'off';
+                app.ExportButton.Enable = 'off';
 
                 % Habilita edição do conteúdo dos campos...
 
@@ -777,8 +819,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: toolButton_open
-        function toolButton_openPushed(app, event)
+        % Image clicked function: ImportButton
+        function ImportButtonPushed(app, event)
             
             [File, Folder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
             figure(app.UIFigure)
@@ -799,8 +841,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: toolButton_export
-        function toolButton_exportPushed(app, event)
+        % Image clicked function: ExportButton
+        function ExportButtonPushed(app, event)
             
             Folder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de tarefas');
             figure(app.UIFigure)
@@ -811,8 +853,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
             
         end
 
-        % Image clicked function: Image_addTask
-        function Image_addTaskPushed(app, event)
+        % Image clicked function: TreeAddTaskNode
+        function TreeAddTaskNodePushed(app, event)
             
             idx1_old = app.Tree.SelectedNodes.NodeData;
             idx1_new = numel(app.editedList) + 1;
@@ -826,8 +868,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: Image_addBand
-        function Image_addBandValueChanged(app, event)
+        % Image clicked function: TreeAddBandNode
+        function TreeAddBandNodeValueChanged(app, event)
             
             idx1 = app.Tree.SelectedNodes.NodeData;
             
@@ -845,8 +887,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: Image_del
-        function Image_delPushed(app, event)
+        % Image clicked function: TreeDelNode
+        function TreeDelNodePushed(app, event)
             
             idx1 = app.Tree.SelectedNodes.NodeData;
             idx2 = app.Tree.SelectedNodes.UserData;
@@ -875,8 +917,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         end
 
-        % Button pushed function: toolButton_ok
-        function toolButton_okPushed(app, event)
+        % Button pushed function: ConfirmEditionButton
+        function ConfirmEditionButtonPushed(app, event)
             
             % Finalizada a edição, avalia-se se algum parâmetro foi, de fato, 
             % alterado, salvando uma nova versão do arquivo "TaskList.json",
@@ -1070,7 +1112,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             
         end
 
-        % Image clicked function: Image_downArrow, Image_upArrow
+        % Image clicked function: TreeMoveDown, TreeMoveUp
         function UpDownImageClicked(app, event)
             
             idx1 = app.Tree.SelectedNodes.NodeData;
@@ -1079,7 +1121,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             Flag = 0;
 
             switch event.Source
-                case app.Image_upArrow
+                case app.TreeMoveUp
                     if app.Tree.SelectedNodes.Parent == app.Tree
                         if idx1 > 1
                             app.editedList(idx1-1:idx1) = flip(app.editedList(idx1-1:idx1));
@@ -1097,7 +1139,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                         end
                     end
 
-                case app.Image_downArrow
+                case app.TreeMoveDown
                     if app.Tree.SelectedNodes.Parent == app.Tree
                         if idx1 < numel(app.editedList)
                             app.editedList(idx1:idx1+1) = flip(app.editedList(idx1:idx1+1));
@@ -1122,30 +1164,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 else
                     TreeBuilding(app, [idx1, idx2])
                 end
-            end
-
-        end
-
-        % Image clicked function: dockModule_Close, dockModule_Undock
-        function DockModuleGroup_ButtonPushed(app, event)
-            
-            [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
-
-            switch event.Source
-                case app.dockModule_Undock
-                    appGeneral = app.mainApp.General;
-                    appGeneral.operationMode.Dock = false;
-                    
-                    inputArguments = ipcMainMatlabCallsHandler(app.mainApp, app, 'dockButtonPushed', auxAppTag);
-                    app.mainApp.tabGroupController.Components.appHandle{idx} = [];
-                    
-                    openModule(app.mainApp.tabGroupController, relatedButton, false, appGeneral, inputArguments{:})
-                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General, 'undock')
-                    
-                    delete(app)
-
-                case app.dockModule_Close
-                    closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General)
             end
 
         end
@@ -1196,7 +1214,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create Toolbar
             app.Toolbar = uigridlayout(app.GridLayout);
-            app.Toolbar.ColumnWidth = {22, 22, '1x', 110};
+            app.Toolbar.ColumnWidth = {22, 22, '1x', 116};
             app.Toolbar.RowHeight = {'1x'};
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.Padding = [10 6 10 6];
@@ -1204,37 +1222,35 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Toolbar.Layout.Column = [1 7];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
-            % Create toolButton_open
-            app.toolButton_open = uiimage(app.Toolbar);
-            app.toolButton_open.ScaleMethod = 'none';
-            app.toolButton_open.ImageClickedFcn = createCallbackFcn(app, @toolButton_openPushed, true);
-            app.toolButton_open.Tooltip = {'Abre arquivo .json com lista de tarefas'};
-            app.toolButton_open.Layout.Row = 1;
-            app.toolButton_open.Layout.Column = 1;
-            app.toolButton_open.ImageSource = 'Import_16.png';
+            % Create ImportButton
+            app.ImportButton = uiimage(app.Toolbar);
+            app.ImportButton.ScaleMethod = 'none';
+            app.ImportButton.ImageClickedFcn = createCallbackFcn(app, @ImportButtonPushed, true);
+            app.ImportButton.Tooltip = {''};
+            app.ImportButton.Layout.Row = 1;
+            app.ImportButton.Layout.Column = 1;
+            app.ImportButton.ImageSource = 'Import_16.png';
 
-            % Create toolButton_export
-            app.toolButton_export = uiimage(app.Toolbar);
-            app.toolButton_export.ScaleMethod = 'none';
-            app.toolButton_export.ImageClickedFcn = createCallbackFcn(app, @toolButton_exportPushed, true);
-            app.toolButton_export.Tooltip = {'Exporta arquivo .json com lista de tarefas'};
-            app.toolButton_export.Layout.Row = 1;
-            app.toolButton_export.Layout.Column = 2;
-            app.toolButton_export.ImageSource = 'Export_16.png';
+            % Create ExportButton
+            app.ExportButton = uiimage(app.Toolbar);
+            app.ExportButton.ScaleMethod = 'none';
+            app.ExportButton.ImageClickedFcn = createCallbackFcn(app, @ExportButtonPushed, true);
+            app.ExportButton.Tooltip = {''};
+            app.ExportButton.Layout.Row = 1;
+            app.ExportButton.Layout.Column = 2;
+            app.ExportButton.ImageSource = 'Export_16.png';
 
-            % Create toolButton_ok
-            app.toolButton_ok = uibutton(app.Toolbar, 'push');
-            app.toolButton_ok.ButtonPushedFcn = createCallbackFcn(app, @toolButton_okPushed, true);
-            app.toolButton_ok.Icon = 'Edit_32White.png';
-            app.toolButton_ok.IconAlignment = 'right';
-            app.toolButton_ok.HorizontalAlignment = 'right';
-            app.toolButton_ok.BackgroundColor = [0.6392 0.0784 0.1804];
-            app.toolButton_ok.FontSize = 11;
-            app.toolButton_ok.FontColor = [1 1 1];
-            app.toolButton_ok.Visible = 'off';
-            app.toolButton_ok.Layout.Row = 1;
-            app.toolButton_ok.Layout.Column = 4;
-            app.toolButton_ok.Text = 'Confirma edição';
+            % Create ConfirmEditionButton
+            app.ConfirmEditionButton = uibutton(app.Toolbar, 'push');
+            app.ConfirmEditionButton.ButtonPushedFcn = createCallbackFcn(app, @ConfirmEditionButtonPushed, true);
+            app.ConfirmEditionButton.Icon = 'save-16px-white.svg';
+            app.ConfirmEditionButton.BackgroundColor = [0.6392 0.0784 0.1804];
+            app.ConfirmEditionButton.FontSize = 11;
+            app.ConfirmEditionButton.FontColor = [1 1 1];
+            app.ConfirmEditionButton.Visible = 'off';
+            app.ConfirmEditionButton.Layout.Row = 1;
+            app.ConfirmEditionButton.Layout.Column = 4;
+            app.ConfirmEditionButton.Text = 'Salva alterações';
 
             % Create SubTabGroup
             app.SubTabGroup = uitabgroup(app.GridLayout);
@@ -1305,50 +1321,50 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Tree.Layout.Row = [1 11];
             app.Tree.Layout.Column = [1 3];
 
-            % Create Image_addTask
-            app.Image_addTask = uiimage(app.TreeGrid);
-            app.Image_addTask.ImageClickedFcn = createCallbackFcn(app, @Image_addTaskPushed, true);
-            app.Image_addTask.Enable = 'off';
-            app.Image_addTask.Tooltip = {'Adiciona nova tarefa'};
-            app.Image_addTask.Layout.Row = 1;
-            app.Image_addTask.Layout.Column = 4;
-            app.Image_addTask.ImageSource = 'addFileWithPlus_32.png';
+            % Create TreeAddTaskNode
+            app.TreeAddTaskNode = uiimage(app.TreeGrid);
+            app.TreeAddTaskNode.ImageClickedFcn = createCallbackFcn(app, @TreeAddTaskNodePushed, true);
+            app.TreeAddTaskNode.Enable = 'off';
+            app.TreeAddTaskNode.Tooltip = {''};
+            app.TreeAddTaskNode.Layout.Row = 1;
+            app.TreeAddTaskNode.Layout.Column = 4;
+            app.TreeAddTaskNode.ImageSource = 'addFileWithPlus_32.png';
 
-            % Create Image_addBand
-            app.Image_addBand = uiimage(app.TreeGrid);
-            app.Image_addBand.ImageClickedFcn = createCallbackFcn(app, @Image_addBandValueChanged, true);
-            app.Image_addBand.Enable = 'off';
-            app.Image_addBand.Tooltip = {'Adiciona fluxo espectral à tarefa selecionada'};
-            app.Image_addBand.Layout.Row = 3;
-            app.Image_addBand.Layout.Column = 4;
-            app.Image_addBand.ImageSource = 'EditWithPlus_32.png';
+            % Create TreeAddBandNode
+            app.TreeAddBandNode = uiimage(app.TreeGrid);
+            app.TreeAddBandNode.ImageClickedFcn = createCallbackFcn(app, @TreeAddBandNodeValueChanged, true);
+            app.TreeAddBandNode.Enable = 'off';
+            app.TreeAddBandNode.Tooltip = {''};
+            app.TreeAddBandNode.Layout.Row = 3;
+            app.TreeAddBandNode.Layout.Column = 4;
+            app.TreeAddBandNode.ImageSource = 'EditWithPlus_32.png';
 
-            % Create Image_del
-            app.Image_del = uiimage(app.TreeGrid);
-            app.Image_del.ImageClickedFcn = createCallbackFcn(app, @Image_delPushed, true);
-            app.Image_del.Enable = 'off';
-            app.Image_del.Tooltip = {'Exclui tarefa ou fluxo selecionado'};
-            app.Image_del.Layout.Row = 5;
-            app.Image_del.Layout.Column = 4;
-            app.Image_del.ImageSource = 'Delete_32Red.png';
+            % Create TreeDelNode
+            app.TreeDelNode = uiimage(app.TreeGrid);
+            app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @TreeDelNodePushed, true);
+            app.TreeDelNode.Enable = 'off';
+            app.TreeDelNode.Tooltip = {''};
+            app.TreeDelNode.Layout.Row = 5;
+            app.TreeDelNode.Layout.Column = 4;
+            app.TreeDelNode.ImageSource = 'Delete_32Red.png';
 
-            % Create Image_upArrow
-            app.Image_upArrow = uiimage(app.TreeGrid);
-            app.Image_upArrow.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
-            app.Image_upArrow.Enable = 'off';
-            app.Image_upArrow.Tooltip = {'Troca ordem de tarefa ou fluxo selecionado'};
-            app.Image_upArrow.Layout.Row = 8;
-            app.Image_upArrow.Layout.Column = 4;
-            app.Image_upArrow.ImageSource = 'ArrowUp_32.png';
+            % Create TreeMoveUp
+            app.TreeMoveUp = uiimage(app.TreeGrid);
+            app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
+            app.TreeMoveUp.Enable = 'off';
+            app.TreeMoveUp.Tooltip = {''};
+            app.TreeMoveUp.Layout.Row = 8;
+            app.TreeMoveUp.Layout.Column = 4;
+            app.TreeMoveUp.ImageSource = 'ArrowUp_32.png';
 
-            % Create Image_downArrow
-            app.Image_downArrow = uiimage(app.TreeGrid);
-            app.Image_downArrow.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
-            app.Image_downArrow.Enable = 'off';
-            app.Image_downArrow.Tooltip = {'Troca ordem de tarefa ou fluxo selecionado'};
-            app.Image_downArrow.Layout.Row = 10;
-            app.Image_downArrow.Layout.Column = 4;
-            app.Image_downArrow.ImageSource = 'ArrowDown_32.png';
+            % Create TreeMoveDown
+            app.TreeMoveDown = uiimage(app.TreeGrid);
+            app.TreeMoveDown.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
+            app.TreeMoveDown.Enable = 'off';
+            app.TreeMoveDown.Tooltip = {''};
+            app.TreeMoveDown.Layout.Row = 10;
+            app.TreeMoveDown.Layout.Column = 4;
+            app.TreeMoveDown.ImageSource = 'ArrowDown_32.png';
 
             % Create TreeLabel
             app.TreeLabel = uilabel(app.SubGrid1);
@@ -2144,26 +2160,22 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.DockModule.Layout.Column = [3 6];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
-            % Create dockModule_Close
-            app.dockModule_Close = uiimage(app.DockModule);
-            app.dockModule_Close.ScaleMethod = 'none';
-            app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
-            app.dockModule_Close.Tag = 'DRIVETEST';
-            app.dockModule_Close.Tooltip = {'Fecha módulo'};
-            app.dockModule_Close.Layout.Row = 1;
-            app.dockModule_Close.Layout.Column = 2;
-            app.dockModule_Close.ImageSource = 'Delete_12SVG_white.svg';
+            % Create DockUndockButton
+            app.DockUndockButton = uiimage(app.DockModule);
+            app.DockUndockButton.ScaleMethod = 'none';
+            app.DockUndockButton.ImageClickedFcn = createCallbackFcn(app, @onDockModuleGroupButtonClicked, true);
+            app.DockUndockButton.Enable = 'off';
+            app.DockUndockButton.Layout.Row = 1;
+            app.DockUndockButton.Layout.Column = 1;
+            app.DockUndockButton.ImageSource = 'Undock_18White.png';
 
-            % Create dockModule_Undock
-            app.dockModule_Undock = uiimage(app.DockModule);
-            app.dockModule_Undock.ScaleMethod = 'none';
-            app.dockModule_Undock.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
-            app.dockModule_Undock.Tag = 'DRIVETEST';
-            app.dockModule_Undock.Enable = 'off';
-            app.dockModule_Undock.Tooltip = {'Reabre módulo em outra janela'};
-            app.dockModule_Undock.Layout.Row = 1;
-            app.dockModule_Undock.Layout.Column = 1;
-            app.dockModule_Undock.ImageSource = 'Undock_18White.png';
+            % Create DockCloseButton
+            app.DockCloseButton = uiimage(app.DockModule);
+            app.DockCloseButton.ScaleMethod = 'none';
+            app.DockCloseButton.ImageClickedFcn = createCallbackFcn(app, @onDockModuleGroupButtonClicked, true);
+            app.DockCloseButton.Layout.Row = 1;
+            app.DockCloseButton.Layout.Column = 2;
+            app.DockCloseButton.ImageSource = 'Delete_12SVG_white.svg';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
