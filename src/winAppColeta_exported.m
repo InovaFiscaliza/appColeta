@@ -282,7 +282,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                         app.UIAxes1.Parent.TileSpacing = tileSpacing;
                 
                                     case 'onPlotColorChange'
-                                        error('pendente')
                                         plotTag = varargin{1};
                                         if ~isempty(eval(sprintf('app.PlotHandles.%s', plotTag)))
                                             app.PlotStyleDirty = true;

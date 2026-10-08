@@ -654,7 +654,7 @@ classdef winConfig_exported < matlab.apps.AppBase
                 saveGeneralSettings(app)
                 
                 updatePanel_Plot(app)
-                ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', 'ClrWrite')
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', 'ClearWrite')
             end
 
         end
@@ -1353,6 +1353,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.DockModule.RowHeight = {'1x'};
             app.DockModule.ColumnSpacing = 2;
             app.DockModule.Padding = [5 2 5 2];
+            app.DockModule.Visible = 'off';
             app.DockModule.Layout.Row = [2 4];
             app.DockModule.Layout.Column = [3 5];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
