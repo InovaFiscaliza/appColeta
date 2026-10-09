@@ -1,5 +1,5 @@
 {
-    "version": 0.14,
+    "version": 0.15,
     "operationMode": {
         "Debug": false,
         "Dock": true,
@@ -37,7 +37,7 @@
             "clientList": [
                 "Zabbix",
                 "Jupyter",
-                "Matlab"
+                "MATLAB"
             ]
         },
         "CONFIG": {
