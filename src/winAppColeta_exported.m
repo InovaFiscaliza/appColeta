@@ -2196,7 +2196,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.AppName.Layout.Row = [1 5];
             app.AppName.Layout.Column = [1 2];
             app.AppName.Interpreter = 'html';
-            app.AppName.Text = {'appColeta v. 1.64.0'; '<font style="font-size: 9px;">R2024a</font>'};
+            app.AppName.Text = {'appColeta v. 2.00.0'; '<font style="font-size: 9px;">R2024a</font>'};
 
             % Create Tab1Button
             app.Tab1Button = uibutton(app.NavBar, 'state');

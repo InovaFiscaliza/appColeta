@@ -240,7 +240,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function nodeText = TreeBuilding_nodeText(app, idx1, idx2)
-            nodeText = sprintf('ID %d: %.3f - %.3f MHz', app.editedList(idx1).Band(idx2).ID,                ...
+            nodeText = sprintf('ID %d: %.3f – %.3f MHz', app.editedList(idx1).Band(idx2).ID, ...
                                                          app.editedList(idx1).Band(idx2).FreqStart ./ 1e+6, ...
                                                          app.editedList(idx1).Band(idx2).FreqStop  ./ 1e+6);
         end
@@ -301,7 +301,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     set(app.SpecificTime_Grid.Children, 'Enable', 0, 'Visible', 0)
                     app.ObservationSamples.Enable = 0;
 
-                %---------------------------------------------------------%
                 case 'Período específico' % "Time"
                     SpecificTimePanel_editable(app)
 
@@ -310,7 +309,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     set([app.Duration, app.DurationUnit], 'Enable', 0, 'Visible', 0)
                     app.ObservationSamples.Enable = 0;
 
-                %---------------------------------------------------------%
                 case 'Quantidade específica de amostras' % "Samples"
                     app.Tab2_PanelGrid.RowHeight{6} = 66; 
                     app.ObservationPanel_Grid.RowHeight{3} = 0;
@@ -427,10 +425,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function newID(app)
-            idx1 = app.Tree.SelectedNodes.NodeData;
+            taskIdx = app.Tree.SelectedNodes.NodeData;
 
-            for ii = 1:numel(app.editedList(idx1).Band)
-                app.editedList(idx1).Band(ii).ID = ii;
+            for ii = 1:numel(app.editedList(taskIdx).Band)
+                app.editedList(taskIdx).Band(ii).ID = ii;
             end
         end
 
@@ -511,27 +509,27 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Selection changed function: Tree
         function TreeSelectionChanged(app, event)
             
-            idx1 = app.Tree.SelectedNodes.NodeData;
+            taskIdx = app.Tree.SelectedNodes.NodeData;
             
             if exist('event', 'var') && ~isequal(event.SelectedNodes.NodeData, event.PreviousSelectedNodes.NodeData)
                 collapse(app.Tree)
-                expand(app.Tree.Children(idx1))
+                expand(app.Tree.Children(taskIdx))
             end
 
             % Painel "ASPECTOS GERAIS"
-            app.Name.Value            = app.editedList(idx1).Name;
-            app.BitsPerPoint.Items    = {sprintf('%d bits', app.editedList(idx1).BitsPerSample)};
+            app.Name.Value = app.editedList(taskIdx).Name;
+            app.BitsPerPoint.Items = {sprintf('%d bits', app.editedList(taskIdx).BitsPerSample)};
             
-            app.ObservationType.Items = {util.TaskScriptIO.observationTypeLabel(app.editedList(idx1).Observation.Type)};
+            app.ObservationType.Items = {util.TaskScriptIO.observationTypeLabel(app.editedList(taskIdx).Observation.Type)};
             ObservationTimeLayout(app)
             
-            app.gpsMode.Items         = {app.editedList(idx1).GPS.Type};
+            app.gpsMode.Items = {app.editedList(taskIdx).GPS.Type};
             gpsModeValueChanged(app)
 
 
             % Painel "ESPECIFICIDADES DO FLUXO SELECIONADO"
             if isscalar(app.Tree.SelectedNodes.UserData)
-                idx2 = app.Tree.SelectedNodes.UserData;
+                bandIdx = app.Tree.SelectedNodes.UserData;
 
                 % Ajuste dos itens que são listas suspensas (uidropdown)
                 % porque no "MODO DE EDIÇÃO" todos os possíveis valores
@@ -543,55 +541,67 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 % ## MODO DE VISUALIZAÇÃO ##
                 %---------------------------------------------------------%
                 if app.ModeButtonView.Value
-                    if app.editedList(idx1).Band(idx2).Enable; app.Status.Items = {'ON'};
-                    else;                                      app.Status.Items = {'OFF'};
-                    end
-
-                    switch app.editedList(idx1).Band(idx2).MaskTrigger.Status
-                        case 0; app.MaskTrigger.Items = {'OFF'};
-                        case 1; app.MaskTrigger.Items = {'ON - Apenas afere rompimento'};
-                        case 2; app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'};
-                        case 3; app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo'};
-                    end
-
-                    app.TraceMode.Items = {app.editedList(idx1).Band(idx2).TraceMode};
-                    app.VBW.Items       = {app.editedList(idx1).Band(idx2).VBW};
-                    app.Detector.Items  = {app.editedList(idx1).Band(idx2).Detector};
-                    app.RFMode.Items    = {app.editedList(idx1).Band(idx2).RFMode};
-                    app.LevelUnit.Items = {app.editedList(idx1).Band(idx2).LevelUnit};
-
-                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.Configuration)
-                        app.FindPeaks_Type.Items = {'Valores padrão (appColeta)'};
+                    if app.editedList(taskIdx).Band(bandIdx).Enable
+                        app.Status.Items = {'ON'};
                     else
-                        app.FindPeaks_Type.Items = {'Valores customizados'};
+                        app.Status.Items = {'OFF'};
                     end
+
+                    switch app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status
+                        case 0
+                            app.MaskTrigger.Items = {'OFF'};
+                        case 1
+                            app.MaskTrigger.Items = {'ON - Apenas afere rompimento'};
+                        case 2
+                            app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'};
+                        case 3
+                            app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo'};
+                    end
+
+                    app.TraceMode.Items = {app.editedList(taskIdx).Band(bandIdx).TraceMode};
+                    app.VBW.Items       = {app.editedList(taskIdx).Band(bandIdx).VBW};
+                    app.Detector.Items  = {app.editedList(taskIdx).Band(bandIdx).Detector};
+                    app.RFMode.Items    = {app.editedList(taskIdx).Band(bandIdx).RFMode};
+                    app.LevelUnit.Items = {app.editedList(taskIdx).Band(bandIdx).LevelUnit};
+
+                    if isempty(app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
+                        findPeaksTypeItems = {'Valores padrão (appColeta)'};
+                    else
+                        findPeaksTypeItems = {'Valores customizados'};
+                    end
+                    set(app.FindPeaks_Type, 'Enable', 'off', 'Items', findPeaksTypeItems)
 
                 %---------------------------------------------------------%
                 % ## MODO DE EDIÇÃO ##
                 %---------------------------------------------------------%
                 else
-                    if app.editedList(idx1).Band(idx2).Enable; app.Status.Value = 'ON';
+                    if app.editedList(taskIdx).Band(bandIdx).Enable; app.Status.Value = 'ON';
                     else;                                      app.Status.Value = 'OFF';
                     end
 
-                    switch app.editedList(idx1).Band(idx2).MaskTrigger.Status
-                        case 0; app.MaskTrigger.Value = 'OFF';
-                        case 1; app.MaskTrigger.Value = 'ON - Apenas afere rompimento';
-                        case 2; app.MaskTrigger.Value = 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)';
-                        case 3; app.MaskTrigger.Value = 'ON - Afere rompimento e salva em arquivo';
+                    switch app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status
+                        case 0
+                            app.MaskTrigger.Value = 'OFF';
+                        case 1
+                            app.MaskTrigger.Value = 'ON - Apenas afere rompimento';
+                        case 2
+                            app.MaskTrigger.Value = 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)';
+                        case 3
+                            app.MaskTrigger.Value = 'ON - Afere rompimento e salva em arquivo';
                     end
 
-                    app.TraceMode.Value = app.editedList(idx1).Band(idx2).TraceMode;
-                    app.VBW.Value       = app.editedList(idx1).Band(idx2).VBW;
-                    app.Detector.Value  = app.editedList(idx1).Band(idx2).Detector;
-                    app.LevelUnit.Value = app.editedList(idx1).Band(idx2).LevelUnit;
-                    app.RFMode.Value    = app.editedList(idx1).Band(idx2).RFMode;
+                    app.TraceMode.Value = app.editedList(taskIdx).Band(bandIdx).TraceMode;
+                    app.VBW.Value       = app.editedList(taskIdx).Band(bandIdx).VBW;
+                    app.Detector.Value  = app.editedList(taskIdx).Band(bandIdx).Detector;
+                    app.LevelUnit.Value = app.editedList(taskIdx).Band(bandIdx).LevelUnit;
+                    app.RFMode.Value    = app.editedList(taskIdx).Band(bandIdx).RFMode;
 
-                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.Configuration)
-                        app.FindPeaks_Type.Value = 'Valores padrão (appColeta)';
+                    if isempty(app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
+                        findPeaksTypeValue = 'Valores padrão (appColeta)';
                     else
-                        app.FindPeaks_Type.Value = 'Valores customizados';
+                        findPeaksTypeValue = 'Valores customizados';
                     end
+                    set(app.FindPeaks_Type, 'Enable', ~strcmp(app.MaskTrigger.Value, 'OFF'), 'Value', findPeaksTypeValue)
                 end
 
 
@@ -599,18 +609,18 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 % além de especificidades do campo "Fator integração" e dos
                 % parâmetros relacionados à busca de emissões.
     
-                app.ObservationSamples.Value = app.editedList(idx1).Band(idx2).ObservationSamples;
-                app.ID.Value                 = app.editedList(idx1).Band(idx2).ID;
-                app.Description.Value        = app.editedList(idx1).Band(idx2).Description;
-                app.RevisitTime.Value        = app.editedList(idx1).Band(idx2).RevisitTime;
+                app.ObservationSamples.Value = app.editedList(taskIdx).Band(bandIdx).ObservationSamples;
+                app.ID.Value                 = app.editedList(taskIdx).Band(bandIdx).ID;
+                app.Description.Value        = app.editedList(taskIdx).Band(bandIdx).Description;
+                app.RevisitTime.Value        = app.editedList(taskIdx).Band(bandIdx).RevisitTime;
                 
-                app.FreqStart.Value          = app.editedList(idx1).Band(idx2).FreqStart  / 1e+6;
-                app.FreqStop.Value           = app.editedList(idx1).Band(idx2).FreqStop   / 1e+6;
-                app.StepWidth.Value          = app.editedList(idx1).Band(idx2).StepWidth  / 1e+3;
+                app.FreqStart.Value          = app.editedList(taskIdx).Band(bandIdx).FreqStart  / 1e+6;
+                app.FreqStop.Value           = app.editedList(taskIdx).Band(bandIdx).FreqStop   / 1e+6;
+                app.StepWidth.Value          = app.editedList(taskIdx).Band(bandIdx).StepWidth  / 1e+3;
                 SpanCheck(app)
 
-                app.Resolution.Value         = app.editedList(idx1).Band(idx2).Resolution / 1e+3;
-                app.IntegrationFactor.Value  = app.editedList(idx1).Band(idx2).IntegrationFactor;
+                app.Resolution.Value         = app.editedList(taskIdx).Band(bandIdx).Resolution / 1e+3;
+                app.IntegrationFactor.Value  = app.editedList(taskIdx).Band(bandIdx).IntegrationFactor;
 
                 IntegrationFactorCheck(app)
                 FindPeaksDropDownValueChanged(app)
@@ -810,11 +820,9 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 set(app.FindPeaks_Type,  'Items', {'Valores padrão (appColeta)', 'Valores customizados'})
             end
 
-
             if strcmp(app.ObservationType.Value, 'Período específico')
                 SpecificTimePanel_editable(app)
             end
-
 
             if strcmp(app.FindPeaks_Type.Value, 'Valores customizados')
                 FindPeaksPanel_editable(app)
@@ -825,11 +833,11 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Image clicked function: ImportButton
         function ImportButtonPushed(app, event)
             
-            [File, Folder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
+            [selectedFile, selectedFolder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
             figure(app.UIFigure)
 
-            if File
-            [tempList, msgError] =  util.TaskScriptIO.readScriptFile(fullfile(Folder, File), 'auxApp.winEditTaskList');
+            if selectedFile
+            [tempList, msgError] =  util.TaskScriptIO.readScriptFile(fullfile(selectedFolder, selectedFile), 'auxApp.winEditTaskList');
 
                 if isempty(msgError)
                     app.taskList   = [app.taskList; tempList];
@@ -847,11 +855,11 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Image clicked function: ExportButton
         function ExportButtonPushed(app, event)
             
-            Folder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de tarefas');
+            selectedFolder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de tarefas');
             figure(app.UIFigure)
 
-            if Folder
-                saveNewFile(app, Folder, true)
+            if selectedFolder
+                saveNewFile(app, selectedFolder, true)
             end
             
         end
@@ -859,46 +867,44 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Image clicked function: TreeAddTaskNode
         function TreeAddTaskNodePushed(app, event)
             
-            idx1_old = app.Tree.SelectedNodes.NodeData;
-            idx1_new = numel(app.editedList) + 1;
+            taskIdxPrevious = app.Tree.SelectedNodes.NodeData;
+            taskIdxCurrent = numel(app.editedList) + 1;
+            bandIdx = 1;
 
-            idx2 = 1;
-
-            app.editedList(idx1_new) = app.editedList(idx1_old);
-            app.editedList(idx1_new).Name = sprintf('%s (Cópia)', app.editedList(idx1_old).Name);
+            app.editedList(taskIdxCurrent) = app.editedList(taskIdxPrevious);
+            app.editedList(taskIdxCurrent).Name = sprintf('%s (Cópia)', app.editedList(taskIdxPrevious).Name);
             
-            TreeBuilding(app, [idx1_new, idx2])
+            TreeBuilding(app, [taskIdxCurrent, bandIdx])
 
         end
 
         % Image clicked function: TreeAddBandNode
         function TreeAddBandNodeValueChanged(app, event)
             
-            idx1 = app.Tree.SelectedNodes.NodeData;
-            
-            idx2_old = app.Tree.SelectedNodes.UserData;
-            idx2_new = numel(app.editedList(idx1).Band) + 1;
+            taskIdx = app.Tree.SelectedNodes.NodeData;
+            bandIdxPrevious = app.Tree.SelectedNodes.UserData;
+            bandIdxCurrent = numel(app.editedList(taskIdx).Band) + 1;
 
             if app.Tree.SelectedNodes.Parent == app.Tree
-                app.editedList(idx1).Band(idx2_new) = app.editedList(idx1).Band(1);
+                app.editedList(taskIdx).Band(bandIdxCurrent) = app.editedList(taskIdx).Band(1);
             else
-                app.editedList(idx1).Band(idx2_new) = app.editedList(idx1).Band(idx2_old);
+                app.editedList(taskIdx).Band(bandIdxCurrent) = app.editedList(taskIdx).Band(bandIdxPrevious);
             end
-             app.editedList(idx1).Band(idx2_new).ID = idx2_new;
+             app.editedList(taskIdx).Band(bandIdxCurrent).ID = bandIdxCurrent;
             
-            TreeBuilding(app, [idx1, idx2_new])
+            TreeBuilding(app, [taskIdx, bandIdxCurrent])
 
         end
 
         % Image clicked function: TreeDelNode
         function TreeDelNodePushed(app, event)
             
-            idx1 = app.Tree.SelectedNodes.NodeData;
-            idx2 = app.Tree.SelectedNodes.UserData;
+            taskIdx = app.Tree.SelectedNodes.NodeData;
+            bandIdx = app.Tree.SelectedNodes.UserData;
             
             if app.Tree.SelectedNodes.Parent == app.Tree
                 if numel(app.editedList) > 1
-                    app.editedList(idx1) = [];
+                    app.editedList(taskIdx) = [];
                     TreeBuilding(app, [1, -1])
 
                 else
@@ -907,10 +913,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 end
 
             else
-                if numel(app.editedList(idx1).Band) > 1
-                    app.editedList(idx1).Band(idx2) = [];
+                if numel(app.editedList(taskIdx).Band) > 1
+                    app.editedList(taskIdx).Band(bandIdx) = [];
                     newID(app)
-                    TreeBuilding(app, [idx1, 1])
+                    TreeBuilding(app, [taskIdx, 1])
 
                 else
                     ui.Dialog(app.UIFigure, "warning", 'Não é possível excluir a única faixa de frequência da tarefa.');
@@ -955,45 +961,47 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % ...and 29 other components
         function TaskParameterChanged(app, event)
             
-            idx1 = app.Tree.SelectedNodes.NodeData;
-            idx2 = app.Tree.SelectedNodes.UserData;
+            taskIdx = app.Tree.SelectedNodes.NodeData;
+            bandIdx = app.Tree.SelectedNodes.UserData;
 
             switch event.Source
                 %---------------------------------------------------------%
                 % Painel "ASPECTOS GERAIS"
                 %---------------------------------------------------------%
                 case app.Name
-                    app.editedList(idx1).Name    = app.Name.Value;
-                    app.Tree.Children(idx1).Text = app.Name.Value;
+                    app.editedList(taskIdx).Name    = app.Name.Value;
+                    app.Tree.Children(taskIdx).Text = app.Name.Value;
 
                 case app.BitsPerPoint
-                    app.editedList(idx1).BitsPerSample = str2double(extractBefore(app.BitsPerPoint.Value, 'bits'));
+                    app.editedList(taskIdx).BitsPerSample = str2double(extractBefore(app.BitsPerPoint.Value, 'bits'));
                 
                 case {app.Duration, app.DurationUnit}
-                    app.editedList(idx1).Observation.Type = 'Duration';
+                    app.editedList(taskIdx).Observation.Type = 'Duration';
                     switch app.DurationUnit.Value
-                        case 'min'; app.editedList(idx1).Observation.Duration = app.Duration.Value * 60;
-                        case 'hr';  app.editedList(idx1).Observation.Duration = app.Duration.Value * 3600;
+                        case 'min'
+                            app.editedList(taskIdx).Observation.Duration = app.Duration.Value * 60;
+                        case 'hr'
+                            app.editedList(taskIdx).Observation.Duration = app.Duration.Value * 3600;
                     end
 
                 case {app.SpecificTime_DatePicker1, app.SpecificTime_Spinner1, app.SpecificTime_Spinner2, app.SpecificTime_DatePicker2, app.SpecificTime_Spinner3, app.SpecificTime_Spinner4}
-                    app.editedList(idx1).Observation.Type = 'Time';
+                    app.editedList(taskIdx).Observation.Type = 'Time';
 
                     BeginTime = app.SpecificTime_DatePicker1.Value + hours(app.SpecificTime_Spinner1.Value) + minutes(app.SpecificTime_Spinner2.Value);
                     EndTime   = app.SpecificTime_DatePicker2.Value + hours(app.SpecificTime_Spinner3.Value) + minutes(app.SpecificTime_Spinner4.Value);
 
-                    app.editedList(idx1).Observation.BeginTime = datestr(BeginTime, 'dd/mm/yyyy HH:MM:ss');
-                    app.editedList(idx1).Observation.EndTime   = datestr(EndTime,   'dd/mm/yyyy HH:MM:ss');
+                    app.editedList(taskIdx).Observation.BeginTime = datestr(BeginTime, 'dd/mm/yyyy HH:MM:ss');
+                    app.editedList(taskIdx).Observation.EndTime   = datestr(EndTime,   'dd/mm/yyyy HH:MM:ss');
 
                 case {app.gpsMode, app.GPS_manualLatitude, app.GPS_manualLongitude, app.GPS_RevisitTime}
                     switch app.gpsMode.Value
                         case 'auto'
-                            app.editedList(idx1).GPS = struct('Type',        'auto', ...
+                            app.editedList(taskIdx).GPS = struct('Type',        'auto', ...
                                                               'Latitude',    [],     ...
                                                               'Longitude',   [],     ...
                                                               'RevisitTime', app.GPS_RevisitTime.Value);
                         case 'manual'
-                            app.editedList(idx1).GPS = struct('Type',        'manual',                      ...
+                            app.editedList(taskIdx).GPS = struct('Type',        'manual',                      ...
                                                               'Latitude',    app.GPS_manualLatitude.Value,  ...
                                                               'Longitude',   app.GPS_manualLongitude.Value, ...
                                                               'RevisitTime', app.GPS_RevisitTime.Value);
@@ -1003,18 +1011,20 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 % Painel "ESPECIFICIDADES DO FLUXO SELECIONADO"
                 %---------------------------------------------------------%
                 case app.Status
-                    if isscalar(app.editedList(idx1).Band)
+                    if isscalar(app.editedList(taskIdx).Band)
                         app.Status.Value = "ON";
                         ui.Dialog(app.UIFigure, "warning", 'Tarefa com apenas uma única faixa de frequência não pode ter essa faixa com o estado "OFF".');
                         return
 
                     else
-                        if app.Status.Value == "ON"; app.editedList(idx1).Band(idx2).Enable = 1;
-                        else;                        app.editedList(idx1).Band(idx2).Enable = 0;
+                        if app.Status.Value == "ON"
+                            app.editedList(taskIdx).Band(bandIdx).Enable = 1;
+                        else
+                            app.editedList(taskIdx).Band(bandIdx).Enable = 0;
                         end
 
-                        if all(~[app.editedList(idx1).Band.Enable])
-                            app.editedList(idx1).Band(idx2).Enable = 1;
+                        if all(~[app.editedList(taskIdx).Band.Enable])
+                            app.editedList(taskIdx).Band(bandIdx).Enable = 1;
 
                             app.Status.Value = "ON";
                             ui.Dialog(app.UIFigure, "warning", 'Toda tarefa deve possuir ao menos uma faixa de frequência com o estado "ON".');
@@ -1027,77 +1037,79 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 case app.MaskTrigger
                     switch app.MaskTrigger.Value
                         case 'OFF'
-                            app.editedList(idx1).Band(idx2).MaskTrigger.Status = 0;
+                            app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status = 0;
                         case 'ON - Apenas afere rompimento'
-                            app.editedList(idx1).Band(idx2).MaskTrigger.Status = 1;
+                            app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status = 1;
                         case 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'
-                            app.editedList(idx1).Band(idx2).MaskTrigger.Status = 2;
+                            app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status = 2;
                         case 'ON - Afere rompimento e salva em arquivo'
-                            app.editedList(idx1).Band(idx2).MaskTrigger.Status = 3;
+                            app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status = 3;
                     end
 
+                    app.FindPeaks_Type.Enable = ~strcmp(app.MaskTrigger.Value, 'OFF');
+
                 case app.Description
-                    app.editedList(idx1).Band(idx2).Description = app.Description.Value;
+                    app.editedList(taskIdx).Band(bandIdx).Description = app.Description.Value;
 
                 case app.ObservationSamples
-                    app.editedList(idx1).Observation.Type = 'Samples';
-                    if isscalar(idx2)
-                        app.editedList(idx1).Band(idx2).ObservationSamples = app.ObservationSamples.Value;
+                    app.editedList(taskIdx).Observation.Type = 'Samples';
+                    if isscalar(bandIdx)
+                        app.editedList(taskIdx).Band(bandIdx).ObservationSamples = app.ObservationSamples.Value;
                     end
 
                 case app.FreqStart
-                    app.editedList(idx1).Band(idx2).FreqStart   = app.FreqStart.Value * 1e+6;
-                    app.Tree.Children(idx1).Children(idx2).Text = TreeBuilding_nodeText(app, idx1, idx2);
+                    app.editedList(taskIdx).Band(bandIdx).FreqStart   = app.FreqStart.Value * 1e+6;
+                    app.Tree.Children(taskIdx).Children(bandIdx).Text = TreeBuilding_nodeText(app, taskIdx, bandIdx);
                     SpanCheck(app)
                     
                 case app.FreqStop
-                    app.editedList(idx1).Band(idx2).FreqStop    = app.FreqStop.Value * 1e+6;
-                    app.Tree.Children(idx1).Children(idx2).Text = TreeBuilding_nodeText(app, idx1, idx2);
+                    app.editedList(taskIdx).Band(bandIdx).FreqStop    = app.FreqStop.Value * 1e+6;
+                    app.Tree.Children(taskIdx).Children(bandIdx).Text = TreeBuilding_nodeText(app, taskIdx, bandIdx);
                     SpanCheck(app)
 
                 case app.StepWidth
-                    app.editedList(idx1).Band(idx2).StepWidth = app.StepWidth.Value * 1e+3;
+                    app.editedList(taskIdx).Band(bandIdx).StepWidth = app.StepWidth.Value * 1e+3;
 
                 case app.Resolution
-                    app.editedList(idx1).Band(idx2).Resolution = app.Resolution.Value * 1e+3;
+                    app.editedList(taskIdx).Band(bandIdx).Resolution = app.Resolution.Value * 1e+3;
 
                 case app.TraceMode
-                    app.editedList(idx1).Band(idx2).TraceMode = app.TraceMode.Value;
+                    app.editedList(taskIdx).Band(bandIdx).TraceMode = app.TraceMode.Value;
                     IntegrationFactorCheck(app)
-                    app.editedList(idx1).Band(idx2).IntegrationFactor = app.IntegrationFactor.Value;
+                    app.editedList(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
 
                 case app.IntegrationFactor
-                    app.editedList(idx1).Band(idx2).IntegrationFactor = app.IntegrationFactor.Value;
+                    app.editedList(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
 
                 case app.RFMode
-                    app.editedList(idx1).Band(idx2).RFMode = app.RFMode.Value;
+                    app.editedList(taskIdx).Band(bandIdx).RFMode = app.RFMode.Value;
 
                 case app.VBW
-                    app.editedList(idx1).Band(idx2).VBW = app.VBW.Value;
+                    app.editedList(taskIdx).Band(bandIdx).VBW = app.VBW.Value;
 
                 case app.Detector
-                    app.editedList(idx1).Band(idx2).Detector = app.Detector.Value;
+                    app.editedList(taskIdx).Band(bandIdx).Detector = app.Detector.Value;
 
                 case app.LevelUnit
-                    app.editedList(idx1).Band(idx2).LevelUnit = app.LevelUnit.Value;
+                    app.editedList(taskIdx).Band(bandIdx).LevelUnit = app.LevelUnit.Value;
 
                 case app.RevisitTime
-                    app.editedList(idx1).Band(idx2).RevisitTime = app.RevisitTime.Value;
+                    app.editedList(taskIdx).Band(bandIdx).RevisitTime = app.RevisitTime.Value;
 
                 %---------------------------------------------------------%
                 % Subpainel "FINDPEAKS"
                 %---------------------------------------------------------%
                 case app.FindPeaks_nSweeps
-                    app.editedList(idx1).Band(idx2).MaskTrigger.Configuration.sweepsPerValidation = app.FindPeaks_nSweeps.Value;
+                    app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration.sweepsPerValidation = app.FindPeaks_nSweeps.Value;
 
                 case app.FindPeaks_Prominence
-                    app.editedList(idx1).Band(idx2).MaskTrigger.Configuration.minimumProminence = app.FindPeaks_Prominence.Value;
+                    app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumProminence = app.FindPeaks_Prominence.Value;
 
                 case app.FindPeaks_Distance
-                    app.editedList(idx1).Band(idx2).MaskTrigger.Configuration.minimumDistanceKHz = app.FindPeaks_Distance.Value;
+                    app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumDistanceKHz = app.FindPeaks_Distance.Value;
 
                 case app.FindPeaks_BW
-                    app.editedList(idx1).Band(idx2).MaskTrigger.Configuration.minimumWidthKHz = app.FindPeaks_BW.Value;
+                    app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumWidthKHz = app.FindPeaks_BW.Value;
             end
             
         end
@@ -1105,54 +1117,54 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Image clicked function: TreeMoveDown, TreeMoveUp
         function UpDownImageClicked(app, event)
             
-            idx1 = app.Tree.SelectedNodes.NodeData;
-            idx2 = app.Tree.SelectedNodes.UserData;
+            taskIdx = app.Tree.SelectedNodes.NodeData;
+            bandIdx = app.Tree.SelectedNodes.UserData;
 
             Flag = 0;
 
             switch event.Source
                 case app.TreeMoveUp
                     if app.Tree.SelectedNodes.Parent == app.Tree
-                        if idx1 > 1
-                            app.editedList(idx1-1:idx1) = flip(app.editedList(idx1-1:idx1));
+                        if taskIdx > 1
+                            app.editedList(taskIdx-1:taskIdx) = flip(app.editedList(taskIdx-1:taskIdx));
 
                             Flag = 1;
-                            idx1 = idx1-1;
+                            taskIdx = taskIdx-1;
                         end
                     else
-                        if idx2 > 1
-                            app.editedList(idx1).Band(idx2-1:idx2) = flip(app.editedList(idx1).Band(idx2-1:idx2));
+                        if bandIdx > 1
+                            app.editedList(taskIdx).Band(bandIdx-1:bandIdx) = flip(app.editedList(taskIdx).Band(bandIdx-1:bandIdx));
                             newID(app)
 
                             Flag = 1;
-                            idx2 = idx2-1;
+                            bandIdx = bandIdx-1;
                         end
                     end
 
                 case app.TreeMoveDown
                     if app.Tree.SelectedNodes.Parent == app.Tree
-                        if idx1 < numel(app.editedList)
-                            app.editedList(idx1:idx1+1) = flip(app.editedList(idx1:idx1+1));
+                        if taskIdx < numel(app.editedList)
+                            app.editedList(taskIdx:taskIdx+1) = flip(app.editedList(taskIdx:taskIdx+1));
 
                             Flag = 1;
-                            idx1 = idx1+1;
+                            taskIdx = taskIdx+1;
                         end
                     else
-                        if idx2 < numel(app.editedList(idx1).Band)
-                            app.editedList(idx1).Band(idx2:idx2+1) = flip(app.editedList(idx1).Band(idx2:idx2+1));
+                        if bandIdx < numel(app.editedList(taskIdx).Band)
+                            app.editedList(taskIdx).Band(bandIdx:bandIdx+1) = flip(app.editedList(taskIdx).Band(bandIdx:bandIdx+1));
                             newID(app)
 
                             Flag = 1;
-                            idx2 = idx2+1;
+                            bandIdx = bandIdx+1;
                         end
                     end
             end
 
             if Flag
                 if app.Tree.SelectedNodes.Parent == app.Tree
-                    TreeBuilding(app, [idx1, -1])
+                    TreeBuilding(app, [taskIdx, -1])
                 else
-                    TreeBuilding(app, [idx1, idx2])
+                    TreeBuilding(app, [taskIdx, bandIdx])
                 end
             end
 
