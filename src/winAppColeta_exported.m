@@ -904,17 +904,17 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             end
 
             app.MaskStatus.Enable = 1;
-            validations = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Validations;
-            brokenCount = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenCount;
+            validations = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ValidationCount;
+            brokenCount = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationCount;
 
             if maskTrigger
-                if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks)
-                    numPeaks = sprintf(' (%d)', height(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks));
-                    freqCenter = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks.Frequency(1);
-                    bandWidth = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks.BandWidthkHz(1);
-                    prominence = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks.Prominence(1);
-                    dayTimeStamp = extractBefore(char(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.TimeStamp), ' ');
-                    hourTimeStamp = extractAfter(char(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.TimeStamp), ' ');
+                if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks)
+                    numPeaks = sprintf(' (%d)', height(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks));
+                    freqCenter = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks.centerFrequencyMHz(1);
+                    bandWidth = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks.bandwidthKHz(1);
+                    prominence = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks.prominence(1);
+                    dayTimeStamp = extractBefore(char(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.LastViolationAt), ' ');
+                    hourTimeStamp = extractAfter(char(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.LastViolationAt), ' ');
                 else
                     numPeaks = '';
                     freqCenter = -1;
@@ -1183,8 +1183,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         ylabel(app.UIAxes1, 'Rompimento (%)');
                         set(app.UIAxes1, XLim=[freqStart, freqStop], YLim=[.1, 100], YScale='log')
             
-                        KK = 100/app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Validations;
-                        app.PlotHandles.ClearWrite = plot.draw2D.clearWrite(app.UIAxes1, xArray, KK.*app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenArray, '%%', 'MaskPlot', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
+                        KK = 100/app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ValidationCount;
+                        app.PlotHandles.ClearWrite = plot.draw2D.clearWrite(app.UIAxes1, xArray, KK.*app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationsPerBin, '%%', 'MaskPlot', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
                 end
                 
                 app.RestoreView(1).XLim = app.UIAxes1.XLim;
@@ -1215,8 +1215,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         plot.draw2D.update(app.PlotHandles.ClearWrite, app.TaskController.Tasks(taskIdx).Bands(bandIdx).AzimuthTrace, app.General)
 
                     case 'Máscara'
-                        KK = 100/app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.Validations;
-                        plot.draw2D.update(app.PlotHandles.ClearWrite, KK.*app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenArray, app.General)
+                        KK = 100/app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ValidationCount;
+                        plot.draw2D.update(app.PlotHandles.ClearWrite, KK.*app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationsPerBin, app.General)
                 end
             end
 

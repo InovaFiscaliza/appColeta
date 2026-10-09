@@ -193,7 +193,7 @@ classdef TaskController < handle
 
                                 else
                                     % BURST OF TRACES
-                                    burstSweeps = obj.Tasks(taskIdx).Bands(bandIdx).Mask.FindPeaks.nSweeps;
+                                    burstSweeps = obj.Tasks(taskIdx).Bands(bandIdx).Mask.Configuration.sweepsPerValidation;
                                     traceData   = zeros(burstSweeps, obj.Tasks(taskIdx).Bands(bandIdx).DataPoints, 'single');
 
                                     for sweepIdx = 1:burstSweeps
@@ -204,21 +204,26 @@ classdef TaskController < handle
                                     averagedTrace = mean(traceData, 1);
 
                                     % METADATA UPDATE
-                                    obj.Tasks(taskIdx).Bands(bandIdx).Mask.Validations = obj.Tasks(taskIdx).Bands(bandIdx).Mask.Validations + 1;
+                                    obj.Tasks(taskIdx).Bands(bandIdx).Mask.ValidationCount = obj.Tasks(taskIdx).Bands(bandIdx).Mask.ValidationCount + 1;
 
                                     % MASK BROKEN ANALISYS
                                     maskExceedance = (averagedTrace - obj.Tasks(taskIdx).Bands(bandIdx).Mask.Array) > 0;
                                     if any(maskExceedance)
-                                        obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenArray = obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenArray + maskExceedance;
+                                        obj.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationsPerBin = obj.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationsPerBin + maskExceedance;
 
                                         peaksTable = util.TaskAnalysis.findMaskPeaks(obj.Tasks(taskIdx), bandIdx, averagedTrace, maskExceedance);
                                         if ~isempty(peaksTable)
-                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenCount = obj.Tasks(taskIdx).Bands(bandIdx).Mask.BrokenCount + 1;
-                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.Peaks       = peaksTable;
-                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.TimeStamp   = sampleTimestamp;
+                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationCount  = obj.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationCount + 1;
+                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks  = peaksTable;
+                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.LastViolationAt = sampleTimestamp;
 
                                             if isRegularTask
-                                                writematrix(jsonencode(rmfield(obj.Tasks(taskIdx).Bands(bandIdx).Mask, {'Table', 'Array', 'Validations', 'BrokenArray', 'FindPeaks'})), ...
+                                                maskEvent = struct( ...
+                                                    'violationCount',  obj.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationCount, ...
+                                                    'exceedingPeaks',  peaksTable, ...
+                                                    'lastViolationAt', sampleTimestamp ...
+                                                );
+                                                writematrix(jsonencode(maskEvent), ...
                                                     replace(obj.Tasks(taskIdx).Bands(bandIdx).OutputFile.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
                                             end
 
@@ -606,14 +611,14 @@ classdef TaskController < handle
                     maskInfo  = util.SpectralMask.readMaskFile(taskSpec.MaskFile);
                     maskArray = util.SpectralMask.buildMaskArray(maskInfo, taskSpec.Script.Band(bandIdx));
 
-                    findPeaksConfig = taskSpec.Script.Band(bandIdx).MaskTrigger.FindPeaks;
-                    if isempty(findPeaksConfig)
-                        findPeaksConfig = class.Constants.FindPeaks;
+                    maskConfiguration = taskSpec.Script.Band(bandIdx).MaskTrigger.Configuration;
+                    if isempty(maskConfiguration)
+                        maskConfiguration = class.Constants.defaultMaskConfiguration;
                     end
 
-                    obj.Tasks(idx).Bands(bandIdx).Mask = struct('Table', maskInfo.Table, 'Array', maskArray, 'Validations', 0, ...
-                                                            'BrokenArray', zeros(1, taskSpec.Script.Band(bandIdx).instrDataPoints), ...
-                                                            'BrokenCount', 0, 'Peaks', '', 'TimeStamp', NaT, 'FindPeaks', findPeaksConfig);
+                    obj.Tasks(idx).Bands(bandIdx).Mask = struct('Table', maskInfo.Table, 'Array', maskArray, 'ValidationCount', 0, ...
+                                                            'ViolationsPerBin', zeros(1, taskSpec.Script.Band(bandIdx).instrDataPoints), ...
+                                                            'ViolationCount', 0, 'ExceedingPeaks', '', 'LastViolationAt', NaT, 'Configuration', maskConfiguration);
                     obj.Tasks(idx).LogEntries(end+1)    = struct('level', 'mask', 'timestamp', datestr(now), 'message', sprintf('ID %.0f\n%s', bandId, jsonencode(maskInfo.Table)));
                 end
 

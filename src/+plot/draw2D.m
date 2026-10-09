@@ -96,7 +96,7 @@ classdef (Abstract) draw2D
             levelUnit = specObj.TaskSpec.Script.Band(kk).instrLevelUnit;
 
             for ii = 1:height(maskTable)
-                newObj = plot(hAxes, [maskTable.FreqStart(ii), maskTable.FreqStop(ii)], [maskTable.THR(ii), maskTable.THR(ii)], 'red', ...
+                newObj = plot(hAxes, [maskTable.startFrequencyMHz(ii), maskTable.stopFrequencyMHz(ii)], [maskTable.threshold(ii), maskTable.threshold(ii)], 'red', ...
                               'Marker', 'o', 'MarkerEdgeColor', 'red', 'MarkerFaceColor', 'red', 'MarkerSize', 4, 'Tag', 'Mask');
                 plot.datatipModel(newObj, levelUnit)
             end

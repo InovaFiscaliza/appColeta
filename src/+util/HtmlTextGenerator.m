@@ -115,8 +115,8 @@ classdef (Abstract) HtmlTextGenerator
         
             % MaskTrigger
             if ~isempty(specObj(taskIdx).Bands(bandIdx).Mask)
-                maskTrigger = struct('Status',    Task.Script.Band(bandIdx).MaskTrigger.Status, ...
-                                     'FindPeaks', specObj(taskIdx).Bands(bandIdx).Mask.FindPeaks);
+                maskTrigger = struct('Status',        Task.Script.Band(bandIdx).MaskTrigger.Status, ...
+                                     'Configuration', specObj(taskIdx).Bands(bandIdx).Mask.Configuration);
             else
                 maskTrigger = 'NA';
             end

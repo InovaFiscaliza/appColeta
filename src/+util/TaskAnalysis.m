@@ -51,11 +51,11 @@ classdef (Abstract) TaskAnalysis
         %-----------------------------------------------------------------%
         function peaksTable = findMaskPeaks(task, bandIdx, smoothedTrace, exceedanceMask)
             % Identifica os picos do traço que romperam a máscara espectral
-            % ("exceedanceMask"), conforme os atributos "Mask.FindPeaks" da banda.
+            % ("exceedanceMask"), conforme "Mask.Configuration.peakDetection" da banda.
 
             peaksTable = [];
 
-            peakAttributes = task.Bands(bandIdx).Mask.FindPeaks;
+            peakAttributes = task.Bands(bandIdx).Mask.Configuration.peakDetection;
             freqStart = task.TaskSpec.Script.Band(bandIdx).FreqStart;
             freqStop  = task.TaskSpec.Script.Band(bandIdx).FreqStop;
             numPoints = numel(smoothedTrace);
@@ -64,9 +64,9 @@ classdef (Abstract) TaskAnalysis
             freqStep = (freqStop-freqStart)/(numPoints-1);
             freqOffset = freqStart-freqStep;
 
-            [peakIdxRanges, peakProminences] = matlab.findpeaks(smoothedTrace, 'MinPeakProminence', peakAttributes.Prominence, ...
-                                                                               'MinPeakDistance',   1000 * peakAttributes.Distance / freqStep, ...
-                                                                               'MinPeakWidth',      1000 * peakAttributes.BW / freqStep, ...
+            [peakIdxRanges, peakProminences] = matlab.findpeaks(smoothedTrace, 'MinPeakProminence', peakAttributes.minimumProminence, ...
+                                                                               'MinPeakDistance',   1000 * peakAttributes.minimumDistanceKHz / freqStep, ...
+                                                                               'MinPeakWidth',      1000 * peakAttributes.minimumWidthKHz / freqStep, ...
                                                                                'SortStr',           'descend');
 
             for peakIdx = height(peakIdxRanges):-1:1
@@ -84,7 +84,7 @@ classdef (Abstract) TaskAnalysis
 
                 peaksTable = table( ...
                     round(peakCenterIdxs), round(peakFreqCenter, 3), round(peakWidth, 1), round(peakProminences, 1), ...
-                    'VariableNames', {'FrequencyIdx', 'Frequency', 'BandWidthkHz', 'Prominence'} ...
+                    'VariableNames', {'frequencyBinIndex', 'centerFrequencyMHz', 'bandwidthKHz', 'prominence'} ...
                 );
             end
         end

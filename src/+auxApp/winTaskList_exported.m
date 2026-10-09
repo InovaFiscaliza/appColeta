@@ -560,7 +560,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     app.RFMode.Items    = {app.editedList(idx1).Band(idx2).RFMode};
                     app.LevelUnit.Items = {app.editedList(idx1).Band(idx2).LevelUnit};
 
-                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks)
+                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.Configuration)
                         app.FindPeaks_Type.Items = {'Valores padrão (appColeta)'};
                     else
                         app.FindPeaks_Type.Items = {'Valores customizados'};
@@ -587,7 +587,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     app.LevelUnit.Value = app.editedList(idx1).Band(idx2).LevelUnit;
                     app.RFMode.Value    = app.editedList(idx1).Band(idx2).RFMode;
 
-                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks)
+                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.Configuration)
                         app.FindPeaks_Type.Value = 'Valores padrão (appColeta)';
                     else
                         app.FindPeaks_Type.Value = 'Valores customizados';
@@ -697,34 +697,37 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 case 'Valores padrão (appColeta)'
                     set(findobj(app.FindPeaks_Grid, 'Type', 'uispinner'), Enable=0)
 
-                    app.FindPeaks_nSweeps.Value    = class.Constants.FindPeaks.nSweeps;
-                    app.FindPeaks_Prominence.Value = class.Constants.FindPeaks.Prominence;
-                    app.FindPeaks_Distance.Value   = class.Constants.FindPeaks.Distance;
-                    app.FindPeaks_BW.Value         = class.Constants.FindPeaks.BW;
+                    defaultConfiguration = class.Constants.defaultMaskConfiguration;
+                    app.FindPeaks_nSweeps.Value    = defaultConfiguration.sweepsPerValidation;
+                    app.FindPeaks_Prominence.Value = defaultConfiguration.peakDetection.minimumProminence;
+                    app.FindPeaks_Distance.Value   = defaultConfiguration.peakDetection.minimumDistanceKHz;
+                    app.FindPeaks_BW.Value         = defaultConfiguration.peakDetection.minimumWidthKHz;
 
                     if app.ModeButtonEdit.Value
-                        app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks = [];
+                        app.editedList(idx1).Band(idx2).MaskTrigger.Configuration = [];
                     end
 
                 case 'Valores customizados'
                     FindPeaksPanel_editable(app)
-                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks)
-                        app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks = struct('nSweeps',    class.Constants.FindPeaks.nSweeps,    ...
-                                                                                       'Prominence', class.Constants.FindPeaks.Prominence, ...
-                                                                                       'Distance',   class.Constants.FindPeaks.Distance,   ...
-                                                                                       'BW',         class.Constants.FindPeaks.BW);
+                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.Configuration)
+                        app.editedList(idx1).Band(idx2).MaskTrigger.Configuration = class.Constants.defaultMaskConfiguration;
                     end
 
-                    app.FindPeaks_nSweeps.Value    = app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.nSweeps;
-                    app.FindPeaks_Prominence.Value = app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.Prominence;
-                    app.FindPeaks_Distance.Value   = app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.Distance;
-                    app.FindPeaks_BW.Value         = app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.BW;
+                    customConfiguration = app.editedList(idx1).Band(idx2).MaskTrigger.Configuration;
+                    app.FindPeaks_nSweeps.Value    = customConfiguration.sweepsPerValidation;
+                    app.FindPeaks_Prominence.Value = customConfiguration.peakDetection.minimumProminence;
+                    app.FindPeaks_Distance.Value   = customConfiguration.peakDetection.minimumDistanceKHz;
+                    app.FindPeaks_BW.Value         = customConfiguration.peakDetection.minimumWidthKHz;
 
                     if app.ModeButtonEdit.Value
-                        app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks = struct('nSweeps',    app.FindPeaks_nSweeps.Value,    ...
-                                                                                       'Prominence', app.FindPeaks_Prominence.Value, ...
-                                                                                       'Distance',   app.FindPeaks_Distance.Value,   ...
-                                                                                       'BW',         app.FindPeaks_BW.Value);
+                        app.editedList(idx1).Band(idx2).MaskTrigger.Configuration = struct( ...
+                            'sweepsPerValidation', app.FindPeaks_nSweeps.Value, ...
+                            'peakDetection', struct( ...
+                                'minimumProminence',  app.FindPeaks_Prominence.Value, ...
+                                'minimumDistanceKHz', app.FindPeaks_Distance.Value, ...
+                                'minimumWidthKHz',    app.FindPeaks_BW.Value ...
+                            ) ...
+                        );
                     end
             end
             
@@ -1021,73 +1024,63 @@ classdef winTaskList_exported < matlab.apps.AppBase
                         TreeBuilding_addStyle(app)
                     end
 
-                %---------------------------------------------------------%
                 case app.MaskTrigger
                     switch app.MaskTrigger.Value
-                        case 'OFF';                                                             app.editedList(idx1).Band(idx2).MaskTrigger.Status = 0;
-                        case 'ON - Apenas afere rompimento';                                    app.editedList(idx1).Band(idx2).MaskTrigger.Status = 1;
-                        case 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'; app.editedList(idx1).Band(idx2).MaskTrigger.Status = 2;
-                        case 'ON - Afere rompimento e salva em arquivo';                        app.editedList(idx1).Band(idx2).MaskTrigger.Status = 3;
+                        case 'OFF'
+                            app.editedList(idx1).Band(idx2).MaskTrigger.Status = 0;
+                        case 'ON - Apenas afere rompimento'
+                            app.editedList(idx1).Band(idx2).MaskTrigger.Status = 1;
+                        case 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'
+                            app.editedList(idx1).Band(idx2).MaskTrigger.Status = 2;
+                        case 'ON - Afere rompimento e salva em arquivo'
+                            app.editedList(idx1).Band(idx2).MaskTrigger.Status = 3;
                     end
 
-                %---------------------------------------------------------%
                 case app.Description
                     app.editedList(idx1).Band(idx2).Description = app.Description.Value;
 
-                %---------------------------------------------------------%
                 case app.ObservationSamples
                     app.editedList(idx1).Observation.Type = 'Samples';
                     if isscalar(idx2)
                         app.editedList(idx1).Band(idx2).ObservationSamples = app.ObservationSamples.Value;
                     end
 
-                %---------------------------------------------------------%
                 case app.FreqStart
                     app.editedList(idx1).Band(idx2).FreqStart   = app.FreqStart.Value * 1e+6;
                     app.Tree.Children(idx1).Children(idx2).Text = TreeBuilding_nodeText(app, idx1, idx2);
                     SpanCheck(app)
                     
-                %---------------------------------------------------------%
                 case app.FreqStop
                     app.editedList(idx1).Band(idx2).FreqStop    = app.FreqStop.Value * 1e+6;
                     app.Tree.Children(idx1).Children(idx2).Text = TreeBuilding_nodeText(app, idx1, idx2);
                     SpanCheck(app)
 
-                %---------------------------------------------------------%
                 case app.StepWidth
                     app.editedList(idx1).Band(idx2).StepWidth = app.StepWidth.Value * 1e+3;
 
-                %---------------------------------------------------------%
                 case app.Resolution
                     app.editedList(idx1).Band(idx2).Resolution = app.Resolution.Value * 1e+3;
 
-                %---------------------------------------------------------%
                 case app.TraceMode
                     app.editedList(idx1).Band(idx2).TraceMode = app.TraceMode.Value;
                     IntegrationFactorCheck(app)
                     app.editedList(idx1).Band(idx2).IntegrationFactor = app.IntegrationFactor.Value;
 
-                %---------------------------------------------------------%
                 case app.IntegrationFactor
                     app.editedList(idx1).Band(idx2).IntegrationFactor = app.IntegrationFactor.Value;
 
-                %---------------------------------------------------------%
                 case app.RFMode
                     app.editedList(idx1).Band(idx2).RFMode = app.RFMode.Value;
 
-                %---------------------------------------------------------%
                 case app.VBW
                     app.editedList(idx1).Band(idx2).VBW = app.VBW.Value;
 
-                %---------------------------------------------------------%
                 case app.Detector
                     app.editedList(idx1).Band(idx2).Detector = app.Detector.Value;
 
-                %---------------------------------------------------------%
                 case app.LevelUnit
                     app.editedList(idx1).Band(idx2).LevelUnit = app.LevelUnit.Value;
 
-                %---------------------------------------------------------%
                 case app.RevisitTime
                     app.editedList(idx1).Band(idx2).RevisitTime = app.RevisitTime.Value;
 
@@ -1095,19 +1088,16 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 % Subpainel "FINDPEAKS"
                 %---------------------------------------------------------%
                 case app.FindPeaks_nSweeps
-                    app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.nSweeps    = app.FindPeaks_nSweeps.Value;
+                    app.editedList(idx1).Band(idx2).MaskTrigger.Configuration.sweepsPerValidation = app.FindPeaks_nSweeps.Value;
 
-                %---------------------------------------------------------%
                 case app.FindPeaks_Prominence
-                    app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.Prominence = app.FindPeaks_Prominence.Value;
+                    app.editedList(idx1).Band(idx2).MaskTrigger.Configuration.minimumProminence = app.FindPeaks_Prominence.Value;
 
-                %---------------------------------------------------------%
                 case app.FindPeaks_Distance
-                    app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.Distance   = app.FindPeaks_Distance.Value;
+                    app.editedList(idx1).Band(idx2).MaskTrigger.Configuration.minimumDistanceKHz = app.FindPeaks_Distance.Value;
 
-                %---------------------------------------------------------%
                 case app.FindPeaks_BW
-                    app.editedList(idx1).Band(idx2).MaskTrigger.FindPeaks.BW         = app.FindPeaks_BW.Value;
+                    app.editedList(idx1).Band(idx2).MaskTrigger.Configuration.minimumWidthKHz = app.FindPeaks_BW.Value;
             end
             
         end
