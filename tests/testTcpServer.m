@@ -13,7 +13,7 @@ function responses = testTcpServer()
     tcpClient = tcpclient(serverAddress, serverSettings.port, "Timeout", 10);
     configureTerminator(tcpClient, "CR/LF")
 
-    requests = ["StationInfo", "Diagnostic", "PositionList", "TaskList"];
+    requests = ["StationInfo", "Diagnostic", "Summary", "PositionList", "TaskList"];
     responses = struct();
 
     for requestIdx = 1:numel(requests)

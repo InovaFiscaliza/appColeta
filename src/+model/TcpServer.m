@@ -137,6 +137,8 @@ classdef TcpServer < handle
                                     msg = answerStationInfo(obj);
                                 case 'Diagnostic'
                                     msg = answerDiagnostic(obj);
+                                case 'Summary'
+                                    msg = answerSummary(obj);
                                 case 'PositionList'
                                     msg = answerPositionList(obj);
                                 case 'TaskList'
@@ -259,8 +261,7 @@ classdef TcpServer < handle
             ];
 
             sysValues  = repmat(replace(sysNames(1:15), {' ', ':'}, {'', ''}), [1 2]);
-            sysDict    = dictionary(sysNames, sysValues);            
-            discFields = "DeviceID,FileSystem,FreeSpace,Size";            
+            sysDict    = dictionary(sysNames, sysValues);
             
             % Environment variable
             envVariables = getenv();
@@ -295,21 +296,62 @@ classdef TcpServer < handle
             end            
             
             % Disc info (Prompt2)
+            answer.diagnostics.logicalDisks = queryLogicalDisks(obj);
+        end
+
+        %-----------------------------------------------------------------%
+        function logicalDisks = queryLogicalDisks(~)
+            logicalDisks = [];
+            discFields = "DeviceID,FileSystem,FreeSpace,Size";
+
             [status, cmdout] = system("wmic LOGICALDISK get " + discFields);
             if ~status
                 try
                     cmdout = strtrim(splitlines(cmdout));
                     cmdout(cellfun(@(x) isempty(x), cmdout)) = [];
-            
-                    answer.diagnostics.logicalDisks = cellfun(@(x) regexp(x, '(?<deviceId>[A-Z]:)\s+(?<fileSystem>\w+)\s+(?<freeSpace>\d+)\s+(?<totalSize>\d+)', 'names'), cmdout(2:end));
-                    for ii = 1:numel(answer.diagnostics.logicalDisks)
-                        answer.diagnostics.logicalDisks(ii).freeSpace = textFormatGUI.bytes2human(str2double(answer.diagnostics.logicalDisks(ii).freeSpace));
-                        answer.diagnostics.logicalDisks(ii).totalSize = textFormatGUI.bytes2human(str2double(answer.diagnostics.logicalDisks(ii).totalSize));
-                    end
 
+                    logicalDisks = cellfun(@(x) regexp(x, '(?<deviceId>[A-Z]:)\s+(?<fileSystem>\w+)\s+(?<freeSpace>\d+)\s+(?<totalSize>\d+)', 'names'), cmdout(2:end));
+                    for ii = 1:numel(logicalDisks)
+                        logicalDisks(ii).freeSpace = textFormatGUI.bytes2human(str2double(logicalDisks(ii).freeSpace));
+                        logicalDisks(ii).totalSize = textFormatGUI.bytes2human(str2double(logicalDisks(ii).totalSize));
+                    end
                 catch
+                    logicalDisks = [];
                 end
             end
+        end
+
+        %-----------------------------------------------------------------%
+        function answer = answerSummary(obj)
+            station = obj.App.General.context.CONFIG.station;
+
+            receiverHandles = obj.App.receiverObj.Table.Handle;
+            receiverIdns = {};
+            for handleIdx = 1:numel(receiverHandles)
+                receiverHandle = receiverHandles{handleIdx};
+                if ~isempty(receiverHandle) && isvalid(receiverHandle) && isstruct(receiverHandle.UserData) && isfield(receiverHandle.UserData, 'IDN')
+                    receiverIdns{end+1} = char(receiverHandle.UserData.IDN);
+                end
+            end
+            receiverIdns = unique(receiverIdns);
+
+            logicalDisks = queryLogicalDisks(obj);
+
+            taskStatus = {obj.App.TaskController.Tasks.Status};
+            runningTaskCount = sum(strcmp(taskStatus, 'Em andamento'));
+
+            answer = struct( ...
+                'stationName', station.name, ...
+                'latitude', station.latitude, ...
+                'longitude', station.longitude, ...
+                'receiverIdns', {receiverIdns}, ...
+                'logicalDisks', logicalDisks, ...
+                'taskSummary', struct( ...
+                    'isRunning', runningTaskCount > 0, ...
+                    'totalCount', numel(taskStatus), ...
+                    'runningCount', runningTaskCount ...
+                ) ...
+            );
         end
 
         %-----------------------------------------------------------------%
