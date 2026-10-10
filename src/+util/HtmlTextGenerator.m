@@ -294,6 +294,40 @@ classdef (Abstract) HtmlTextGenerator
 
             htmlContent   = textFormatGUI.struct2PrettyPrintList(dataStruct);
         end
+
+        %-----------------------------------------------------------------%
+        function tag = createTag(type, varargin)
+            arguments
+                type {mustBeMember(type, {'Flow', 'Emission', 'Channel'})}
+            end
+
+            arguments (Repeating)
+                varargin
+            end
+
+            switch type
+                case 'Flow'
+                    startFrequencyHz = varargin{1};
+                    stopFrequencyHz = varargin{2};
+                    flowId = varargin{3};
+
+                    tag = sprintf('%.3f – %.3f MHz', startFrequencyHz/1e+6, stopFrequencyHz/1e+6);
+
+                    if ~isempty(flowId)
+                        tag = [sprintf('ID %d: ', flowId), tag];
+                    end
+
+                case 'Emission'
+                    frequencyMHz = varargin{1};
+                    bandWidthkHz = varargin{2};
+                    tag = sprintf('%.3f MHz ⌂ %.1f kHz', frequencyMHz, bandWidthkHz);
+
+                case 'Channel'
+                    frequencyMHz = varargin{1};
+                    bandWidthMHz = varargin{2};
+                    tag = sprintf('%.3f MHz @ %.3f MHz', bandWidthMHz, frequencyMHz);
+            end
+        end
     end
 end
 

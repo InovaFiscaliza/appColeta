@@ -2,109 +2,109 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        UIFigure                   matlab.ui.Figure
-        GridLayout                 matlab.ui.container.GridLayout
-        DockModule                 matlab.ui.container.GridLayout
-        DockCloseButton            matlab.ui.control.Image
-        DockUndockButton           matlab.ui.control.Image
-        SubTabGroup                matlab.ui.container.TabGroup
-        SubTab1                    matlab.ui.container.Tab
-        SubGrid1                   matlab.ui.container.GridLayout
-        PanelGrid                  matlab.ui.container.GridLayout
-        BandSpecificInfo_Grid      matlab.ui.container.GridLayout
-        FindPeaks_Panel            matlab.ui.container.Panel
-        FindPeaks_Grid             matlab.ui.container.GridLayout
-        FindPeaks_BW               matlab.ui.control.Spinner
-        FindPeaks_BWLabel          matlab.ui.control.Label
-        FindPeaks_Distance         matlab.ui.control.Spinner
-        FindPeaks_DistanceLabel    matlab.ui.control.Label
-        FindPeaks_Prominence       matlab.ui.control.Spinner
-        FindPeaks_ProminenceLabel  matlab.ui.control.Label
-        FindPeaks_nSweeps          matlab.ui.control.Spinner
-        FindPeaks_nSweepsLabel     matlab.ui.control.Label
-        FindPeaks_Type             matlab.ui.control.DropDown
-        FindPeaks_TypeLabel        matlab.ui.control.Label
-        FindPeaks_PanelLabel       matlab.ui.control.Label
-        RevisitTime                matlab.ui.control.NumericEditField
-        RevisitTimeLabel           matlab.ui.control.Label
-        LevelUnit                  matlab.ui.control.DropDown
-        LevelUnitLabel             matlab.ui.control.Label
-        Detector                   matlab.ui.control.DropDown
-        DetectorLabel              matlab.ui.control.Label
-        VBW                        matlab.ui.control.DropDown
-        VBWLabel                   matlab.ui.control.Label
-        RFMode                     matlab.ui.control.DropDown
-        RFModeLabel                matlab.ui.control.Label
-        IntegrationFactor          matlab.ui.control.NumericEditField
-        IntegrationFactorLabel     matlab.ui.control.Label
-        TraceMode                  matlab.ui.control.DropDown
-        TraceModeLabel             matlab.ui.control.Label
-        Resolution                 matlab.ui.control.NumericEditField
-        ResolutionLabel            matlab.ui.control.Label
-        StepWidth                  matlab.ui.control.NumericEditField
-        StepWidthLabel             matlab.ui.control.Label
-        FreqStop                   matlab.ui.control.NumericEditField
-        FreqStopLabel              matlab.ui.control.Label
-        FreqStart                  matlab.ui.control.NumericEditField
-        FreqStartLabel             matlab.ui.control.Label
-        ObservationSamples         matlab.ui.control.NumericEditField
-        ObservationSamplesLabel    matlab.ui.control.Label
-        Description                matlab.ui.control.EditField
-        DescriptionLabel           matlab.ui.control.Label
-        ID                         matlab.ui.control.NumericEditField
-        IDLabel                    matlab.ui.control.Label
-        MaskTrigger                matlab.ui.control.DropDown
-        MaskTriggerLabel           matlab.ui.control.Label
-        Status                     matlab.ui.control.DropDown
-        StatusLabel                matlab.ui.control.Label
-        Tab2_PanelGrid             matlab.ui.container.GridLayout
-        GPS_Panel                  matlab.ui.container.Panel
-        GPS_Grid                   matlab.ui.container.GridLayout
-        GPS_RevisitTime            matlab.ui.control.NumericEditField
-        GPS_RevisitTimeLabel       matlab.ui.control.Label
-        GPS_manualLongitude        matlab.ui.control.NumericEditField
-        GPS_manualLongitudeLabel   matlab.ui.control.Label
-        GPS_manualLatitude         matlab.ui.control.NumericEditField
-        GPS_manualLatitudeLabel    matlab.ui.control.Label
-        gpsMode                    matlab.ui.control.DropDown
-        gpsModeLabel               matlab.ui.control.Label
-        ObservationPanel           matlab.ui.container.Panel
-        ObservationPanel_Grid      matlab.ui.container.GridLayout
-        SpecificTime_Grid          matlab.ui.container.GridLayout
-        SpecificTime_Mark2         matlab.ui.control.Label
-        SpecificTime_Mark1         matlab.ui.control.Label
-        SpecificTime_Spinner4      matlab.ui.control.Spinner
-        SpecificTime_Spinner3      matlab.ui.control.Spinner
-        SpecificTime_DatePicker2   matlab.ui.control.DatePicker
-        SpecificTime_Spinner2      matlab.ui.control.Spinner
-        SpecificTime_Spinner1      matlab.ui.control.Spinner
-        SpecificTime_DatePicker1   matlab.ui.control.DatePicker
-        Duration_Grid              matlab.ui.container.GridLayout
-        Duration                   matlab.ui.control.NumericEditField
-        DurationUnit               matlab.ui.control.DropDown
-        ObservationType            matlab.ui.control.DropDown
-        ObservationTypeLabel       matlab.ui.control.Label
-        ObservationLabel           matlab.ui.control.Label
-        BitsPerPoint               matlab.ui.control.DropDown
-        BitsPerPointLabel          matlab.ui.control.Label
-        Name                       matlab.ui.control.EditField
-        NameLabel                  matlab.ui.control.Label
-        TreeLabel                  matlab.ui.control.Label
-        TreeGrid                   matlab.ui.container.GridLayout
-        TreeMoveDown               matlab.ui.control.Image
-        TreeMoveUp                 matlab.ui.control.Image
-        TreeDelNode                matlab.ui.control.Image
-        TreeAddBandNode            matlab.ui.control.Image
-        TreeAddTaskNode            matlab.ui.control.Image
-        Tree                       matlab.ui.container.Tree
-        ModePanel                  matlab.ui.container.ButtonGroup
-        ModeButtonEdit             matlab.ui.control.RadioButton
-        ModeButtonView             matlab.ui.control.RadioButton
-        ModePanelLabel             matlab.ui.control.Label
-        Toolbar                    matlab.ui.container.GridLayout
-        ConfirmEditionButton       matlab.ui.control.Button
-        ExportButton               matlab.ui.control.Image
-        ImportButton               matlab.ui.control.Image
+        UIFigure                     matlab.ui.Figure
+        GridLayout                   matlab.ui.container.GridLayout
+        DockModule                   matlab.ui.container.GridLayout
+        DockCloseButton              matlab.ui.control.Image
+        DockUndockButton             matlab.ui.control.Image
+        ConfirmEditionButtonGrid     matlab.ui.container.GridLayout
+        ConfirmEditionButton         matlab.ui.control.Button
+        Toolbar                      matlab.ui.container.GridLayout
+        ExportButton                 matlab.ui.control.Image
+        ImportButton                 matlab.ui.control.Image
+        BandPanel                    matlab.ui.container.Panel
+        BandGrid                     matlab.ui.container.GridLayout
+        FindPeaksPanel               matlab.ui.container.Panel
+        FindPeaksGrid                matlab.ui.container.GridLayout
+        FindPeaksMinBandWidth        matlab.ui.control.Spinner
+        FindPeaksMinBandWidthLabel   matlab.ui.control.Label
+        FindPeaksMinDistance         matlab.ui.control.Spinner
+        FindPeaksMinDistanceLabel    matlab.ui.control.Label
+        FindPeaksMinProminence       matlab.ui.control.Spinner
+        FindPeaksMinProminenceLabel  matlab.ui.control.Label
+        FindPeaksNumSweeps           matlab.ui.control.Spinner
+        FindPeaksNumSweepsLabel      matlab.ui.control.Label
+        FindPeaksType                matlab.ui.control.DropDown
+        FindPeaksTypeLabel           matlab.ui.control.Label
+        FindPeaks_PanelLabel         matlab.ui.control.Label
+        RevisitTime                  matlab.ui.control.NumericEditField
+        RevisitTimeLabel             matlab.ui.control.Label
+        LevelUnit                    matlab.ui.control.DropDown
+        LevelUnitLabel               matlab.ui.control.Label
+        Detector                     matlab.ui.control.DropDown
+        DetectorLabel                matlab.ui.control.Label
+        VBW                          matlab.ui.control.DropDown
+        VBWLabel                     matlab.ui.control.Label
+        RFMode                       matlab.ui.control.DropDown
+        RFModeLabel                  matlab.ui.control.Label
+        IntegrationFactor            matlab.ui.control.NumericEditField
+        IntegrationFactorLabel       matlab.ui.control.Label
+        TraceMode                    matlab.ui.control.DropDown
+        TraceModeLabel               matlab.ui.control.Label
+        Resolution                   matlab.ui.control.NumericEditField
+        ResolutionLabel              matlab.ui.control.Label
+        StepWidth                    matlab.ui.control.NumericEditField
+        StepWidthLabel               matlab.ui.control.Label
+        FreqStop                     matlab.ui.control.NumericEditField
+        FreqStopLabel                matlab.ui.control.Label
+        FreqStart                    matlab.ui.control.NumericEditField
+        FreqStartLabel               matlab.ui.control.Label
+        ObservationSamples           matlab.ui.control.NumericEditField
+        ObservationSamplesLabel      matlab.ui.control.Label
+        Description                  matlab.ui.control.EditField
+        DescriptionLabel             matlab.ui.control.Label
+        ID                           matlab.ui.control.NumericEditField
+        IDLabel                      matlab.ui.control.Label
+        MaskTrigger                  matlab.ui.control.DropDown
+        MaskTriggerLabel             matlab.ui.control.Label
+        Status                       matlab.ui.control.DropDown
+        StatusLabel                  matlab.ui.control.Label
+        BandTitle                    matlab.ui.control.Label
+        TaskPanel                    matlab.ui.container.Panel
+        TaskGrid                     matlab.ui.container.GridLayout
+        GpsPanel                     matlab.ui.container.Panel
+        GpsGrid                      matlab.ui.container.GridLayout
+        GpsRevisitTime               matlab.ui.control.NumericEditField
+        GpsRevisitTimeLabel          matlab.ui.control.Label
+        Longitude                    matlab.ui.control.NumericEditField
+        LongitudeLabel               matlab.ui.control.Label
+        Latitude                     matlab.ui.control.NumericEditField
+        LatitudeLabel                matlab.ui.control.Label
+        GpsMode                      matlab.ui.control.DropDown
+        GpsModeLabel                 matlab.ui.control.Label
+        ObservationPanel             matlab.ui.container.Panel
+        ObservationGrid              matlab.ui.container.GridLayout
+        SpecificTimeGrid             matlab.ui.container.GridLayout
+        EndTimeMinuteSpinner         matlab.ui.control.Spinner
+        EndTimeSeparator             matlab.ui.control.Label
+        EndTimeHourSpinner           matlab.ui.control.Spinner
+        EndDatePicker                matlab.ui.control.DatePicker
+        StartTimeMinuteSpinner       matlab.ui.control.Spinner
+        StartTimeSeparator           matlab.ui.control.Label
+        StartTimeHourSpinner         matlab.ui.control.Spinner
+        StartDatePicker              matlab.ui.control.DatePicker
+        DurationGrid                 matlab.ui.container.GridLayout
+        DurationUnit                 matlab.ui.control.DropDown
+        Duration                     matlab.ui.control.NumericEditField
+        ObservationType              matlab.ui.control.DropDown
+        ObservationTypeLabel         matlab.ui.control.Label
+        ObservationLabel             matlab.ui.control.Label
+        BitsPerPoint                 matlab.ui.control.DropDown
+        BitsPerPointLabel            matlab.ui.control.Label
+        Name                         matlab.ui.control.EditField
+        NameLabel                    matlab.ui.control.Label
+        TaskTitle                    matlab.ui.control.Label
+        EditStateButton              matlab.ui.control.StateButton
+        ViewStateButton              matlab.ui.control.StateButton
+        TreePanel                    matlab.ui.container.GridLayout
+        TreeTitle                    matlab.ui.control.Label
+        TreeMoveDown                 matlab.ui.control.Image
+        TreeMoveUp                   matlab.ui.control.Image
+        TreeDelNode                  matlab.ui.control.Image
+        TreeAddBandNode              matlab.ui.control.Image
+        TreeAddTaskNode              matlab.ui.control.Image
+        Tree                         matlab.ui.container.Tree
+        TreeIcon                     matlab.ui.control.Image
     end
 
     
@@ -119,11 +119,15 @@ classdef winTaskList_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         Container
         isDocked = false
+        SubTabGroup = struct('Children', -1, 'UserData', [])
+        
         mainApp
         jsBackDoor
         progressDialog
-        taskList
-        editedList
+
+        ViewMode = true
+        TaskList
+        TaskListEdited
     end
 
 
@@ -155,6 +159,9 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 case 1
                     appName = class(app);
                     elToModify = {
+                        app.ViewStateButton;
+                        app.EditStateButton;
+                        app.ConfirmEditionButtonGrid;
                         app.ImportButton;
                         app.ExportButton;
                         app.DockUndockButton;
@@ -164,6 +171,9 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
                     try
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.ViewStateButton.UserData.id, 'generation', 1, 'styleImportant', struct('borderRadius', '5px 0px 0px 5px')), ...
+                            struct('appName', appName, 'dataTag', app.EditStateButton.UserData.id, 'generation', 1, 'styleImportant', struct('borderRadius', '0px 5px 5px 0px')), ...
+                            struct('appName', appName, 'dataTag', app.ConfirmEditionButtonGrid.UserData.id, 'style', struct('background', 'none')), ...
                             struct('appName', appName, 'dataTag', app.ImportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Importa lista de tarefas')), ...
                             struct('appName', appName, 'dataTag', app.ExportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta lista de tarefas')), ...
                             struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
@@ -179,8 +189,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function initializeAppProperties(app)
-            app.taskList   = util.TaskScriptIO.loadScriptList(app.mainApp.rootFolder, 'auxApp.winTaskList');
-            app.editedList = app.taskList;
+            app.TaskList = app.mainApp.taskList; % util.TaskScriptIO.loadScriptList(app.mainApp.rootFolder, 'auxApp.winTaskList');
+            app.TaskListEdited = app.TaskList;
         end
 
         %-----------------------------------------------------------------%
@@ -188,11 +198,14 @@ classdef winTaskList_exported < matlab.apps.AppBase
             if ~strcmp(app.mainApp.executionMode, 'webApp')
                 app.DockUndockButton.Enable = 1;
             end
+
+            app.TaskPanel.BorderColor = [0.9412 0.9412 0.9412];
+            app.BandPanel.BorderColor = [0.9412 0.9412 0.9412];
         end
 
         %-----------------------------------------------------------------%
         function applyInitialLayout(app)
-            TreeBuilding(app, [])
+            buildTaskTree(app, [])
             focus(app.Tree)
         end
     end
@@ -200,197 +213,271 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
     methods (Access = private)
         %-----------------------------------------------------------------%
-        function TreeBuilding(app, SelectedNode)
+        function buildTaskTree(app, selectedNode)
             if ~isempty(app.Tree.Children)
                 delete(app.Tree.Children)
             end
 
-            % Tree creation
-            for ii = 1:numel(app.editedList)
-                taskNode = uitreenode(app.Tree, 'Text', app.editedList(ii).Name, 'NodeData', ii, 'UserData', 1:numel(app.editedList(ii).Band));
+            for taskIdx = 1:numel(app.TaskListEdited)
+                taskNode = uitreenode(app.Tree, 'Text', app.TaskListEdited(taskIdx).Name, 'NodeData', struct('taskIdx', taskIdx, 'bandIdx', 1:numel(app.TaskListEdited(taskIdx).Band)));
 
-                for jj = 1:numel(app.editedList(ii).Band)
-                    uitreenode(taskNode, 'Text', TreeBuilding_nodeText(app, ii, jj), 'NodeData', ii, 'UserData', jj);
+                for bandIdx = 1:numel(app.TaskListEdited(taskIdx).Band)
+                    uitreenode(taskNode, 'Text', getFlowTag(app, taskIdx, bandIdx), 'NodeData', struct('taskIdx', taskIdx, 'bandIdx', bandIdx));
                 end
             end
-            TreeBuilding_addStyle(app)
 
-            % SelectedNode
-            if ~isempty(app.Tree.Children)
-                if ~isempty(SelectedNode)
-                    idx1 = SelectedNode(1);
-                    idx2 = SelectedNode(2);
-                else
-                    idx1 = 1;
-                    idx2 = -1;
-                end
-                
-                if idx2 == -1
-                    app.Tree.SelectedNodes = app.Tree.Children(idx1);
-                else
-                    app.Tree.SelectedNodes = app.Tree.Children(idx1).Children(idx2);
-                end
-
-                TreeSelectionChanged(app)                                   % internal "Layout(app)" call
-                expand(app.Tree.Children(idx1))
+            if ~isempty(selectedNode)
+                taskIdx = selectedNode(1);
+                bandIdx = selectedNode(2);
             else
-                Layout(app)
+                taskIdx = 1;
+                bandIdx = 1;
             end
+
+            expand(app.Tree.Children(taskIdx))
+            app.Tree.SelectedNodes = app.Tree.Children(taskIdx).Children(bandIdx);
+            onTaskTreeSelectionChanged(app)
         end
 
         %-----------------------------------------------------------------%
-        function nodeText = TreeBuilding_nodeText(app, idx1, idx2)
-            nodeText = sprintf('ID %d: %.3f – %.3f MHz', app.editedList(idx1).Band(idx2).ID, ...
-                                                         app.editedList(idx1).Band(idx2).FreqStart ./ 1e+6, ...
-                                                         app.editedList(idx1).Band(idx2).FreqStop  ./ 1e+6);
+        function tag = getFlowTag(app, taskIdx, bandIdx)
+            tag = util.HtmlTextGenerator.createTag('Flow', app.TaskListEdited(taskIdx).Band(bandIdx).FreqStart, app.TaskListEdited(taskIdx).Band(bandIdx).FreqStop, app.TaskListEdited(taskIdx).Band(bandIdx).ID);
         end
 
         %-----------------------------------------------------------------%
-        function TreeBuilding_addStyle(app)
+        function applyTaskTreeStyle(app)
             if ~isempty(app.Tree.StyleConfigurations)
                 removeStyle(app.Tree)
             end
 
-            DisableNodes = [];
-            for ii = 1:numel(app.editedList)
-                for jj = 1:numel(app.editedList(ii).Band)
-                    if ~app.editedList(ii).Band(jj).Enable
-                        DisableNodes = [DisableNodes, app.Tree.Children(ii).Children(jj)];
+            disableNodes = [];
+            for taskIdx = 1:numel(app.TaskListEdited)
+                for bandIdx = 1:numel(app.TaskListEdited(taskIdx).Band)
+                    if ~app.TaskListEdited(taskIdx).Band(bandIdx).Enable
+                        disableNodes = [disableNodes, app.Tree.Children(taskIdx).Children(bandIdx)];
                     end
                 end
             end
 
-            if ~isempty(DisableNodes)
-                s = uistyle('FontColor', [.5 .5 .5]);
-                addStyle(app.Tree, s, 'node', DisableNodes)
+            if ~isempty(disableNodes)
+                addStyle(app.Tree, uistyle('FontColor', [.5 .5 .5]), 'node', disableNodes)
             end
+
+            addStyle(app.Tree, uistyle('FontWeight', 'bold'), 'node', app.Tree.SelectedNodes)
         end
 
         %-----------------------------------------------------------------%
-        function Layout(app)
-            if isempty(app.Tree.SelectedNodes)
-                set(app.Tab2_PanelGrid.Children,        'Enable', 0)
-                set(app.BandSpecificInfo_Grid.Children, 'Enable', 0)
+        function updateUIControlState(app)
+            % Painel à esquerda
+            if app.ViewMode
+                set(app.ViewStateButton, 'BackgroundColor', [0 0.451 0.7412], 'FontColor', [1 1 1], 'Value', true)
+                set(app.EditStateButton, 'BackgroundColor', [0.9412 0.9412 0.9412], 'FontColor', [0 0.4471 0.7412], 'Value', false)
+                app.TreePanel.ColumnWidth{end} = 0;
 
             else
-                set(app.Tab2_PanelGrid.Children,        'Enable', 1)
-
-                if isscalar(app.Tree.SelectedNodes.UserData)
-                    set(app.BandSpecificInfo_Grid.Children, 'Enable', 1)
-
-                    switch app.ObservationType.Value
-                        case 'Quantidade específica de amostras'
-                            app.ObservationSamples.Enable = 'on';
-                        otherwise
-                            app.ObservationSamples.Enable = 'off';
-                    end
-
-                elseif numel(app.Tree.SelectedNodes.UserData) > 1
-                    set(app.BandSpecificInfo_Grid.Children, 'Enable', 0)
-                end
+                set(app.ViewStateButton, 'BackgroundColor', [0.9412 0.9412 0.9412], 'FontColor', [0 0.4471 0.7412], 'Value', false)
+                set(app.EditStateButton, 'BackgroundColor', [0 0.451 0.7412], 'FontColor', [1 1 1], 'Value', true)
+                app.TreePanel.ColumnWidth{end} = 16;
             end
+
+            set(setdiff(findobj(app.TreePanel, 'Type', 'uiimage'), app.TreeIcon), 'Enable', ~app.ViewMode)
+            
+            updateObservationPanelElementsState(app)
+            updateGpsPanelElementsState(app)
+
+            % Painéis do centro e à direita
+            set([
+                app.Name;
+                app.Duration;
+                findobj(app.GpsGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield');
+                findobj(app.BandGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield')
+            ], 'Editable', ~app.ViewMode)
+
+            app.ID.Editable = false;
+            updateFindPeaksPanelElementsState(app)
+
+            % Toolbar
+            app.ConfirmEditionButtonGrid.Visible = ~app.ViewMode;
+
+            set([
+                app.ImportButton;
+                app.ExportButton
+            ], 'Enable', app.ViewMode)
         end
 
         %-----------------------------------------------------------------%
-        function ObservationTimeLayout(app)
+        function updateObservationPanelElementsState(app)
+            handleTimeElements = findobj(app.SpecificTimeGrid, '-not', {'Type', 'uilabel', '-or', 'Type', 'uigridlayout', '-or', 'Type', 'uipanel'});
+
             switch app.ObservationType.Value
-                case 'Duração' % "Duration"
-                    app.Tab2_PanelGrid.RowHeight{6} = 94; 
-                    app.ObservationPanel_Grid.RowHeight{3} = 22;
-                    set([app.Duration, app.DurationUnit], 'Enable', 1, 'Visible', 1)
-                    set(app.SpecificTime_Grid.Children, 'Enable', 0, 'Visible', 0)
-                    app.ObservationSamples.Enable = 0;
+                case 'Duração'
+                    app.TaskGrid.RowHeight{5} = 94; 
+                    app.ObservationGrid.RowHeight{3} = 22;
 
-                case 'Período específico' % "Time"
-                    SpecificTimePanel_editable(app)
+                    set([app.Duration, app.DurationUnit], 'Enable', true, 'Visible', true)
+                    set(handleTimeElements, 'Enable', false, 'Visible', false)
+                    app.ObservationSamples.Enable = false;
 
-                    app.Tab2_PanelGrid.RowHeight{6} = 122;
-                    app.ObservationPanel_Grid.RowHeight{3} = 0;
-                    set([app.Duration, app.DurationUnit], 'Enable', 0, 'Visible', 0)
-                    app.ObservationSamples.Enable = 0;
+                case 'Período específico'
+                    app.TaskGrid.RowHeight{5} = 122;
+                    app.ObservationGrid.RowHeight{3} = 0;
 
-                case 'Quantidade específica de amostras' % "Samples"
-                    app.Tab2_PanelGrid.RowHeight{6} = 66; 
-                    app.ObservationPanel_Grid.RowHeight{3} = 0;
-                    set([app.Duration, app.DurationUnit], 'Enable', 0, 'Visible', 0)
-                    set(app.SpecificTime_Grid.Children, 'Enable', 0, 'Visible', 0)
-                    app.ObservationSamples.Enable = 1;
+                    set([app.Duration, app.DurationUnit], 'Enable', false, 'Visible', false)
+                    set(handleTimeElements, 'Enable', ~app.ViewMode, 'Visible', app.ViewMode)
+                    app.ObservationSamples.Enable = false;
+
+                case 'Quantidade específica de amostras'
+                    app.TaskGrid.RowHeight{5} = 66; 
+                    app.ObservationGrid.RowHeight{3} = 0;
+
+                    set([app.Duration, app.DurationUnit], 'Enable', false, 'Visible', false)
+                    set(handleTimeElements, 'Enable', false, 'Visible', false)
+                    app.ObservationSamples.Enable = true;
             end
         end
 
         %-----------------------------------------------------------------%
-        function updateDuration(app, idx1)
-            Duration_sec = app.editedList(idx1).Observation.Duration;
-            if isempty(Duration_sec)
-                Duration_sec = 600;
-            end
+        function updateGpsPanelElementsState(app)
+            switch app.GpsMode.Value
+                case 'auto'
+                    set([app.Latitude, app.Longitude], 'Enable', false)
+                    app.GpsRevisitTime.Enable = true;
 
-            if Duration_sec >= 3600
-                app.Duration.Value = Duration_sec ./ 3600;
-                set(app.DurationUnit, Items={'min', 'hr'}, Value='hr')
-            else
-                app.Duration.Value = Duration_sec ./ 60;
-                set(app.DurationUnit, Items={'min', 'hr'}, Value='min')
-            end
-
-            if app.ModeButtonView.Value
-                app.DurationUnit.Items = {app.DurationUnit.Value};
+                case 'manual'
+                    set([app.Latitude, app.Longitude], 'Enable', true)
+                    app.GpsRevisitTime.Enable = false;
             end
         end
 
         %-----------------------------------------------------------------%
-        function updateObservationTime(app, idx1)
-            BeginTime = datetime(app.editedList(idx1).Observation.BeginTime, "InputFormat", "dd/MM/yyyy HH:mm:ss", "Format", "dd/MM/yyyy HH:mm:ss");
-            EndTime   = datetime(app.editedList(idx1).Observation.EndTime,   "InputFormat", "dd/MM/yyyy HH:mm:ss", "Format", "dd/MM/yyyy HH:mm:ss");
+        function updateFindPeaksPanelElementsState(app)
+            set(findobj(app.FindPeaksGrid, 'Type', 'uispinner'), 'Enable', ~app.ViewMode)
+        end
 
-            timeFlag  = 1;
-            if isnat(BeginTime) && isnat(EndTime)
-                BeginTime = datetime('now');
-                EndTime   = BeginTime;
-            elseif isnat(BeginTime)
-                BeginTime = datetime('now');
-            elseif isnat(EndTime)
-                EndTime   = datetime('now');
-            else
-                timeFlag  = 0; 
-            end
+        %-----------------------------------------------------------------%
+        function updateUIControlContent(app)
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
 
-            app.SpecificTime_DatePicker1.Value = BeginTime;
-            app.SpecificTime_DatePicker2.Value = EndTime;
+            app.Name.Value = app.TaskListEdited(taskIdx).Name;
 
-            try
-                if timeFlag
-                    error('timeFlag')
+            app.ID.Value = app.TaskListEdited(taskIdx).Band(bandIdx).ID;
+            app.Description.Value = app.TaskListEdited(taskIdx).Band(bandIdx).Description;
+            app.ObservationSamples.Value = app.TaskListEdited(taskIdx).Band(bandIdx).ObservationSamples;
+            
+            app.FreqStart.Value = app.TaskListEdited(taskIdx).Band(bandIdx).FreqStart  / 1e+6;
+            app.FreqStop.Value = app.TaskListEdited(taskIdx).Band(bandIdx).FreqStop   / 1e+6;
+            app.StepWidth.Value = app.TaskListEdited(taskIdx).Band(bandIdx).StepWidth  / 1e+3;
+            app.Resolution.Value = app.TaskListEdited(taskIdx).Band(bandIdx).Resolution / 1e+3;
+            
+            app.IntegrationFactor.Value = app.TaskListEdited(taskIdx).Band(bandIdx).IntegrationFactor;
+            app.RevisitTime.Value = app.TaskListEdited(taskIdx).Band(bandIdx).RevisitTime;
+
+            if app.ViewMode
+                app.BitsPerPoint.Items = {sprintf('%d bits', app.TaskListEdited(taskIdx).BitsPerSample)};
+                
+                app.ObservationType.Items = {util.TaskScriptIO.observationTypeLabel(app.TaskListEdited(taskIdx).Observation.Type)};
+                switch app.ObservationType.Value
+                    case 'Duração'
+                        updateDurationFields(app, taskIdx)
+
+                    case 'Período específico'
+                        updateObservationTime(app, taskIdx)
+                end
+                
+                app.GpsMode.Items = {app.TaskListEdited(taskIdx).GPS.Type};
+                switch app.GpsMode.Value
+                    case 'auto'
+                        set([app.Latitude, app.Longitude], 'Value', [])
+                        app.GpsRevisitTime.Value = app.TaskListEdited(taskIdx).GPS.RevisitTime;
+    
+                    case 'manual'
+                        app.Latitude.Value  = app.TaskListEdited(idx1).GPS.Latitude;
+                        app.Longitude.Value = app.TaskListEdited(idx1).GPS.Longitude;
+                        app.GpsRevisitTime.Value = inf;
+                end
+    
+                if app.TaskListEdited(taskIdx).Band(bandIdx).Enable
+                    app.Status.Items = {'ON'};
+                else
+                    app.Status.Items = {'OFF'};
                 end
 
-                app.SpecificTime_Spinner1.Value = hour(BeginTime);
-                app.SpecificTime_Spinner2.Value = minute(BeginTime);
-                app.SpecificTime_Spinner3.Value = hour(EndTime);
-                app.SpecificTime_Spinner4.Value = minute(EndTime);
-            catch
-                app.SpecificTime_Spinner1.Value = 0;
-                app.SpecificTime_Spinner2.Value = 0;
-                app.SpecificTime_Spinner3.Value = 23;
-                app.SpecificTime_Spinner4.Value = 59;
+                switch app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status
+                    case 0
+                        app.MaskTrigger.Items = {'OFF'};
+                    case 1
+                        app.MaskTrigger.Items = {'ON - Apenas afere rompimento'};
+                    case 2
+                        app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'};
+                    case 3
+                        app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo'};
+                end
+                
+                app.TraceMode.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).TraceMode};
+                app.RFMode.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).RFMode};
+                app.VBW.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).VBW};
+                app.Detector.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).Detector};
+                app.LevelUnit.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).LevelUnit};
+
+                if isempty(app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
+                    findPeaksTypeItems = {'Valores padrão (appColeta)'};
+                else
+                    findPeaksTypeItems = {'Valores customizados'};
+                end
+                app.FindPeaksType.Items = findPeaksTypeItems;
+
+            else
+                app.BitsPerPoint.Items    = {'8 bits', '16 bits', '32 bits'};
+                app.ObservationType.Items = {'Duração', 'Período específico', 'Quantidade específica de amostras'};
+                app.DurationUnit.Items    = {'min', 'hr'};
+                app.GpsMode.Items         = {'auto', 'manual'};
+                app.Status.Items          = {'ON', 'OFF'};
+                app.MaskTrigger.Items     = {'OFF', 'ON - Apenas afere rompimento', 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)', 'ON - Afere rompimento e salva em arquivo'};
+                app.RFMode.Items          = {'High Sensitivity', 'Normal', 'Low Distortion'};
+                app.TraceMode.Items       = {'ClearWrite', 'Average', 'MaxHold', 'MinHold'};
+                app.Detector.Items        = {'Sample', 'Average/RMS', 'Positive Peak', 'Negative Peak'};
+                app.LevelUnit.Items       = {'dBm', 'dBµV'};
+                app.VBW.Items             = {'auto', 'RBW', 'RBW/10', 'RBW/100'};
+                app.FindPeaksType.Items   = {'Valores padrão (appColeta)', 'Valores customizados'};
             end
         end
 
         %-----------------------------------------------------------------%
-        function SpecificTimePanel_editable(app)
-            if app.ModeButtonView.Value
-                set(app.SpecificTime_Grid.Children, Enable=0, Visible=1)
+        function updateDurationFields(app, taskIdx)
+            durationSeconds = app.TaskListEdited(taskIdx).Observation.Duration;
+            if isempty(durationSeconds)
+                durationSeconds = 600;
+            end
+
+            if durationSeconds >= 3600
+                app.Duration.Value = durationSeconds / 3600;
+                app.DurationUnit.Items = {'hr'};
             else
-                set(app.SpecificTime_Grid.Children, Enable=1, Visible=1)
+                app.Duration.Value = durationSeconds / 60;
+                app.DurationUnit.Items = {'min'};
             end
         end
 
         %-----------------------------------------------------------------%
-        function FindPeaksPanel_editable(app)
-            if app.ModeButtonView.Value
-                set(findobj(app.FindPeaks_Grid, 'Type', 'uispinner'), Enable=0)
-            else
-                set(findobj(app.FindPeaks_Grid, 'Type', 'uispinner'), Enable=1)
+        function updateObservationTime(app, taskIdx)
+            startTime = datetime(app.TaskListEdited(taskIdx).Observation.BeginTime, "InputFormat", "dd/MM/yyyy HH:mm:ss", "Format", "dd/MM/yyyy HH:mm:ss");
+            if isnat(startTime)
+                startTime = datetime('now');
             end
+
+            endTime = datetime(app.TaskListEdited(taskIdx).Observation.EndTime,     "InputFormat", "dd/MM/yyyy HH:mm:ss", "Format", "dd/MM/yyyy HH:mm:ss");
+            if isnat(endTime)
+                endTime = datetime('now');
+            end
+
+            app.StartDatePicker.Value = startTime;
+            app.StartTimeHourSpinner.Value = hour(startTime);
+            app.StartTimeMinuteSpinner.Value = minute(startTime);
+
+            app.EndDatePicker.Value = endTime;
+            app.EndTimeHourSpinner.Value = hour(endTime);
+            app.EndTimeMinuteSpinner.Value = minute(endTime);
         end
 
         %-----------------------------------------------------------------%
@@ -424,34 +511,33 @@ classdef winTaskList_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function newID(app)
-            taskIdx = app.Tree.SelectedNodes.NodeData;
+        function updateBandIds(app)
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
 
-            for ii = 1:numel(app.editedList(taskIdx).Band)
-                app.editedList(taskIdx).Band(ii).ID = ii;
+            for bandIdx = 1:numel(app.TaskListEdited(taskIdx).Band)
+                app.TaskListEdited(taskIdx).Band(bandIdx).ID = bandIdx;
             end
         end
 
         %-----------------------------------------------------------------%
-        function update(app)
+        function updateTaskFile(app)
             appName = class.Constants.appName;
             [~, programDataFolder] = appEngine.util.Path(appName, app.mainApp.rootFolder);
-            saveNewFile(app, programDataFolder, false)
+            saveTaskFile(app, programDataFolder, false)
 
-            % Atualiza a propriedade do app...
+            % Atualiza a propriedade do app e força o fechamento do módulo
+            % auxiliar auxApp.winAddTask, caso aberto.
             ipcMainMatlabCallsHandler(app.mainApp, app, 'onTaskListEdit')
-
-            % Fecha o módulo auxiliar "auxApp.winAddTask.mlapp", caso aberto.
             ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK_ADD')
         end
 
         %-----------------------------------------------------------------%
-        function saveNewFile(app, Folder, ShowAlert)
-            msgError = util.TaskScriptIO.writeScriptFile(Folder, app.taskList);
+        function saveTaskFile(app, folder, showAlert)
+            msgError = util.TaskScriptIO.writeScriptFile(folder, app.TaskList);
 
-            if ShowAlert
+            if showAlert
                 if isempty(msgError)
-                    ui.Dialog(app.UIFigure, "warning", sprintf('Arquivo <b>TaskList.json</b> salvo na pasta "%s"', Folder));
+                    ui.Dialog(app.UIFigure, "warning", sprintf('Arquivo <b>TaskList.json</b> salvo na pasta "%s"', folder));
                 else
                     ui.Dialog(app.UIFigure, "error", msgError);
                 end
@@ -507,166 +593,109 @@ classdef winTaskList_exported < matlab.apps.AppBase
         end
 
         % Selection changed function: Tree
-        function TreeSelectionChanged(app, event)
+        function onTaskTreeSelectionChanged(app, event)
             
-            taskIdx = app.Tree.SelectedNodes.NodeData;
+            if exist('event', 'var')
+                if isempty(event.SelectedNodes)
+                    app.Tree.SelectedNodes = event.PreviousSelectedNodes;
+                    return
+                end
+            end
+
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
             
-            if exist('event', 'var') && ~isequal(event.SelectedNodes.NodeData, event.PreviousSelectedNodes.NodeData)
+            if app.Tree.SelectedNodes.Parent == app.Tree || ~isscalar(bandIdx)
+                bandIdx = 1;
+                app.Tree.SelectedNodes = app.Tree.Children(taskIdx).Children(bandIdx);
+            end
+
+            applyTaskTreeStyle(app)
+            
+            if exist('event', 'var') && ~isequal(taskIdx, event.PreviousSelectedNodes.NodeData.taskIdx)
                 collapse(app.Tree)
                 expand(app.Tree.Children(taskIdx))
             end
 
-            % Painel "ASPECTOS GERAIS"
-            app.Name.Value = app.editedList(taskIdx).Name;
-            app.BitsPerPoint.Items = {sprintf('%d bits', app.editedList(taskIdx).BitsPerSample)};
+            updateUIControlState(app)
+            updateUIControlContent(app)
             
-            app.ObservationType.Items = {util.TaskScriptIO.observationTypeLabel(app.editedList(taskIdx).Observation.Type)};
-            ObservationTimeLayout(app)
+        end
+
+        % Value changed function: EditStateButton, ViewStateButton
+        function onViewModeChanged(app, event)
             
-            app.gpsMode.Items = {app.editedList(taskIdx).GPS.Type};
-            gpsModeValueChanged(app)
-
-
-            % Painel "ESPECIFICIDADES DO FLUXO SELECIONADO"
-            if isscalar(app.Tree.SelectedNodes.UserData)
-                bandIdx = app.Tree.SelectedNodes.UserData;
-
-                % Ajuste dos itens que são listas suspensas (uidropdown)
-                % porque no "MODO DE EDIÇÃO" todos os possíveis valores
-                % estão disponíveis para escolha, enquanto que no "MODO DE
-                % VISUALIZAÇÃO" ficará disponível apenas o valor indicado
-                % no "TaskList.json".
-
-                %---------------------------------------------------------%
-                % ## MODO DE VISUALIZAÇÃO ##
-                %---------------------------------------------------------%
-                if app.ModeButtonView.Value
-                    if app.editedList(taskIdx).Band(bandIdx).Enable
-                        app.Status.Items = {'ON'};
-                    else
-                        app.Status.Items = {'OFF'};
-                    end
-
-                    switch app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status
-                        case 0
-                            app.MaskTrigger.Items = {'OFF'};
-                        case 1
-                            app.MaskTrigger.Items = {'ON - Apenas afere rompimento'};
-                        case 2
-                            app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'};
-                        case 3
-                            app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo'};
-                    end
-
-                    app.TraceMode.Items = {app.editedList(taskIdx).Band(bandIdx).TraceMode};
-                    app.VBW.Items       = {app.editedList(taskIdx).Band(bandIdx).VBW};
-                    app.Detector.Items  = {app.editedList(taskIdx).Band(bandIdx).Detector};
-                    app.RFMode.Items    = {app.editedList(taskIdx).Band(bandIdx).RFMode};
-                    app.LevelUnit.Items = {app.editedList(taskIdx).Band(bandIdx).LevelUnit};
-
-                    if isempty(app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
-                        findPeaksTypeItems = {'Valores padrão (appColeta)'};
-                    else
-                        findPeaksTypeItems = {'Valores customizados'};
-                    end
-                    set(app.FindPeaks_Type, 'Enable', 'off', 'Items', findPeaksTypeItems)
-
-                %---------------------------------------------------------%
-                % ## MODO DE EDIÇÃO ##
-                %---------------------------------------------------------%
-                else
-                    if app.editedList(taskIdx).Band(bandIdx).Enable; app.Status.Value = 'ON';
-                    else;                                      app.Status.Value = 'OFF';
-                    end
-
-                    switch app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status
-                        case 0
-                            app.MaskTrigger.Value = 'OFF';
-                        case 1
-                            app.MaskTrigger.Value = 'ON - Apenas afere rompimento';
-                        case 2
-                            app.MaskTrigger.Value = 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)';
-                        case 3
-                            app.MaskTrigger.Value = 'ON - Afere rompimento e salva em arquivo';
-                    end
-
-                    app.TraceMode.Value = app.editedList(taskIdx).Band(bandIdx).TraceMode;
-                    app.VBW.Value       = app.editedList(taskIdx).Band(bandIdx).VBW;
-                    app.Detector.Value  = app.editedList(taskIdx).Band(bandIdx).Detector;
-                    app.LevelUnit.Value = app.editedList(taskIdx).Band(bandIdx).LevelUnit;
-                    app.RFMode.Value    = app.editedList(taskIdx).Band(bandIdx).RFMode;
-
-                    if isempty(app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
-                        findPeaksTypeValue = 'Valores padrão (appColeta)';
-                    else
-                        findPeaksTypeValue = 'Valores customizados';
-                    end
-                    set(app.FindPeaks_Type, 'Enable', ~strcmp(app.MaskTrigger.Value, 'OFF'), 'Value', findPeaksTypeValue)
-                end
-
-
-                % Ajustes nos outros campos (que não são listas suspensas), 
-                % além de especificidades do campo "Fator integração" e dos
-                % parâmetros relacionados à busca de emissões.
-    
-                app.ObservationSamples.Value = app.editedList(taskIdx).Band(bandIdx).ObservationSamples;
-                app.ID.Value                 = app.editedList(taskIdx).Band(bandIdx).ID;
-                app.Description.Value        = app.editedList(taskIdx).Band(bandIdx).Description;
-                app.RevisitTime.Value        = app.editedList(taskIdx).Band(bandIdx).RevisitTime;
-                
-                app.FreqStart.Value          = app.editedList(taskIdx).Band(bandIdx).FreqStart  / 1e+6;
-                app.FreqStop.Value           = app.editedList(taskIdx).Band(bandIdx).FreqStop   / 1e+6;
-                app.StepWidth.Value          = app.editedList(taskIdx).Band(bandIdx).StepWidth  / 1e+3;
-                SpanCheck(app)
-
-                app.Resolution.Value         = app.editedList(taskIdx).Band(bandIdx).Resolution / 1e+3;
-                app.IntegrationFactor.Value  = app.editedList(taskIdx).Band(bandIdx).IntegrationFactor;
-
-                IntegrationFactorCheck(app)
-                FindPeaksDropDownValueChanged(app)
+            if event.PreviousValue
+                event.Source.Value = true;
+                return
             end
 
+            switch event.Source 
+                case app.ViewStateButton
+                    hasChanged = ~isequal(app.TaskList, app.TaskListEdited);
 
-            % LAYOUT
-            Layout(app)
+                    if hasChanged
+                        questionMsg = [ ...
+                            'Foi evidenciada alteração de ao menos uma das tarefas. ' ...
+                            'Ao sair do modo de edição, sem salvar as alterações, ' ...
+                            'elas serão perdidas.<br><br>Confirma sair do modo de edição?' ...
+                        ];
+                        userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', questionMsg, {'Sim', 'Não'}, 1, 2);
 
-            if app.ModeButtonEdit.Value
-                set(app.BitsPerPoint,    'Items', {'8 bits', '16 bits', '32 bits'})
-                set(app.ObservationType, 'Items', {'Duração', 'Período específico', 'Quantidade específica de amostras'})
-                set(app.DurationUnit,    'Items', {'min', 'hr'})
-                set(app.gpsMode,         'Items', {'auto', 'manual'})
+                        if userSelection == "Não"
+                            app.ViewStateButton.Value = false;
+                            return
+                        end
+                    end
+
+                    app.ViewMode = ~app.ViewMode;
+                    
+                    if hasChanged
+                        app.TaskListEdited = app.TaskList;
+
+                        taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+                        bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
+                        buildTaskTree(app, [taskIdx, bandIdx])
+                        return
+                    end
+
+                case app.EditStateButton
+                    app.ViewMode = ~app.ViewMode;
             end
+
+            updateUIControlState(app)
+            updateUIControlContent(app)
             
         end
 
         % Value changed function: ObservationType
-        function ObservationTimeValueChanged(app, event)
+        function onObservationTypeValueChanged(app, event)
             
-            ObservationTimeLayout(app)
+            updateObservationPanelElementsState(app)
             
-            idx1 = app.Tree.SelectedNodes.NodeData;            
+            taskIdx = app.Tree.SelectedNodes.NodeData;            
             switch app.ObservationType.Value
                 case 'Duração'                                              % "Duration"
-                    updateDuration(app, idx1)
-                    TaskParameterChanged(app, struct('Source', app.Duration))
+                    updateDuration(app, taskIdx)
+                    onTaskParameterValueChanged(app, struct('Source', app.Duration))
 
                 case 'Período específico'                                   % "Time"
-                    updateObservationTime(app, idx1)
-                    TaskParameterChanged(app, struct('Source', app.SpecificTime_DatePicker1))
+                    updateObservationTime(app, taskIdx)
+                    onTaskParameterValueChanged(app, struct('Source', app.StartDatePicker))
 
                 case 'Quantidade específica de amostras'                    % "Samples"
-                    TaskParameterChanged(app, struct('Source', app.ObservationSamples))
+                    onTaskParameterValueChanged(app, struct('Source', app.ObservationSamples))
             end
             
         end
 
-        % Value changed function: gpsMode
-        function gpsModeValueChanged(app, event)
+        % Value changed function: GpsMode
+        function onGpsModeValueChanged(app, event)
             
-            app.GPS_manualLatitude.Value  = -1;
-            app.GPS_manualLongitude.Value = -1;
-            app.GPS_RevisitTime.Value     = 60;
-            set(app.GPS_Grid.Children, Enable='on')
+            app.Latitude.Value  = -1;
+            app.Longitude.Value = -1;
+            app.GpsRevisitTime.Value     = 60;
+            set(app.GpsGrid.Children, Enable='on')
 
             % Após a leitura do arquivo "TaskList.json", uma tarefa com GPS
             % automático tem informação vazia de coordenadas geográficas
@@ -676,66 +705,66 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % evita o erro de preenchimento do componente numérico com um
             % valor vazio.
 
-            idx1 = app.Tree.SelectedNodes.NodeData;
+            idx1 = app.Tree.SelectedNodes.NodeData.taskIdx;
 
-            switch app.gpsMode.Value
+            switch app.GpsMode.Value
                 case 'auto'
-                    app.GPS_manualLatitude.Enable     = 'off';
-                    app.GPS_manualLongitude.Enable    = 'off';
-                    app.GPS_RevisitTime.Value         = app.editedList(idx1).GPS.RevisitTime;
+                    app.Latitude.Enable     = 'off';
+                    app.Longitude.Enable    = 'off';
+                    app.GpsRevisitTime.Value         = app.TaskListEdited(idx1).GPS.RevisitTime;
 
                 case 'manual'
                     try
-                        app.GPS_manualLatitude.Value  = app.editedList(idx1).GPS.Latitude;
-                        app.GPS_manualLongitude.Value = app.editedList(idx1).GPS.Longitude;
+                        app.Latitude.Value  = app.TaskListEdited(idx1).GPS.Latitude;
+                        app.Longitude.Value = app.TaskListEdited(idx1).GPS.Longitude;
                     catch
                     end
-                    app.GPS_RevisitTime.Enable        = 'off';
+                    app.GpsRevisitTime.Enable        = 'off';
             end
 
-            TaskParameterChanged(app, struct('Source', app.gpsMode))
+            onTaskParameterValueChanged(app, struct('Source', app.GpsMode))
 
         end
 
-        % Value changed function: FindPeaks_Type
+        % Value changed function: FindPeaksType
         function FindPeaksDropDownValueChanged(app, event)
             
-            idx1 = app.Tree.SelectedNodes.NodeData;
-            idx2 = app.Tree.SelectedNodes.UserData;
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
 
-            switch app.FindPeaks_Type.Value
+            switch app.FindPeaksType.Value
                 case 'Valores padrão (appColeta)'
-                    set(findobj(app.FindPeaks_Grid, 'Type', 'uispinner'), Enable=0)
+                    set(findobj(app.FindPeaksGrid, 'Type', 'uispinner'), Enable=0)
 
                     defaultConfiguration = class.Constants.defaultMaskConfiguration;
-                    app.FindPeaks_nSweeps.Value    = defaultConfiguration.sweepsPerValidation;
-                    app.FindPeaks_Prominence.Value = defaultConfiguration.peakDetection.minimumProminence;
-                    app.FindPeaks_Distance.Value   = defaultConfiguration.peakDetection.minimumDistanceKHz;
-                    app.FindPeaks_BW.Value         = defaultConfiguration.peakDetection.minimumWidthKHz;
+                    app.FindPeaksNumSweeps.Value    = defaultConfiguration.sweepsPerValidation;
+                    app.FindPeaksMinProminence.Value = defaultConfiguration.peakDetection.minimumProminence;
+                    app.FindPeaksMinDistance.Value   = defaultConfiguration.peakDetection.minimumDistanceKHz;
+                    app.FindPeaksMinBandWidth.Value         = defaultConfiguration.peakDetection.minimumWidthKHz;
 
-                    if app.ModeButtonEdit.Value
-                        app.editedList(idx1).Band(idx2).MaskTrigger.Configuration = [];
+                    if ~app.ViewMode
+                        app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = [];
                     end
 
                 case 'Valores customizados'
-                    FindPeaksPanel_editable(app)
-                    if isempty(app.editedList(idx1).Band(idx2).MaskTrigger.Configuration)
-                        app.editedList(idx1).Band(idx2).MaskTrigger.Configuration = class.Constants.defaultMaskConfiguration;
+                    updateFindPeaksPanelElementsState(app)
+                    if isempty(app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
+                        app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = class.Constants.defaultMaskConfiguration;
                     end
 
-                    customConfiguration = app.editedList(idx1).Band(idx2).MaskTrigger.Configuration;
-                    app.FindPeaks_nSweeps.Value    = customConfiguration.sweepsPerValidation;
-                    app.FindPeaks_Prominence.Value = customConfiguration.peakDetection.minimumProminence;
-                    app.FindPeaks_Distance.Value   = customConfiguration.peakDetection.minimumDistanceKHz;
-                    app.FindPeaks_BW.Value         = customConfiguration.peakDetection.minimumWidthKHz;
+                    customConfiguration = app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration;
+                    app.FindPeaksNumSweeps.Value    = customConfiguration.sweepsPerValidation;
+                    app.FindPeaksMinProminence.Value = customConfiguration.peakDetection.minimumProminence;
+                    app.FindPeaksMinDistance.Value   = customConfiguration.peakDetection.minimumDistanceKHz;
+                    app.FindPeaksMinBandWidth.Value         = customConfiguration.peakDetection.minimumWidthKHz;
 
-                    if app.ModeButtonEdit.Value
-                        app.editedList(idx1).Band(idx2).MaskTrigger.Configuration = struct( ...
-                            'sweepsPerValidation', app.FindPeaks_nSweeps.Value, ...
+                    if ~app.ViewMode
+                        app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = struct( ...
+                            'sweepsPerValidation', app.FindPeaksNumSweeps.Value, ...
                             'peakDetection', struct( ...
-                                'minimumProminence',  app.FindPeaks_Prominence.Value, ...
-                                'minimumDistanceKHz', app.FindPeaks_Distance.Value, ...
-                                'minimumWidthKHz',    app.FindPeaks_BW.Value ...
+                                'minimumProminence',  app.FindPeaksMinProminence.Value, ...
+                                'minimumDistanceKHz', app.FindPeaksMinDistance.Value, ...
+                                'minimumWidthKHz',    app.FindPeaksMinBandWidth.Value ...
                             ) ...
                         );
                     end
@@ -743,169 +772,81 @@ classdef winTaskList_exported < matlab.apps.AppBase
             
         end
 
-        % Selection changed function: ModePanel
-        function OperationModeValueChanged(app, event)
+        % Image clicked function: ExportButton, ImportButton
+        function onToolbarButtonClicked(app, event)
             
-            %-------------------------------------------------------------%
-            % ## MODO DE VISUALIZAÇÃO ##
-            %-------------------------------------------------------------%
-            if app.ModeButtonView.Value
-                % Aspectos relacionados à indicação visual de que se trata 
-                % do modo de visualização:
-                set(findobj(app.TreeGrid, 'Type', 'uiimage'), 'Enable', 'off')
-                app.TreeGrid.ColumnWidth{end} = 0;                
-                app.ConfirmEditionButton.Visible  = 0;
-                app.ImportButton.Enable   = 'on';
-                app.ExportButton.Enable = 'on';
+            switch event.Source
+                case app.ImportButton
+                    [selectedFile, selectedFolder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
+                    figure(app.UIFigure)
+        
+                    if selectedFile
+                    [tempList, msgError] =  util.TaskScriptIO.readScriptFile(fullfile(selectedFolder, selectedFile), 'auxApp.winEditTaskList');
+        
+                        if isempty(msgError)
+                            app.TaskList   = [app.TaskList; tempList];
+                            app.TaskListEdited = app.TaskList;
+                            updateTaskFile(app)
+        
+                            buildTaskTree(app, [])
+                        else
+                            ui.Dialog(app.UIFigure, "error", msgError);
+                        end
+                    end
 
-                % Desabilita edição do conteúdo dos campos...
-                app.Name.Editable            = 'off';
-                app.Duration.Editable        = 'off';
-                set(findobj(app.GPS_Grid,              'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
-                set(findobj(app.BandSpecificInfo_Grid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
-
-                set(app.BitsPerPoint,    'Items', {app.BitsPerPoint.Value})
-                set(app.ObservationType, 'Items', {app.ObservationType.Value})
-                set(app.DurationUnit,    'Items', {app.DurationUnit.Value})
-                set(app.gpsMode,         'Items', {app.gpsMode.Value})
-                set(app.Status,          'Items', {app.Status.Value})
-                set(app.MaskTrigger,     'Items', {app.MaskTrigger.Value})
-                set(app.RFMode,          'Items', {app.RFMode.Value})
-                set(app.TraceMode,       'Items', {app.TraceMode.Value})
-                set(app.Detector,        'Items', {app.Detector.Value})
-                set(app.LevelUnit,       'Items', {app.LevelUnit.Value})
-                set(app.VBW,             'Items', {app.VBW.Value})
-                set(app.FindPeaks_Type,  'Items', {app.FindPeaks_Type.Value})
-
-                % Essa última validação é essencial para desfazer alterações 
-                % que não foram salvas. Ou seja, o usuário fez alterações
-                % em app.taskList (que estavam armazenadas na sua cópia -
-                % app.editedList) e não clicou no botão "Confirma edição".
-                if ~isequal(app.taskList, app.editedList)
-                    app.editedList = app.taskList;
-                    TreeBuilding(app, [])
-                end
-
-            %-------------------------------------------------------------%
-            % ## MODO DE EDIÇÃO ##
-            %-------------------------------------------------------------%
-            else
-                % Aspectos relacionados à indicação visual de que se trata 
-                % do modo de edição:
-                set(app.TreeGrid.Children, 'Enable', 'on')
-                app.TreeGrid.ColumnWidth{end} = 16;                
-                app.ConfirmEditionButton.Visible  = 1;
-                app.ImportButton.Enable   = 'off';
-                app.ExportButton.Enable = 'off';
-
-                % Habilita edição do conteúdo dos campos...
-
-                app.Name.Editable            = 'on';
-                app.Duration.Editable        = 'on';
-                set(findobj(app.GPS_Grid,              'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
-                set(findobj(app.BandSpecificInfo_Grid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
-                app.ID.Editable              = 'off';
-
-                set(app.BitsPerPoint,    'Items', {'8 bits', '16 bits', '32 bits'})
-                set(app.ObservationType, 'Items', {'Duração', 'Período específico', 'Quantidade específica de amostras'})
-                set(app.DurationUnit,    'Items', {'min', 'hr'})
-                set(app.gpsMode,         'Items', {'auto', 'manual'})
-                set(app.Status,          'Items', {'ON', 'OFF'})
-                set(app.MaskTrigger,     'Items', {'OFF', 'ON - Apenas afere rompimento', 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)', 'ON - Afere rompimento e salva em arquivo'})
-                set(app.RFMode,          'Items', {'High Sensitivity', 'Normal', 'Low Distortion'})
-                set(app.TraceMode,       'Items', {'ClearWrite', 'Average', 'MaxHold', 'MinHold'})
-                set(app.Detector,        'Items', {'Sample', 'Average/RMS', 'Positive Peak', 'Negative Peak'})
-                set(app.LevelUnit,       'Items', {'dBm', 'dBµV'})
-                set(app.VBW,             'Items', {'auto', 'RBW', 'RBW/10', 'RBW/100'})
-                set(app.FindPeaks_Type,  'Items', {'Valores padrão (appColeta)', 'Valores customizados'})
+                case app.ExportButton
+                    selectedFolder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de tarefas');
+                    figure(app.UIFigure)
+        
+                    if selectedFolder
+                        saveTaskFile(app, selectedFolder, true)
+                    end
             end
 
-            if strcmp(app.ObservationType.Value, 'Período específico')
-                SpecificTimePanel_editable(app)
-            end
-
-            if strcmp(app.FindPeaks_Type.Value, 'Valores customizados')
-                FindPeaksPanel_editable(app)
-            end
-
-        end
-
-        % Image clicked function: ImportButton
-        function ImportButtonPushed(app, event)
-            
-            [selectedFile, selectedFolder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
-            figure(app.UIFigure)
-
-            if selectedFile
-            [tempList, msgError] =  util.TaskScriptIO.readScriptFile(fullfile(selectedFolder, selectedFile), 'auxApp.winEditTaskList');
-
-                if isempty(msgError)
-                    app.taskList   = [app.taskList; tempList];
-                    app.editedList = app.taskList;
-                    update(app)
-
-                    TreeBuilding(app, [])
-                else
-                    ui.Dialog(app.UIFigure, "error", msgError);
-                end
-            end
-
-        end
-
-        % Image clicked function: ExportButton
-        function ExportButtonPushed(app, event)
-            
-            selectedFolder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de tarefas');
-            figure(app.UIFigure)
-
-            if selectedFolder
-                saveNewFile(app, selectedFolder, true)
-            end
-            
         end
 
         % Image clicked function: TreeAddTaskNode
         function TreeAddTaskNodePushed(app, event)
             
-            taskIdxPrevious = app.Tree.SelectedNodes.NodeData;
-            taskIdxCurrent = numel(app.editedList) + 1;
+            taskIdxPrevious = app.Tree.SelectedNodes.NodeData.taskIdx;
+            taskIdxCurrent = numel(app.TaskListEdited) + 1;
             bandIdx = 1;
 
-            app.editedList(taskIdxCurrent) = app.editedList(taskIdxPrevious);
-            app.editedList(taskIdxCurrent).Name = sprintf('%s (Cópia)', app.editedList(taskIdxPrevious).Name);
+            app.TaskListEdited(taskIdxCurrent) = app.TaskListEdited(taskIdxPrevious);
+            app.TaskListEdited(taskIdxCurrent).Name = sprintf('%s (Cópia)', app.TaskListEdited(taskIdxPrevious).Name);
             
-            TreeBuilding(app, [taskIdxCurrent, bandIdx])
+            buildTaskTree(app, [taskIdxCurrent, bandIdx])
 
         end
 
         % Image clicked function: TreeAddBandNode
         function TreeAddBandNodeValueChanged(app, event)
             
-            taskIdx = app.Tree.SelectedNodes.NodeData;
-            bandIdxPrevious = app.Tree.SelectedNodes.UserData;
-            bandIdxCurrent = numel(app.editedList(taskIdx).Band) + 1;
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdxPrevious = app.Tree.SelectedNodes.NodeData.bandIdx;
+            bandIdxCurrent = numel(app.TaskListEdited(taskIdx).Band) + 1;
 
             if app.Tree.SelectedNodes.Parent == app.Tree
-                app.editedList(taskIdx).Band(bandIdxCurrent) = app.editedList(taskIdx).Band(1);
+                app.TaskListEdited(taskIdx).Band(bandIdxCurrent) = app.TaskListEdited(taskIdx).Band(1);
             else
-                app.editedList(taskIdx).Band(bandIdxCurrent) = app.editedList(taskIdx).Band(bandIdxPrevious);
+                app.TaskListEdited(taskIdx).Band(bandIdxCurrent) = app.TaskListEdited(taskIdx).Band(bandIdxPrevious);
             end
-             app.editedList(taskIdx).Band(bandIdxCurrent).ID = bandIdxCurrent;
+             app.TaskListEdited(taskIdx).Band(bandIdxCurrent).ID = bandIdxCurrent;
             
-            TreeBuilding(app, [taskIdx, bandIdxCurrent])
+            buildTaskTree(app, [taskIdx, bandIdxCurrent])
 
         end
 
         % Image clicked function: TreeDelNode
         function TreeDelNodePushed(app, event)
             
-            taskIdx = app.Tree.SelectedNodes.NodeData;
-            bandIdx = app.Tree.SelectedNodes.UserData;
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
             
             if app.Tree.SelectedNodes.Parent == app.Tree
-                if numel(app.editedList) > 1
-                    app.editedList(taskIdx) = [];
-                    TreeBuilding(app, [1, -1])
+                if numel(app.TaskListEdited) > 1
+                    app.TaskListEdited(taskIdx) = [];
+                    buildTaskTree(app, [1, -1])
 
                 else
                     ui.Dialog(app.UIFigure, "warning", 'Não é possível excluir a única tarefa.');
@@ -913,10 +854,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 end
 
             else
-                if numel(app.editedList(taskIdx).Band) > 1
-                    app.editedList(taskIdx).Band(bandIdx) = [];
-                    newID(app)
-                    TreeBuilding(app, [taskIdx, 1])
+                if numel(app.TaskListEdited(taskIdx).Band) > 1
+                    app.TaskListEdited(taskIdx).Band(bandIdx) = [];
+                    updateBandIds(app)
+                    buildTaskTree(app, [taskIdx, 1])
 
                 else
                     ui.Dialog(app.UIFigure, "warning", 'Não é possível excluir a única faixa de frequência da tarefa.');
@@ -933,183 +874,183 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % alterado, salvando uma nova versão do arquivo "TaskList.json",
             % caso necessário.
 
-            if ~isequal(app.taskList, app.editedList)
+            if ~isequal(app.TaskList, app.TaskListEdited)
                 % Validaçao dos valores das faixas - os outros campos já são 
                 % validados pelos próprios componentes da interface.                
-                for ii = 1:numel(app.editedList)
-                    for jj = 1:numel(app.editedList(ii).Band)
-                        freqStart = app.editedList(ii).Band.FreqStart;
-                        freqStop  = app.editedList(ii).Band.FreqStop;
+                for ii = 1:numel(app.TaskListEdited)
+                    for jj = 1:numel(app.TaskListEdited(ii).Band)
+                        freqStart = app.TaskListEdited(ii).Band.FreqStart;
+                        freqStop  = app.TaskListEdited(ii).Band.FreqStop;
 
                         if freqStart >= freqStop
-                            ui.Dialog(app.UIFigure, "warning", sprintf('A faixa <b>%.3f - %.3f MHz</b>, da tarefa "%s", é inválida. A frequência final de uma faixa deve ser superior à inicial.', freqStart/1e+6, freqStop/1e+6, app.editedList(ii).Name));
+                            ui.Dialog(app.UIFigure, "warning", sprintf('A faixa <b>%.3f - %.3f MHz</b>, da tarefa "%s", é inválida. A frequência final de uma faixa deve ser superior à inicial.', freqStart/1e+6, freqStop/1e+6, app.TaskListEdited(ii).Name));
                             return
                         end
                     end
                 end
 
-                app.taskList = app.editedList;
-                update(app)
+                app.TaskList = app.TaskListEdited;
+                updateTaskFile(app)
             end
             
-            app.ModeButtonView.Value = 1;
+            app.ViewMode = true;
             OperationModeValueChanged(app)
 
         end
 
         % Value changed function: BitsPerPoint, Description, Detector, 
         % ...and 29 other components
-        function TaskParameterChanged(app, event)
+        function onTaskParameterValueChanged(app, event)
             
-            taskIdx = app.Tree.SelectedNodes.NodeData;
-            bandIdx = app.Tree.SelectedNodes.UserData;
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
 
             switch event.Source
                 %---------------------------------------------------------%
                 % Painel "ASPECTOS GERAIS"
                 %---------------------------------------------------------%
                 case app.Name
-                    app.editedList(taskIdx).Name    = app.Name.Value;
+                    app.TaskListEdited(taskIdx).Name    = app.Name.Value;
                     app.Tree.Children(taskIdx).Text = app.Name.Value;
 
                 case app.BitsPerPoint
-                    app.editedList(taskIdx).BitsPerSample = str2double(extractBefore(app.BitsPerPoint.Value, 'bits'));
+                    app.TaskListEdited(taskIdx).BitsPerSample = str2double(extractBefore(app.BitsPerPoint.Value, 'bits'));
                 
                 case {app.Duration, app.DurationUnit}
-                    app.editedList(taskIdx).Observation.Type = 'Duration';
+                    app.TaskListEdited(taskIdx).Observation.Type = 'Duration';
                     switch app.DurationUnit.Value
                         case 'min'
-                            app.editedList(taskIdx).Observation.Duration = app.Duration.Value * 60;
+                            app.TaskListEdited(taskIdx).Observation.Duration = app.Duration.Value * 60;
                         case 'hr'
-                            app.editedList(taskIdx).Observation.Duration = app.Duration.Value * 3600;
+                            app.TaskListEdited(taskIdx).Observation.Duration = app.Duration.Value * 3600;
                     end
 
-                case {app.SpecificTime_DatePicker1, app.SpecificTime_Spinner1, app.SpecificTime_Spinner2, app.SpecificTime_DatePicker2, app.SpecificTime_Spinner3, app.SpecificTime_Spinner4}
-                    app.editedList(taskIdx).Observation.Type = 'Time';
+                case {app.StartDatePicker, app.StartTimeHourSpinner, app.StartTimeMinuteSpinner, app.EndDatePicker, app.EndTimeHourSpinner, app.EndTimeMinuteSpinner}
+                    app.TaskListEdited(taskIdx).Observation.Type = 'Time';
 
-                    BeginTime = app.SpecificTime_DatePicker1.Value + hours(app.SpecificTime_Spinner1.Value) + minutes(app.SpecificTime_Spinner2.Value);
-                    EndTime   = app.SpecificTime_DatePicker2.Value + hours(app.SpecificTime_Spinner3.Value) + minutes(app.SpecificTime_Spinner4.Value);
+                    BeginTime = app.StartDatePicker.Value + hours(app.StartTimeHourSpinner.Value) + minutes(app.StartTimeMinuteSpinner.Value);
+                    EndTime   = app.EndDatePicker.Value + hours(app.EndTimeHourSpinner.Value) + minutes(app.EndTimeMinuteSpinner.Value);
 
-                    app.editedList(taskIdx).Observation.BeginTime = datestr(BeginTime, 'dd/mm/yyyy HH:MM:ss');
-                    app.editedList(taskIdx).Observation.EndTime   = datestr(EndTime,   'dd/mm/yyyy HH:MM:ss');
+                    app.TaskListEdited(taskIdx).Observation.BeginTime = datestr(BeginTime, 'dd/mm/yyyy HH:MM:ss');
+                    app.TaskListEdited(taskIdx).Observation.EndTime   = datestr(EndTime,   'dd/mm/yyyy HH:MM:ss');
 
-                case {app.gpsMode, app.GPS_manualLatitude, app.GPS_manualLongitude, app.GPS_RevisitTime}
-                    switch app.gpsMode.Value
+                case {app.GpsMode, app.Latitude, app.Longitude, app.GpsRevisitTime}
+                    switch app.GpsMode.Value
                         case 'auto'
-                            app.editedList(taskIdx).GPS = struct('Type',        'auto', ...
+                            app.TaskListEdited(taskIdx).GPS = struct('Type',        'auto', ...
                                                               'Latitude',    [],     ...
                                                               'Longitude',   [],     ...
-                                                              'RevisitTime', app.GPS_RevisitTime.Value);
+                                                              'RevisitTime', app.GpsRevisitTime.Value);
                         case 'manual'
-                            app.editedList(taskIdx).GPS = struct('Type',        'manual',                      ...
-                                                              'Latitude',    app.GPS_manualLatitude.Value,  ...
-                                                              'Longitude',   app.GPS_manualLongitude.Value, ...
-                                                              'RevisitTime', app.GPS_RevisitTime.Value);
+                            app.TaskListEdited(taskIdx).GPS = struct('Type',        'manual',                      ...
+                                                              'Latitude',    app.Latitude.Value,  ...
+                                                              'Longitude',   app.Longitude.Value, ...
+                                                              'RevisitTime', app.GpsRevisitTime.Value);
                     end
 
                 %---------------------------------------------------------%                
                 % Painel "ESPECIFICIDADES DO FLUXO SELECIONADO"
                 %---------------------------------------------------------%
                 case app.Status
-                    if isscalar(app.editedList(taskIdx).Band)
+                    if isscalar(app.TaskListEdited(taskIdx).Band)
                         app.Status.Value = "ON";
                         ui.Dialog(app.UIFigure, "warning", 'Tarefa com apenas uma única faixa de frequência não pode ter essa faixa com o estado "OFF".');
                         return
 
                     else
                         if app.Status.Value == "ON"
-                            app.editedList(taskIdx).Band(bandIdx).Enable = 1;
+                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 1;
                         else
-                            app.editedList(taskIdx).Band(bandIdx).Enable = 0;
+                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 0;
                         end
 
-                        if all(~[app.editedList(taskIdx).Band.Enable])
-                            app.editedList(taskIdx).Band(bandIdx).Enable = 1;
+                        if all(~[app.TaskListEdited(taskIdx).Band.Enable])
+                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 1;
 
                             app.Status.Value = "ON";
                             ui.Dialog(app.UIFigure, "warning", 'Toda tarefa deve possuir ao menos uma faixa de frequência com o estado "ON".');
                             return
                         end
     
-                        TreeBuilding_addStyle(app)
+                        applyTaskTreeStyle(app)
                     end
 
                 case app.MaskTrigger
                     switch app.MaskTrigger.Value
                         case 'OFF'
-                            app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status = 0;
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 0;
                         case 'ON - Apenas afere rompimento'
-                            app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status = 1;
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 1;
                         case 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'
-                            app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status = 2;
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 2;
                         case 'ON - Afere rompimento e salva em arquivo'
-                            app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Status = 3;
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 3;
                     end
 
-                    app.FindPeaks_Type.Enable = ~strcmp(app.MaskTrigger.Value, 'OFF');
+                    app.FindPeaksType.Enable = ~strcmp(app.MaskTrigger.Value, 'OFF');
 
                 case app.Description
-                    app.editedList(taskIdx).Band(bandIdx).Description = app.Description.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).Description = app.Description.Value;
 
                 case app.ObservationSamples
-                    app.editedList(taskIdx).Observation.Type = 'Samples';
+                    app.TaskListEdited(taskIdx).Observation.Type = 'Samples';
                     if isscalar(bandIdx)
-                        app.editedList(taskIdx).Band(bandIdx).ObservationSamples = app.ObservationSamples.Value;
+                        app.TaskListEdited(taskIdx).Band(bandIdx).ObservationSamples = app.ObservationSamples.Value;
                     end
 
                 case app.FreqStart
-                    app.editedList(taskIdx).Band(bandIdx).FreqStart   = app.FreqStart.Value * 1e+6;
-                    app.Tree.Children(taskIdx).Children(bandIdx).Text = TreeBuilding_nodeText(app, taskIdx, bandIdx);
+                    app.TaskListEdited(taskIdx).Band(bandIdx).FreqStart   = app.FreqStart.Value * 1e+6;
+                    app.Tree.Children(taskIdx).Children(bandIdx).Text = getFlowTag(app, taskIdx, bandIdx);
                     SpanCheck(app)
                     
                 case app.FreqStop
-                    app.editedList(taskIdx).Band(bandIdx).FreqStop    = app.FreqStop.Value * 1e+6;
-                    app.Tree.Children(taskIdx).Children(bandIdx).Text = TreeBuilding_nodeText(app, taskIdx, bandIdx);
+                    app.TaskListEdited(taskIdx).Band(bandIdx).FreqStop    = app.FreqStop.Value * 1e+6;
+                    app.Tree.Children(taskIdx).Children(bandIdx).Text = getFlowTag(app, taskIdx, bandIdx);
                     SpanCheck(app)
 
                 case app.StepWidth
-                    app.editedList(taskIdx).Band(bandIdx).StepWidth = app.StepWidth.Value * 1e+3;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).StepWidth = app.StepWidth.Value * 1e+3;
 
                 case app.Resolution
-                    app.editedList(taskIdx).Band(bandIdx).Resolution = app.Resolution.Value * 1e+3;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).Resolution = app.Resolution.Value * 1e+3;
 
                 case app.TraceMode
-                    app.editedList(taskIdx).Band(bandIdx).TraceMode = app.TraceMode.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).TraceMode = app.TraceMode.Value;
                     IntegrationFactorCheck(app)
-                    app.editedList(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
 
                 case app.IntegrationFactor
-                    app.editedList(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
 
                 case app.RFMode
-                    app.editedList(taskIdx).Band(bandIdx).RFMode = app.RFMode.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).RFMode = app.RFMode.Value;
 
                 case app.VBW
-                    app.editedList(taskIdx).Band(bandIdx).VBW = app.VBW.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).VBW = app.VBW.Value;
 
                 case app.Detector
-                    app.editedList(taskIdx).Band(bandIdx).Detector = app.Detector.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).Detector = app.Detector.Value;
 
                 case app.LevelUnit
-                    app.editedList(taskIdx).Band(bandIdx).LevelUnit = app.LevelUnit.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).LevelUnit = app.LevelUnit.Value;
 
                 case app.RevisitTime
-                    app.editedList(taskIdx).Band(bandIdx).RevisitTime = app.RevisitTime.Value;
+                    app.TaskListEdited(taskIdx).Band(bandIdx).RevisitTime = app.RevisitTime.Value;
 
                 %---------------------------------------------------------%
                 % Subpainel "FINDPEAKS"
                 %---------------------------------------------------------%
-                case app.FindPeaks_nSweeps
-                    app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration.sweepsPerValidation = app.FindPeaks_nSweeps.Value;
+                case app.FindPeaksNumSweeps
+                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.sweepsPerValidation = app.FindPeaksNumSweeps.Value;
 
-                case app.FindPeaks_Prominence
-                    app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumProminence = app.FindPeaks_Prominence.Value;
+                case app.FindPeaksMinProminence
+                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumProminence = app.FindPeaksMinProminence.Value;
 
-                case app.FindPeaks_Distance
-                    app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumDistanceKHz = app.FindPeaks_Distance.Value;
+                case app.FindPeaksMinDistance
+                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumDistanceKHz = app.FindPeaksMinDistance.Value;
 
-                case app.FindPeaks_BW
-                    app.editedList(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumWidthKHz = app.FindPeaks_BW.Value;
+                case app.FindPeaksMinBandWidth
+                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumWidthKHz = app.FindPeaksMinBandWidth.Value;
             end
             
         end
@@ -1117,8 +1058,8 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Image clicked function: TreeMoveDown, TreeMoveUp
         function UpDownImageClicked(app, event)
             
-            taskIdx = app.Tree.SelectedNodes.NodeData;
-            bandIdx = app.Tree.SelectedNodes.UserData;
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
 
             Flag = 0;
 
@@ -1126,15 +1067,15 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 case app.TreeMoveUp
                     if app.Tree.SelectedNodes.Parent == app.Tree
                         if taskIdx > 1
-                            app.editedList(taskIdx-1:taskIdx) = flip(app.editedList(taskIdx-1:taskIdx));
+                            app.TaskListEdited(taskIdx-1:taskIdx) = flip(app.TaskListEdited(taskIdx-1:taskIdx));
 
                             Flag = 1;
                             taskIdx = taskIdx-1;
                         end
                     else
                         if bandIdx > 1
-                            app.editedList(taskIdx).Band(bandIdx-1:bandIdx) = flip(app.editedList(taskIdx).Band(bandIdx-1:bandIdx));
-                            newID(app)
+                            app.TaskListEdited(taskIdx).Band(bandIdx-1:bandIdx) = flip(app.TaskListEdited(taskIdx).Band(bandIdx-1:bandIdx));
+                            updateBandIds(app)
 
                             Flag = 1;
                             bandIdx = bandIdx-1;
@@ -1143,16 +1084,16 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
                 case app.TreeMoveDown
                     if app.Tree.SelectedNodes.Parent == app.Tree
-                        if taskIdx < numel(app.editedList)
-                            app.editedList(taskIdx:taskIdx+1) = flip(app.editedList(taskIdx:taskIdx+1));
+                        if taskIdx < numel(app.TaskListEdited)
+                            app.TaskListEdited(taskIdx:taskIdx+1) = flip(app.TaskListEdited(taskIdx:taskIdx+1));
 
                             Flag = 1;
                             taskIdx = taskIdx+1;
                         end
                     else
-                        if bandIdx < numel(app.editedList(taskIdx).Band)
-                            app.editedList(taskIdx).Band(bandIdx:bandIdx+1) = flip(app.editedList(taskIdx).Band(bandIdx:bandIdx+1));
-                            newID(app)
+                        if bandIdx < numel(app.TaskListEdited(taskIdx).Band)
+                            app.TaskListEdited(taskIdx).Band(bandIdx:bandIdx+1) = flip(app.TaskListEdited(taskIdx).Band(bandIdx:bandIdx+1));
+                            updateBandIds(app)
 
                             Flag = 1;
                             bandIdx = bandIdx+1;
@@ -1162,9 +1103,9 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             if Flag
                 if app.Tree.SelectedNodes.Parent == app.Tree
-                    TreeBuilding(app, [taskIdx, -1])
+                    buildTaskTree(app, [taskIdx, -1])
                 else
-                    TreeBuilding(app, [taskIdx, bandIdx])
+                    buildTaskTree(app, [taskIdx, bandIdx])
                 end
             end
 
@@ -1207,12 +1148,898 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {20, '1x', 16, 22, 10, 8, 2};
-            app.GridLayout.RowHeight = {2, 8, 10, 14, '1x', 20, 34};
+            app.GridLayout.ColumnWidth = {20, 160, 160, 10, 320, 10, '1x', 122, 16, 22, 10, 8, 2};
+            app.GridLayout.RowHeight = {2, 8, 10, 14, '1x', 10, 34, 20, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
             app.GridLayout.BackgroundColor = [1 1 1];
+
+            % Create TreePanel
+            app.TreePanel = uigridlayout(app.GridLayout);
+            app.TreePanel.ColumnWidth = {24, '1x', 0};
+            app.TreePanel.RowHeight = {36, 36, 16, 5, 16, 5, 16, '1x', 16, 16, 5, 16, 2};
+            app.TreePanel.ColumnSpacing = 5;
+            app.TreePanel.RowSpacing = 0;
+            app.TreePanel.Padding = [0 0 0 0];
+            app.TreePanel.Layout.Row = [4 5];
+            app.TreePanel.Layout.Column = [2 3];
+            app.TreePanel.BackgroundColor = [1 1 1];
+
+            % Create TreeIcon
+            app.TreeIcon = uiimage(app.TreePanel);
+            app.TreeIcon.ScaleMethod = 'none';
+            app.TreeIcon.Layout.Row = 1;
+            app.TreeIcon.Layout.Column = 1;
+            app.TreeIcon.VerticalAlignment = 'top';
+            app.TreeIcon.ImageSource = 'server-process - blue.svg';
+
+            % Create Tree
+            app.Tree = uitree(app.TreePanel);
+            app.Tree.SelectionChangedFcn = createCallbackFcn(app, @onTaskTreeSelectionChanged, true);
+            app.Tree.FontSize = 11;
+            app.Tree.FontColor = [0.2 0.2 0.2];
+            app.Tree.Layout.Row = [3 13];
+            app.Tree.Layout.Column = [1 2];
+
+            % Create TreeAddTaskNode
+            app.TreeAddTaskNode = uiimage(app.TreePanel);
+            app.TreeAddTaskNode.ImageClickedFcn = createCallbackFcn(app, @TreeAddTaskNodePushed, true);
+            app.TreeAddTaskNode.Enable = 'off';
+            app.TreeAddTaskNode.Tooltip = {''};
+            app.TreeAddTaskNode.Layout.Row = 3;
+            app.TreeAddTaskNode.Layout.Column = 3;
+            app.TreeAddTaskNode.ImageSource = 'addFileWithPlus_32.png';
+
+            % Create TreeAddBandNode
+            app.TreeAddBandNode = uiimage(app.TreePanel);
+            app.TreeAddBandNode.ImageClickedFcn = createCallbackFcn(app, @TreeAddBandNodeValueChanged, true);
+            app.TreeAddBandNode.Enable = 'off';
+            app.TreeAddBandNode.Tooltip = {''};
+            app.TreeAddBandNode.Layout.Row = 5;
+            app.TreeAddBandNode.Layout.Column = 3;
+            app.TreeAddBandNode.ImageSource = 'EditWithPlus_32.png';
+
+            % Create TreeDelNode
+            app.TreeDelNode = uiimage(app.TreePanel);
+            app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @TreeDelNodePushed, true);
+            app.TreeDelNode.Enable = 'off';
+            app.TreeDelNode.Tooltip = {''};
+            app.TreeDelNode.Layout.Row = 7;
+            app.TreeDelNode.Layout.Column = 3;
+            app.TreeDelNode.ImageSource = 'Delete_32Red.png';
+
+            % Create TreeMoveUp
+            app.TreeMoveUp = uiimage(app.TreePanel);
+            app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
+            app.TreeMoveUp.Enable = 'off';
+            app.TreeMoveUp.Tooltip = {''};
+            app.TreeMoveUp.Layout.Row = 10;
+            app.TreeMoveUp.Layout.Column = 3;
+            app.TreeMoveUp.ImageSource = 'ArrowUp_32.png';
+
+            % Create TreeMoveDown
+            app.TreeMoveDown = uiimage(app.TreePanel);
+            app.TreeMoveDown.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
+            app.TreeMoveDown.Enable = 'off';
+            app.TreeMoveDown.Tooltip = {''};
+            app.TreeMoveDown.Layout.Row = 12;
+            app.TreeMoveDown.Layout.Column = 3;
+            app.TreeMoveDown.ImageSource = 'ArrowDown_32.png';
+
+            % Create TreeTitle
+            app.TreeTitle = uilabel(app.TreePanel);
+            app.TreeTitle.VerticalAlignment = 'top';
+            app.TreeTitle.WordWrap = 'on';
+            app.TreeTitle.FontSize = 15;
+            app.TreeTitle.FontColor = [0 0.4471 0.7412];
+            app.TreeTitle.Layout.Row = [1 2];
+            app.TreeTitle.Layout.Column = [2 3];
+            app.TreeTitle.Interpreter = 'html';
+            app.TreeTitle.Text = {'<b>Lista de tarefas de monitoração</b>'; '<font style="color: gray; font-size: 11px;">Selecione uma tarefa para visualizar seus detalhes, editar parâmetros e gerenciar as faixas de frequência</font>'};
+
+            % Create ViewStateButton
+            app.ViewStateButton = uibutton(app.GridLayout, 'state');
+            app.ViewStateButton.ValueChangedFcn = createCallbackFcn(app, @onViewModeChanged, true);
+            app.ViewStateButton.Text = 'Visualizar lista';
+            app.ViewStateButton.BackgroundColor = [0 0.451 0.7412];
+            app.ViewStateButton.FontSize = 11;
+            app.ViewStateButton.FontWeight = 'bold';
+            app.ViewStateButton.FontColor = [1 1 1];
+            app.ViewStateButton.Layout.Row = 7;
+            app.ViewStateButton.Layout.Column = 2;
+            app.ViewStateButton.Value = true;
+
+            % Create EditStateButton
+            app.EditStateButton = uibutton(app.GridLayout, 'state');
+            app.EditStateButton.ValueChangedFcn = createCallbackFcn(app, @onViewModeChanged, true);
+            app.EditStateButton.Text = 'Editar lista';
+            app.EditStateButton.BackgroundColor = [0.9412 0.9412 0.9412];
+            app.EditStateButton.FontSize = 11;
+            app.EditStateButton.FontWeight = 'bold';
+            app.EditStateButton.FontColor = [0 0.4471 0.7412];
+            app.EditStateButton.Layout.Row = 7;
+            app.EditStateButton.Layout.Column = 3;
+
+            % Create TaskPanel
+            app.TaskPanel = uipanel(app.GridLayout);
+            app.TaskPanel.AutoResizeChildren = 'off';
+            app.TaskPanel.Layout.Row = [4 7];
+            app.TaskPanel.Layout.Column = 5;
+
+            % Create TaskGrid
+            app.TaskGrid = uigridlayout(app.TaskPanel);
+            app.TaskGrid.ColumnWidth = {'1x', 110};
+            app.TaskGrid.RowHeight = {34, 17, 22, 22, 94, 22, 22, '1x'};
+            app.TaskGrid.RowSpacing = 5;
+            app.TaskGrid.BackgroundColor = [1 1 1];
+
+            % Create TaskTitle
+            app.TaskTitle = uilabel(app.TaskGrid);
+            app.TaskTitle.VerticalAlignment = 'top';
+            app.TaskTitle.WordWrap = 'on';
+            app.TaskTitle.FontColor = [0 0.4471 0.7412];
+            app.TaskTitle.Layout.Row = 1;
+            app.TaskTitle.Layout.Column = [1 2];
+            app.TaskTitle.Interpreter = 'html';
+            app.TaskTitle.Text = {'<b>Tarefa selecionada</b>'; '<font style="color: gray; font-size: 10px;">Configurações gerais da tarefa de monitoração</font>'};
+
+            % Create NameLabel
+            app.NameLabel = uilabel(app.TaskGrid);
+            app.NameLabel.VerticalAlignment = 'bottom';
+            app.NameLabel.FontSize = 10;
+            app.NameLabel.Layout.Row = 2;
+            app.NameLabel.Layout.Column = 1;
+            app.NameLabel.Text = 'NOME';
+
+            % Create Name
+            app.Name = uieditfield(app.TaskGrid, 'text');
+            app.Name.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.Name.Editable = 'off';
+            app.Name.FontSize = 11;
+            app.Name.Layout.Row = 3;
+            app.Name.Layout.Column = 1;
+
+            % Create BitsPerPointLabel
+            app.BitsPerPointLabel = uilabel(app.TaskGrid);
+            app.BitsPerPointLabel.VerticalAlignment = 'bottom';
+            app.BitsPerPointLabel.FontSize = 10;
+            app.BitsPerPointLabel.Layout.Row = 2;
+            app.BitsPerPointLabel.Layout.Column = 2;
+            app.BitsPerPointLabel.Text = 'CODIFICAÇÃO';
+
+            % Create BitsPerPoint
+            app.BitsPerPoint = uidropdown(app.TaskGrid);
+            app.BitsPerPoint.Items = {'8 bits', '16 bits', '32 bits'};
+            app.BitsPerPoint.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.BitsPerPoint.FontSize = 11;
+            app.BitsPerPoint.BackgroundColor = [1 1 1];
+            app.BitsPerPoint.Layout.Row = 3;
+            app.BitsPerPoint.Layout.Column = 2;
+            app.BitsPerPoint.Value = '8 bits';
+
+            % Create ObservationLabel
+            app.ObservationLabel = uilabel(app.TaskGrid);
+            app.ObservationLabel.VerticalAlignment = 'bottom';
+            app.ObservationLabel.FontSize = 10;
+            app.ObservationLabel.Layout.Row = 4;
+            app.ObservationLabel.Layout.Column = 1;
+            app.ObservationLabel.Text = 'PERÍODO DE OBSERVAÇÃO';
+
+            % Create ObservationPanel
+            app.ObservationPanel = uipanel(app.TaskGrid);
+            app.ObservationPanel.AutoResizeChildren = 'off';
+            app.ObservationPanel.Layout.Row = 5;
+            app.ObservationPanel.Layout.Column = [1 2];
+
+            % Create ObservationGrid
+            app.ObservationGrid = uigridlayout(app.ObservationPanel);
+            app.ObservationGrid.ColumnWidth = {'1x'};
+            app.ObservationGrid.RowHeight = {17, 22, 22, 49};
+            app.ObservationGrid.ColumnSpacing = 11;
+            app.ObservationGrid.RowSpacing = 5;
+            app.ObservationGrid.BackgroundColor = [1 1 1];
+
+            % Create ObservationTypeLabel
+            app.ObservationTypeLabel = uilabel(app.ObservationGrid);
+            app.ObservationTypeLabel.VerticalAlignment = 'bottom';
+            app.ObservationTypeLabel.FontSize = 11;
+            app.ObservationTypeLabel.Layout.Row = 1;
+            app.ObservationTypeLabel.Layout.Column = 1;
+            app.ObservationTypeLabel.Text = 'Critério de término:';
+
+            % Create ObservationType
+            app.ObservationType = uidropdown(app.ObservationGrid);
+            app.ObservationType.Items = {'Duração', 'Período específico', 'Quantidade específica de amostras'};
+            app.ObservationType.ValueChangedFcn = createCallbackFcn(app, @onObservationTypeValueChanged, true);
+            app.ObservationType.Tag = 'task_Editable';
+            app.ObservationType.FontSize = 11;
+            app.ObservationType.BackgroundColor = [1 1 1];
+            app.ObservationType.Layout.Row = 2;
+            app.ObservationType.Layout.Column = 1;
+            app.ObservationType.Value = 'Duração';
+
+            % Create DurationGrid
+            app.DurationGrid = uigridlayout(app.ObservationGrid);
+            app.DurationGrid.ColumnWidth = {133, '100x'};
+            app.DurationGrid.RowHeight = {'1x'};
+            app.DurationGrid.RowSpacing = 5;
+            app.DurationGrid.Padding = [0 0 0 0];
+            app.DurationGrid.Layout.Row = 3;
+            app.DurationGrid.Layout.Column = 1;
+            app.DurationGrid.BackgroundColor = [1 1 1];
+
+            % Create Duration
+            app.Duration = uieditfield(app.DurationGrid, 'numeric');
+            app.Duration.Limits = [1 Inf];
+            app.Duration.ValueDisplayFormat = '%.3f';
+            app.Duration.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.Duration.Tag = 'task_Editable';
+            app.Duration.Editable = 'off';
+            app.Duration.FontSize = 11;
+            app.Duration.Layout.Row = 1;
+            app.Duration.Layout.Column = 1;
+            app.Duration.Value = 10;
+
+            % Create DurationUnit
+            app.DurationUnit = uidropdown(app.DurationGrid);
+            app.DurationUnit.Items = {'min', 'hr'};
+            app.DurationUnit.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.DurationUnit.Tag = 'task_Editable';
+            app.DurationUnit.FontSize = 11;
+            app.DurationUnit.BackgroundColor = [1 1 1];
+            app.DurationUnit.Layout.Row = 1;
+            app.DurationUnit.Layout.Column = 2;
+            app.DurationUnit.Value = 'min';
+
+            % Create SpecificTimeGrid
+            app.SpecificTimeGrid = uigridlayout(app.ObservationGrid);
+            app.SpecificTimeGrid.ColumnWidth = {64, 5, 64, 10, 64, 5, 64};
+            app.SpecificTimeGrid.RowHeight = {22, 22};
+            app.SpecificTimeGrid.ColumnSpacing = 0;
+            app.SpecificTimeGrid.RowSpacing = 5;
+            app.SpecificTimeGrid.Padding = [0 0 0 0];
+            app.SpecificTimeGrid.Layout.Row = 4;
+            app.SpecificTimeGrid.Layout.Column = 1;
+            app.SpecificTimeGrid.BackgroundColor = [1 1 1];
+
+            % Create StartDatePicker
+            app.StartDatePicker = uidatepicker(app.SpecificTimeGrid);
+            app.StartDatePicker.DisplayFormat = 'dd/MM/uuuu';
+            app.StartDatePicker.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.StartDatePicker.FontSize = 11;
+            app.StartDatePicker.Enable = 'off';
+            app.StartDatePicker.Visible = 'off';
+            app.StartDatePicker.Layout.Row = 1;
+            app.StartDatePicker.Layout.Column = [1 3];
+
+            % Create StartTimeHourSpinner
+            app.StartTimeHourSpinner = uispinner(app.SpecificTimeGrid);
+            app.StartTimeHourSpinner.Limits = [0 23];
+            app.StartTimeHourSpinner.RoundFractionalValues = 'on';
+            app.StartTimeHourSpinner.ValueDisplayFormat = '%.0f';
+            app.StartTimeHourSpinner.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.StartTimeHourSpinner.HorizontalAlignment = 'center';
+            app.StartTimeHourSpinner.FontSize = 11;
+            app.StartTimeHourSpinner.Enable = 'off';
+            app.StartTimeHourSpinner.Visible = 'off';
+            app.StartTimeHourSpinner.Layout.Row = 2;
+            app.StartTimeHourSpinner.Layout.Column = 1;
+
+            % Create StartTimeSeparator
+            app.StartTimeSeparator = uilabel(app.SpecificTimeGrid);
+            app.StartTimeSeparator.FontSize = 10;
+            app.StartTimeSeparator.Enable = 'off';
+            app.StartTimeSeparator.Visible = 'off';
+            app.StartTimeSeparator.Layout.Row = 2;
+            app.StartTimeSeparator.Layout.Column = 2;
+            app.StartTimeSeparator.Text = ':';
+
+            % Create StartTimeMinuteSpinner
+            app.StartTimeMinuteSpinner = uispinner(app.SpecificTimeGrid);
+            app.StartTimeMinuteSpinner.Step = 10;
+            app.StartTimeMinuteSpinner.Limits = [0 59];
+            app.StartTimeMinuteSpinner.RoundFractionalValues = 'on';
+            app.StartTimeMinuteSpinner.ValueDisplayFormat = '%.0f';
+            app.StartTimeMinuteSpinner.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.StartTimeMinuteSpinner.HorizontalAlignment = 'center';
+            app.StartTimeMinuteSpinner.FontSize = 11;
+            app.StartTimeMinuteSpinner.Enable = 'off';
+            app.StartTimeMinuteSpinner.Visible = 'off';
+            app.StartTimeMinuteSpinner.Layout.Row = 2;
+            app.StartTimeMinuteSpinner.Layout.Column = 3;
+
+            % Create EndDatePicker
+            app.EndDatePicker = uidatepicker(app.SpecificTimeGrid);
+            app.EndDatePicker.DisplayFormat = 'dd/MM/uuuu';
+            app.EndDatePicker.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.EndDatePicker.FontSize = 11;
+            app.EndDatePicker.Enable = 'off';
+            app.EndDatePicker.Visible = 'off';
+            app.EndDatePicker.Layout.Row = 1;
+            app.EndDatePicker.Layout.Column = [5 7];
+
+            % Create EndTimeHourSpinner
+            app.EndTimeHourSpinner = uispinner(app.SpecificTimeGrid);
+            app.EndTimeHourSpinner.Limits = [0 23];
+            app.EndTimeHourSpinner.RoundFractionalValues = 'on';
+            app.EndTimeHourSpinner.ValueDisplayFormat = '%.0f';
+            app.EndTimeHourSpinner.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.EndTimeHourSpinner.HorizontalAlignment = 'center';
+            app.EndTimeHourSpinner.FontSize = 11;
+            app.EndTimeHourSpinner.Enable = 'off';
+            app.EndTimeHourSpinner.Visible = 'off';
+            app.EndTimeHourSpinner.Layout.Row = 2;
+            app.EndTimeHourSpinner.Layout.Column = 5;
+            app.EndTimeHourSpinner.Value = 23;
+
+            % Create EndTimeSeparator
+            app.EndTimeSeparator = uilabel(app.SpecificTimeGrid);
+            app.EndTimeSeparator.FontSize = 10;
+            app.EndTimeSeparator.Enable = 'off';
+            app.EndTimeSeparator.Visible = 'off';
+            app.EndTimeSeparator.Layout.Row = 2;
+            app.EndTimeSeparator.Layout.Column = 6;
+            app.EndTimeSeparator.Text = ':';
+
+            % Create EndTimeMinuteSpinner
+            app.EndTimeMinuteSpinner = uispinner(app.SpecificTimeGrid);
+            app.EndTimeMinuteSpinner.Step = 10;
+            app.EndTimeMinuteSpinner.Limits = [0 59];
+            app.EndTimeMinuteSpinner.RoundFractionalValues = 'on';
+            app.EndTimeMinuteSpinner.ValueDisplayFormat = '%.0f';
+            app.EndTimeMinuteSpinner.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.EndTimeMinuteSpinner.HorizontalAlignment = 'center';
+            app.EndTimeMinuteSpinner.FontSize = 11;
+            app.EndTimeMinuteSpinner.Enable = 'off';
+            app.EndTimeMinuteSpinner.Visible = 'off';
+            app.EndTimeMinuteSpinner.Layout.Row = 2;
+            app.EndTimeMinuteSpinner.Layout.Column = 7;
+            app.EndTimeMinuteSpinner.Value = 59;
+
+            % Create GpsModeLabel
+            app.GpsModeLabel = uilabel(app.TaskGrid);
+            app.GpsModeLabel.VerticalAlignment = 'bottom';
+            app.GpsModeLabel.FontSize = 10;
+            app.GpsModeLabel.Layout.Row = 6;
+            app.GpsModeLabel.Layout.Column = 1;
+            app.GpsModeLabel.Text = 'GPS';
+
+            % Create GpsMode
+            app.GpsMode = uidropdown(app.TaskGrid);
+            app.GpsMode.Items = {'auto', 'manual'};
+            app.GpsMode.ValueChangedFcn = createCallbackFcn(app, @onGpsModeValueChanged, true);
+            app.GpsMode.Tag = 'task_Editable';
+            app.GpsMode.FontSize = 11;
+            app.GpsMode.BackgroundColor = [1 1 1];
+            app.GpsMode.Layout.Row = 7;
+            app.GpsMode.Layout.Column = [1 2];
+            app.GpsMode.Value = 'auto';
+
+            % Create GpsPanel
+            app.GpsPanel = uipanel(app.TaskGrid);
+            app.GpsPanel.AutoResizeChildren = 'off';
+            app.GpsPanel.Layout.Row = 8;
+            app.GpsPanel.Layout.Column = [1 2];
+
+            % Create GpsGrid
+            app.GpsGrid = uigridlayout(app.GpsPanel);
+            app.GpsGrid.ColumnWidth = {133, 133};
+            app.GpsGrid.RowHeight = {17, 22, 22, 22};
+            app.GpsGrid.RowSpacing = 5;
+            app.GpsGrid.BackgroundColor = [1 1 1];
+
+            % Create LatitudeLabel
+            app.LatitudeLabel = uilabel(app.GpsGrid);
+            app.LatitudeLabel.VerticalAlignment = 'bottom';
+            app.LatitudeLabel.FontSize = 11;
+            app.LatitudeLabel.Layout.Row = 1;
+            app.LatitudeLabel.Layout.Column = 1;
+            app.LatitudeLabel.Text = 'Latitude (º):';
+
+            % Create Latitude
+            app.Latitude = uieditfield(app.GpsGrid, 'numeric');
+            app.Latitude.ValueDisplayFormat = '%.6f';
+            app.Latitude.AllowEmpty = 'on';
+            app.Latitude.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.Latitude.Tag = 'task_Editable';
+            app.Latitude.Editable = 'off';
+            app.Latitude.FontSize = 11;
+            app.Latitude.Enable = 'off';
+            app.Latitude.Layout.Row = 2;
+            app.Latitude.Layout.Column = 1;
+            app.Latitude.Value = [];
+
+            % Create LongitudeLabel
+            app.LongitudeLabel = uilabel(app.GpsGrid);
+            app.LongitudeLabel.VerticalAlignment = 'bottom';
+            app.LongitudeLabel.FontSize = 11;
+            app.LongitudeLabel.Layout.Row = 1;
+            app.LongitudeLabel.Layout.Column = 2;
+            app.LongitudeLabel.Text = 'Longitude (º):';
+
+            % Create Longitude
+            app.Longitude = uieditfield(app.GpsGrid, 'numeric');
+            app.Longitude.ValueDisplayFormat = '%.6f';
+            app.Longitude.AllowEmpty = 'on';
+            app.Longitude.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.Longitude.Tag = 'task_Editable';
+            app.Longitude.Editable = 'off';
+            app.Longitude.FontSize = 11;
+            app.Longitude.Enable = 'off';
+            app.Longitude.Layout.Row = 2;
+            app.Longitude.Layout.Column = 2;
+            app.Longitude.Value = [];
+
+            % Create GpsRevisitTimeLabel
+            app.GpsRevisitTimeLabel = uilabel(app.GpsGrid);
+            app.GpsRevisitTimeLabel.VerticalAlignment = 'bottom';
+            app.GpsRevisitTimeLabel.FontSize = 11;
+            app.GpsRevisitTimeLabel.Layout.Row = 3;
+            app.GpsRevisitTimeLabel.Layout.Column = 1;
+            app.GpsRevisitTimeLabel.Text = 'Revisita (seg):';
+
+            % Create GpsRevisitTime
+            app.GpsRevisitTime = uieditfield(app.GpsGrid, 'numeric');
+            app.GpsRevisitTime.Limits = [1 Inf];
+            app.GpsRevisitTime.RoundFractionalValues = 'on';
+            app.GpsRevisitTime.ValueDisplayFormat = '%.0f';
+            app.GpsRevisitTime.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.GpsRevisitTime.Tag = 'task_Editable';
+            app.GpsRevisitTime.Editable = 'off';
+            app.GpsRevisitTime.FontSize = 11;
+            app.GpsRevisitTime.Layout.Row = 4;
+            app.GpsRevisitTime.Layout.Column = 1;
+            app.GpsRevisitTime.Value = 60;
+
+            % Create BandPanel
+            app.BandPanel = uipanel(app.GridLayout);
+            app.BandPanel.AutoResizeChildren = 'off';
+            app.BandPanel.Layout.Row = [4 7];
+            app.BandPanel.Layout.Column = [7 10];
+
+            % Create BandGrid
+            app.BandGrid = uigridlayout(app.BandPanel);
+            app.BandGrid.ColumnWidth = {110, 110, 110, 110, '1x'};
+            app.BandGrid.RowHeight = {34, 17, 22, 22, 22, 22, 22, 22, 22, 22, 22, 36, 22, '1x'};
+            app.BandGrid.RowSpacing = 5;
+            app.BandGrid.Scrollable = 'on';
+            app.BandGrid.BackgroundColor = [1 1 1];
+
+            % Create BandTitle
+            app.BandTitle = uilabel(app.BandGrid);
+            app.BandTitle.VerticalAlignment = 'top';
+            app.BandTitle.WordWrap = 'on';
+            app.BandTitle.FontColor = [0 0.4471 0.7412];
+            app.BandTitle.Layout.Row = 1;
+            app.BandTitle.Layout.Column = [1 5];
+            app.BandTitle.Interpreter = 'html';
+            app.BandTitle.Text = {'<b>Faixa de frequência selecionada</b>'; '<font style="color: gray; font-size: 10px;">Parâmetros técnicos de aquisição e detecção</font>'};
+
+            % Create StatusLabel
+            app.StatusLabel = uilabel(app.BandGrid);
+            app.StatusLabel.VerticalAlignment = 'bottom';
+            app.StatusLabel.FontSize = 10;
+            app.StatusLabel.FontColor = [0.149 0.149 0.149];
+            app.StatusLabel.Layout.Row = 2;
+            app.StatusLabel.Layout.Column = 1;
+            app.StatusLabel.Text = 'ESTADO';
+
+            % Create Status
+            app.Status = uidropdown(app.BandGrid);
+            app.Status.Items = {'ON', 'OFF'};
+            app.Status.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.Status.FontSize = 11;
+            app.Status.BackgroundColor = [0.9412 0.9412 0.9412];
+            app.Status.Layout.Row = 3;
+            app.Status.Layout.Column = 1;
+            app.Status.Value = 'ON';
+
+            % Create MaskTriggerLabel
+            app.MaskTriggerLabel = uilabel(app.BandGrid);
+            app.MaskTriggerLabel.VerticalAlignment = 'bottom';
+            app.MaskTriggerLabel.FontSize = 10;
+            app.MaskTriggerLabel.FontColor = [0.149 0.149 0.149];
+            app.MaskTriggerLabel.Layout.Row = 2;
+            app.MaskTriggerLabel.Layout.Column = [2 3];
+            app.MaskTriggerLabel.Text = 'MÁSCARA ESPECTRAL';
+
+            % Create MaskTrigger
+            app.MaskTrigger = uidropdown(app.BandGrid);
+            app.MaskTrigger.Items = {'OFF', 'ON - Apenas afere rompimento', 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)', 'ON - Afere rompimento e salva em arquivo'};
+            app.MaskTrigger.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.MaskTrigger.FontSize = 11;
+            app.MaskTrigger.BackgroundColor = [0.9412 0.9412 0.9412];
+            app.MaskTrigger.Layout.Row = 3;
+            app.MaskTrigger.Layout.Column = [2 4];
+            app.MaskTrigger.Value = 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)';
+
+            % Create IDLabel
+            app.IDLabel = uilabel(app.BandGrid);
+            app.IDLabel.VerticalAlignment = 'bottom';
+            app.IDLabel.FontSize = 10;
+            app.IDLabel.Layout.Row = 4;
+            app.IDLabel.Layout.Column = 1;
+            app.IDLabel.Text = 'ID';
+
+            % Create ID
+            app.ID = uieditfield(app.BandGrid, 'numeric');
+            app.ID.Limits = [1 Inf];
+            app.ID.RoundFractionalValues = 'on';
+            app.ID.ValueDisplayFormat = '%.0f';
+            app.ID.Editable = 'off';
+            app.ID.FontSize = 11;
+            app.ID.Layout.Row = 5;
+            app.ID.Layout.Column = 1;
+            app.ID.Value = 1;
+
+            % Create DescriptionLabel
+            app.DescriptionLabel = uilabel(app.BandGrid);
+            app.DescriptionLabel.VerticalAlignment = 'bottom';
+            app.DescriptionLabel.FontSize = 10;
+            app.DescriptionLabel.Layout.Row = 4;
+            app.DescriptionLabel.Layout.Column = [2 3];
+            app.DescriptionLabel.Text = 'DESCRIÇÃO';
+
+            % Create Description
+            app.Description = uieditfield(app.BandGrid, 'text');
+            app.Description.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.Description.Editable = 'off';
+            app.Description.FontSize = 11;
+            app.Description.Layout.Row = 5;
+            app.Description.Layout.Column = [2 3];
+
+            % Create ObservationSamplesLabel
+            app.ObservationSamplesLabel = uilabel(app.BandGrid);
+            app.ObservationSamplesLabel.VerticalAlignment = 'bottom';
+            app.ObservationSamplesLabel.FontSize = 10;
+            app.ObservationSamplesLabel.Layout.Row = 4;
+            app.ObservationSamplesLabel.Layout.Column = [4 5];
+            app.ObservationSamplesLabel.Text = 'AMOSTRAS A COLETAR';
+
+            % Create ObservationSamples
+            app.ObservationSamples = uieditfield(app.BandGrid, 'numeric');
+            app.ObservationSamples.Limits = [-1 Inf];
+            app.ObservationSamples.RoundFractionalValues = 'on';
+            app.ObservationSamples.ValueDisplayFormat = '%.0f';
+            app.ObservationSamples.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.ObservationSamples.Editable = 'off';
+            app.ObservationSamples.FontSize = 11;
+            app.ObservationSamples.Layout.Row = 5;
+            app.ObservationSamples.Layout.Column = 4;
+            app.ObservationSamples.Value = -1;
+
+            % Create FreqStartLabel
+            app.FreqStartLabel = uilabel(app.BandGrid);
+            app.FreqStartLabel.VerticalAlignment = 'bottom';
+            app.FreqStartLabel.FontSize = 10;
+            app.FreqStartLabel.Layout.Row = 6;
+            app.FreqStartLabel.Layout.Column = 1;
+            app.FreqStartLabel.Text = 'FREQ. INICIAL (MHz)';
+
+            % Create FreqStart
+            app.FreqStart = uieditfield(app.BandGrid, 'numeric');
+            app.FreqStart.Limits = [0.1 100000];
+            app.FreqStart.ValueDisplayFormat = '%.6f';
+            app.FreqStart.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.FreqStart.Editable = 'off';
+            app.FreqStart.HorizontalAlignment = 'left';
+            app.FreqStart.FontSize = 11;
+            app.FreqStart.Layout.Row = 7;
+            app.FreqStart.Layout.Column = 1;
+            app.FreqStart.Value = 108;
+
+            % Create FreqStopLabel
+            app.FreqStopLabel = uilabel(app.BandGrid);
+            app.FreqStopLabel.VerticalAlignment = 'bottom';
+            app.FreqStopLabel.FontSize = 10;
+            app.FreqStopLabel.Layout.Row = 6;
+            app.FreqStopLabel.Layout.Column = 2;
+            app.FreqStopLabel.Text = 'FREQ. FINAL (MHz)';
+
+            % Create FreqStop
+            app.FreqStop = uieditfield(app.BandGrid, 'numeric');
+            app.FreqStop.Limits = [0.1 100000];
+            app.FreqStop.ValueDisplayFormat = '%.6f';
+            app.FreqStop.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.FreqStop.Editable = 'off';
+            app.FreqStop.HorizontalAlignment = 'left';
+            app.FreqStop.FontSize = 11;
+            app.FreqStop.Layout.Row = 7;
+            app.FreqStop.Layout.Column = 2;
+            app.FreqStop.Value = 108;
+
+            % Create StepWidthLabel
+            app.StepWidthLabel = uilabel(app.BandGrid);
+            app.StepWidthLabel.VerticalAlignment = 'bottom';
+            app.StepWidthLabel.FontSize = 10;
+            app.StepWidthLabel.Layout.Row = 6;
+            app.StepWidthLabel.Layout.Column = 3;
+            app.StepWidthLabel.Text = 'PASSO (kHz)';
+
+            % Create StepWidth
+            app.StepWidth = uieditfield(app.BandGrid, 'numeric');
+            app.StepWidth.Limits = [1 Inf];
+            app.StepWidth.ValueDisplayFormat = '%.3f';
+            app.StepWidth.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.StepWidth.Editable = 'off';
+            app.StepWidth.FontSize = 11;
+            app.StepWidth.Layout.Row = 7;
+            app.StepWidth.Layout.Column = 3;
+            app.StepWidth.Value = 1;
+
+            % Create ResolutionLabel
+            app.ResolutionLabel = uilabel(app.BandGrid);
+            app.ResolutionLabel.VerticalAlignment = 'bottom';
+            app.ResolutionLabel.FontSize = 10;
+            app.ResolutionLabel.Layout.Row = 6;
+            app.ResolutionLabel.Layout.Column = 4;
+            app.ResolutionLabel.Text = 'RESOLUÇÃO (kHz)';
+
+            % Create Resolution
+            app.Resolution = uieditfield(app.BandGrid, 'numeric');
+            app.Resolution.Limits = [1 Inf];
+            app.Resolution.ValueDisplayFormat = '%.3f';
+            app.Resolution.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.Resolution.Editable = 'off';
+            app.Resolution.FontSize = 11;
+            app.Resolution.Layout.Row = 7;
+            app.Resolution.Layout.Column = 4;
+            app.Resolution.Value = 1;
+
+            % Create TraceModeLabel
+            app.TraceModeLabel = uilabel(app.BandGrid);
+            app.TraceModeLabel.VerticalAlignment = 'bottom';
+            app.TraceModeLabel.FontSize = 10;
+            app.TraceModeLabel.Layout.Row = 8;
+            app.TraceModeLabel.Layout.Column = 1;
+            app.TraceModeLabel.Text = 'TRAÇO';
+
+            % Create TraceMode
+            app.TraceMode = uidropdown(app.BandGrid);
+            app.TraceMode.Items = {'ClearWrite', 'Average', 'MaxHold', 'MinHold'};
+            app.TraceMode.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.TraceMode.FontSize = 11;
+            app.TraceMode.BackgroundColor = [1 1 1];
+            app.TraceMode.Layout.Row = 9;
+            app.TraceMode.Layout.Column = 1;
+            app.TraceMode.Value = 'Average';
+
+            % Create IntegrationFactorLabel
+            app.IntegrationFactorLabel = uilabel(app.BandGrid);
+            app.IntegrationFactorLabel.VerticalAlignment = 'bottom';
+            app.IntegrationFactorLabel.FontSize = 10;
+            app.IntegrationFactorLabel.Layout.Row = 8;
+            app.IntegrationFactorLabel.Layout.Column = 2;
+            app.IntegrationFactorLabel.Text = 'FATOR INTEGRAÇÃO';
+
+            % Create IntegrationFactor
+            app.IntegrationFactor = uieditfield(app.BandGrid, 'numeric');
+            app.IntegrationFactor.Limits = [1 Inf];
+            app.IntegrationFactor.RoundFractionalValues = 'on';
+            app.IntegrationFactor.ValueDisplayFormat = '%.0f';
+            app.IntegrationFactor.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.IntegrationFactor.Editable = 'off';
+            app.IntegrationFactor.FontSize = 11;
+            app.IntegrationFactor.Layout.Row = 9;
+            app.IntegrationFactor.Layout.Column = 2;
+            app.IntegrationFactor.Value = 1;
+
+            % Create RFModeLabel
+            app.RFModeLabel = uilabel(app.BandGrid);
+            app.RFModeLabel.VerticalAlignment = 'bottom';
+            app.RFModeLabel.FontSize = 10;
+            app.RFModeLabel.Layout.Row = 8;
+            app.RFModeLabel.Layout.Column = 3;
+            app.RFModeLabel.Text = 'MODO DE RF';
+
+            % Create RFMode
+            app.RFMode = uidropdown(app.BandGrid);
+            app.RFMode.Items = {'High Sensitivity', 'Low Distortion', 'Normal'};
+            app.RFMode.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.RFMode.FontSize = 11;
+            app.RFMode.BackgroundColor = [1 1 1];
+            app.RFMode.Layout.Row = 9;
+            app.RFMode.Layout.Column = 3;
+            app.RFMode.Value = 'High Sensitivity';
+
+            % Create VBWLabel
+            app.VBWLabel = uilabel(app.BandGrid);
+            app.VBWLabel.VerticalAlignment = 'bottom';
+            app.VBWLabel.FontSize = 10;
+            app.VBWLabel.Layout.Row = 8;
+            app.VBWLabel.Layout.Column = 4;
+            app.VBWLabel.Text = 'VBW';
+
+            % Create VBW
+            app.VBW = uidropdown(app.BandGrid);
+            app.VBW.Items = {'auto', 'RBW', 'RBW/10', 'RBW/100'};
+            app.VBW.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.VBW.FontSize = 11;
+            app.VBW.BackgroundColor = [1 1 1];
+            app.VBW.Layout.Row = 9;
+            app.VBW.Layout.Column = 4;
+            app.VBW.Value = 'auto';
+
+            % Create DetectorLabel
+            app.DetectorLabel = uilabel(app.BandGrid);
+            app.DetectorLabel.VerticalAlignment = 'bottom';
+            app.DetectorLabel.FontSize = 10;
+            app.DetectorLabel.Layout.Row = 10;
+            app.DetectorLabel.Layout.Column = 1;
+            app.DetectorLabel.Text = 'DETECTOR';
+
+            % Create Detector
+            app.Detector = uidropdown(app.BandGrid);
+            app.Detector.Items = {'Sample', 'Average/RMS', 'Positive Peak', 'Negative Peak'};
+            app.Detector.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.Detector.FontSize = 11;
+            app.Detector.BackgroundColor = [1 1 1];
+            app.Detector.Layout.Row = 11;
+            app.Detector.Layout.Column = [1 2];
+            app.Detector.Value = 'Sample';
+
+            % Create LevelUnitLabel
+            app.LevelUnitLabel = uilabel(app.BandGrid);
+            app.LevelUnitLabel.VerticalAlignment = 'bottom';
+            app.LevelUnitLabel.FontSize = 10;
+            app.LevelUnitLabel.Layout.Row = 10;
+            app.LevelUnitLabel.Layout.Column = 3;
+            app.LevelUnitLabel.Text = 'UNIDADE';
+
+            % Create LevelUnit
+            app.LevelUnit = uidropdown(app.BandGrid);
+            app.LevelUnit.Items = {'dBm', 'dBµV'};
+            app.LevelUnit.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.LevelUnit.FontSize = 11;
+            app.LevelUnit.BackgroundColor = [1 1 1];
+            app.LevelUnit.Layout.Row = 11;
+            app.LevelUnit.Layout.Column = 3;
+            app.LevelUnit.Value = 'dBm';
+
+            % Create RevisitTimeLabel
+            app.RevisitTimeLabel = uilabel(app.BandGrid);
+            app.RevisitTimeLabel.VerticalAlignment = 'bottom';
+            app.RevisitTimeLabel.FontSize = 10;
+            app.RevisitTimeLabel.Layout.Row = 10;
+            app.RevisitTimeLabel.Layout.Column = 4;
+            app.RevisitTimeLabel.Text = 'REVISITA (seg)';
+
+            % Create RevisitTime
+            app.RevisitTime = uieditfield(app.BandGrid, 'numeric');
+            app.RevisitTime.Limits = [0.001 Inf];
+            app.RevisitTime.ValueDisplayFormat = '%.3f';
+            app.RevisitTime.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.RevisitTime.Editable = 'off';
+            app.RevisitTime.FontSize = 11;
+            app.RevisitTime.Layout.Row = 11;
+            app.RevisitTime.Layout.Column = 4;
+            app.RevisitTime.Value = 1;
+
+            % Create FindPeaks_PanelLabel
+            app.FindPeaks_PanelLabel = uilabel(app.BandGrid);
+            app.FindPeaks_PanelLabel.VerticalAlignment = 'bottom';
+            app.FindPeaks_PanelLabel.FontSize = 10;
+            app.FindPeaks_PanelLabel.Layout.Row = 12;
+            app.FindPeaks_PanelLabel.Layout.Column = [1 4];
+            app.FindPeaks_PanelLabel.Text = {'PARÂMETROS RELACIONADOS À BUSCA DE EMISSÕES'; '(caso evidenciado rompimento de máscara espectral)'};
+
+            % Create FindPeaksPanel
+            app.FindPeaksPanel = uipanel(app.BandGrid);
+            app.FindPeaksPanel.AutoResizeChildren = 'off';
+            app.FindPeaksPanel.Layout.Row = [13 14];
+            app.FindPeaksPanel.Layout.Column = [1 5];
+
+            % Create FindPeaksGrid
+            app.FindPeaksGrid = uigridlayout(app.FindPeaksPanel);
+            app.FindPeaksGrid.ColumnWidth = {100, 110, 110, 110};
+            app.FindPeaksGrid.RowHeight = {17, 22, 34, 22};
+            app.FindPeaksGrid.RowSpacing = 5;
+            app.FindPeaksGrid.Scrollable = 'on';
+            app.FindPeaksGrid.BackgroundColor = [1 1 1];
+
+            % Create FindPeaksTypeLabel
+            app.FindPeaksTypeLabel = uilabel(app.FindPeaksGrid);
+            app.FindPeaksTypeLabel.VerticalAlignment = 'bottom';
+            app.FindPeaksTypeLabel.FontSize = 11;
+            app.FindPeaksTypeLabel.Layout.Row = 1;
+            app.FindPeaksTypeLabel.Layout.Column = 1;
+            app.FindPeaksTypeLabel.Text = 'Tipo:';
+
+            % Create FindPeaksType
+            app.FindPeaksType = uidropdown(app.FindPeaksGrid);
+            app.FindPeaksType.Items = {'Valores padrão (appColeta)', 'Valores customizados'};
+            app.FindPeaksType.ValueChangedFcn = createCallbackFcn(app, @FindPeaksDropDownValueChanged, true);
+            app.FindPeaksType.Enable = 'off';
+            app.FindPeaksType.FontSize = 11;
+            app.FindPeaksType.BackgroundColor = [1 1 1];
+            app.FindPeaksType.Layout.Row = 2;
+            app.FindPeaksType.Layout.Column = [1 4];
+            app.FindPeaksType.Value = 'Valores padrão (appColeta)';
+
+            % Create FindPeaksNumSweepsLabel
+            app.FindPeaksNumSweepsLabel = uilabel(app.FindPeaksGrid);
+            app.FindPeaksNumSweepsLabel.VerticalAlignment = 'bottom';
+            app.FindPeaksNumSweepsLabel.FontSize = 11;
+            app.FindPeaksNumSweepsLabel.Layout.Row = 3;
+            app.FindPeaksNumSweepsLabel.Layout.Column = 1;
+            app.FindPeaksNumSweepsLabel.Text = {'Quantidade de'; 'varreduras:'};
+
+            % Create FindPeaksNumSweeps
+            app.FindPeaksNumSweeps = uispinner(app.FindPeaksGrid);
+            app.FindPeaksNumSweeps.Limits = [1 100];
+            app.FindPeaksNumSweeps.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.FindPeaksNumSweeps.FontSize = 11;
+            app.FindPeaksNumSweeps.Enable = 'off';
+            app.FindPeaksNumSweeps.Layout.Row = 4;
+            app.FindPeaksNumSweeps.Layout.Column = 1;
+            app.FindPeaksNumSweeps.Value = 10;
+
+            % Create FindPeaksMinProminenceLabel
+            app.FindPeaksMinProminenceLabel = uilabel(app.FindPeaksGrid);
+            app.FindPeaksMinProminenceLabel.VerticalAlignment = 'bottom';
+            app.FindPeaksMinProminenceLabel.WordWrap = 'on';
+            app.FindPeaksMinProminenceLabel.FontSize = 11;
+            app.FindPeaksMinProminenceLabel.Layout.Row = 3;
+            app.FindPeaksMinProminenceLabel.Layout.Column = 2;
+            app.FindPeaksMinProminenceLabel.Text = {'Proeminência '; 'mínima (dB):'};
+
+            % Create FindPeaksMinProminence
+            app.FindPeaksMinProminence = uispinner(app.FindPeaksGrid);
+            app.FindPeaksMinProminence.Step = 10;
+            app.FindPeaksMinProminence.Limits = [3 50];
+            app.FindPeaksMinProminence.RoundFractionalValues = 'on';
+            app.FindPeaksMinProminence.ValueDisplayFormat = '%.0f';
+            app.FindPeaksMinProminence.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.FindPeaksMinProminence.FontSize = 11;
+            app.FindPeaksMinProminence.Enable = 'off';
+            app.FindPeaksMinProminence.Layout.Row = 4;
+            app.FindPeaksMinProminence.Layout.Column = 2;
+            app.FindPeaksMinProminence.Value = 30;
+
+            % Create FindPeaksMinDistanceLabel
+            app.FindPeaksMinDistanceLabel = uilabel(app.FindPeaksGrid);
+            app.FindPeaksMinDistanceLabel.VerticalAlignment = 'bottom';
+            app.FindPeaksMinDistanceLabel.WordWrap = 'on';
+            app.FindPeaksMinDistanceLabel.FontSize = 11;
+            app.FindPeaksMinDistanceLabel.Layout.Row = 3;
+            app.FindPeaksMinDistanceLabel.Layout.Column = 3;
+            app.FindPeaksMinDistanceLabel.Text = {'Distância mínima '; 'entre picos (kHz):'};
+
+            % Create FindPeaksMinDistance
+            app.FindPeaksMinDistance = uispinner(app.FindPeaksGrid);
+            app.FindPeaksMinDistance.Step = 25;
+            app.FindPeaksMinDistance.Limits = [0 100000];
+            app.FindPeaksMinDistance.RoundFractionalValues = 'on';
+            app.FindPeaksMinDistance.ValueDisplayFormat = '%.0f';
+            app.FindPeaksMinDistance.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.FindPeaksMinDistance.FontSize = 11;
+            app.FindPeaksMinDistance.Enable = 'off';
+            app.FindPeaksMinDistance.Layout.Row = 4;
+            app.FindPeaksMinDistance.Layout.Column = 3;
+            app.FindPeaksMinDistance.Value = 25;
+
+            % Create FindPeaksMinBandWidthLabel
+            app.FindPeaksMinBandWidthLabel = uilabel(app.FindPeaksGrid);
+            app.FindPeaksMinBandWidthLabel.VerticalAlignment = 'bottom';
+            app.FindPeaksMinBandWidthLabel.WordWrap = 'on';
+            app.FindPeaksMinBandWidthLabel.FontSize = 11;
+            app.FindPeaksMinBandWidthLabel.Layout.Row = 3;
+            app.FindPeaksMinBandWidthLabel.Layout.Column = 4;
+            app.FindPeaksMinBandWidthLabel.Text = {'Largura mínima'; 'ocupada (kHz):'};
+
+            % Create FindPeaksMinBandWidth
+            app.FindPeaksMinBandWidth = uispinner(app.FindPeaksGrid);
+            app.FindPeaksMinBandWidth.Step = 10;
+            app.FindPeaksMinBandWidth.Limits = [0 100000];
+            app.FindPeaksMinBandWidth.RoundFractionalValues = 'on';
+            app.FindPeaksMinBandWidth.ValueDisplayFormat = '%.0f';
+            app.FindPeaksMinBandWidth.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
+            app.FindPeaksMinBandWidth.FontSize = 11;
+            app.FindPeaksMinBandWidth.Enable = 'off';
+            app.FindPeaksMinBandWidth.Layout.Row = 4;
+            app.FindPeaksMinBandWidth.Layout.Column = 4;
+            app.FindPeaksMinBandWidth.Value = 10;
 
             % Create Toolbar
             app.Toolbar = uigridlayout(app.GridLayout);
@@ -1220,14 +2047,14 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.Toolbar.RowHeight = {'1x'};
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.Padding = [10 6 10 6];
-            app.Toolbar.Layout.Row = 7;
-            app.Toolbar.Layout.Column = [1 7];
+            app.Toolbar.Layout.Row = 9;
+            app.Toolbar.Layout.Column = [1 13];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
             % Create ImportButton
             app.ImportButton = uiimage(app.Toolbar);
             app.ImportButton.ScaleMethod = 'none';
-            app.ImportButton.ImageClickedFcn = createCallbackFcn(app, @ImportButtonPushed, true);
+            app.ImportButton.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
             app.ImportButton.Tooltip = {''};
             app.ImportButton.Layout.Row = 1;
             app.ImportButton.Layout.Column = 1;
@@ -1236,921 +2063,32 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create ExportButton
             app.ExportButton = uiimage(app.Toolbar);
             app.ExportButton.ScaleMethod = 'none';
-            app.ExportButton.ImageClickedFcn = createCallbackFcn(app, @ExportButtonPushed, true);
+            app.ExportButton.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
             app.ExportButton.Tooltip = {''};
             app.ExportButton.Layout.Row = 1;
             app.ExportButton.Layout.Column = 2;
             app.ExportButton.ImageSource = 'Export_16.png';
 
+            % Create ConfirmEditionButtonGrid
+            app.ConfirmEditionButtonGrid = uigridlayout(app.GridLayout);
+            app.ConfirmEditionButtonGrid.ColumnWidth = {'1x'};
+            app.ConfirmEditionButtonGrid.RowHeight = {'1x'};
+            app.ConfirmEditionButtonGrid.Padding = [0 10 0 10];
+            app.ConfirmEditionButtonGrid.Visible = 'off';
+            app.ConfirmEditionButtonGrid.Layout.Row = [8 9];
+            app.ConfirmEditionButtonGrid.Layout.Column = [8 10];
+            app.ConfirmEditionButtonGrid.BackgroundColor = [1 1 1];
+
             % Create ConfirmEditionButton
-            app.ConfirmEditionButton = uibutton(app.Toolbar, 'push');
+            app.ConfirmEditionButton = uibutton(app.ConfirmEditionButtonGrid, 'push');
             app.ConfirmEditionButton.ButtonPushedFcn = createCallbackFcn(app, @ConfirmEditionButtonPushed, true);
             app.ConfirmEditionButton.Icon = 'save-16px-white.svg';
-            app.ConfirmEditionButton.BackgroundColor = [0.6392 0.0784 0.1804];
+            app.ConfirmEditionButton.BackgroundColor = [0 0.451 0.7412];
             app.ConfirmEditionButton.FontSize = 11;
             app.ConfirmEditionButton.FontColor = [1 1 1];
-            app.ConfirmEditionButton.Visible = 'off';
             app.ConfirmEditionButton.Layout.Row = 1;
-            app.ConfirmEditionButton.Layout.Column = 4;
-            app.ConfirmEditionButton.Text = 'Salva alterações';
-
-            % Create SubTabGroup
-            app.SubTabGroup = uitabgroup(app.GridLayout);
-            app.SubTabGroup.AutoResizeChildren = 'off';
-            app.SubTabGroup.Layout.Row = [4 5];
-            app.SubTabGroup.Layout.Column = [2 4];
-
-            % Create SubTab1
-            app.SubTab1 = uitab(app.SubTabGroup);
-            app.SubTab1.AutoResizeChildren = 'off';
-            app.SubTab1.Title = 'LISTA DE TAREFAS';
-
-            % Create SubGrid1
-            app.SubGrid1 = uigridlayout(app.SubTab1);
-            app.SubGrid1.ColumnWidth = {310, '1x'};
-            app.SubGrid1.RowHeight = {17, '1x', 22, 34};
-            app.SubGrid1.ColumnSpacing = 20;
-            app.SubGrid1.RowSpacing = 5;
-            app.SubGrid1.BackgroundColor = [1 1 1];
-
-            % Create ModePanelLabel
-            app.ModePanelLabel = uilabel(app.SubGrid1);
-            app.ModePanelLabel.VerticalAlignment = 'bottom';
-            app.ModePanelLabel.FontSize = 10;
-            app.ModePanelLabel.Layout.Row = 3;
-            app.ModePanelLabel.Layout.Column = 1;
-            app.ModePanelLabel.Text = 'MODO';
-
-            % Create ModePanel
-            app.ModePanel = uibuttongroup(app.SubGrid1);
-            app.ModePanel.AutoResizeChildren = 'off';
-            app.ModePanel.SelectionChangedFcn = createCallbackFcn(app, @OperationModeValueChanged, true);
-            app.ModePanel.BackgroundColor = [1 1 1];
-            app.ModePanel.Layout.Row = 4;
-            app.ModePanel.Layout.Column = 1;
-            app.ModePanel.FontSize = 10;
-
-            % Create ModeButtonView
-            app.ModeButtonView = uiradiobutton(app.ModePanel);
-            app.ModeButtonView.Text = '<font style="color:#0000ff;">VISUALIZAR</font> lista';
-            app.ModeButtonView.FontSize = 11;
-            app.ModeButtonView.Interpreter = 'html';
-            app.ModeButtonView.Position = [6 5 117 22];
-            app.ModeButtonView.Value = true;
-
-            % Create ModeButtonEdit
-            app.ModeButtonEdit = uiradiobutton(app.ModePanel);
-            app.ModeButtonEdit.Text = '<font style="color:#a2142f;"><b>EDITAR</b></font> lista';
-            app.ModeButtonEdit.FontSize = 11;
-            app.ModeButtonEdit.Interpreter = 'html';
-            app.ModeButtonEdit.Position = [150 5 92 22];
-
-            % Create TreeGrid
-            app.TreeGrid = uigridlayout(app.SubGrid1);
-            app.TreeGrid.ColumnWidth = {2, 146, '1x', 0};
-            app.TreeGrid.RowHeight = {16, 5, 16, 5, 16, '1x', 16, 16, 5, 16, 2};
-            app.TreeGrid.ColumnSpacing = 5;
-            app.TreeGrid.RowSpacing = 0;
-            app.TreeGrid.Padding = [0 0 0 0];
-            app.TreeGrid.Layout.Row = 2;
-            app.TreeGrid.Layout.Column = 1;
-            app.TreeGrid.BackgroundColor = [1 1 1];
-
-            % Create Tree
-            app.Tree = uitree(app.TreeGrid);
-            app.Tree.SelectionChangedFcn = createCallbackFcn(app, @TreeSelectionChanged, true);
-            app.Tree.FontSize = 11;
-            app.Tree.Layout.Row = [1 11];
-            app.Tree.Layout.Column = [1 3];
-
-            % Create TreeAddTaskNode
-            app.TreeAddTaskNode = uiimage(app.TreeGrid);
-            app.TreeAddTaskNode.ImageClickedFcn = createCallbackFcn(app, @TreeAddTaskNodePushed, true);
-            app.TreeAddTaskNode.Enable = 'off';
-            app.TreeAddTaskNode.Tooltip = {''};
-            app.TreeAddTaskNode.Layout.Row = 1;
-            app.TreeAddTaskNode.Layout.Column = 4;
-            app.TreeAddTaskNode.ImageSource = 'addFileWithPlus_32.png';
-
-            % Create TreeAddBandNode
-            app.TreeAddBandNode = uiimage(app.TreeGrid);
-            app.TreeAddBandNode.ImageClickedFcn = createCallbackFcn(app, @TreeAddBandNodeValueChanged, true);
-            app.TreeAddBandNode.Enable = 'off';
-            app.TreeAddBandNode.Tooltip = {''};
-            app.TreeAddBandNode.Layout.Row = 3;
-            app.TreeAddBandNode.Layout.Column = 4;
-            app.TreeAddBandNode.ImageSource = 'EditWithPlus_32.png';
-
-            % Create TreeDelNode
-            app.TreeDelNode = uiimage(app.TreeGrid);
-            app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @TreeDelNodePushed, true);
-            app.TreeDelNode.Enable = 'off';
-            app.TreeDelNode.Tooltip = {''};
-            app.TreeDelNode.Layout.Row = 5;
-            app.TreeDelNode.Layout.Column = 4;
-            app.TreeDelNode.ImageSource = 'Delete_32Red.png';
-
-            % Create TreeMoveUp
-            app.TreeMoveUp = uiimage(app.TreeGrid);
-            app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
-            app.TreeMoveUp.Enable = 'off';
-            app.TreeMoveUp.Tooltip = {''};
-            app.TreeMoveUp.Layout.Row = 8;
-            app.TreeMoveUp.Layout.Column = 4;
-            app.TreeMoveUp.ImageSource = 'ArrowUp_32.png';
-
-            % Create TreeMoveDown
-            app.TreeMoveDown = uiimage(app.TreeGrid);
-            app.TreeMoveDown.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
-            app.TreeMoveDown.Enable = 'off';
-            app.TreeMoveDown.Tooltip = {''};
-            app.TreeMoveDown.Layout.Row = 10;
-            app.TreeMoveDown.Layout.Column = 4;
-            app.TreeMoveDown.ImageSource = 'ArrowDown_32.png';
-
-            % Create TreeLabel
-            app.TreeLabel = uilabel(app.SubGrid1);
-            app.TreeLabel.VerticalAlignment = 'bottom';
-            app.TreeLabel.FontSize = 10;
-            app.TreeLabel.Layout.Row = 1;
-            app.TreeLabel.Layout.Column = 1;
-            app.TreeLabel.Text = 'TAREFAS';
-
-            % Create PanelGrid
-            app.PanelGrid = uigridlayout(app.SubGrid1);
-            app.PanelGrid.ColumnWidth = {310, 1, '1x'};
-            app.PanelGrid.RowHeight = {'1x'};
-            app.PanelGrid.Padding = [0 0 0 0];
-            app.PanelGrid.Layout.Row = [1 4];
-            app.PanelGrid.Layout.Column = 2;
-            app.PanelGrid.BackgroundColor = [1 1 1];
-
-            % Create Tab2_PanelGrid
-            app.Tab2_PanelGrid = uigridlayout(app.PanelGrid);
-            app.Tab2_PanelGrid.ColumnWidth = {'1x'};
-            app.Tab2_PanelGrid.RowHeight = {17, 22, 22, 22, 22, 94, 22, 22, '1x'};
-            app.Tab2_PanelGrid.ColumnSpacing = 20;
-            app.Tab2_PanelGrid.RowSpacing = 5;
-            app.Tab2_PanelGrid.Padding = [0 0 0 0];
-            app.Tab2_PanelGrid.Layout.Row = 1;
-            app.Tab2_PanelGrid.Layout.Column = 1;
-            app.Tab2_PanelGrid.BackgroundColor = [1 1 1];
-
-            % Create NameLabel
-            app.NameLabel = uilabel(app.Tab2_PanelGrid);
-            app.NameLabel.VerticalAlignment = 'bottom';
-            app.NameLabel.FontSize = 10;
-            app.NameLabel.Layout.Row = 1;
-            app.NameLabel.Layout.Column = 1;
-            app.NameLabel.Text = 'NOME';
-
-            % Create Name
-            app.Name = uieditfield(app.Tab2_PanelGrid, 'text');
-            app.Name.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.Name.Editable = 'off';
-            app.Name.FontSize = 11;
-            app.Name.Layout.Row = 2;
-            app.Name.Layout.Column = 1;
-
-            % Create BitsPerPointLabel
-            app.BitsPerPointLabel = uilabel(app.Tab2_PanelGrid);
-            app.BitsPerPointLabel.VerticalAlignment = 'bottom';
-            app.BitsPerPointLabel.FontSize = 10;
-            app.BitsPerPointLabel.Layout.Row = 3;
-            app.BitsPerPointLabel.Layout.Column = 1;
-            app.BitsPerPointLabel.Text = 'CODIFICAÇÃO';
-
-            % Create BitsPerPoint
-            app.BitsPerPoint = uidropdown(app.Tab2_PanelGrid);
-            app.BitsPerPoint.Items = {'8 bits', '16 bits', '32 bits'};
-            app.BitsPerPoint.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.BitsPerPoint.FontSize = 11;
-            app.BitsPerPoint.BackgroundColor = [1 1 1];
-            app.BitsPerPoint.Layout.Row = 4;
-            app.BitsPerPoint.Layout.Column = 1;
-            app.BitsPerPoint.Value = '8 bits';
-
-            % Create ObservationLabel
-            app.ObservationLabel = uilabel(app.Tab2_PanelGrid);
-            app.ObservationLabel.VerticalAlignment = 'bottom';
-            app.ObservationLabel.FontSize = 10;
-            app.ObservationLabel.Layout.Row = 5;
-            app.ObservationLabel.Layout.Column = 1;
-            app.ObservationLabel.Text = 'PERÍODO DE OBSERVAÇÃO';
-
-            % Create ObservationPanel
-            app.ObservationPanel = uipanel(app.Tab2_PanelGrid);
-            app.ObservationPanel.AutoResizeChildren = 'off';
-            app.ObservationPanel.Layout.Row = 6;
-            app.ObservationPanel.Layout.Column = 1;
-
-            % Create ObservationPanel_Grid
-            app.ObservationPanel_Grid = uigridlayout(app.ObservationPanel);
-            app.ObservationPanel_Grid.ColumnWidth = {'1x'};
-            app.ObservationPanel_Grid.RowHeight = {17, 22, 22, 49};
-            app.ObservationPanel_Grid.ColumnSpacing = 11;
-            app.ObservationPanel_Grid.RowSpacing = 5;
-            app.ObservationPanel_Grid.BackgroundColor = [1 1 1];
-
-            % Create ObservationTypeLabel
-            app.ObservationTypeLabel = uilabel(app.ObservationPanel_Grid);
-            app.ObservationTypeLabel.VerticalAlignment = 'bottom';
-            app.ObservationTypeLabel.FontSize = 11;
-            app.ObservationTypeLabel.Layout.Row = 1;
-            app.ObservationTypeLabel.Layout.Column = 1;
-            app.ObservationTypeLabel.Text = 'Critério de término:';
-
-            % Create ObservationType
-            app.ObservationType = uidropdown(app.ObservationPanel_Grid);
-            app.ObservationType.Items = {'Duração', 'Período específico', 'Quantidade específica de amostras'};
-            app.ObservationType.ValueChangedFcn = createCallbackFcn(app, @ObservationTimeValueChanged, true);
-            app.ObservationType.Tag = 'task_Editable';
-            app.ObservationType.FontSize = 11;
-            app.ObservationType.BackgroundColor = [1 1 1];
-            app.ObservationType.Layout.Row = 2;
-            app.ObservationType.Layout.Column = 1;
-            app.ObservationType.Value = 'Duração';
-
-            % Create Duration_Grid
-            app.Duration_Grid = uigridlayout(app.ObservationPanel_Grid);
-            app.Duration_Grid.ColumnWidth = {139, 139};
-            app.Duration_Grid.RowHeight = {'1x'};
-            app.Duration_Grid.RowSpacing = 5;
-            app.Duration_Grid.Padding = [0 0 0 0];
-            app.Duration_Grid.Layout.Row = 3;
-            app.Duration_Grid.Layout.Column = 1;
-            app.Duration_Grid.BackgroundColor = [1 1 1];
-
-            % Create DurationUnit
-            app.DurationUnit = uidropdown(app.Duration_Grid);
-            app.DurationUnit.Items = {'min', 'hr'};
-            app.DurationUnit.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.DurationUnit.Tag = 'task_Editable';
-            app.DurationUnit.FontSize = 11;
-            app.DurationUnit.BackgroundColor = [1 1 1];
-            app.DurationUnit.Layout.Row = 1;
-            app.DurationUnit.Layout.Column = 2;
-            app.DurationUnit.Value = 'min';
-
-            % Create Duration
-            app.Duration = uieditfield(app.Duration_Grid, 'numeric');
-            app.Duration.Limits = [1 Inf];
-            app.Duration.ValueDisplayFormat = '%.3f';
-            app.Duration.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.Duration.Tag = 'task_Editable';
-            app.Duration.Editable = 'off';
-            app.Duration.FontSize = 11;
-            app.Duration.Layout.Row = 1;
-            app.Duration.Layout.Column = 1;
-            app.Duration.Value = 10;
-
-            % Create SpecificTime_Grid
-            app.SpecificTime_Grid = uigridlayout(app.ObservationPanel_Grid);
-            app.SpecificTime_Grid.ColumnWidth = {67, 5, 67, 10, 67, 5, 67};
-            app.SpecificTime_Grid.RowHeight = {22, 22};
-            app.SpecificTime_Grid.ColumnSpacing = 0;
-            app.SpecificTime_Grid.RowSpacing = 5;
-            app.SpecificTime_Grid.Padding = [0 0 0 0];
-            app.SpecificTime_Grid.Layout.Row = 4;
-            app.SpecificTime_Grid.Layout.Column = 1;
-            app.SpecificTime_Grid.BackgroundColor = [1 1 1];
-
-            % Create SpecificTime_DatePicker1
-            app.SpecificTime_DatePicker1 = uidatepicker(app.SpecificTime_Grid);
-            app.SpecificTime_DatePicker1.DisplayFormat = 'dd/MM/uuuu';
-            app.SpecificTime_DatePicker1.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.SpecificTime_DatePicker1.FontSize = 11;
-            app.SpecificTime_DatePicker1.Enable = 'off';
-            app.SpecificTime_DatePicker1.Visible = 'off';
-            app.SpecificTime_DatePicker1.Layout.Row = 1;
-            app.SpecificTime_DatePicker1.Layout.Column = [1 3];
-
-            % Create SpecificTime_Spinner1
-            app.SpecificTime_Spinner1 = uispinner(app.SpecificTime_Grid);
-            app.SpecificTime_Spinner1.Limits = [0 23];
-            app.SpecificTime_Spinner1.RoundFractionalValues = 'on';
-            app.SpecificTime_Spinner1.ValueDisplayFormat = '%.0f';
-            app.SpecificTime_Spinner1.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.SpecificTime_Spinner1.HorizontalAlignment = 'center';
-            app.SpecificTime_Spinner1.FontSize = 11;
-            app.SpecificTime_Spinner1.Enable = 'off';
-            app.SpecificTime_Spinner1.Visible = 'off';
-            app.SpecificTime_Spinner1.Layout.Row = 2;
-            app.SpecificTime_Spinner1.Layout.Column = 1;
-
-            % Create SpecificTime_Spinner2
-            app.SpecificTime_Spinner2 = uispinner(app.SpecificTime_Grid);
-            app.SpecificTime_Spinner2.Step = 10;
-            app.SpecificTime_Spinner2.Limits = [0 59];
-            app.SpecificTime_Spinner2.RoundFractionalValues = 'on';
-            app.SpecificTime_Spinner2.ValueDisplayFormat = '%.0f';
-            app.SpecificTime_Spinner2.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.SpecificTime_Spinner2.HorizontalAlignment = 'center';
-            app.SpecificTime_Spinner2.FontSize = 11;
-            app.SpecificTime_Spinner2.Enable = 'off';
-            app.SpecificTime_Spinner2.Visible = 'off';
-            app.SpecificTime_Spinner2.Layout.Row = 2;
-            app.SpecificTime_Spinner2.Layout.Column = 3;
-
-            % Create SpecificTime_DatePicker2
-            app.SpecificTime_DatePicker2 = uidatepicker(app.SpecificTime_Grid);
-            app.SpecificTime_DatePicker2.DisplayFormat = 'dd/MM/uuuu';
-            app.SpecificTime_DatePicker2.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.SpecificTime_DatePicker2.FontSize = 11;
-            app.SpecificTime_DatePicker2.Enable = 'off';
-            app.SpecificTime_DatePicker2.Visible = 'off';
-            app.SpecificTime_DatePicker2.Layout.Row = 1;
-            app.SpecificTime_DatePicker2.Layout.Column = [5 7];
-
-            % Create SpecificTime_Spinner3
-            app.SpecificTime_Spinner3 = uispinner(app.SpecificTime_Grid);
-            app.SpecificTime_Spinner3.Limits = [0 23];
-            app.SpecificTime_Spinner3.RoundFractionalValues = 'on';
-            app.SpecificTime_Spinner3.ValueDisplayFormat = '%.0f';
-            app.SpecificTime_Spinner3.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.SpecificTime_Spinner3.HorizontalAlignment = 'center';
-            app.SpecificTime_Spinner3.FontSize = 11;
-            app.SpecificTime_Spinner3.Enable = 'off';
-            app.SpecificTime_Spinner3.Visible = 'off';
-            app.SpecificTime_Spinner3.Layout.Row = 2;
-            app.SpecificTime_Spinner3.Layout.Column = 5;
-            app.SpecificTime_Spinner3.Value = 23;
-
-            % Create SpecificTime_Spinner4
-            app.SpecificTime_Spinner4 = uispinner(app.SpecificTime_Grid);
-            app.SpecificTime_Spinner4.Step = 10;
-            app.SpecificTime_Spinner4.Limits = [0 59];
-            app.SpecificTime_Spinner4.RoundFractionalValues = 'on';
-            app.SpecificTime_Spinner4.ValueDisplayFormat = '%.0f';
-            app.SpecificTime_Spinner4.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.SpecificTime_Spinner4.HorizontalAlignment = 'center';
-            app.SpecificTime_Spinner4.FontSize = 11;
-            app.SpecificTime_Spinner4.Enable = 'off';
-            app.SpecificTime_Spinner4.Visible = 'off';
-            app.SpecificTime_Spinner4.Layout.Row = 2;
-            app.SpecificTime_Spinner4.Layout.Column = 7;
-            app.SpecificTime_Spinner4.Value = 59;
-
-            % Create SpecificTime_Mark1
-            app.SpecificTime_Mark1 = uilabel(app.SpecificTime_Grid);
-            app.SpecificTime_Mark1.FontSize = 10;
-            app.SpecificTime_Mark1.Enable = 'off';
-            app.SpecificTime_Mark1.Visible = 'off';
-            app.SpecificTime_Mark1.Layout.Row = 2;
-            app.SpecificTime_Mark1.Layout.Column = 2;
-            app.SpecificTime_Mark1.Text = ':';
-
-            % Create SpecificTime_Mark2
-            app.SpecificTime_Mark2 = uilabel(app.SpecificTime_Grid);
-            app.SpecificTime_Mark2.FontSize = 10;
-            app.SpecificTime_Mark2.Enable = 'off';
-            app.SpecificTime_Mark2.Visible = 'off';
-            app.SpecificTime_Mark2.Layout.Row = 2;
-            app.SpecificTime_Mark2.Layout.Column = 6;
-            app.SpecificTime_Mark2.Text = ':';
-
-            % Create gpsModeLabel
-            app.gpsModeLabel = uilabel(app.Tab2_PanelGrid);
-            app.gpsModeLabel.VerticalAlignment = 'bottom';
-            app.gpsModeLabel.FontSize = 10;
-            app.gpsModeLabel.Layout.Row = 7;
-            app.gpsModeLabel.Layout.Column = 1;
-            app.gpsModeLabel.Text = 'GPS';
-
-            % Create gpsMode
-            app.gpsMode = uidropdown(app.Tab2_PanelGrid);
-            app.gpsMode.Items = {'auto', 'manual'};
-            app.gpsMode.ValueChangedFcn = createCallbackFcn(app, @gpsModeValueChanged, true);
-            app.gpsMode.Tag = 'task_Editable';
-            app.gpsMode.FontSize = 11;
-            app.gpsMode.BackgroundColor = [1 1 1];
-            app.gpsMode.Layout.Row = 8;
-            app.gpsMode.Layout.Column = 1;
-            app.gpsMode.Value = 'auto';
-
-            % Create GPS_Panel
-            app.GPS_Panel = uipanel(app.Tab2_PanelGrid);
-            app.GPS_Panel.AutoResizeChildren = 'off';
-            app.GPS_Panel.Layout.Row = 9;
-            app.GPS_Panel.Layout.Column = 1;
-
-            % Create GPS_Grid
-            app.GPS_Grid = uigridlayout(app.GPS_Panel);
-            app.GPS_Grid.ColumnWidth = {139, 139};
-            app.GPS_Grid.RowHeight = {17, 22, 22, 22};
-            app.GPS_Grid.RowSpacing = 5;
-            app.GPS_Grid.BackgroundColor = [1 1 1];
-
-            % Create GPS_manualLatitudeLabel
-            app.GPS_manualLatitudeLabel = uilabel(app.GPS_Grid);
-            app.GPS_manualLatitudeLabel.VerticalAlignment = 'bottom';
-            app.GPS_manualLatitudeLabel.FontSize = 11;
-            app.GPS_manualLatitudeLabel.Layout.Row = 1;
-            app.GPS_manualLatitudeLabel.Layout.Column = 1;
-            app.GPS_manualLatitudeLabel.Text = 'Latitude (º):';
-
-            % Create GPS_manualLatitude
-            app.GPS_manualLatitude = uieditfield(app.GPS_Grid, 'numeric');
-            app.GPS_manualLatitude.ValueDisplayFormat = '%.6f';
-            app.GPS_manualLatitude.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.GPS_manualLatitude.Tag = 'task_Editable';
-            app.GPS_manualLatitude.Editable = 'off';
-            app.GPS_manualLatitude.FontSize = 11;
-            app.GPS_manualLatitude.Enable = 'off';
-            app.GPS_manualLatitude.Layout.Row = 2;
-            app.GPS_manualLatitude.Layout.Column = 1;
-            app.GPS_manualLatitude.Value = -1;
-
-            % Create GPS_manualLongitudeLabel
-            app.GPS_manualLongitudeLabel = uilabel(app.GPS_Grid);
-            app.GPS_manualLongitudeLabel.VerticalAlignment = 'bottom';
-            app.GPS_manualLongitudeLabel.FontSize = 11;
-            app.GPS_manualLongitudeLabel.Layout.Row = 1;
-            app.GPS_manualLongitudeLabel.Layout.Column = 2;
-            app.GPS_manualLongitudeLabel.Text = 'Longitude (º):';
-
-            % Create GPS_manualLongitude
-            app.GPS_manualLongitude = uieditfield(app.GPS_Grid, 'numeric');
-            app.GPS_manualLongitude.ValueDisplayFormat = '%.6f';
-            app.GPS_manualLongitude.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.GPS_manualLongitude.Tag = 'task_Editable';
-            app.GPS_manualLongitude.Editable = 'off';
-            app.GPS_manualLongitude.FontSize = 11;
-            app.GPS_manualLongitude.Enable = 'off';
-            app.GPS_manualLongitude.Layout.Row = 2;
-            app.GPS_manualLongitude.Layout.Column = 2;
-            app.GPS_manualLongitude.Value = -1;
-
-            % Create GPS_RevisitTimeLabel
-            app.GPS_RevisitTimeLabel = uilabel(app.GPS_Grid);
-            app.GPS_RevisitTimeLabel.VerticalAlignment = 'bottom';
-            app.GPS_RevisitTimeLabel.FontSize = 11;
-            app.GPS_RevisitTimeLabel.Layout.Row = 3;
-            app.GPS_RevisitTimeLabel.Layout.Column = 1;
-            app.GPS_RevisitTimeLabel.Text = 'Revisita (seg):';
-
-            % Create GPS_RevisitTime
-            app.GPS_RevisitTime = uieditfield(app.GPS_Grid, 'numeric');
-            app.GPS_RevisitTime.Limits = [1 Inf];
-            app.GPS_RevisitTime.RoundFractionalValues = 'on';
-            app.GPS_RevisitTime.ValueDisplayFormat = '%.0f';
-            app.GPS_RevisitTime.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.GPS_RevisitTime.Tag = 'task_Editable';
-            app.GPS_RevisitTime.Editable = 'off';
-            app.GPS_RevisitTime.FontSize = 11;
-            app.GPS_RevisitTime.Layout.Row = 4;
-            app.GPS_RevisitTime.Layout.Column = 1;
-            app.GPS_RevisitTime.Value = 60;
-
-            % Create BandSpecificInfo_Grid
-            app.BandSpecificInfo_Grid = uigridlayout(app.PanelGrid);
-            app.BandSpecificInfo_Grid.ColumnWidth = {110, 110, 110, 110, '1x'};
-            app.BandSpecificInfo_Grid.RowHeight = {17, 22, 22, 22, 22, 22, 22, 22, 22, 22, 36, 22, '1x'};
-            app.BandSpecificInfo_Grid.RowSpacing = 5;
-            app.BandSpecificInfo_Grid.Padding = [0 0 0 0];
-            app.BandSpecificInfo_Grid.Layout.Row = 1;
-            app.BandSpecificInfo_Grid.Layout.Column = 3;
-            app.BandSpecificInfo_Grid.BackgroundColor = [1 1 1];
-
-            % Create StatusLabel
-            app.StatusLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.StatusLabel.VerticalAlignment = 'bottom';
-            app.StatusLabel.FontSize = 10;
-            app.StatusLabel.FontColor = [0.149 0.149 0.149];
-            app.StatusLabel.Layout.Row = 1;
-            app.StatusLabel.Layout.Column = 1;
-            app.StatusLabel.Text = 'ESTADO';
-
-            % Create Status
-            app.Status = uidropdown(app.BandSpecificInfo_Grid);
-            app.Status.Items = {'ON', 'OFF'};
-            app.Status.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.Status.Enable = 'off';
-            app.Status.FontSize = 11;
-            app.Status.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.Status.Layout.Row = 2;
-            app.Status.Layout.Column = 1;
-            app.Status.Value = 'ON';
-
-            % Create MaskTriggerLabel
-            app.MaskTriggerLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.MaskTriggerLabel.VerticalAlignment = 'bottom';
-            app.MaskTriggerLabel.FontSize = 10;
-            app.MaskTriggerLabel.FontColor = [0.149 0.149 0.149];
-            app.MaskTriggerLabel.Layout.Row = 1;
-            app.MaskTriggerLabel.Layout.Column = [2 3];
-            app.MaskTriggerLabel.Text = 'MÁSCARA ESPECTRAL';
-
-            % Create MaskTrigger
-            app.MaskTrigger = uidropdown(app.BandSpecificInfo_Grid);
-            app.MaskTrigger.Items = {'OFF', 'ON - Apenas afere rompimento', 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)', 'ON - Afere rompimento e salva em arquivo'};
-            app.MaskTrigger.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.MaskTrigger.Enable = 'off';
-            app.MaskTrigger.FontSize = 11;
-            app.MaskTrigger.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.MaskTrigger.Layout.Row = 2;
-            app.MaskTrigger.Layout.Column = [2 4];
-            app.MaskTrigger.Value = 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)';
-
-            % Create IDLabel
-            app.IDLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.IDLabel.VerticalAlignment = 'bottom';
-            app.IDLabel.FontSize = 10;
-            app.IDLabel.Layout.Row = 3;
-            app.IDLabel.Layout.Column = 1;
-            app.IDLabel.Text = 'ID';
-
-            % Create ID
-            app.ID = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
-            app.ID.Limits = [1 Inf];
-            app.ID.RoundFractionalValues = 'on';
-            app.ID.ValueDisplayFormat = '%.0f';
-            app.ID.Editable = 'off';
-            app.ID.FontSize = 11;
-            app.ID.Enable = 'off';
-            app.ID.Layout.Row = 4;
-            app.ID.Layout.Column = 1;
-            app.ID.Value = 1;
-
-            % Create DescriptionLabel
-            app.DescriptionLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.DescriptionLabel.VerticalAlignment = 'bottom';
-            app.DescriptionLabel.FontSize = 10;
-            app.DescriptionLabel.Layout.Row = 3;
-            app.DescriptionLabel.Layout.Column = [2 3];
-            app.DescriptionLabel.Text = 'DESCRIÇÃO';
-
-            % Create Description
-            app.Description = uieditfield(app.BandSpecificInfo_Grid, 'text');
-            app.Description.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.Description.Editable = 'off';
-            app.Description.FontSize = 11;
-            app.Description.Enable = 'off';
-            app.Description.Layout.Row = 4;
-            app.Description.Layout.Column = [2 3];
-
-            % Create ObservationSamplesLabel
-            app.ObservationSamplesLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.ObservationSamplesLabel.VerticalAlignment = 'bottom';
-            app.ObservationSamplesLabel.FontSize = 10;
-            app.ObservationSamplesLabel.Layout.Row = 3;
-            app.ObservationSamplesLabel.Layout.Column = [4 5];
-            app.ObservationSamplesLabel.Text = 'AMOSTRAS A COLETAR';
-
-            % Create ObservationSamples
-            app.ObservationSamples = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
-            app.ObservationSamples.Limits = [-1 Inf];
-            app.ObservationSamples.RoundFractionalValues = 'on';
-            app.ObservationSamples.ValueDisplayFormat = '%.0f';
-            app.ObservationSamples.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.ObservationSamples.Editable = 'off';
-            app.ObservationSamples.FontSize = 11;
-            app.ObservationSamples.Enable = 'off';
-            app.ObservationSamples.Layout.Row = 4;
-            app.ObservationSamples.Layout.Column = 4;
-            app.ObservationSamples.Value = -1;
-
-            % Create FreqStartLabel
-            app.FreqStartLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.FreqStartLabel.VerticalAlignment = 'bottom';
-            app.FreqStartLabel.FontSize = 10;
-            app.FreqStartLabel.Layout.Row = 5;
-            app.FreqStartLabel.Layout.Column = 1;
-            app.FreqStartLabel.Text = 'FREQ. INICIAL (MHz)';
-
-            % Create FreqStart
-            app.FreqStart = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
-            app.FreqStart.Limits = [0.1 100000];
-            app.FreqStart.ValueDisplayFormat = '%.6f';
-            app.FreqStart.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.FreqStart.Editable = 'off';
-            app.FreqStart.HorizontalAlignment = 'left';
-            app.FreqStart.FontSize = 11;
-            app.FreqStart.Enable = 'off';
-            app.FreqStart.Layout.Row = 6;
-            app.FreqStart.Layout.Column = 1;
-            app.FreqStart.Value = 108;
-
-            % Create FreqStopLabel
-            app.FreqStopLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.FreqStopLabel.VerticalAlignment = 'bottom';
-            app.FreqStopLabel.FontSize = 10;
-            app.FreqStopLabel.Layout.Row = 5;
-            app.FreqStopLabel.Layout.Column = 2;
-            app.FreqStopLabel.Text = 'FREQ. FINAL (MHz)';
-
-            % Create FreqStop
-            app.FreqStop = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
-            app.FreqStop.Limits = [0.1 100000];
-            app.FreqStop.ValueDisplayFormat = '%.6f';
-            app.FreqStop.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.FreqStop.Editable = 'off';
-            app.FreqStop.HorizontalAlignment = 'left';
-            app.FreqStop.FontSize = 11;
-            app.FreqStop.Enable = 'off';
-            app.FreqStop.Layout.Row = 6;
-            app.FreqStop.Layout.Column = 2;
-            app.FreqStop.Value = 108;
-
-            % Create StepWidthLabel
-            app.StepWidthLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.StepWidthLabel.VerticalAlignment = 'bottom';
-            app.StepWidthLabel.FontSize = 10;
-            app.StepWidthLabel.Layout.Row = 5;
-            app.StepWidthLabel.Layout.Column = 3;
-            app.StepWidthLabel.Text = 'PASSO (kHz)';
-
-            % Create StepWidth
-            app.StepWidth = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
-            app.StepWidth.Limits = [1 Inf];
-            app.StepWidth.ValueDisplayFormat = '%.3f';
-            app.StepWidth.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.StepWidth.Editable = 'off';
-            app.StepWidth.FontSize = 11;
-            app.StepWidth.Enable = 'off';
-            app.StepWidth.Layout.Row = 6;
-            app.StepWidth.Layout.Column = 3;
-            app.StepWidth.Value = 1;
-
-            % Create ResolutionLabel
-            app.ResolutionLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.ResolutionLabel.VerticalAlignment = 'bottom';
-            app.ResolutionLabel.FontSize = 10;
-            app.ResolutionLabel.Layout.Row = 5;
-            app.ResolutionLabel.Layout.Column = 4;
-            app.ResolutionLabel.Text = 'RESOLUÇÃO (kHz)';
-
-            % Create Resolution
-            app.Resolution = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
-            app.Resolution.Limits = [1 Inf];
-            app.Resolution.ValueDisplayFormat = '%.3f';
-            app.Resolution.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.Resolution.Editable = 'off';
-            app.Resolution.FontSize = 11;
-            app.Resolution.Enable = 'off';
-            app.Resolution.Layout.Row = 6;
-            app.Resolution.Layout.Column = 4;
-            app.Resolution.Value = 1;
-
-            % Create TraceModeLabel
-            app.TraceModeLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.TraceModeLabel.VerticalAlignment = 'bottom';
-            app.TraceModeLabel.FontSize = 10;
-            app.TraceModeLabel.Layout.Row = 7;
-            app.TraceModeLabel.Layout.Column = 1;
-            app.TraceModeLabel.Text = 'TRAÇO';
-
-            % Create TraceMode
-            app.TraceMode = uidropdown(app.BandSpecificInfo_Grid);
-            app.TraceMode.Items = {'ClearWrite', 'Average', 'MaxHold', 'MinHold'};
-            app.TraceMode.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.TraceMode.Enable = 'off';
-            app.TraceMode.FontSize = 11;
-            app.TraceMode.BackgroundColor = [1 1 1];
-            app.TraceMode.Layout.Row = 8;
-            app.TraceMode.Layout.Column = 1;
-            app.TraceMode.Value = 'Average';
-
-            % Create IntegrationFactorLabel
-            app.IntegrationFactorLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.IntegrationFactorLabel.VerticalAlignment = 'bottom';
-            app.IntegrationFactorLabel.FontSize = 10;
-            app.IntegrationFactorLabel.Layout.Row = 7;
-            app.IntegrationFactorLabel.Layout.Column = 2;
-            app.IntegrationFactorLabel.Text = 'FATOR INTEGRAÇÃO';
-
-            % Create IntegrationFactor
-            app.IntegrationFactor = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
-            app.IntegrationFactor.Limits = [1 Inf];
-            app.IntegrationFactor.RoundFractionalValues = 'on';
-            app.IntegrationFactor.ValueDisplayFormat = '%.0f';
-            app.IntegrationFactor.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.IntegrationFactor.Editable = 'off';
-            app.IntegrationFactor.FontSize = 11;
-            app.IntegrationFactor.Enable = 'off';
-            app.IntegrationFactor.Layout.Row = 8;
-            app.IntegrationFactor.Layout.Column = 2;
-            app.IntegrationFactor.Value = 1;
-
-            % Create RFModeLabel
-            app.RFModeLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.RFModeLabel.VerticalAlignment = 'bottom';
-            app.RFModeLabel.FontSize = 10;
-            app.RFModeLabel.Layout.Row = 7;
-            app.RFModeLabel.Layout.Column = 3;
-            app.RFModeLabel.Text = 'MODO DE RF';
-
-            % Create RFMode
-            app.RFMode = uidropdown(app.BandSpecificInfo_Grid);
-            app.RFMode.Items = {'High Sensitivity', 'Low Distortion', 'Normal'};
-            app.RFMode.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.RFMode.Enable = 'off';
-            app.RFMode.FontSize = 11;
-            app.RFMode.BackgroundColor = [1 1 1];
-            app.RFMode.Layout.Row = 8;
-            app.RFMode.Layout.Column = 3;
-            app.RFMode.Value = 'High Sensitivity';
-
-            % Create VBWLabel
-            app.VBWLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.VBWLabel.VerticalAlignment = 'bottom';
-            app.VBWLabel.FontSize = 10;
-            app.VBWLabel.Layout.Row = 7;
-            app.VBWLabel.Layout.Column = 4;
-            app.VBWLabel.Text = 'VBW';
-
-            % Create VBW
-            app.VBW = uidropdown(app.BandSpecificInfo_Grid);
-            app.VBW.Items = {'auto', 'RBW', 'RBW/10', 'RBW/100'};
-            app.VBW.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.VBW.Enable = 'off';
-            app.VBW.FontSize = 11;
-            app.VBW.BackgroundColor = [1 1 1];
-            app.VBW.Layout.Row = 8;
-            app.VBW.Layout.Column = 4;
-            app.VBW.Value = 'auto';
-
-            % Create DetectorLabel
-            app.DetectorLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.DetectorLabel.VerticalAlignment = 'bottom';
-            app.DetectorLabel.FontSize = 10;
-            app.DetectorLabel.Layout.Row = 9;
-            app.DetectorLabel.Layout.Column = 1;
-            app.DetectorLabel.Text = 'DETECTOR';
-
-            % Create Detector
-            app.Detector = uidropdown(app.BandSpecificInfo_Grid);
-            app.Detector.Items = {'Sample', 'Average/RMS', 'Positive Peak', 'Negative Peak'};
-            app.Detector.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.Detector.Enable = 'off';
-            app.Detector.FontSize = 11;
-            app.Detector.BackgroundColor = [1 1 1];
-            app.Detector.Layout.Row = 10;
-            app.Detector.Layout.Column = [1 2];
-            app.Detector.Value = 'Sample';
-
-            % Create LevelUnitLabel
-            app.LevelUnitLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.LevelUnitLabel.VerticalAlignment = 'bottom';
-            app.LevelUnitLabel.FontSize = 10;
-            app.LevelUnitLabel.Layout.Row = 9;
-            app.LevelUnitLabel.Layout.Column = 3;
-            app.LevelUnitLabel.Text = 'UNIDADE';
-
-            % Create LevelUnit
-            app.LevelUnit = uidropdown(app.BandSpecificInfo_Grid);
-            app.LevelUnit.Items = {'dBm', 'dBµV'};
-            app.LevelUnit.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.LevelUnit.Enable = 'off';
-            app.LevelUnit.FontSize = 11;
-            app.LevelUnit.BackgroundColor = [1 1 1];
-            app.LevelUnit.Layout.Row = 10;
-            app.LevelUnit.Layout.Column = 3;
-            app.LevelUnit.Value = 'dBm';
-
-            % Create RevisitTimeLabel
-            app.RevisitTimeLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.RevisitTimeLabel.VerticalAlignment = 'bottom';
-            app.RevisitTimeLabel.FontSize = 10;
-            app.RevisitTimeLabel.Layout.Row = 9;
-            app.RevisitTimeLabel.Layout.Column = 4;
-            app.RevisitTimeLabel.Text = 'REVISITA (seg)';
-
-            % Create RevisitTime
-            app.RevisitTime = uieditfield(app.BandSpecificInfo_Grid, 'numeric');
-            app.RevisitTime.Limits = [0.001 Inf];
-            app.RevisitTime.ValueDisplayFormat = '%.3f';
-            app.RevisitTime.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.RevisitTime.Editable = 'off';
-            app.RevisitTime.FontSize = 11;
-            app.RevisitTime.Enable = 'off';
-            app.RevisitTime.Layout.Row = 10;
-            app.RevisitTime.Layout.Column = 4;
-            app.RevisitTime.Value = 1;
-
-            % Create FindPeaks_PanelLabel
-            app.FindPeaks_PanelLabel = uilabel(app.BandSpecificInfo_Grid);
-            app.FindPeaks_PanelLabel.VerticalAlignment = 'bottom';
-            app.FindPeaks_PanelLabel.FontSize = 10;
-            app.FindPeaks_PanelLabel.Layout.Row = 11;
-            app.FindPeaks_PanelLabel.Layout.Column = [1 4];
-            app.FindPeaks_PanelLabel.Text = {'PARÂMETROS RELACIONADOS À BUSCA DE EMISSÕES'; '(caso evidenciado rompimento de máscara espectral)'};
-
-            % Create FindPeaks_Panel
-            app.FindPeaks_Panel = uipanel(app.BandSpecificInfo_Grid);
-            app.FindPeaks_Panel.AutoResizeChildren = 'off';
-            app.FindPeaks_Panel.Layout.Row = [12 13];
-            app.FindPeaks_Panel.Layout.Column = [1 5];
-
-            % Create FindPeaks_Grid
-            app.FindPeaks_Grid = uigridlayout(app.FindPeaks_Panel);
-            app.FindPeaks_Grid.ColumnWidth = {100, 110, 110, 110};
-            app.FindPeaks_Grid.RowHeight = {17, 22, 34, 22};
-            app.FindPeaks_Grid.RowSpacing = 5;
-            app.FindPeaks_Grid.BackgroundColor = [1 1 1];
-
-            % Create FindPeaks_TypeLabel
-            app.FindPeaks_TypeLabel = uilabel(app.FindPeaks_Grid);
-            app.FindPeaks_TypeLabel.VerticalAlignment = 'bottom';
-            app.FindPeaks_TypeLabel.FontSize = 11;
-            app.FindPeaks_TypeLabel.Layout.Row = 1;
-            app.FindPeaks_TypeLabel.Layout.Column = 1;
-            app.FindPeaks_TypeLabel.Text = 'Tipo:';
-
-            % Create FindPeaks_Type
-            app.FindPeaks_Type = uidropdown(app.FindPeaks_Grid);
-            app.FindPeaks_Type.Items = {'Valores padrão (appColeta)', 'Valores customizados'};
-            app.FindPeaks_Type.ValueChangedFcn = createCallbackFcn(app, @FindPeaksDropDownValueChanged, true);
-            app.FindPeaks_Type.Enable = 'off';
-            app.FindPeaks_Type.FontSize = 11;
-            app.FindPeaks_Type.BackgroundColor = [1 1 1];
-            app.FindPeaks_Type.Layout.Row = 2;
-            app.FindPeaks_Type.Layout.Column = [1 4];
-            app.FindPeaks_Type.Value = 'Valores padrão (appColeta)';
-
-            % Create FindPeaks_nSweepsLabel
-            app.FindPeaks_nSweepsLabel = uilabel(app.FindPeaks_Grid);
-            app.FindPeaks_nSweepsLabel.VerticalAlignment = 'bottom';
-            app.FindPeaks_nSweepsLabel.FontSize = 11;
-            app.FindPeaks_nSweepsLabel.Layout.Row = 3;
-            app.FindPeaks_nSweepsLabel.Layout.Column = 1;
-            app.FindPeaks_nSweepsLabel.Text = {'Quantidade de'; 'varreduras:'};
-
-            % Create FindPeaks_nSweeps
-            app.FindPeaks_nSweeps = uispinner(app.FindPeaks_Grid);
-            app.FindPeaks_nSweeps.Limits = [1 100];
-            app.FindPeaks_nSweeps.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.FindPeaks_nSweeps.FontSize = 11;
-            app.FindPeaks_nSweeps.Enable = 'off';
-            app.FindPeaks_nSweeps.Layout.Row = 4;
-            app.FindPeaks_nSweeps.Layout.Column = 1;
-            app.FindPeaks_nSweeps.Value = 10;
-
-            % Create FindPeaks_ProminenceLabel
-            app.FindPeaks_ProminenceLabel = uilabel(app.FindPeaks_Grid);
-            app.FindPeaks_ProminenceLabel.VerticalAlignment = 'bottom';
-            app.FindPeaks_ProminenceLabel.WordWrap = 'on';
-            app.FindPeaks_ProminenceLabel.FontSize = 11;
-            app.FindPeaks_ProminenceLabel.Layout.Row = 3;
-            app.FindPeaks_ProminenceLabel.Layout.Column = 2;
-            app.FindPeaks_ProminenceLabel.Text = {'Proeminência '; 'mínima (dB):'};
-
-            % Create FindPeaks_Prominence
-            app.FindPeaks_Prominence = uispinner(app.FindPeaks_Grid);
-            app.FindPeaks_Prominence.Step = 10;
-            app.FindPeaks_Prominence.Limits = [3 50];
-            app.FindPeaks_Prominence.RoundFractionalValues = 'on';
-            app.FindPeaks_Prominence.ValueDisplayFormat = '%.0f';
-            app.FindPeaks_Prominence.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.FindPeaks_Prominence.FontSize = 11;
-            app.FindPeaks_Prominence.Enable = 'off';
-            app.FindPeaks_Prominence.Layout.Row = 4;
-            app.FindPeaks_Prominence.Layout.Column = 2;
-            app.FindPeaks_Prominence.Value = 30;
-
-            % Create FindPeaks_DistanceLabel
-            app.FindPeaks_DistanceLabel = uilabel(app.FindPeaks_Grid);
-            app.FindPeaks_DistanceLabel.VerticalAlignment = 'bottom';
-            app.FindPeaks_DistanceLabel.WordWrap = 'on';
-            app.FindPeaks_DistanceLabel.FontSize = 11;
-            app.FindPeaks_DistanceLabel.Layout.Row = 3;
-            app.FindPeaks_DistanceLabel.Layout.Column = 3;
-            app.FindPeaks_DistanceLabel.Text = {'Distância mínima '; 'entre picos (kHz):'};
-
-            % Create FindPeaks_Distance
-            app.FindPeaks_Distance = uispinner(app.FindPeaks_Grid);
-            app.FindPeaks_Distance.Step = 25;
-            app.FindPeaks_Distance.Limits = [0 100000];
-            app.FindPeaks_Distance.RoundFractionalValues = 'on';
-            app.FindPeaks_Distance.ValueDisplayFormat = '%.0f';
-            app.FindPeaks_Distance.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.FindPeaks_Distance.FontSize = 11;
-            app.FindPeaks_Distance.Enable = 'off';
-            app.FindPeaks_Distance.Layout.Row = 4;
-            app.FindPeaks_Distance.Layout.Column = 3;
-            app.FindPeaks_Distance.Value = 25;
-
-            % Create FindPeaks_BWLabel
-            app.FindPeaks_BWLabel = uilabel(app.FindPeaks_Grid);
-            app.FindPeaks_BWLabel.VerticalAlignment = 'bottom';
-            app.FindPeaks_BWLabel.WordWrap = 'on';
-            app.FindPeaks_BWLabel.FontSize = 11;
-            app.FindPeaks_BWLabel.Layout.Row = 3;
-            app.FindPeaks_BWLabel.Layout.Column = 4;
-            app.FindPeaks_BWLabel.Text = {'Largura mínima'; 'ocupada (kHz):'};
-
-            % Create FindPeaks_BW
-            app.FindPeaks_BW = uispinner(app.FindPeaks_Grid);
-            app.FindPeaks_BW.Step = 10;
-            app.FindPeaks_BW.Limits = [0 100000];
-            app.FindPeaks_BW.RoundFractionalValues = 'on';
-            app.FindPeaks_BW.ValueDisplayFormat = '%.0f';
-            app.FindPeaks_BW.ValueChangedFcn = createCallbackFcn(app, @TaskParameterChanged, true);
-            app.FindPeaks_BW.FontSize = 11;
-            app.FindPeaks_BW.Enable = 'off';
-            app.FindPeaks_BW.Layout.Row = 4;
-            app.FindPeaks_BW.Layout.Column = 4;
-            app.FindPeaks_BW.Value = 10;
+            app.ConfirmEditionButton.Layout.Column = 1;
+            app.ConfirmEditionButton.Text = 'Salvar alterações';
 
             % Create DockModule
             app.DockModule = uigridlayout(app.GridLayout);
@@ -2159,7 +2097,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.DockModule.Padding = [5 2 5 2];
             app.DockModule.Visible = 'off';
             app.DockModule.Layout.Row = [2 4];
-            app.DockModule.Layout.Column = [3 6];
+            app.DockModule.Layout.Column = [9 12];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
             % Create DockUndockButton
