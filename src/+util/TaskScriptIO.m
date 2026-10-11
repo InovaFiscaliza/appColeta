@@ -93,10 +93,12 @@ classdef (Abstract) TaskScriptIO
                             Duration_sec = List(ii).Observation.Duration;
                             if isinf(Duration_sec)
                                 List(ii).Observation.Duration = 'inf';
-                            elseif Duration_sec >= 3600
+                            elseif mod(Duration_sec, 3600) == 0
                                 List(ii).Observation.Duration = sprintf('%d hr',  Duration_sec / 3600);
-                            else
+                            elseif mod(Duration_sec, 60) == 0
                                 List(ii).Observation.Duration = sprintf('%d min', Duration_sec / 60);
+                            else
+                                List(ii).Observation.Duration = sprintf('%d sec', round(Duration_sec));
                             end
 
                             List(ii).Observation.BeginTime = 'not applicable';

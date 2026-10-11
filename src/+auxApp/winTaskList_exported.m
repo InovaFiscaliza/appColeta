@@ -472,6 +472,26 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 app.VBW.Items             = {'auto', 'RBW', 'RBW/10', 'RBW/100'};
                 app.FindPeaksType.Items   = {'Valores padrão (appColeta)', 'Valores customizados'};
             end
+
+            validateParameterValue(app, 'FreqStart')
+            app.IntegrationFactor.Enable = ~strcmp(app.TraceMode.Value, 'ClearWrite');
+        end
+
+        %-----------------------------------------------------------------%
+        function userAccepted = confirmDiscardEdition(app)
+            userAccepted = true;
+
+            if app.ViewMode || isequal(app.TaskList, app.TaskListEdited)
+                return
+            end
+
+            questionMsg = [ ...
+                'Foi evidenciada alteração de ao menos uma das tarefas. ' ...
+                'Se as alterações não forem salvas, elas serão perdidas.' ...
+                '<br><br>Confirma descartar as alterações?' ...
+            ];
+            userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', questionMsg, {'Sim', 'Não'}, 1, 2);
+            userAccepted  = userSelection == "Sim";
         end
 
         %-----------------------------------------------------------------%
@@ -595,6 +615,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
+            if ~confirmDiscardEdition(app)
+                return
+            end
+
             ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', app.Context)
             delete(app)
             
@@ -603,6 +627,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Image clicked function: DockCloseButton, DockUndockButton
         function onDockModuleGroupButtonClicked(app, event)
             
+            if ~confirmDiscardEdition(app)
+                return
+            end
+
             [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
 
             switch event.Source
@@ -666,33 +694,24 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 case app.ViewStateButton
                     hasChanged = ~isequal(app.TaskList, app.TaskListEdited);
 
-                    if hasChanged
-                        questionMsg = [ ...
-                            'Foi evidenciada alteração de ao menos uma das tarefas. ' ...
-                            'Ao sair do modo de edição, sem salvar as alterações, ' ...
-                            'elas serão perdidas.<br><br>Confirma sair do modo de edição?' ...
-                        ];
-                        userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', questionMsg, {'Sim', 'Não'}, 1, 2);
-
-                        if userSelection == "Não"
-                            app.ViewStateButton.Value = false;
-                            return
-                        end
+                    if ~confirmDiscardEdition(app)
+                        app.ViewStateButton.Value = false;
+                        return
                     end
 
-                    app.ViewMode = ~app.ViewMode;
+                    app.ViewMode = true;
                     
                     if hasChanged
                         app.TaskListEdited = app.TaskList;
 
-                        taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
-                        bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
+                        taskIdx = min(app.Tree.SelectedNodes.NodeData.taskIdx, numel(app.TaskList));
+                        bandIdx = min(app.Tree.SelectedNodes.NodeData.bandIdx, numel(app.TaskList(taskIdx).Band));
                         buildTaskTree(app, [taskIdx, bandIdx])
                         return
                     end
 
                 case app.EditStateButton
-                    app.ViewMode = ~app.ViewMode;
+                    app.ViewMode = false;
             end
 
             updateUIControlState(app)
