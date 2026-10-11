@@ -282,9 +282,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             set(setdiff(findobj(app.TreePanel, 'Type', 'uiimage'), app.TreeIcon), 'Enable', ~app.ViewMode)
             
-            updateObservationPanelElementsState(app)
-            updateGpsPanelElementsState(app)
-
             % Painéis do centro e à direita
             set([
                 app.Name;
@@ -294,7 +291,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             ], 'Editable', ~app.ViewMode)
 
             app.ID.Editable = false;
-            updateFindPeaksPanelElementsState(app)
 
             % Toolbar
             app.ConfirmEditionButtonGrid.Visible = ~app.ViewMode;
@@ -323,7 +319,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
                     app.ObservationGrid.RowHeight{3} = 0;
 
                     set([app.Duration, app.DurationUnit], 'Enable', false, 'Visible', false)
-                    set(handleTimeElements, 'Enable', ~app.ViewMode, 'Visible', app.ViewMode)
+                    set(handleTimeElements, 'Enable', ~app.ViewMode, 'Visible', true)
                     app.ObservationSamples.Enable = false;
 
                 case 'Quantidade específica de amostras'
@@ -350,8 +346,47 @@ classdef winTaskList_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
+        function updateGpsPanelElementsContent(app, taskIdx)
+            switch app.GpsMode.Value
+                case 'auto'
+                    set([app.Latitude, app.Longitude], 'Value', [])
+                    app.GpsRevisitTime.Value = app.TaskListEdited(taskIdx).GPS.RevisitTime;
+
+                case 'manual'
+                    app.Latitude.Value  = app.TaskListEdited(taskIdx).GPS.Latitude;
+                    app.Longitude.Value = app.TaskListEdited(taskIdx).GPS.Longitude;
+                    app.GpsRevisitTime.Value = inf;
+            end
+        end
+
+        %-----------------------------------------------------------------%
         function updateFindPeaksPanelElementsState(app)
-            set(findobj(app.FindPeaksGrid, 'Type', 'uispinner'), 'Enable', ~app.ViewMode)
+            set(findobj(app.FindPeaksGrid, 'Type', 'uispinner'), 'Enable', strcmp(app.FindPeaksType.Value, 'Valores customizados') && ~app.ViewMode)
+        end
+
+        %-----------------------------------------------------------------%
+        function updateFindPeaksPanelElementsContent(app, taskIdx, bandIdx)
+            switch app.FindPeaksType.Value
+                case 'Valores padrão (appColeta)'
+                    defaultConfiguration = class.Constants.defaultMaskConfiguration;
+
+                    app.FindPeaksNumSweeps.Value     = defaultConfiguration.sweepsPerValidation;
+                    app.FindPeaksMinProminence.Value = defaultConfiguration.peakDetection.minimumProminence;
+                    app.FindPeaksMinDistance.Value   = defaultConfiguration.peakDetection.minimumDistanceKHz;
+                    app.FindPeaksMinBandWidth.Value  = defaultConfiguration.peakDetection.minimumWidthKHz;
+
+                case 'Valores customizados'
+                    if isempty(app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
+                        app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = class.Constants.defaultMaskConfiguration;
+                    end
+
+                    customConfiguration = app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration;
+
+                    app.FindPeaksNumSweeps.Value     = customConfiguration.sweepsPerValidation;
+                    app.FindPeaksMinProminence.Value = customConfiguration.peakDetection.minimumProminence;
+                    app.FindPeaksMinDistance.Value   = customConfiguration.peakDetection.minimumDistanceKHz;
+                    app.FindPeaksMinBandWidth.Value  = customConfiguration.peakDetection.minimumWidthKHz;
+            end
         end
 
         %-----------------------------------------------------------------%
@@ -359,7 +394,41 @@ classdef winTaskList_exported < matlab.apps.AppBase
             taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
             bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
 
+            % Painel ao centro
             app.Name.Value = app.TaskListEdited(taskIdx).Name;
+            app.BitsPerPoint.Items = {sprintf('%d bits', app.TaskListEdited(taskIdx).BitsPerSample)};
+            
+            app.ObservationType.Items = {util.TaskScriptIO.observationTypeLabel(app.TaskListEdited(taskIdx).Observation.Type)};
+            switch app.ObservationType.Value
+                case 'Duração'
+                    updateDurationFields(app, taskIdx)
+
+                case 'Período específico'
+                    updateObservationTime(app, taskIdx)
+            end
+            updateObservationPanelElementsState(app)
+            
+            app.GpsMode.Items = {app.TaskListEdited(taskIdx).GPS.Type};
+            updateGpsPanelElementsState(app)
+            updateGpsPanelElementsContent(app, taskIdx)
+
+            % Painel à direita
+            if app.TaskListEdited(taskIdx).Band(bandIdx).Enable
+                app.Status.Items = {'ON'};
+            else
+                app.Status.Items = {'OFF'};
+            end
+
+            switch app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status
+                case 0
+                    app.MaskTrigger.Items = {'OFF'};
+                case 1
+                    app.MaskTrigger.Items = {'ON - Apenas afere rompimento'};
+                case 2
+                    app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'};
+                case 3
+                    app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo'};
+            end
 
             app.ID.Value = app.TaskListEdited(taskIdx).Band(bandIdx).ID;
             app.Description.Value = app.TaskListEdited(taskIdx).Band(bandIdx).Description;
@@ -370,64 +439,26 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.StepWidth.Value = app.TaskListEdited(taskIdx).Band(bandIdx).StepWidth  / 1e+3;
             app.Resolution.Value = app.TaskListEdited(taskIdx).Band(bandIdx).Resolution / 1e+3;
             
+            app.TraceMode.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).TraceMode};
             app.IntegrationFactor.Value = app.TaskListEdited(taskIdx).Band(bandIdx).IntegrationFactor;
+            app.RFMode.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).RFMode};
+            app.VBW.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).VBW};
+
+            app.Detector.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).Detector};
+            app.LevelUnit.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).LevelUnit};
             app.RevisitTime.Value = app.TaskListEdited(taskIdx).Band(bandIdx).RevisitTime;
 
-            if app.ViewMode
-                app.BitsPerPoint.Items = {sprintf('%d bits', app.TaskListEdited(taskIdx).BitsPerSample)};
-                
-                app.ObservationType.Items = {util.TaskScriptIO.observationTypeLabel(app.TaskListEdited(taskIdx).Observation.Type)};
-                switch app.ObservationType.Value
-                    case 'Duração'
-                        updateDurationFields(app, taskIdx)
-
-                    case 'Período específico'
-                        updateObservationTime(app, taskIdx)
-                end
-                
-                app.GpsMode.Items = {app.TaskListEdited(taskIdx).GPS.Type};
-                switch app.GpsMode.Value
-                    case 'auto'
-                        set([app.Latitude, app.Longitude], 'Value', [])
-                        app.GpsRevisitTime.Value = app.TaskListEdited(taskIdx).GPS.RevisitTime;
-    
-                    case 'manual'
-                        app.Latitude.Value  = app.TaskListEdited(idx1).GPS.Latitude;
-                        app.Longitude.Value = app.TaskListEdited(idx1).GPS.Longitude;
-                        app.GpsRevisitTime.Value = inf;
-                end
-    
-                if app.TaskListEdited(taskIdx).Band(bandIdx).Enable
-                    app.Status.Items = {'ON'};
-                else
-                    app.Status.Items = {'OFF'};
-                end
-
-                switch app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status
-                    case 0
-                        app.MaskTrigger.Items = {'OFF'};
-                    case 1
-                        app.MaskTrigger.Items = {'ON - Apenas afere rompimento'};
-                    case 2
-                        app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'};
-                    case 3
-                        app.MaskTrigger.Items = {'ON - Afere rompimento e salva em arquivo'};
-                end
-                
-                app.TraceMode.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).TraceMode};
-                app.RFMode.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).RFMode};
-                app.VBW.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).VBW};
-                app.Detector.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).Detector};
-                app.LevelUnit.Items = {app.TaskListEdited(taskIdx).Band(bandIdx).LevelUnit};
-
-                if isempty(app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
-                    findPeaksTypeItems = {'Valores padrão (appColeta)'};
-                else
-                    findPeaksTypeItems = {'Valores customizados'};
-                end
-                app.FindPeaksType.Items = findPeaksTypeItems;
-
+            if isempty(app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
+                findPeaksTypeItems = {'Valores padrão (appColeta)'};
             else
+                findPeaksTypeItems = {'Valores customizados'};
+            end
+
+            set(app.FindPeaksType, 'Items', findPeaksTypeItems, 'Enable', app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status ~= 0)
+            updateFindPeaksPanelElementsState(app)
+            updateFindPeaksPanelElementsContent(app, taskIdx, bandIdx)
+
+            if ~app.ViewMode
                 app.BitsPerPoint.Items    = {'8 bits', '16 bits', '32 bits'};
                 app.ObservationType.Items = {'Duração', 'Período específico', 'Quantidade específica de amostras'};
                 app.DurationUnit.Items    = {'min', 'hr'};
@@ -481,41 +512,42 @@ classdef winTaskList_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function SpanCheck(app)
-            span = (app.FreqStop.Value - app.FreqStart.Value)*1e+6;
-
-            if span <= 0
-                app.FreqStart.FontColor = [1 0 0];
-                app.FreqStop.FontColor  = [1 0 0];
-                app.StepWidth.Enable    = 0;
-            else
-                app.FreqStart.FontColor = [0 0 0];
-                app.FreqStop.FontColor  = [0 0 0];
-                app.StepWidth.Enable    = 1;
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function IntegrationFactorCheck(app)
-            switch app.TraceMode.Value
-                case 'ClearWrite'
-                    set(app.IntegrationFactor, 'Enable', 0, 'Value', 1)
-
-                otherwise
-                    app.IntegrationFactor.Enable = 1;
-
-                    if app.IntegrationFactor.Value == 1
-                        app.IntegrationFactor.Value = 3;
-                    end
-            end
-        end
-
-        %-----------------------------------------------------------------%
         function updateBandIds(app)
             taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
 
             for bandIdx = 1:numel(app.TaskListEdited(taskIdx).Band)
                 app.TaskListEdited(taskIdx).Band(bandIdx).ID = bandIdx;
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function validateParameterValue(app, parameterName)
+            switch parameterName
+                case {'FreqStart', 'FreqStop'}
+                    span = (app.FreqStop.Value - app.FreqStart.Value) * 1e+6;
+        
+                    if span <= 0
+                        app.FreqStart.FontColor = [1 0 0];
+                        app.FreqStop.FontColor  = [1 0 0];
+                        app.StepWidth.Enable    = false;
+                    else
+                        app.FreqStart.FontColor = [0 0 0];
+                        app.FreqStop.FontColor  = [0 0 0];
+                        app.StepWidth.Enable    = true;
+                    end
+
+                case 'IntegrationFactor'
+                    switch app.TraceMode.Value
+                        case 'ClearWrite'
+                            set(app.IntegrationFactor, 'Enable', false, 'Value', 1)
+        
+                        otherwise
+                            app.IntegrationFactor.Enable = true;
+        
+                            if app.IntegrationFactor.Value == 1
+                                app.IntegrationFactor.Value = 3;
+                            end
+                    end
             end
         end
 
@@ -671,103 +703,330 @@ classdef winTaskList_exported < matlab.apps.AppBase
         % Value changed function: ObservationType
         function onObservationTypeValueChanged(app, event)
             
-            updateObservationPanelElementsState(app)
-            
-            taskIdx = app.Tree.SelectedNodes.NodeData;            
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+
             switch app.ObservationType.Value
-                case 'Duração'                                              % "Duration"
-                    updateDuration(app, taskIdx)
+                case 'Duração'
+                    updateDurationFields(app, taskIdx)
                     onTaskParameterValueChanged(app, struct('Source', app.Duration))
 
-                case 'Período específico'                                   % "Time"
+                case 'Período específico'
                     updateObservationTime(app, taskIdx)
                     onTaskParameterValueChanged(app, struct('Source', app.StartDatePicker))
 
-                case 'Quantidade específica de amostras'                    % "Samples"
+                case 'Quantidade específica de amostras'
                     onTaskParameterValueChanged(app, struct('Source', app.ObservationSamples))
             end
+
+            updateObservationPanelElementsState(app)
             
         end
 
         % Value changed function: GpsMode
         function onGpsModeValueChanged(app, event)
             
-            app.Latitude.Value  = -1;
-            app.Longitude.Value = -1;
-            app.GpsRevisitTime.Value     = 60;
-            set(app.GpsGrid.Children, Enable='on')
-
-            % Após a leitura do arquivo "TaskList.json", uma tarefa com GPS
-            % automático tem informação vazia de coordenadas geográficas
-            % (latitude, longitude). Ao editar o tipo de GPS, trocando de
-            % automático para manual, os valores iniciais serão (-1,-1), os
-            % quais foram definidos no topo da função. O bloco try/catch
-            % evita o erro de preenchimento do componente numérico com um
-            % valor vazio.
-
-            idx1 = app.Tree.SelectedNodes.NodeData.taskIdx;
-
-            switch app.GpsMode.Value
-                case 'auto'
-                    app.Latitude.Enable     = 'off';
-                    app.Longitude.Enable    = 'off';
-                    app.GpsRevisitTime.Value         = app.TaskListEdited(idx1).GPS.RevisitTime;
-
-                case 'manual'
-                    try
-                        app.Latitude.Value  = app.TaskListEdited(idx1).GPS.Latitude;
-                        app.Longitude.Value = app.TaskListEdited(idx1).GPS.Longitude;
-                    catch
-                    end
-                    app.GpsRevisitTime.Enable        = 'off';
-            end
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            updateGpsPanelElementsState(app)
+            updateGpsPanelElementsContent(app, taskIdx)
 
             onTaskParameterValueChanged(app, struct('Source', app.GpsMode))
 
         end
 
-        % Value changed function: FindPeaksType
-        function FindPeaksDropDownValueChanged(app, event)
+        % Image clicked function: TreeAddTaskNode
+        function onTreeAddTaskNodeCuttonClicked(app, event)
+            
+            taskIdxPrevious = app.Tree.SelectedNodes.NodeData.taskIdx;
+            taskIdxCurrent = numel(app.TaskListEdited) + 1;
+            bandIdx = 1;
+
+            app.TaskListEdited(taskIdxCurrent) = app.TaskListEdited(taskIdxPrevious);
+            app.TaskListEdited(taskIdxCurrent).Name = sprintf('%s (Cópia)', app.TaskListEdited(taskIdxPrevious).Name);
+            
+            buildTaskTree(app, [taskIdxCurrent, bandIdx])
+
+        end
+
+        % Image clicked function: TreeAddBandNode
+        function onTreeAddBandNodeButtonClicked(app, event)
+            
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdxPrevious = app.Tree.SelectedNodes.NodeData.bandIdx;
+            bandIdxCurrent = numel(app.TaskListEdited(taskIdx).Band) + 1;
+
+            if app.Tree.SelectedNodes.Parent == app.Tree
+                app.TaskListEdited(taskIdx).Band(bandIdxCurrent) = app.TaskListEdited(taskIdx).Band(1);
+            else
+                app.TaskListEdited(taskIdx).Band(bandIdxCurrent) = app.TaskListEdited(taskIdx).Band(bandIdxPrevious);
+            end
+             app.TaskListEdited(taskIdx).Band(bandIdxCurrent).ID = bandIdxCurrent;
+            
+            buildTaskTree(app, [taskIdx, bandIdxCurrent])
+
+        end
+
+        % Image clicked function: TreeDelNode
+        function onTreeDelNodeButtonClicked(app, event)
+            
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
+            
+            if app.Tree.SelectedNodes.Parent == app.Tree
+                if numel(app.TaskListEdited) > 1
+                    app.TaskListEdited(taskIdx) = [];
+                    buildTaskTree(app, [])
+
+                else
+                    ui.Dialog(app.UIFigure, "warning", 'Não é possível excluir a única tarefa.');
+                    return
+                end
+
+            else
+                if numel(app.TaskListEdited(taskIdx).Band) > 1
+                    app.TaskListEdited(taskIdx).Band(bandIdx) = [];
+                    updateBandIds(app)
+                    buildTaskTree(app, [taskIdx, 1])
+
+                else
+                    ui.Dialog(app.UIFigure, "warning", 'Não é possível excluir a única faixa de frequência da tarefa.');
+                    return
+                end
+            end            
+
+        end
+
+        % Image clicked function: TreeMoveDown, TreeMoveUp
+        function onTreeNodeUpDownButtonClicked(app, event)
             
             taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
             bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
 
-            switch app.FindPeaksType.Value
-                case 'Valores padrão (appColeta)'
-                    set(findobj(app.FindPeaksGrid, 'Type', 'uispinner'), Enable=0)
+            rerenderTree = false;
 
-                    defaultConfiguration = class.Constants.defaultMaskConfiguration;
-                    app.FindPeaksNumSweeps.Value    = defaultConfiguration.sweepsPerValidation;
-                    app.FindPeaksMinProminence.Value = defaultConfiguration.peakDetection.minimumProminence;
-                    app.FindPeaksMinDistance.Value   = defaultConfiguration.peakDetection.minimumDistanceKHz;
-                    app.FindPeaksMinBandWidth.Value         = defaultConfiguration.peakDetection.minimumWidthKHz;
+            switch event.Source
+                case app.TreeMoveUp
+                    if app.Tree.SelectedNodes.Parent == app.Tree
+                        if taskIdx > 1
+                            app.TaskListEdited(taskIdx-1:taskIdx) = flip(app.TaskListEdited(taskIdx-1:taskIdx));
 
-                    if ~app.ViewMode
-                        app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = [];
+                            rerenderTree = true;
+                            taskIdx = taskIdx-1;
+                        end
+                    else
+                        if bandIdx > 1
+                            app.TaskListEdited(taskIdx).Band(bandIdx-1:bandIdx) = flip(app.TaskListEdited(taskIdx).Band(bandIdx-1:bandIdx));
+                            updateBandIds(app)
+
+                            rerenderTree = true;
+                            bandIdx = bandIdx-1;
+                        end
                     end
 
-                case 'Valores customizados'
+                case app.TreeMoveDown
+                    if app.Tree.SelectedNodes.Parent == app.Tree
+                        if taskIdx < numel(app.TaskListEdited)
+                            app.TaskListEdited(taskIdx:taskIdx+1) = flip(app.TaskListEdited(taskIdx:taskIdx+1));
+
+                            rerenderTree = true;
+                            taskIdx = taskIdx+1;
+                        end
+                    else
+                        if bandIdx < numel(app.TaskListEdited(taskIdx).Band)
+                            app.TaskListEdited(taskIdx).Band(bandIdx:bandIdx+1) = flip(app.TaskListEdited(taskIdx).Band(bandIdx:bandIdx+1));
+                            updateBandIds(app)
+
+                            rerenderTree = true;
+                            bandIdx = bandIdx+1;
+                        end
+                    end
+            end
+
+            if rerenderTree
+                buildTaskTree(app, [taskIdx, bandIdx])
+            end
+
+        end
+
+        % Value changed function: BitsPerPoint, Description, Detector, 
+        % ...and 30 other components
+        function onTaskParameterValueChanged(app, event)
+            
+            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
+            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
+
+            switch event.Source
+                %---------------------------------------------------------%
+                % Painel "ASPECTOS GERAIS"
+                %---------------------------------------------------------%
+                case app.Name
+                    app.TaskListEdited(taskIdx).Name    = app.Name.Value;
+                    app.Tree.Children(taskIdx).Text = app.Name.Value;
+
+                case app.BitsPerPoint
+                    app.TaskListEdited(taskIdx).BitsPerSample = str2double(extractBefore(app.BitsPerPoint.Value, 'bits'));
+                
+                case {app.Duration, app.DurationUnit}
+                    app.TaskListEdited(taskIdx).Observation.Type = 'Duration';
+                    switch app.DurationUnit.Value
+                        case 'min'
+                            app.TaskListEdited(taskIdx).Observation.Duration = app.Duration.Value * 60;
+                        case 'hr'
+                            app.TaskListEdited(taskIdx).Observation.Duration = app.Duration.Value * 3600;
+                    end
+
+                case {app.StartDatePicker, app.StartTimeHourSpinner, app.StartTimeMinuteSpinner, app.EndDatePicker, app.EndTimeHourSpinner, app.EndTimeMinuteSpinner}
+                    app.TaskListEdited(taskIdx).Observation.Type = 'Time';
+
+                    startTime = app.StartDatePicker.Value + hours(app.StartTimeHourSpinner.Value) + minutes(app.StartTimeMinuteSpinner.Value);
+                    endTime   = app.EndDatePicker.Value + hours(app.EndTimeHourSpinner.Value) + minutes(app.EndTimeMinuteSpinner.Value);
+
+                    app.TaskListEdited(taskIdx).Observation.BeginTime = datestr(startTime, 'dd/mm/yyyy HH:MM:ss');
+                    app.TaskListEdited(taskIdx).Observation.EndTime   = datestr(endTime,   'dd/mm/yyyy HH:MM:ss');
+
+                case {app.GpsMode, app.Latitude, app.Longitude, app.GpsRevisitTime}
+                    switch app.GpsMode.Value
+                        case 'auto'
+                            app.TaskListEdited(taskIdx).GPS = struct( ...
+                                'Type', 'auto', ...
+                                'Latitude', [], ...
+                                'Longitude', [], ...
+                                'RevisitTime', app.GpsRevisitTime.Value ...
+                            );
+
+                        case 'manual'
+                            app.TaskListEdited(taskIdx).GPS = struct( ...
+                                'Type', 'manual', ...
+                                'Latitude', app.Latitude.Value, ...
+                                'Longitude', app.Longitude.Value, ...
+                                'RevisitTime', app.GpsRevisitTime.Value ...
+                            );
+                    end
+
+                %---------------------------------------------------------%                
+                % Painel "ESPECIFICIDADES DO FLUXO SELECIONADO"
+                %---------------------------------------------------------%
+                case app.Status
+                    if isscalar(app.TaskListEdited(taskIdx).Band)
+                        app.Status.Value = "ON";
+                        ui.Dialog(app.UIFigure, "warning", 'Tarefa com apenas uma única faixa de frequência não pode ter essa faixa com o estado "OFF".');
+                        return
+
+                    else
+                        if app.Status.Value == "ON"
+                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 1;
+                        else
+                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 0;
+                        end
+
+                        if all(~[app.TaskListEdited(taskIdx).Band.Enable])
+                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 1;
+
+                            app.Status.Value = "ON";
+                            ui.Dialog(app.UIFigure, "warning", 'Toda tarefa deve possuir ao menos uma faixa de frequência com o estado "ON".');
+                            return
+                        end
+    
+                        applyTaskTreeStyle(app)
+                    end
+
+                case app.MaskTrigger
+                    switch app.MaskTrigger.Value
+                        case 'OFF'
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 0;
+
+                        case 'ON - Apenas afere rompimento'
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 1;
+
+                        case 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 2;
+
+                        case 'ON - Afere rompimento e salva em arquivo'
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 3;
+                    end
+
+                    app.FindPeaksType.Enable = ~strcmp(app.MaskTrigger.Value, 'OFF');
+
+                case app.Description
+                    app.TaskListEdited(taskIdx).Band(bandIdx).Description = app.Description.Value;
+
+                case app.ObservationSamples
+                    app.TaskListEdited(taskIdx).Observation.Type = 'Samples';
+                    if isscalar(bandIdx)
+                        app.TaskListEdited(taskIdx).Band(bandIdx).ObservationSamples = app.ObservationSamples.Value;
+                    end
+
+                case app.FreqStart
+                    app.TaskListEdited(taskIdx).Band(bandIdx).FreqStart   = app.FreqStart.Value * 1e+6;
+                    app.Tree.Children(taskIdx).Children(bandIdx).Text = getFlowTag(app, taskIdx, bandIdx);
+                    validateParameterValue(app, 'FreqStart')
+                    
+                case app.FreqStop
+                    app.TaskListEdited(taskIdx).Band(bandIdx).FreqStop    = app.FreqStop.Value * 1e+6;
+                    app.Tree.Children(taskIdx).Children(bandIdx).Text = getFlowTag(app, taskIdx, bandIdx);
+                    validateParameterValue(app, 'FreqStop')
+
+                case app.StepWidth
+                    app.TaskListEdited(taskIdx).Band(bandIdx).StepWidth = app.StepWidth.Value * 1e+3;
+
+                case app.Resolution
+                    app.TaskListEdited(taskIdx).Band(bandIdx).Resolution = app.Resolution.Value * 1e+3;
+
+                case app.TraceMode
+                    app.TaskListEdited(taskIdx).Band(bandIdx).TraceMode = app.TraceMode.Value;
+                    validateParameterValue(app, 'IntegrationFactor')
+                    app.TaskListEdited(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
+
+                case app.IntegrationFactor
+                    app.TaskListEdited(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
+
+                case app.RFMode
+                    app.TaskListEdited(taskIdx).Band(bandIdx).RFMode = app.RFMode.Value;
+
+                case app.VBW
+                    app.TaskListEdited(taskIdx).Band(bandIdx).VBW = app.VBW.Value;
+
+                case app.Detector
+                    app.TaskListEdited(taskIdx).Band(bandIdx).Detector = app.Detector.Value;
+
+                case app.LevelUnit
+                    app.TaskListEdited(taskIdx).Band(bandIdx).LevelUnit = app.LevelUnit.Value;
+
+                case app.RevisitTime
+                    app.TaskListEdited(taskIdx).Band(bandIdx).RevisitTime = app.RevisitTime.Value;
+
+                %---------------------------------------------------------%
+                % Subpainel "FINDPEAKS"
+                %---------------------------------------------------------%
+                case app.FindPeaksType
                     updateFindPeaksPanelElementsState(app)
-                    if isempty(app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration)
-                        app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = class.Constants.defaultMaskConfiguration;
+                    updateFindPeaksPanelElementsContent(app, taskIdx, bandIdx)
+
+                    switch app.FindPeaksType.Value
+                        case 'Valores padrão (appColeta)'
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = [];
+
+                        case 'Valores customizados'
+                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = struct( ...
+                                'sweepsPerValidation', app.FindPeaksNumSweeps.Value, ...
+                                'peakDetection', struct( ...
+                                    'minimumProminence', app.FindPeaksMinProminence.Value, ...
+                                    'minimumDistanceKHz', app.FindPeaksMinDistance.Value, ...
+                                    'minimumWidthKHz', app.FindPeaksMinBandWidth.Value ...
+                                ) ...
+                            );
                     end
 
-                    customConfiguration = app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration;
-                    app.FindPeaksNumSweeps.Value    = customConfiguration.sweepsPerValidation;
-                    app.FindPeaksMinProminence.Value = customConfiguration.peakDetection.minimumProminence;
-                    app.FindPeaksMinDistance.Value   = customConfiguration.peakDetection.minimumDistanceKHz;
-                    app.FindPeaksMinBandWidth.Value         = customConfiguration.peakDetection.minimumWidthKHz;
+                case app.FindPeaksNumSweeps
+                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.sweepsPerValidation = app.FindPeaksNumSweeps.Value;
 
-                    if ~app.ViewMode
-                        app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration = struct( ...
-                            'sweepsPerValidation', app.FindPeaksNumSweeps.Value, ...
-                            'peakDetection', struct( ...
-                                'minimumProminence',  app.FindPeaksMinProminence.Value, ...
-                                'minimumDistanceKHz', app.FindPeaksMinDistance.Value, ...
-                                'minimumWidthKHz',    app.FindPeaksMinBandWidth.Value ...
-                            ) ...
-                        );
-                    end
+                case app.FindPeaksMinProminence
+                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.peakDetection.minimumProminence = app.FindPeaksMinProminence.Value;
+
+                case app.FindPeaksMinDistance
+                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.peakDetection.minimumDistanceKHz = app.FindPeaksMinDistance.Value;
+
+                case app.FindPeaksMinBandWidth
+                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.peakDetection.minimumWidthKHz = app.FindPeaksMinBandWidth.Value;
             end
             
         end
@@ -805,85 +1064,41 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: TreeAddTaskNode
-        function TreeAddTaskNodePushed(app, event)
-            
-            taskIdxPrevious = app.Tree.SelectedNodes.NodeData.taskIdx;
-            taskIdxCurrent = numel(app.TaskListEdited) + 1;
-            bandIdx = 1;
-
-            app.TaskListEdited(taskIdxCurrent) = app.TaskListEdited(taskIdxPrevious);
-            app.TaskListEdited(taskIdxCurrent).Name = sprintf('%s (Cópia)', app.TaskListEdited(taskIdxPrevious).Name);
-            
-            buildTaskTree(app, [taskIdxCurrent, bandIdx])
-
-        end
-
-        % Image clicked function: TreeAddBandNode
-        function TreeAddBandNodeValueChanged(app, event)
-            
-            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
-            bandIdxPrevious = app.Tree.SelectedNodes.NodeData.bandIdx;
-            bandIdxCurrent = numel(app.TaskListEdited(taskIdx).Band) + 1;
-
-            if app.Tree.SelectedNodes.Parent == app.Tree
-                app.TaskListEdited(taskIdx).Band(bandIdxCurrent) = app.TaskListEdited(taskIdx).Band(1);
-            else
-                app.TaskListEdited(taskIdx).Band(bandIdxCurrent) = app.TaskListEdited(taskIdx).Band(bandIdxPrevious);
-            end
-             app.TaskListEdited(taskIdx).Band(bandIdxCurrent).ID = bandIdxCurrent;
-            
-            buildTaskTree(app, [taskIdx, bandIdxCurrent])
-
-        end
-
-        % Image clicked function: TreeDelNode
-        function TreeDelNodePushed(app, event)
-            
-            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
-            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
-            
-            if app.Tree.SelectedNodes.Parent == app.Tree
-                if numel(app.TaskListEdited) > 1
-                    app.TaskListEdited(taskIdx) = [];
-                    buildTaskTree(app, [1, -1])
-
-                else
-                    ui.Dialog(app.UIFigure, "warning", 'Não é possível excluir a única tarefa.');
-                    return
-                end
-
-            else
-                if numel(app.TaskListEdited(taskIdx).Band) > 1
-                    app.TaskListEdited(taskIdx).Band(bandIdx) = [];
-                    updateBandIds(app)
-                    buildTaskTree(app, [taskIdx, 1])
-
-                else
-                    ui.Dialog(app.UIFigure, "warning", 'Não é possível excluir a única faixa de frequência da tarefa.');
-                    return
-                end
-            end            
-
-        end
-
         % Button pushed function: ConfirmEditionButton
-        function ConfirmEditionButtonPushed(app, event)
+        function onConfirmEditionButtonClicked(app, event)
             
-            % Finalizada a edição, avalia-se se algum parâmetro foi, de fato, 
-            % alterado, salvando uma nova versão do arquivo "TaskList.json",
-            % caso necessário.
+            hasChanged = ~isequal(app.TaskList, app.TaskListEdited);
 
-            if ~isequal(app.TaskList, app.TaskListEdited)
-                % Validaçao dos valores das faixas - os outros campos já são 
-                % validados pelos próprios componentes da interface.                
-                for ii = 1:numel(app.TaskListEdited)
-                    for jj = 1:numel(app.TaskListEdited(ii).Band)
-                        freqStart = app.TaskListEdited(ii).Band.FreqStart;
-                        freqStop  = app.TaskListEdited(ii).Band.FreqStop;
+            if hasChanged
+                for taskIdx = 1:numel(app.TaskListEdited)
+                    taskName = app.TaskListEdited(taskIdx).Name;
+
+                    gpsMode = app.TaskListEdited(taskIdx).GPS.Type;
+                    lat = app.TaskListEdited(taskIdx).GPS.Latitude;
+                    lng = app.TaskListEdited(taskIdx).GPS.Longitude;
+
+                    if strcmp(gpsMode, 'manual') && (isempty(lat) || isempty(lng))
+                        warningMsg = sprintf([ ...
+                            'É inválido o valor vazio de latitude ou ' ...
+                            'longitude da tarefa "%s".' ...
+                        ], taskName);
+                        ui.Dialog(app.UIFigure, "warning", warningMsg);
+
+                        return
+                    end
+
+                    for bandIdx = 1:numel(app.TaskListEdited(taskIdx).Band)
+                        freqStart = app.TaskListEdited(taskIdx).Band(bandIdx).FreqStart;
+                        freqStop  = app.TaskListEdited(taskIdx).Band(bandIdx).FreqStop;
 
                         if freqStart >= freqStop
-                            ui.Dialog(app.UIFigure, "warning", sprintf('A faixa <b>%.3f - %.3f MHz</b>, da tarefa "%s", é inválida. A frequência final de uma faixa deve ser superior à inicial.', freqStart/1e+6, freqStop/1e+6, app.TaskListEdited(ii).Name));
+                            warningMsg = sprintf([ ...
+                                'A faixa <b>%.3f - %.3f MHz</b>, da tarefa "%s", ' ...
+                                'é inválida. A frequência final de uma faixa deve ' ...
+                                'ser superior à inicial.' ...
+                            ], freqStart/1e+6, freqStop/1e+6, taskName);
+                            ui.Dialog(app.UIFigure, "warning", warningMsg);
+
                             return
                         end
                     end
@@ -894,220 +1109,9 @@ classdef winTaskList_exported < matlab.apps.AppBase
             end
             
             app.ViewMode = true;
-            OperationModeValueChanged(app)
 
-        end
-
-        % Value changed function: BitsPerPoint, Description, Detector, 
-        % ...and 29 other components
-        function onTaskParameterValueChanged(app, event)
-            
-            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
-            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
-
-            switch event.Source
-                %---------------------------------------------------------%
-                % Painel "ASPECTOS GERAIS"
-                %---------------------------------------------------------%
-                case app.Name
-                    app.TaskListEdited(taskIdx).Name    = app.Name.Value;
-                    app.Tree.Children(taskIdx).Text = app.Name.Value;
-
-                case app.BitsPerPoint
-                    app.TaskListEdited(taskIdx).BitsPerSample = str2double(extractBefore(app.BitsPerPoint.Value, 'bits'));
-                
-                case {app.Duration, app.DurationUnit}
-                    app.TaskListEdited(taskIdx).Observation.Type = 'Duration';
-                    switch app.DurationUnit.Value
-                        case 'min'
-                            app.TaskListEdited(taskIdx).Observation.Duration = app.Duration.Value * 60;
-                        case 'hr'
-                            app.TaskListEdited(taskIdx).Observation.Duration = app.Duration.Value * 3600;
-                    end
-
-                case {app.StartDatePicker, app.StartTimeHourSpinner, app.StartTimeMinuteSpinner, app.EndDatePicker, app.EndTimeHourSpinner, app.EndTimeMinuteSpinner}
-                    app.TaskListEdited(taskIdx).Observation.Type = 'Time';
-
-                    BeginTime = app.StartDatePicker.Value + hours(app.StartTimeHourSpinner.Value) + minutes(app.StartTimeMinuteSpinner.Value);
-                    EndTime   = app.EndDatePicker.Value + hours(app.EndTimeHourSpinner.Value) + minutes(app.EndTimeMinuteSpinner.Value);
-
-                    app.TaskListEdited(taskIdx).Observation.BeginTime = datestr(BeginTime, 'dd/mm/yyyy HH:MM:ss');
-                    app.TaskListEdited(taskIdx).Observation.EndTime   = datestr(EndTime,   'dd/mm/yyyy HH:MM:ss');
-
-                case {app.GpsMode, app.Latitude, app.Longitude, app.GpsRevisitTime}
-                    switch app.GpsMode.Value
-                        case 'auto'
-                            app.TaskListEdited(taskIdx).GPS = struct('Type',        'auto', ...
-                                                              'Latitude',    [],     ...
-                                                              'Longitude',   [],     ...
-                                                              'RevisitTime', app.GpsRevisitTime.Value);
-                        case 'manual'
-                            app.TaskListEdited(taskIdx).GPS = struct('Type',        'manual',                      ...
-                                                              'Latitude',    app.Latitude.Value,  ...
-                                                              'Longitude',   app.Longitude.Value, ...
-                                                              'RevisitTime', app.GpsRevisitTime.Value);
-                    end
-
-                %---------------------------------------------------------%                
-                % Painel "ESPECIFICIDADES DO FLUXO SELECIONADO"
-                %---------------------------------------------------------%
-                case app.Status
-                    if isscalar(app.TaskListEdited(taskIdx).Band)
-                        app.Status.Value = "ON";
-                        ui.Dialog(app.UIFigure, "warning", 'Tarefa com apenas uma única faixa de frequência não pode ter essa faixa com o estado "OFF".');
-                        return
-
-                    else
-                        if app.Status.Value == "ON"
-                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 1;
-                        else
-                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 0;
-                        end
-
-                        if all(~[app.TaskListEdited(taskIdx).Band.Enable])
-                            app.TaskListEdited(taskIdx).Band(bandIdx).Enable = 1;
-
-                            app.Status.Value = "ON";
-                            ui.Dialog(app.UIFigure, "warning", 'Toda tarefa deve possuir ao menos uma faixa de frequência com o estado "ON".');
-                            return
-                        end
-    
-                        applyTaskTreeStyle(app)
-                    end
-
-                case app.MaskTrigger
-                    switch app.MaskTrigger.Value
-                        case 'OFF'
-                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 0;
-                        case 'ON - Apenas afere rompimento'
-                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 1;
-                        case 'ON - Afere rompimento e salva em arquivo (caso rompida máscara)'
-                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 2;
-                        case 'ON - Afere rompimento e salva em arquivo'
-                            app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Status = 3;
-                    end
-
-                    app.FindPeaksType.Enable = ~strcmp(app.MaskTrigger.Value, 'OFF');
-
-                case app.Description
-                    app.TaskListEdited(taskIdx).Band(bandIdx).Description = app.Description.Value;
-
-                case app.ObservationSamples
-                    app.TaskListEdited(taskIdx).Observation.Type = 'Samples';
-                    if isscalar(bandIdx)
-                        app.TaskListEdited(taskIdx).Band(bandIdx).ObservationSamples = app.ObservationSamples.Value;
-                    end
-
-                case app.FreqStart
-                    app.TaskListEdited(taskIdx).Band(bandIdx).FreqStart   = app.FreqStart.Value * 1e+6;
-                    app.Tree.Children(taskIdx).Children(bandIdx).Text = getFlowTag(app, taskIdx, bandIdx);
-                    SpanCheck(app)
-                    
-                case app.FreqStop
-                    app.TaskListEdited(taskIdx).Band(bandIdx).FreqStop    = app.FreqStop.Value * 1e+6;
-                    app.Tree.Children(taskIdx).Children(bandIdx).Text = getFlowTag(app, taskIdx, bandIdx);
-                    SpanCheck(app)
-
-                case app.StepWidth
-                    app.TaskListEdited(taskIdx).Band(bandIdx).StepWidth = app.StepWidth.Value * 1e+3;
-
-                case app.Resolution
-                    app.TaskListEdited(taskIdx).Band(bandIdx).Resolution = app.Resolution.Value * 1e+3;
-
-                case app.TraceMode
-                    app.TaskListEdited(taskIdx).Band(bandIdx).TraceMode = app.TraceMode.Value;
-                    IntegrationFactorCheck(app)
-                    app.TaskListEdited(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
-
-                case app.IntegrationFactor
-                    app.TaskListEdited(taskIdx).Band(bandIdx).IntegrationFactor = app.IntegrationFactor.Value;
-
-                case app.RFMode
-                    app.TaskListEdited(taskIdx).Band(bandIdx).RFMode = app.RFMode.Value;
-
-                case app.VBW
-                    app.TaskListEdited(taskIdx).Band(bandIdx).VBW = app.VBW.Value;
-
-                case app.Detector
-                    app.TaskListEdited(taskIdx).Band(bandIdx).Detector = app.Detector.Value;
-
-                case app.LevelUnit
-                    app.TaskListEdited(taskIdx).Band(bandIdx).LevelUnit = app.LevelUnit.Value;
-
-                case app.RevisitTime
-                    app.TaskListEdited(taskIdx).Band(bandIdx).RevisitTime = app.RevisitTime.Value;
-
-                %---------------------------------------------------------%
-                % Subpainel "FINDPEAKS"
-                %---------------------------------------------------------%
-                case app.FindPeaksNumSweeps
-                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.sweepsPerValidation = app.FindPeaksNumSweeps.Value;
-
-                case app.FindPeaksMinProminence
-                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumProminence = app.FindPeaksMinProminence.Value;
-
-                case app.FindPeaksMinDistance
-                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumDistanceKHz = app.FindPeaksMinDistance.Value;
-
-                case app.FindPeaksMinBandWidth
-                    app.TaskListEdited(taskIdx).Band(bandIdx).MaskTrigger.Configuration.minimumWidthKHz = app.FindPeaksMinBandWidth.Value;
-            end
-            
-        end
-
-        % Image clicked function: TreeMoveDown, TreeMoveUp
-        function UpDownImageClicked(app, event)
-            
-            taskIdx = app.Tree.SelectedNodes.NodeData.taskIdx;
-            bandIdx = app.Tree.SelectedNodes.NodeData.bandIdx;
-
-            Flag = 0;
-
-            switch event.Source
-                case app.TreeMoveUp
-                    if app.Tree.SelectedNodes.Parent == app.Tree
-                        if taskIdx > 1
-                            app.TaskListEdited(taskIdx-1:taskIdx) = flip(app.TaskListEdited(taskIdx-1:taskIdx));
-
-                            Flag = 1;
-                            taskIdx = taskIdx-1;
-                        end
-                    else
-                        if bandIdx > 1
-                            app.TaskListEdited(taskIdx).Band(bandIdx-1:bandIdx) = flip(app.TaskListEdited(taskIdx).Band(bandIdx-1:bandIdx));
-                            updateBandIds(app)
-
-                            Flag = 1;
-                            bandIdx = bandIdx-1;
-                        end
-                    end
-
-                case app.TreeMoveDown
-                    if app.Tree.SelectedNodes.Parent == app.Tree
-                        if taskIdx < numel(app.TaskListEdited)
-                            app.TaskListEdited(taskIdx:taskIdx+1) = flip(app.TaskListEdited(taskIdx:taskIdx+1));
-
-                            Flag = 1;
-                            taskIdx = taskIdx+1;
-                        end
-                    else
-                        if bandIdx < numel(app.TaskListEdited(taskIdx).Band)
-                            app.TaskListEdited(taskIdx).Band(bandIdx:bandIdx+1) = flip(app.TaskListEdited(taskIdx).Band(bandIdx:bandIdx+1));
-                            updateBandIds(app)
-
-                            Flag = 1;
-                            bandIdx = bandIdx+1;
-                        end
-                    end
-            end
-
-            if Flag
-                if app.Tree.SelectedNodes.Parent == app.Tree
-                    buildTaskTree(app, [taskIdx, -1])
-                else
-                    buildTaskTree(app, [taskIdx, bandIdx])
-                end
-            end
+            updateUIControlState(app)
+            updateUIControlContent(app)
 
         end
     end
@@ -1184,7 +1188,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create TreeAddTaskNode
             app.TreeAddTaskNode = uiimage(app.TreePanel);
-            app.TreeAddTaskNode.ImageClickedFcn = createCallbackFcn(app, @TreeAddTaskNodePushed, true);
+            app.TreeAddTaskNode.ImageClickedFcn = createCallbackFcn(app, @onTreeAddTaskNodeCuttonClicked, true);
             app.TreeAddTaskNode.Enable = 'off';
             app.TreeAddTaskNode.Tooltip = {''};
             app.TreeAddTaskNode.Layout.Row = 3;
@@ -1193,7 +1197,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create TreeAddBandNode
             app.TreeAddBandNode = uiimage(app.TreePanel);
-            app.TreeAddBandNode.ImageClickedFcn = createCallbackFcn(app, @TreeAddBandNodeValueChanged, true);
+            app.TreeAddBandNode.ImageClickedFcn = createCallbackFcn(app, @onTreeAddBandNodeButtonClicked, true);
             app.TreeAddBandNode.Enable = 'off';
             app.TreeAddBandNode.Tooltip = {''};
             app.TreeAddBandNode.Layout.Row = 5;
@@ -1202,7 +1206,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create TreeDelNode
             app.TreeDelNode = uiimage(app.TreePanel);
-            app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @TreeDelNodePushed, true);
+            app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @onTreeDelNodeButtonClicked, true);
             app.TreeDelNode.Enable = 'off';
             app.TreeDelNode.Tooltip = {''};
             app.TreeDelNode.Layout.Row = 7;
@@ -1211,7 +1215,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create TreeMoveUp
             app.TreeMoveUp = uiimage(app.TreePanel);
-            app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
+            app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
             app.TreeMoveUp.Enable = 'off';
             app.TreeMoveUp.Tooltip = {''};
             app.TreeMoveUp.Layout.Row = 10;
@@ -1220,7 +1224,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create TreeMoveDown
             app.TreeMoveDown = uiimage(app.TreePanel);
-            app.TreeMoveDown.ImageClickedFcn = createCallbackFcn(app, @UpDownImageClicked, true);
+            app.TreeMoveDown.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
             app.TreeMoveDown.Enable = 'off';
             app.TreeMoveDown.Tooltip = {''};
             app.TreeMoveDown.Layout.Row = 12;
@@ -1949,7 +1953,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create FindPeaksType
             app.FindPeaksType = uidropdown(app.FindPeaksGrid);
             app.FindPeaksType.Items = {'Valores padrão (appColeta)', 'Valores customizados'};
-            app.FindPeaksType.ValueChangedFcn = createCallbackFcn(app, @FindPeaksDropDownValueChanged, true);
+            app.FindPeaksType.ValueChangedFcn = createCallbackFcn(app, @onTaskParameterValueChanged, true);
             app.FindPeaksType.Enable = 'off';
             app.FindPeaksType.FontSize = 11;
             app.FindPeaksType.BackgroundColor = [1 1 1];
@@ -2081,7 +2085,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create ConfirmEditionButton
             app.ConfirmEditionButton = uibutton(app.ConfirmEditionButtonGrid, 'push');
-            app.ConfirmEditionButton.ButtonPushedFcn = createCallbackFcn(app, @ConfirmEditionButtonPushed, true);
+            app.ConfirmEditionButton.ButtonPushedFcn = createCallbackFcn(app, @onConfirmEditionButtonClicked, true);
             app.ConfirmEditionButton.Icon = 'save-16px-white.svg';
             app.ConfirmEditionButton.BackgroundColor = [0 0.451 0.7412];
             app.ConfirmEditionButton.FontSize = 11;
