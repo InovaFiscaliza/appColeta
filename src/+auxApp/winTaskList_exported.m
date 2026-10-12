@@ -162,8 +162,10 @@ classdef winTaskList_exported < matlab.apps.AppBase
                         app.ViewStateButton;
                         app.EditStateButton;
                         app.ConfirmEditionButtonGrid;
+                        ...
                         app.ImportButton;
                         app.ExportButton;
+                        ...
                         app.DockUndockButton;
                         app.DockCloseButton
                     };
@@ -236,7 +238,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             expand(app.Tree.Children(taskIdx))
             app.Tree.SelectedNodes = app.Tree.Children(taskIdx).Children(bandIdx);
-            onTaskTreeSelectionChanged(app)
+            onTreeSelectionChanged(app)
         end
 
         %-----------------------------------------------------------------%
@@ -653,7 +655,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         end
 
         % Selection changed function: Tree
-        function onTaskTreeSelectionChanged(app, event)
+        function onTreeSelectionChanged(app, event)
             
             if exist('event', 'var')
                 if isempty(event.SelectedNodes)
@@ -753,7 +755,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
         end
 
         % Image clicked function: TreeAddTaskNode
-        function onTreeAddTaskNodeCuttonClicked(app, event)
+        function onTreeAddTaskNodeButtonClicked(app, event)
             
             taskIdxPrevious = app.Tree.SelectedNodes.NodeData.taskIdx;
             taskIdxCurrent = numel(app.TaskListEdited) + 1;
@@ -1199,7 +1201,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create Tree
             app.Tree = uitree(app.TreePanel);
-            app.Tree.SelectionChangedFcn = createCallbackFcn(app, @onTaskTreeSelectionChanged, true);
+            app.Tree.SelectionChangedFcn = createCallbackFcn(app, @onTreeSelectionChanged, true);
             app.Tree.FontSize = 11;
             app.Tree.FontColor = [0.2 0.2 0.2];
             app.Tree.Layout.Row = [3 13];
@@ -1207,7 +1209,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Create TreeAddTaskNode
             app.TreeAddTaskNode = uiimage(app.TreePanel);
-            app.TreeAddTaskNode.ImageClickedFcn = createCallbackFcn(app, @onTreeAddTaskNodeCuttonClicked, true);
+            app.TreeAddTaskNode.ImageClickedFcn = createCallbackFcn(app, @onTreeAddTaskNodeButtonClicked, true);
             app.TreeAddTaskNode.Enable = 'off';
             app.TreeAddTaskNode.Tooltip = {''};
             app.TreeAddTaskNode.Layout.Row = 3;
@@ -1259,7 +1261,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TreeTitle.Layout.Row = [1 2];
             app.TreeTitle.Layout.Column = [2 3];
             app.TreeTitle.Interpreter = 'html';
-            app.TreeTitle.Text = {'<b>Lista de tarefas de monitoração</b>'; '<font style="color: gray; font-size: 11px;">Selecione uma tarefa para visualizar seus detalhes, editar parâmetros e gerenciar as faixas de frequência</font>'};
+            app.TreeTitle.Text = {'<b>Tarefas de monitoração</b>'; '<font style="color: gray; font-size: 11px;">Selecione uma tarefa para visualizar seus detalhes, editar parâmetros e gerenciar as faixas de frequência</font>'};
 
             % Create ViewStateButton
             app.ViewStateButton = uibutton(app.GridLayout, 'state');

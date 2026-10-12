@@ -2224,7 +2224,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab2Button = uibutton(app.NavBar, 'state');
             app.Tab2Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.Tab2Button.Tag = 'INSTRUMENT';
-            app.Tab2Button.Tooltip = {'Lista de instrumentos'};
+            app.Tab2Button.Tooltip = {'Instrumentos'};
             app.Tab2Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'circuit-board.svg');
             app.Tab2Button.Text = '';
             app.Tab2Button.BackgroundColor = [0.2 0.2 0.2];
@@ -2236,7 +2236,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab3Button = uibutton(app.NavBar, 'state');
             app.Tab3Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.Tab3Button.Tag = 'TASK_EDIT';
-            app.Tab3Button.Tooltip = {'Lista de tarefas'};
+            app.Tab3Button.Tooltip = {'Tarefas de monitoração'};
             app.Tab3Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'server-process.svg');
             app.Tab3Button.Text = '';
             app.Tab3Button.BackgroundColor = [0.2 0.2 0.2];

@@ -191,29 +191,33 @@ classdef (Abstract) HtmlTextGenerator
         end
 
         %-----------------------------------------------------------------%
-        function [htmlContent, imgSource] = Instrument(receiverObj, gpsObj, editedList, idx1)
+        function [tag, features, img] = Instrument(receiverObj, gpsObj, editedList, idx1)
             switch editedList.Family{idx1}
                 case 'Receiver'
-                    idx2 = find(strcmp(receiverObj.Config.Name, editedList.Name{idx1}), 1);
-                    definition = receiverObj.Config.Definition{idx2};
-                    imgSource  = definition.image;
+                    receiverIdx = find(strcmp(receiverObj.Config.Name, editedList.Name{idx1}), 1);
+                    definition = receiverObj.Config.Definition{receiverIdx};
+                    
+                    tag = sprintf('%s<br><font style="font-size: 10px; color: gray;">%s</font>', definition.name, definition.band);
+                    img = definition.image;
 
-                    dataStruct    = struct('group', 'IDENTIFICAÇÃO', ...
-                                           'value', table2struct(receiverObj.Config(idx2,1:4)));        
-                    dataStruct(2) = struct('group', 'PARÂMETROS', ...
-                                           'value', receiverParameters(definition));
+                    dataStruct = [ ...
+                        struct('group', 'ASPECTOS GERAIS', 'value', table2struct(receiverObj.Config(receiverIdx, {'Family', 'Tag'}))), ...
+                        struct('group', 'ATRIBUTOS',       'value', receiverParameters(definition)) ...
+                    ];
 
                 case 'GPS'
-                    idx2 = find(strcmp(gpsObj.Config.Name, editedList.Name{idx1}), 1);
-                    imgSource = gpsObj.Config.Image{idx2};
+                    gpsIdx = find(strcmp(gpsObj.Config.Name, editedList.Name{idx1}), 1);
 
-                    dataStruct    = struct('group', 'IDENTIFICAÇÃO', ...
-                                           'value', table2struct(gpsObj.Config(idx2,1:3)));        
-                    dataStruct(2) = struct('group', 'PARÂMETROS', ...
-                                           'value', table2struct(gpsObj.Config(idx2,6:7)));
+                    tag = sprintf('%s<br><font style="font-size: 10px; color: gray;">%s</font>', gpsObj.Config.Name{gpsIdx}, gpsObj.Config.connectPort{gpsIdx});
+                    img = gpsObj.Config.Image{gpsIdx};
+
+                    dataStruct = [ ...
+                        struct('group', 'ASPECTOS GERAIS', 'value', table2struct(gpsObj.Config(gpsIdx, {'Family', 'Tag'}))), ...
+                        struct('group', 'ATRIBUTOS',       'value', table2struct(gpsObj.Config(gpsIdx, {'connectType', 'connectPort'}))) ...
+                    ];
             end
 
-            htmlContent = textFormatGUI.struct2PrettyPrintList(dataStruct, "delete");
+            features = textFormatGUI.struct2PrettyPrintList(dataStruct, "delete");
         end
 
         %-----------------------------------------------------------------%

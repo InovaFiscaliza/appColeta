@@ -2,64 +2,68 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        UIFigure                matlab.ui.Figure
-        GridLayout              matlab.ui.container.GridLayout
-        DockModule              matlab.ui.container.GridLayout
-        DockCloseButton         matlab.ui.control.Image
-        DockUndockButton        matlab.ui.control.Image
-        Toolbar                 matlab.ui.container.GridLayout
-        ConfirmEditionButton    matlab.ui.control.Button
-        TestConnectivityButton  matlab.ui.control.Button
-        ButtonsSeparator        matlab.ui.control.Image
-        ExportButton            matlab.ui.control.Image
-        ImportButton            matlab.ui.control.Image
-        SubTabGroup             matlab.ui.container.TabGroup
-        SubTab1                 matlab.ui.container.Tab
-        SubGrid1                matlab.ui.container.GridLayout
-        InstrumentGrid          matlab.ui.container.GridLayout
-        Image                   matlab.ui.control.Image
-        Features                matlab.ui.control.Label
-        FeaturesLabel           matlab.ui.control.Label
-        ParametersPanel         matlab.ui.container.Panel
-        ParametersGrid          matlab.ui.container.GridLayout
-        LocalHostPanel          matlab.ui.container.Panel
-        LocalHostGrid           matlab.ui.container.GridLayout
-        IPublic                 matlab.ui.control.EditField
-        IPPublicLabel           matlab.ui.control.Label
-        IPLocal                 matlab.ui.control.EditField
-        IPLocalLabel            matlab.ui.control.Label
-        LocalhostCheckBox       matlab.ui.control.CheckBox
-        Timeout                 matlab.ui.control.NumericEditField
-        TimeoutLabel            matlab.ui.control.Label
-        BaudRate                matlab.ui.control.NumericEditField
-        BaudRateLabel           matlab.ui.control.Label
-        Port                    matlab.ui.control.EditField
-        PortLabel               matlab.ui.control.Label
-        IP                      matlab.ui.control.EditField
-        IPLabel                 matlab.ui.control.Label
-        ConnectionType          matlab.ui.control.DropDown
-        ConnectionTypeLabel     matlab.ui.control.Label
-        Description             matlab.ui.control.TextArea
-        DescriptionLabel        matlab.ui.control.Label
-        Name                    matlab.ui.control.DropDown
-        NameLabel               matlab.ui.control.Label
-        Family                  matlab.ui.control.DropDown
-        FamilyLabel             matlab.ui.control.Label
-        Status                  matlab.ui.control.DropDown
-        StatusLabel             matlab.ui.control.Label
-        ModeRadioGroup          matlab.ui.container.ButtonGroup
-        EditModeGroup           matlab.ui.control.RadioButton
-        ViewModeButton          matlab.ui.control.RadioButton
-        ModePanelLabel          matlab.ui.control.Label
-        TreeGrid                matlab.ui.container.GridLayout
-        TreeModeDown            matlab.ui.control.Image
-        TreeMoveUp              matlab.ui.control.Image
-        TreeDelNode             matlab.ui.control.Image
-        TreeAddNode             matlab.ui.control.Image
-        Tree                    matlab.ui.container.Tree
-        TreeNodeReceiver        matlab.ui.container.TreeNode
-        TreeNodeGPS             matlab.ui.container.TreeNode
-        TreeLabel               matlab.ui.control.Label
+        UIFigure                  matlab.ui.Figure
+        GridLayout                matlab.ui.container.GridLayout
+        ConfirmEditionButtonGrid  matlab.ui.container.GridLayout
+        ConfirmEditionButton      matlab.ui.control.Button
+        DockModule                matlab.ui.container.GridLayout
+        DockCloseButton           matlab.ui.control.Image
+        DockUndockButton          matlab.ui.control.Image
+        Toolbar                   matlab.ui.container.GridLayout
+        TestConnectivityButton    matlab.ui.control.Button
+        ButtonsSeparator          matlab.ui.control.Image
+        ExportButton              matlab.ui.control.Image
+        ImportButton              matlab.ui.control.Image
+        BandPanel                 matlab.ui.container.Panel
+        GridLayout2               matlab.ui.container.GridLayout
+        ImageGrid                 matlab.ui.container.GridLayout
+        Image                     matlab.ui.control.Image
+        StatusLabel_3             matlab.ui.control.Label
+        StatusLabel_2             matlab.ui.control.Label
+        BandTitle                 matlab.ui.control.Label
+        Features                  matlab.ui.control.Label
+        TaskPanel                 matlab.ui.container.Panel
+        InstrumentGrid            matlab.ui.container.GridLayout
+        TaskTitle                 matlab.ui.control.Label
+        ParametersPanel           matlab.ui.container.Panel
+        ParametersGrid            matlab.ui.container.GridLayout
+        LocalHostPanel            matlab.ui.container.Panel
+        LocalHostGrid             matlab.ui.container.GridLayout
+        IPublic                   matlab.ui.control.EditField
+        IPPublicLabel             matlab.ui.control.Label
+        IPLocal                   matlab.ui.control.EditField
+        IPLocalLabel              matlab.ui.control.Label
+        LocalhostCheckBox         matlab.ui.control.CheckBox
+        Timeout                   matlab.ui.control.NumericEditField
+        TimeoutLabel              matlab.ui.control.Label
+        BaudRate                  matlab.ui.control.NumericEditField
+        BaudRateLabel             matlab.ui.control.Label
+        Port                      matlab.ui.control.EditField
+        PortLabel                 matlab.ui.control.Label
+        IP                        matlab.ui.control.EditField
+        IPLabel                   matlab.ui.control.Label
+        ConnectionType            matlab.ui.control.DropDown
+        ConnectionTypeLabel       matlab.ui.control.Label
+        Description               matlab.ui.control.TextArea
+        DescriptionLabel          matlab.ui.control.Label
+        Name                      matlab.ui.control.DropDown
+        NameLabel                 matlab.ui.control.Label
+        Family                    matlab.ui.control.DropDown
+        FamilyLabel               matlab.ui.control.Label
+        Status                    matlab.ui.control.DropDown
+        StatusLabel               matlab.ui.control.Label
+        EditStateButton           matlab.ui.control.StateButton
+        ViewStateButton           matlab.ui.control.StateButton
+        TreePanel                 matlab.ui.container.GridLayout
+        TreeTitle                 matlab.ui.control.Label
+        TreeIcon                  matlab.ui.control.Image
+        TreeModeDown              matlab.ui.control.Image
+        TreeMoveUp                matlab.ui.control.Image
+        TreeDelNode               matlab.ui.control.Image
+        TreeAddNode               matlab.ui.control.Image
+        Tree                      matlab.ui.container.Tree
+        TreeNodeReceiver          matlab.ui.container.TreeNode
+        TreeNodeGPS               matlab.ui.container.TreeNode
     end
 
     
@@ -74,14 +78,18 @@ classdef winInstrument_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         Container
         isDocked = false
+        SubTabGroup = struct('Children', -1, 'UserData', [])
+
         mainApp
         jsBackDoor
         progressDialog
 
         receiverObj
         gpsObj
-        instrumentList
-        editedList
+
+        ViewMode = true
+        InstrumentList
+        InstrumentListEdited
     end
 
 
@@ -113,10 +121,16 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 case 1
                     appName = class(app);
                     elToModify = {
+                        app.ImageGrid;
                         app.Features;
+                        app.ViewStateButton;
+                        app.EditStateButton;
+                        app.ConfirmEditionButtonGrid;
+                        ...
                         app.ImportButton;
                         app.ExportButton;
                         app.TestConnectivityButton;
+                        ...
                         app.DockUndockButton;
                         app.DockCloseButton
                     };
@@ -129,6 +143,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                     try
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.ImageGrid.UserData.id, 'generation', 0, 'styleImportant', struct('borderRadius', '0 10px 0 0')), ...
+                            struct('appName', appName, 'dataTag', app.ViewStateButton.UserData.id, 'generation', 1, 'styleImportant', struct('borderRadius', '5px 0px 0px 5px')), ...
+                            struct('appName', appName, 'dataTag', app.EditStateButton.UserData.id, 'generation', 1, 'styleImportant', struct('borderRadius', '0px 5px 5px 0px')), ...
+                            struct('appName', appName, 'dataTag', app.ConfirmEditionButtonGrid.UserData.id, 'style', struct('background', 'none')), ...
                             struct('appName', appName, 'dataTag', app.ImportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Importa lista de instrumentos')), ...
                             struct('appName', appName, 'dataTag', app.ExportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta lista de instrumentos')), ...
                             struct('appName', appName, 'dataTag', app.TestConnectivityButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Testa conectividade de instrumento selecionado')), ...
@@ -145,10 +163,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function initializeAppProperties(app)
-            app.receiverObj    = app.mainApp.receiverObj;
-            app.gpsObj         = app.mainApp.gpsObj;
-            app.instrumentList = [app.receiverObj.List; app.gpsObj.List];
-            app.editedList     = app.instrumentList;
+            app.receiverObj = app.mainApp.receiverObj;
+            app.gpsObj = app.mainApp.gpsObj;
+
+            app.InstrumentList = [app.receiverObj.List; app.gpsObj.List];
+            app.InstrumentListEdited = app.InstrumentList;
         end
 
         %-----------------------------------------------------------------%
@@ -156,18 +175,22 @@ classdef winInstrument_exported < matlab.apps.AppBase
             if ~strcmp(app.mainApp.executionMode, 'webApp')
                 app.DockUndockButton.Enable = 1;
             end
+
+            app.TaskPanel.BorderColor = [0.9412 0.9412 0.9412];
+            app.BandPanel.BorderColor = [0.9412 0.9412 0.9412];
         end
 
         %-----------------------------------------------------------------%
         function applyInitialLayout(app)
-            TreeBuilding(app, [])
+            buildTaskTree(app, [])
+            focus(app.Tree)
         end
     end
 
 
     methods (Access = private)
         %-----------------------------------------------------------------%
-        function TreeBuilding(app, idxSelectedNode)
+        function buildTaskTree(app, selectedNodeIdx)
             if ~isempty(app.TreeNodeReceiver.Children)
                 delete(app.TreeNodeReceiver.Children)
             end
@@ -176,76 +199,188 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 delete(app.TreeNodeGPS.Children)
             end
 
-            % Tree creation
-            for ii = 1:height(app.editedList)
-                switch app.editedList.Family{ii}
+            selectedNode = [];
+
+            for instrIdx = 1:height(app.InstrumentListEdited)
+                switch app.InstrumentListEdited.Family{instrIdx}
                     case 'Receiver'
-                        Parent = app.TreeNodeReceiver;
+                        nodeParent = app.TreeNodeReceiver;
                     case 'GPS'
-                        Parent = app.TreeNodeGPS;                    
+                        nodeParent = app.TreeNodeGPS;                    
                     otherwise
                         continue
                 end
 
-                if ~ismember(app.editedList.Type{ii}, {'TCPIP Socket', 'TCP/UDP IP Socket', 'Serial'})
+                if ~ismember(app.InstrumentListEdited.Type{instrIdx}, {'TCPIP Socket', 'TCP/UDP IP Socket', 'Serial'})
                     continue
                 end
 
-                nodeText = TreeBuilding_nodeText(app, ii);
-                nodeTree = uitreenode(Parent, 'Text', nodeText, 'NodeData', ii, 'UserData', numel(Parent.Children)+1);
+                nodeTree = uitreenode(nodeParent, 'Text', getInstrumentTag(app, instrIdx), 'NodeData', struct('instrIdx', instrIdx, 'nodeParentIdx', numel(nodeParent.Children)+1));
 
-                if ~isempty(idxSelectedNode) && (ii == idxSelectedNode)
-                    SelectedNode = nodeTree;
+                if ~isempty(selectedNodeIdx) && (instrIdx == selectedNodeIdx)
+                    selectedNode = nodeTree;
                 end
             end            
-            TreeBuilding_addStyle(app);
-
-            % SelectedNode
-            if exist('SelectedNode', 'var')
-                app.Tree.SelectedNodes = SelectedNode;
-            else
-                app.Tree.SelectedNodes = app.Tree.Children(1).Children(1);
+            
+            if isempty(selectedNode)
+                selectedNode = app.Tree.Children(1).Children(1);
             end
 
-            TreeSelectionChanged(app)
             expand(app.Tree, 'all')
+            app.Tree.SelectedNodes = selectedNode;
+            onTreeSelectionChanged(app)
         end
 
         %-----------------------------------------------------------------%
-        function nodeText = TreeBuilding_nodeText(app, idx)
-            Parameters = jsondecode(app.editedList.Parameters{idx});
+        function instrTag = getInstrumentTag(app, idx)
+            parameters = jsondecode(app.InstrumentListEdited.Parameters{idx});
 
-            switch app.editedList.Type{idx}
+            switch app.InstrumentListEdited.Type{idx}
                 case 'Serial'
-                    Socket = sprintf('%s', Parameters.Port);
+                    socket = sprintf('%s', parameters.Port);
+
                 case {'TCPIP Socket', 'TCP/UDP IP Socket'}
-                    Socket = sprintf('%s:%s', Parameters.IP, Parameters.Port);
+                    socket = sprintf('%s:%s', parameters.IP, parameters.Port);
             end
 
-            nodeText = sprintf('%s - %s', app.editedList.Name{idx}, Socket);
+            instrTag = sprintf('%s - %s', app.InstrumentListEdited.Name{idx}, socket);
         end
 
         %-----------------------------------------------------------------%
-        function TreeBuilding_addStyle(app)
+        function applyTreeStyle(app)
             if ~isempty(app.Tree.StyleConfigurations)
                 removeStyle(app.Tree)
             end
 
-            h = [allchild(app.TreeNodeReceiver); ...
-                 allchild(app.TreeNodeGPS)];
+            h = [allchild(app.TreeNodeReceiver); allchild(app.TreeNodeGPS)];
 
-            DisableNodes = [];
+            disableNodes = [];
             for ii = 1:numel(h)
-                idx = h(ii).NodeData;
-                if ~app.editedList.Enable(idx)
-                    DisableNodes = [DisableNodes, h(ii)];
+                instrIdx = h(ii).NodeData.instrIdx;
+                if ~app.InstrumentListEdited.Enable(instrIdx)
+                    disableNodes = [disableNodes, h(ii)];
                 end
             end
 
-            if ~isempty(DisableNodes)
-                s = uistyle('FontColor', [.5 .5 .5]);
-                addStyle(app.Tree, s, 'node', DisableNodes)
+            if ~isempty(disableNodes)
+                addStyle(app.Tree, uistyle('FontColor', [.5 .5 .5]), 'node', disableNodes)
             end
+
+            addStyle(app.Tree, uistyle('FontWeight', 'bold'), 'node', app.Tree.SelectedNodes)
+        end
+
+        %-----------------------------------------------------------------%
+        function updateUIControlState(app)
+            % Painel à esquerda
+            if app.ViewMode
+                set(app.ViewStateButton, 'BackgroundColor', [0 0.451 0.7412], 'FontColor', [1 1 1], 'Value', true)
+                set(app.EditStateButton, 'BackgroundColor', [0.9412 0.9412 0.9412], 'FontColor', [0 0.4471 0.7412], 'Value', false)
+                app.TreePanel.ColumnWidth{end} = 0;
+
+            else
+                set(app.ViewStateButton, 'BackgroundColor', [0.9412 0.9412 0.9412], 'FontColor', [0 0.4471 0.7412], 'Value', false)
+                set(app.EditStateButton, 'BackgroundColor', [0 0.451 0.7412], 'FontColor', [1 1 1], 'Value', true)
+                app.TreePanel.ColumnWidth{end} = 16;
+            end
+
+            set(setdiff(findobj(app.TreePanel, 'Type', 'uiimage'), app.TreeIcon), 'Enable', ~app.ViewMode)
+            
+            % Painéis do centro e à direita
+            % ...
+            app.Description.Editable = 'off';
+            set(findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
+            set(findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
+            app.LocalhostCheckBox.Enable = 0;
+
+            if ~app.ViewMode
+                app.Description.Editable = 'on';
+                set(findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
+                set(findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
+                app.LocalhostCheckBox.Enable = 1;
+            end
+
+            % Toolbar
+            app.ConfirmEditionButtonGrid.Visible = ~app.ViewMode;
+
+            set([
+                app.ImportButton;
+                app.ExportButton
+            ], 'Enable', app.ViewMode)
+        end
+
+        %-----------------------------------------------------------------%
+        function updateUIControlContent(app)
+            instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+
+            if app.InstrumentListEdited.Enable(instrIdx)
+                app.Status.Items = {'ON'};
+            else
+                app.Status.Items = {'OFF'};
+            end
+
+            app.Family.Items = app.InstrumentListEdited.Family(instrIdx);
+            Layout_FamilyChanged(app, '')
+
+            app.Name.Items = app.InstrumentListEdited.Name(instrIdx);
+            Layout_NameChanged(app, 'InstrumentParameterChanged')
+
+            app.Description.Value = app.InstrumentListEdited.Description{instrIdx};
+            app.ConnectionType.Items = app.InstrumentListEdited.Type(instrIdx);
+
+            parameters = jsondecode(app.InstrumentListEdited.Parameters{instrIdx});
+            switch app.ConnectionType.Value
+                case 'Serial'
+                    app.IP.Value = '';
+                    app.Port.Value = parameters.Port;
+                    app.BaudRate.Value = parameters.BaudRate;
+                    app.LocalhostCheckBox.Value = 0;
+
+                case {'TCPIP Socket', 'TCP/UDP IP Socket'}
+                    app.IP.Value = parameters.IP;
+                    app.Port.Value = parameters.Port;
+
+                    if isfield(parameters, 'Localhost_Enable')
+                        app.LocalhostCheckBox.Value = parameters.Localhost_Enable;
+                        app.IPLocal.Value  = parameters.Localhost_localIP;
+                        app.IPublic.Value = parameters.Localhost_publicIP;
+                    else
+                        app.LocalhostCheckBox.Value = 0;
+                        app.IPLocal.Value = '';
+                        app.IPublic.Value = '';
+                    end
+            end
+
+            if isfield(parameters, 'Timeout')
+                app.Timeout.Value = parameters.Timeout;
+            else
+                app.Timeout.Value = class.Constants.Timeout;
+            end
+
+            if ~app.ViewMode
+                set(app.Status, 'Items', {'ON', 'OFF'})
+                set(app.Family, 'Items', {'Receiver', 'GPS'})
+                Layout_FamilyChanged(app, 'InstrumentParameterChanged')
+            end
+
+            Layout_TypeValueChanged(app)
+            Layout_InstrumentSpecifications(app)
+        end
+
+        %-----------------------------------------------------------------%
+        function userAccepted = confirmDiscardEdition(app)
+            userAccepted = true;
+
+            if app.ViewMode || isequal(app.InstrumentList, app.InstrumentListEdited)
+                return
+            end
+
+            questionMsg = [ ...
+                'Foi evidenciada alteração de ao menos uma das tarefas. ' ...
+                'Se as alterações não forem salvas, elas serão perdidas.' ...
+                '<br><br>Confirma descartar as alterações?' ...
+            ];
+            userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', questionMsg, {'Sim', 'Não'}, 1, 2);
+            userAccepted  = userSelection == "Sim";
         end
 
         %-----------------------------------------------------------------%
@@ -325,7 +460,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         function Layout_LocalhostCheckBox1(app)
             app.LocalhostCheckBox.Enable = 0;
 
-            if app.EditModeGroup.Value && strcmp(app.ConnectionType.Value, "TCP/UDP IP Socket")
+            if ~app.ViewMode && strcmp(app.ConnectionType.Value, "TCP/UDP IP Socket")
                 app.LocalhostCheckBox.Enable = 1;
             end
         end
@@ -336,138 +471,165 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 set(app.LocalHostGrid.Children, 'Enable', 1)
 
             else
-                idx = app.Tree.SelectedNodes.NodeData;
-                Parameters = jsondecode(app.editedList.Parameters{idx});
+                instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+                parameters = jsondecode(app.InstrumentListEdited.Parameters{instrIdx});
 
-                if isfield(Parameters, 'Localhost_Enable')
-                    Localhost_localIP  = Parameters.Localhost_localIP;
-                    Localhost_publicIP = Parameters.Localhost_publicIP;
+                if isfield(parameters, 'Localhost_Enable')
+                    localhostLocalIP  = parameters.Localhost_localIP;
+                    localhostPublicIP = parameters.Localhost_publicIP;
                 else
-                    Localhost_localIP  = '';
-                    Localhost_publicIP = ''; 
+                    localhostLocalIP  = '';
+                    localhostPublicIP = ''; 
                 end
 
-                set(app.IPLocal,  'Enable', 0, 'Value', Localhost_localIP)
-                set(app.IPublic, 'Enable', 0, 'Value', Localhost_publicIP)
+                set(app.IPLocal, 'Enable', 0, 'Value', localhostLocalIP)
+                set(app.IPublic, 'Enable', 0, 'Value', localhostPublicIP)
             end
         end
 
         %-----------------------------------------------------------------%
         function Layout_InstrumentSpecifications(app)            
-            idx1 = app.Tree.SelectedNodes.NodeData;
-            [htmlContent, imgSource] = util.HtmlTextGenerator.Instrument(app.receiverObj, app.gpsObj, app.editedList, idx1);
+            instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+            [tag, features, img] = util.HtmlTextGenerator.Instrument(app.receiverObj, app.gpsObj, app.InstrumentListEdited, instrIdx);
 
-            app.Features.Text   = htmlContent;
-            set(app.Image, 'ImageSource', imgSource, 'Visible', 'on')
+            app.StatusLabel_3.Text = tag;
+            app.Features.Text = features;
+            set(app.Image, 'ImageSource', img, 'Visible', 'on')
         end
 
         %-----------------------------------------------------------------%
-        function ParameterUpdate(app)
-            idx = app.Tree.SelectedNodes.NodeData;
+        function updateParametersField(app)
+            instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
 
             switch app.ConnectionType.Value
                 case 'Serial'
-                    app.editedList.Parameters{idx} = jsonencode(struct('Port',     app.Port.Value,     ...
-                                                                       'BaudRate', app.BaudRate.Value, ...
-                                                                       'Timeout',  app.Timeout.Value));
+                    app.InstrumentListEdited.Parameters{instrIdx} = jsonencode(struct( ...
+                        'Port', app.Port.Value, ...
+                        'BaudRate', app.BaudRate.Value, ...
+                        'Timeout', app.Timeout.Value ...
+                    ));
 
                 case 'TCPIP Socket'
-                    app.editedList.Parameters{idx} = jsonencode(struct('IP',       app.IP.Value,       ...
-                                                                       'Port',     app.Port.Value,     ...
-                                                                       'Timeout',  app.Timeout.Value));
+                    app.InstrumentListEdited.Parameters{instrIdx} = jsonencode(struct( ...
+                        'IP', app.IP.Value, ...
+                        'Port', app.Port.Value, ...
+                        'Timeout',  app.Timeout.Value ...
+                    ));
                 
                 case 'TCP/UDP IP Socket'
-                    if app.LocalhostCheckBox.Value; Localhost_Enable = 1;
-                    else;                           Localhost_Enable = 0;
-                    end
-
-                    app.editedList.Parameters{idx} = jsonencode(struct('IP',       app.IP.Value,                ...
-                                                                       'Port',     app.Port.Value,              ...
-                                                                       'Timeout',  app.Timeout.Value,           ...
-                                                                       'Localhost_Enable',   Localhost_Enable,  ...
-                                                                       'Localhost_localIP',  app.IPLocal.Value, ...
-                                                                       'Localhost_publicIP', app.IPublic.Value));
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function Flag = IPv4Validation(app, event)            
-            switch event.Source
-                case app.IP;       ipAddress = app.IP.Value;
-                case app.IPLocal;  ipAddress = app.IPLocal.Value;
-                case app.IPublic; ipAddress = app.IPublic.Value;
-            end
-
-            ipString = regexp(ipAddress, '\d*[.]{1}\d{1,3}[.]{1}\d{1,3}[.]{1}\d*', 'match');
-
-            Flag = 0;
-            if isempty(ipString)
-                Flag = 1;
-            else
-                ipArray = cellfun(@(x) str2double(x), strsplit(char(ipString), '.'));
-                if any(ipArray > 255) || any(isnan(ipArray))
-                    Flag = 1;
-                end                    
-            end
-
-            if Flag
-                ui.Dialog(app.UIFigure, 'warning', 'Endereço IP inválido');
-
-                switch event.Source
-                    case app.IP;       app.IP.Value       = event.PreviousValue;
-                    case app.IPLocal;  app.IPLocal.Value  = event.PreviousValue;
-                    case app.IPublic; app.IPublic.Value = event.PreviousValue;
-                end
-            else
-                if ~strcmp(ipAddress, char(ipString))
-                    switch event.Source
-                        case app.IP;       app.IP.Value       = char(ipString);
-                        case app.IPLocal;  app.IPLocal.Value  = char(ipString);
-                        case app.IPublic; app.IPublic.Value = char(ipString);
-                    end
-                end
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function Flag = PortValidation(app, event)
-            Flag = 0;
-
-            switch app.ConnectionType.Value
-                case 'Serial'
-                    portValidation = regexpi(app.Port.Value, 'COM\d+', 'match');
-                    if isempty(portValidation)
-                        Flag = 1;
-                    end
-
-                case {'TCPIP Socket', 'TCP/UDP IP Socket'}
-                    portValidation = regexp(app.Port.Value, '\d+', 'match');
-                    if isempty(portValidation)
-                        Flag = 1;
+                    if app.LocalhostCheckBox.Value
+                        localhostEnable = 1;
                     else
-                        if str2double(portValidation) > 65535
-                            Flag = 1;
+                        localhostEnable = 0;
+                    end
+
+                    app.InstrumentListEdited.Parameters{instrIdx} = jsonencode(struct( ...
+                        'IP', app.IP.Value, ...
+                        'Port', app.Port.Value, ...
+                        'Timeout', app.Timeout.Value, ...
+                        'Localhost_Enable', localhostEnable, ...
+                        'Localhost_localIP', app.IPLocal.Value, ...
+                        'Localhost_publicIP', app.IPublic.Value ...
+                    ));
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function flag = validateParameterValue(app, parameterName, event)
+            flag = false;
+
+            switch parameterName
+                case 'Port'
+                    flag = 0;
+        
+                    switch app.ConnectionType.Value
+                        case 'Serial'
+                            portValidation = regexpi(app.Port.Value, 'COM\d+', 'match');
+                            if isempty(portValidation)
+                                flag = true;
+                            end
+        
+                        case {'TCPIP Socket', 'TCP/UDP IP Socket'}
+                            portValidation = regexp(app.Port.Value, '\d+', 'match');
+                            if isempty(portValidation)
+                                flag = true;
+                            else
+                                if str2double(portValidation) > 65535
+                                    flag = true;
+                                end
+                            end
+                    end
+        
+                    if flag
+                        ui.Dialog(app.UIFigure, 'warning', 'Porta inválida');
+                        app.Port.Value = event.PreviousValue;
+                        
+                    else
+                        if ~strcmpi(app.Port.Value, char(portValidation))
+                            app.Port.Value = upper(char(portValidation));
+                        end
+                    end
+
+                case 'IPv4'
+                    switch event.Source
+                        case app.IP
+                            ipAddress = app.IP.Value;
+
+                        case app.IPLocal
+                            ipAddress = app.IPLocal.Value;
+
+                        case app.IPublic
+                            ipAddress = app.IPublic.Value;
+                    end
+        
+                    ipString = regexp(ipAddress, '\d*[.]{1}\d{1,3}[.]{1}\d{1,3}[.]{1}\d*', 'match');
+        
+                    if isempty(ipString)
+                        flag = true;
+                    else
+                        ipArray = cellfun(@(x) str2double(x), strsplit(char(ipString), '.'));
+                        if any(ipArray > 255) || any(isnan(ipArray))
+                            flag = true;
+                        end                    
+                    end
+        
+                    if flag
+                        ui.Dialog(app.UIFigure, 'warning', 'Endereço IP inválido');
+        
+                        switch event.Source
+                            case app.IP
+                                app.IP.Value = event.PreviousValue;
+
+                            case app.IPLocal
+                                app.IPLocal.Value = event.PreviousValue;
+
+                            case app.IPublic
+                                app.IPublic.Value = event.PreviousValue;
+                        end
+
+                    else
+                        if ~strcmp(ipAddress, char(ipString))
+                            switch event.Source
+                                case app.IP
+                                    app.IP.Value = char(ipString);
+
+                                case app.IPLocal
+                                    app.IPLocal.Value = char(ipString);
+
+                                case app.IPublic
+                                    app.IPublic.Value = char(ipString);
+                            end
                         end
                     end
             end
-
-            if Flag
-                ui.Dialog(app.UIFigure, 'warning', 'Porta inválida');
-                app.Port.Value = event.PreviousValue;
-                
-            else
-                if ~strcmpi(app.Port.Value, char(portValidation))
-                    app.Port.Value = upper(char(portValidation));
-                end
-            end
         end
 
         %-----------------------------------------------------------------%
-        function [idx, msgError] = SelectionNodeValidation(app)
+        function [instrIdx, msgError] = SelectionNodeValidation(app)
             try
-                idx = app.Tree.SelectedNodes.NodeData;
+                instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
 
-                if isempty(idx)
+                if isempty(instrIdx)
                     switch app.Tree.SelectedNodes
                         case app.TreeNodeReceiver
                             app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
@@ -479,24 +641,24 @@ classdef winInstrument_exported < matlab.apps.AppBase
                                 app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
                             end
                     end
-                    idx = app.Tree.SelectedNodes.NodeData;
+
+                    instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
                 end
 
                 msgError = '';
 
             catch ME
                 app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
-                idx = app.Tree.SelectedNodes.NodeData;
-
+                instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
                 msgError = ME.message;
             end
         end
 
         %-----------------------------------------------------------------%
-        function update(app)
+        function updateInstrumentFile(app)
             appName = class.Constants.appName;
             [~, programDataFolder] = appEngine.util.Path(appName, app.mainApp.rootFolder);
-            saveNewFile(app, programDataFolder, false)
+            saveInstrumentFile(app, programDataFolder, false)
 
             % Após salva a nova versão de "InstrumentList.json", atualizam-se
             % as listas dos objetos HANDLE app.receiverObj e app.gpsObj.
@@ -512,22 +674,21 @@ classdef winInstrument_exported < matlab.apps.AppBase
             % pois podem estar desatualizadas, no caso da edição excluir
             % todos os instrumentos, ou desabilitar todos):
             initializeAppProperties(app)
-            TreeBuilding(app, [])
+            buildTaskTree(app, [])
 
             % Fecha o módulo auxiliar "auxApp.winAddTask.mlapp", caso aberto.
             ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK_ADD')
         end
 
         %-----------------------------------------------------------------%
-        function saveNewFile(app, Folder, ShowAlert)
-            fileList = table2struct(app.instrumentList);
+        function saveInstrumentFile(app, folder, showAlert)
+            fileList = table2struct(app.InstrumentList);
             for ii = 1:numel(fileList)
                 fileList(ii).Parameters = jsondecode(fileList(ii).Parameters);
 
                 % Eliminar informação relacionada à localhost, caso não tenha 
                 % sido preenchidos ao menos um dos campos de IP - "ip_local" 
                 % ou "ip_público".
-
                 if isfield(fileList(ii).Parameters, 'Localhost_Enable')
                     if fileList(ii).Parameters.Localhost_Enable  && isempty(fileList(ii).Parameters.Localhost_localIP) && isempty(fileList(ii).Parameters.Localhost_publicIP)
                         fileList(ii).Parameters = rmfield(fileList(ii).Parameters, {'Localhost_Enable', 'Localhost_localIP', 'Localhost_publicIP'});
@@ -536,9 +697,9 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             try
-                writematrix(jsonencode(fileList, 'PrettyPrint', true), fullfile(Folder, 'InstrumentList.json'), 'FileType', 'text', 'QuoteStrings', 'none', 'WriteMode', 'overwrite', 'Encoding', 'UTF-8')
-                if ShowAlert
-                    ui.Dialog(app.UIFigure, 'warning', sprintf('Arquivo <b>InstrumentList.json</b> salvo na pasta "%s"', Folder));
+                writematrix(jsonencode(fileList, 'PrettyPrint', true), fullfile(folder, 'InstrumentList.json'), 'FileType', 'text', 'QuoteStrings', 'none', 'WriteMode', 'overwrite', 'Encoding', 'UTF-8')
+                if showAlert
+                    ui.Dialog(app.UIFigure, 'warning', sprintf('Arquivo <b>InstrumentList.json</b> salvo na pasta "%s"', folder));
                 end
                 
             catch ME
@@ -595,161 +756,66 @@ classdef winInstrument_exported < matlab.apps.AppBase
         end
 
         % Selection changed function: Tree
-        function TreeSelectionChanged(app, event)
+        function onTreeSelectionChanged(app, event)
             
-            % Caso o nó selecionado da árvore seja o "RECEPTOR" ou "GPS",
-            % busca-se o seu primeiro filho, caso existente.
-            idx = SelectionNodeValidation(app);
-
-            % Ajuste dos itens que são listas suspensas (uidropdown)
-            % porque no "MODO DE EDIÇÃO" todos os possíveis valores
-            % estão disponíveis para escolha, enquanto que no "MODO DE
-            % VISUALIZAÇÃO" ficará disponível apenas o valor indicado
-            % no "TaskList.json".
-
-            %---------------------------------------------------------%
-            % ## MODO DE VISUALIZAÇÃO ##
-            %---------------------------------------------------------%
-            if app.ViewModeButton.Value
-                if app.editedList.Enable(idx); app.Status.Items = {'ON'};
-                else;                          app.Status.Items = {'OFF'};
+            if exist('event', 'var')
+                if isempty(event.SelectedNodes) || event.SelectedNodes == app.TreeNodeReceiver || event.SelectedNodes == app.TreeNodeGPS
+                    app.Tree.SelectedNodes = event.PreviousSelectedNodes;
+                    return
                 end
-
-                app.Family.Items = app.editedList.Family(idx);
-                app.Name.Items   = app.editedList.Name(idx);
-                app.ConnectionType.Items   = app.editedList.Type(idx);
-
-            %---------------------------------------------------------%
-            % ## MODO DE EDIÇÃO ##
-            %---------------------------------------------------------%
-            else
-                if app.editedList.Enable(idx); app.Status.Value = 'ON';
-                else;                          app.Status.Value = 'OFF';
-                end
-
-                app.Family.Value = app.editedList.Family{idx};
-                Layout_FamilyChanged(app, '')
-                
-                app.Name.Value = app.editedList.Name{idx};
-                Layout_NameChanged(app, 'InstrumentParameterChanged')
-
-                app.ConnectionType.Value = app.editedList.Type{idx};
-            end            
-
-            % Ajustes nos outros campos (que não são listas suspensas), 
-            % além de especificidades do campo "Fator integração" e dos
-            % parâmetros relacionados à busca de emissões.
-
-            app.Description.Value = app.editedList.Description{idx};
-            app.LocalhostCheckBox.Value = 0;
-
-            Parameters = jsondecode(app.editedList.Parameters{idx});
-            switch app.ConnectionType.Value
-                case 'Serial'
-                    app.IP.Value       = '';
-                    app.Port.Value     = Parameters.Port;
-                    app.BaudRate.Value = Parameters.BaudRate;
-
-                case {'TCPIP Socket', 'TCP/UDP IP Socket'}
-                    app.IP.Value       = Parameters.IP;
-                    app.Port.Value     = Parameters.Port;
-
-                    if isfield(Parameters, 'Localhost_Enable')
-                        app.LocalhostCheckBox.Value = Parameters.Localhost_Enable;
-                        app.IPLocal.Value  = Parameters.Localhost_localIP;
-                        app.IPublic.Value = Parameters.Localhost_publicIP;
-                    else
-                        app.LocalhostCheckBox.Value = 0;
-                        app.IPLocal.Value           = '';
-                        app.IPublic.Value          = '';
-                    end
             end
 
-            if isfield(Parameters, 'Timeout');  app.Timeout.Value = Parameters.Timeout;
-            else;                               app.Timeout.Value = class.Constants.Timeout;
-            end
-            
-            % Os últimos ajustes consistem na validação do campo "Port",
-            % assim como atualização estética do instrumento.
+            applyTreeStyle(app)
 
-            Layout_TypeValueChanged(app)
-            Layout_InstrumentSpecifications(app)
+            updateUIControlState(app)
+            updateUIControlContent(app)
             
         end
 
-        % Selection changed function: ModeRadioGroup
-        function ValueChanged_OperationMode(app, event)
+        % Value changed function: EditStateButton, ViewStateButton
+        function onViewModeChanged(app, event)
             
-            %-------------------------------------------------------------%
-            % ## MODO DE VISUALIZAÇÃO ##
-            %-------------------------------------------------------------%
-            if app.ViewModeButton.Value
-                % Aspectos relacionados à indicação visual de que se trata 
-                % do modo de visualização:
-
-                set(findobj(app.TreeGrid, 'Type', 'uiimage'), Enable='off')
-                app.TreeGrid.ColumnWidth{end} = 0;
-                app.ConfirmEditionButton.Visible  = 0;
-                app.ImportButton.Enable   = 'on';
-                app.ExportButton.Enable = 'on';                
-
-                % Desabilita edição do conteúdo dos campos...
-
-                app.Description.Editable = 'off';
-                set(findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
-                set(findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
-                app.LocalhostCheckBox.Enable = 0;
-
-                set(app.Status, 'Items', {app.Status.Value})
-                set(app.Family, 'Items', {app.Family.Value})
-                set(app.Name,   'Items', {app.Name.Value})
-                set(app.ConnectionType,   'Items', {app.ConnectionType.Value})
-
-                % Essa última validação é essencial para desfazer alterações 
-                % que não foram salvas. Ou seja, o usuário fez alterações
-                % em app.taskList (que estavam armazenadas na sua cópia -
-                % app.editedList) e não clicou no botão "Confirma edição".
-
-                if ~isequal(app.instrumentList, app.editedList)
-                    app.editedList = app.instrumentList;
-                    TreeBuilding(app, [])
-                end
-
-            %-------------------------------------------------------------%
-            % ## MODO DE EDIÇÃO ##
-            %-------------------------------------------------------------%
-            else
-                % Aspectos relacionados à indicação visual de que se trata 
-                % do modo de edição:
-
-                set(app.TreeGrid.Children, Enable='on')
-                app.TreeGrid.ColumnWidth{end} = 16;
-                app.ConfirmEditionButton.Visible  = 1;
-                app.ImportButton.Enable   = 'off';
-                app.ExportButton.Enable = 'off';
-
-                % Habilita edição do conteúdo dos campos...
-
-                app.Description.Editable = 'on';
-                set(findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
-                set(findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
-                app.LocalhostCheckBox.Enable = 1;
-
-                set(app.Status, 'Items', {'ON', 'OFF'})
-                set(app.Family, 'Items', {'Receiver', 'GPS'})
-                Layout_FamilyChanged(app, 'InstrumentParameterChanged')
+            if event.PreviousValue
+                event.Source.Value = true;
+                return
             end
 
+            switch event.Source 
+                case app.ViewStateButton
+                    hasChanged = ~isequal(app.InstrumentList, app.InstrumentListEdited);
+
+                    if ~confirmDiscardEdition(app)
+                        app.ViewStateButton.Value = false;
+                        return
+                    end
+
+                    app.ViewMode = true;
+                    
+                    if hasChanged
+                        app.InstrumentListEdited = app.InstrumentList;
+
+                        instrIdx = min(app.Tree.SelectedNodes.NodeData.instrIdx, numel(app.InstrumentList));
+                        buildTaskTree(app, instrIdx)
+                        return
+                    end
+
+                case app.EditStateButton
+                    app.ViewMode = false;
+            end
+
+            updateUIControlState(app)
+            updateUIControlContent(app)
+            
         end
 
         % Value changed function: BaudRate, ConnectionType, Description, 
         % ...and 9 other components
-        function ValueChanged_Parameter(app, event)
+        function onParameterValueChanged(app, event)
             
-            [idx, msgError] = SelectionNodeValidation(app);
+            [instrIdx, msgError] = SelectionNodeValidation(app);
 
             if ~isempty(msgError)
-                TreeSelectionChanged(app)
+                onTreeSelectionChanged(app)
                 return
             end
 
@@ -757,46 +823,46 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 %---------------------------------------------------------%
                 case app.Status
                     if app.Status.Value == "ON"
-                        app.editedList.Enable(idx) = 1;
+                        app.InstrumentListEdited.Enable(instrIdx) = 1;
                     else
-                        app.editedList.Enable(idx) = 0;
+                        app.InstrumentListEdited.Enable(instrIdx) = 0;
                     end
 
                 %---------------------------------------------------------%
                 case app.Family
                     Layout_FamilyChanged(app, 'InstrumentParameterChanged')
                     
-                    app.editedList.Family{idx} = app.Family.Value;
-                    app.editedList.Name{idx}   = app.Name.Value;
-                    app.editedList.Type{idx}   = app.ConnectionType.Value;
+                    app.InstrumentListEdited.Family{instrIdx} = app.Family.Value;
+                    app.InstrumentListEdited.Name{instrIdx}   = app.Name.Value;
+                    app.InstrumentListEdited.Type{instrIdx}   = app.ConnectionType.Value;
 
                     if strcmp(app.Family.Value, 'Receiver')
                         Layout_DefaultPort(app)
                     end
                     
                     Layout_InstrumentSpecifications(app)
-                    ParameterUpdate(app)
+                    updateParametersField(app)
                     
                 %---------------------------------------------------------%
                 case app.Name
                     Layout_NameChanged(app, 'InstrumentParameterChanged')
 
-                    app.editedList.Name{idx} = app.Name.Value;
-                    app.editedList.Type{idx} = app.ConnectionType.Value;
+                    app.InstrumentListEdited.Name{instrIdx} = app.Name.Value;
+                    app.InstrumentListEdited.Type{instrIdx} = app.ConnectionType.Value;
 
                     if strcmp(app.Family.Value, 'Receiver')
                         Layout_DefaultPort(app)
                     end
 
                     Layout_InstrumentSpecifications(app)
-                    ParameterUpdate(app)
+                    updateParametersField(app)
 
                 %---------------------------------------------------------%
                 case app.ConnectionType
                     Layout_TypeValueChanged(app)                    
 
-                    app.editedList.Type{idx} = app.ConnectionType.Value;
-                    ParameterUpdate(app)
+                    app.InstrumentListEdited.Type{instrIdx} = app.ConnectionType.Value;
+                    updateParametersField(app)
 
                 %---------------------------------------------------------%
                 case {app.Port, app.IP, app.IPLocal, app.IPublic}
@@ -804,58 +870,58 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                     if ~isempty(event.Source.Value)
                         if event.Source == app.Port
-                            Flag = PortValidation(app, event);
+                            Flag = validateParameterValue(app, 'Port', event);
                         else
-                            Flag = IPv4Validation(app, event);
+                            Flag = validateParameterValue(app, 'IPv4', event);
                         end
                     end
 
                     if ~Flag
-                        ParameterUpdate(app)
+                        updateParametersField(app)
                     end
 
                 %---------------------------------------------------------%
                 case app.BaudRate
-                    ParameterUpdate(app)
+                    updateParametersField(app)
 
                 %---------------------------------------------------------%
                 case app.Timeout
-                    ParameterUpdate(app)
+                    updateParametersField(app)
 
                 %---------------------------------------------------------%
                 case app.LocalhostCheckBox
                     Layout_LocalhostCheckBox2(app)
-                    ParameterUpdate(app)
+                    updateParametersField(app)
 
                 %---------------------------------------------------------%
                 case app.Description
-                    app.editedList.Description{idx} = strjoin(app.Description.Value);
+                    app.InstrumentListEdited.Description{instrIdx} = strjoin(app.Description.Value);
             end
 
             % Recriando a árvore...
-            TreeBuilding(app, idx)
+            buildTaskTree(app, instrIdx)
             
         end
 
         % Image clicked function: TreeAddNode
-        function ImageClicked_add(app, event)
+        function onTreeAddNodeButtonClicked(app, event)
             
-            [idx, msgError] = SelectionNodeValidation(app);
+            [instrIdx, msgError] = SelectionNodeValidation(app);
 
             if isempty(msgError)
-                idx_old = idx;
-                idx_new = height(app.editedList) + 1;
+                idx_old = instrIdx;
+                idx_new = height(app.InstrumentListEdited) + 1;
     
-                app.editedList(idx_new,:) = app.editedList(idx_old,:);
-                TreeBuilding(app, idx_new)
+                app.InstrumentListEdited(idx_new,:) = app.InstrumentListEdited(idx_old,:);
+                buildTaskTree(app, idx_new)
             end
 
         end
 
         % Image clicked function: TreeDelNode
-        function ImageClicked_del(app, event)
+        function onTreeDelNodeButtonClicked(app, event)
             
-            [idx, msgError] = SelectionNodeValidation(app);
+            [instrIdx, msgError] = SelectionNodeValidation(app);
 
             if isempty(msgError)
                 nodeParent = app.Tree.SelectedNodes.Parent;
@@ -866,134 +932,129 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     end
                 end
 
-                app.editedList(idx,:) = [];
-                TreeBuilding(app, [])
+                app.InstrumentListEdited(instrIdx,:) = [];
+                buildTaskTree(app, [])
             end
 
         end
 
         % Image clicked function: TreeModeDown, TreeMoveUp
-        function ImageClicked_UpDownArrows(app, event)
+        function onTreeNodeUpDownButtonClicked(app, event)
             
-            [idx, msgError] = SelectionNodeValidation(app);
+            [instrIdx, msgError] = SelectionNodeValidation(app);
 
             if isempty(msgError)
-                idx1_old = idx;
-                idx2_old = app.Tree.SelectedNodes.UserData;
-                Parent   = app.Tree.SelectedNodes.Parent;
+                instrIdxPrevious = instrIdx;
+                nodeParentIdxPrevious = app.Tree.SelectedNodes.NodeData.nodeParentIdx;
+                parentNode = app.Tree.SelectedNodes.Parent;
     
-                Flag     = 0;
+                flag = false;
                 switch event.Source
                     case app.TreeMoveUp
-                        if idx2_old > 1
-                            idx1_new = Parent.Children(idx2_old-1).NodeData;
-                            Flag     = 1;
+                        if nodeParentIdxPrevious > 1
+                            instrIdxNew = parentNode.Children(nodeParentIdxPrevious-1).NodeData.instrIdx;
+                            flag = true;
                         end
     
                     case app.TreeModeDown
-                        if idx2_old < numel(Parent.Children)
-                            idx1_new = Parent.Children(idx2_old+1).NodeData;
-                            Flag     = 1;
+                        if nodeParentIdxPrevious < numel(parentNode.Children)
+                            instrIdxNew = parentNode.Children(nodeParentIdxPrevious+1).NodeData.instrIdx;
+                            flag = true;
                         end
                 end
     
-                if Flag
-                    app.editedList([idx1_old, idx1_new],:) = flip(app.editedList([idx1_old, idx1_new],:));
-                    TreeBuilding(app, idx1_new)
+                if flag
+                    app.InstrumentListEdited([instrIdxPrevious, instrIdxNew],:) = flip(app.InstrumentListEdited([instrIdxPrevious, instrIdxNew],:));
+                    buildTaskTree(app, instrIdxNew)
                 end
             end
 
         end
 
-        % Image clicked function: ImportButton
-        function toolButtonPushed_open(app, event)
+        % Callback function: ExportButton, ImportButton, 
+        % ...and 1 other component
+        function onToolbarButtonClicked(app, event)
             
-            [File, Folder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
-            figure(app.UIFigure)
-
-            if File
-                try
-                    tempList = util.InstrumentIO.readInstrumentList(fullfile(Folder, File));
-
-                    if ~isempty(tempList)
-                        app.instrumentList = [app.instrumentList; tempList];
-                        app.editedList     = app.instrumentList;
-                        update(app)
+            switch event.Source
+                case app.ImportButton
+                    [file, folder] = uigetfile({'*.json', '*.json'}, 'Selecione um arquivo', 'MultiSelect', 'off');
+                    figure(app.UIFigure)
+        
+                    if file
+                        try
+                            tempList = util.InstrumentIO.readInstrumentList(fullfile(folder, file));
+        
+                            if ~isempty(tempList)
+                                app.InstrumentList = [app.InstrumentList; tempList];
+                                app.InstrumentListEdited     = app.InstrumentList;
+                                updateInstrumentFile(app)
+                            end
+        
+                        catch ME
+                            ui.Dialog(app.UIFigure, 'error', getReport(ME));
+                        end
                     end
 
-                catch ME
-                    ui.Dialog(app.UIFigure, 'error', getReport(ME));
-                end
-            end
+                case app.ExportButton
+                    folder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de instrumentos');
+                    figure(app.UIFigure)
+        
+                    if folder
+                        saveInstrumentFile(app, folder, true)
+                    end
 
-        end
-
-        % Image clicked function: ExportButton
-        function toolButtonPushed_export(app, event)
+                case app.TestConnectivityButton
+                    app.progressDialog.Visible = 'visible';
+        
+                    [instrIdx, msgError] = SelectionNodeValidation(app);
+        
+                    if isempty(msgError)
+                        notification = [];
             
-            Folder = uigetdir(app.mainApp.General.fileFolder.userPath, 'Escolha o diretório em que será salva a lista de instrumentos');
-            figure(app.UIFigure)
-
-            if Folder
-                saveNewFile(app, Folder, true)
-            end
-
-        end
-
-        % Button pushed function: TestConnectivityButton
-        function toolButtonPushed_connectTest(app, event)
+                        switch app.Family.Value
+                            case 'Receiver'
+                                receiverIdx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
+                                instrInfo = struct( ...
+                                    'Type', app.ConnectionType.Value, ...
+                                    'Tag', app.receiverObj.Config.Tag{receiverIdx}, ...
+                                    'Parameters', jsondecode(app.InstrumentListEdited.Parameters{instrIdx}) ...
+                                );
             
-            app.progressDialog.Visible = 'visible';
+                                [~, notification] = testConnectivity(app.receiverObj, instrInfo, 1);
+            
+                            case 'GPS'
+                                instrInfo = struct( ...
+                                    'Type', app.ConnectionType.Value, ...
+                                    'Parameters', jsondecode(app.InstrumentListEdited.Parameters{instrIdx}) ...
+                                );
+            
+                                [~, ~, notification] = testConnectivity(app.gpsObj, instrInfo, 1);
+                        end
 
-            % O "idx1" se refere ao índice da tabela completa extraída de
-            % "InstrumentList.json" (possivelmente já editada), incluindo 
-            % receptores e GPSs.
-
-            [idx, msgError] = SelectionNodeValidation(app);
-
-            if isempty(msgError)
-                idx1 = idx;
-    
-                switch app.Family.Value
-                    case 'Receiver'
-                        idx2 = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
-                        instrSelected = struct('Type',       app.ConnectionType.Value,                   ...
-                                               'Tag',        app.receiverObj.Config.Tag{idx2}, ...
-                                               'Parameters', jsondecode(app.editedList.Parameters{idx1}));
-    
-                        [~, notification] = testConnectivity(app.receiverObj, instrSelected, 1);
                         if ~isempty(notification)
                             ui.Dialog(app.UIFigure, notification.type, notification.message);
                         end
-    
-                    case 'GPS'
-                        instrSelected = struct('Type',       app.ConnectionType.Value, ...
-                                               'Parameters', jsondecode(app.editedList.Parameters{idx1}));
-    
-                        [~, ~, notification] = testConnectivity(app.gpsObj, instrSelected, 1);
-                        if ~isempty(notification)
-                            ui.Dialog(app.UIFigure, notification.type, notification.message);
-                        end
-                end
+                    end
+        
+                    app.progressDialog.Visible = 'hidden';
             end
-
-            app.progressDialog.Visible = 'hidden';
 
         end
 
         % Button pushed function: ConfirmEditionButton
-        function toolButtonPushed_edit(app, event)
+        function onConfirmEditionButtonClicked(app, event)
             
-            % Finalizada a edição, avalia-se se algum parâmetro foi, de fato, 
-            % alterado, salvando uma nova versão do arquivo "InstrumentList.json",
-            % caso necessário.             
-            if ~isequal(app.instrumentList, app.editedList)
-                app.instrumentList = app.editedList;
-                update(app)
+            hasChanged = ~isequal(app.InstrumentList, app.InstrumentListEdited);
+
+            if hasChanged
+                app.InstrumentList = app.InstrumentListEdited;
+                updateInstrumentFile(app)
             end
-            
-            app.ViewModeButton.Value = 1;
-            ValueChanged_OperationMode(app)
+
+            app.ViewMode = true;
+
+            updateUIControlState(app)
+            updateUIControlContent(app)
 
         end
     end
@@ -1011,7 +1072,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             if isempty(Container)
                 app.UIFigure = uifigure('Visible', 'off');
                 app.UIFigure.AutoResizeChildren = 'off';
-                app.UIFigure.Position = [100 100 1146 540];
+                app.UIFigure.Position = [100 100 1244 660];
                 app.UIFigure.Name = 'appColeta';
                 app.UIFigure.Icon = 'icon_32.png';
                 app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @closeFcn, true);
@@ -1034,56 +1095,30 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {20, '1x', 38, 10, 8, 2};
-            app.GridLayout.RowHeight = {2, 8, 10, 14, '1x', 20, 34};
+            app.GridLayout.ColumnWidth = {20, 160, 160, 10, 320, 10, '1x', 122, 38, 10, 8, 2};
+            app.GridLayout.RowHeight = {2, 8, 10, 14, '1x', 10, 34, 20, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
             app.GridLayout.BackgroundColor = [1 1 1];
 
-            % Create SubTabGroup
-            app.SubTabGroup = uitabgroup(app.GridLayout);
-            app.SubTabGroup.AutoResizeChildren = 'off';
-            app.SubTabGroup.Layout.Row = [4 5];
-            app.SubTabGroup.Layout.Column = [2 3];
-
-            % Create SubTab1
-            app.SubTab1 = uitab(app.SubTabGroup);
-            app.SubTab1.AutoResizeChildren = 'off';
-            app.SubTab1.Title = 'LISTA DE INSTRUMENTOS';
-
-            % Create SubGrid1
-            app.SubGrid1 = uigridlayout(app.SubTab1);
-            app.SubGrid1.ColumnWidth = {310, '1x'};
-            app.SubGrid1.RowHeight = {17, '1x', 22, 34};
-            app.SubGrid1.ColumnSpacing = 20;
-            app.SubGrid1.RowSpacing = 5;
-            app.SubGrid1.BackgroundColor = [1 1 1];
-
-            % Create TreeLabel
-            app.TreeLabel = uilabel(app.SubGrid1);
-            app.TreeLabel.VerticalAlignment = 'bottom';
-            app.TreeLabel.FontSize = 10;
-            app.TreeLabel.Layout.Row = 1;
-            app.TreeLabel.Layout.Column = 1;
-            app.TreeLabel.Text = 'INSTRUMENTOS';
-
-            % Create TreeGrid
-            app.TreeGrid = uigridlayout(app.SubGrid1);
-            app.TreeGrid.ColumnWidth = {146, '1x', 0};
-            app.TreeGrid.RowHeight = {16, 5, 16, '1x', 16, 5, 16};
-            app.TreeGrid.ColumnSpacing = 5;
-            app.TreeGrid.RowSpacing = 0;
-            app.TreeGrid.Padding = [0 0 0 0];
-            app.TreeGrid.Layout.Row = 2;
-            app.TreeGrid.Layout.Column = 1;
-            app.TreeGrid.BackgroundColor = [1 1 1];
+            % Create TreePanel
+            app.TreePanel = uigridlayout(app.GridLayout);
+            app.TreePanel.ColumnWidth = {24, '1x', 0};
+            app.TreePanel.RowHeight = {36, 36, 16, 5, 16, '1x', 16, 5, 16};
+            app.TreePanel.ColumnSpacing = 5;
+            app.TreePanel.RowSpacing = 0;
+            app.TreePanel.Padding = [0 0 0 0];
+            app.TreePanel.Layout.Row = [4 5];
+            app.TreePanel.Layout.Column = [2 3];
+            app.TreePanel.BackgroundColor = [1 1 1];
 
             % Create Tree
-            app.Tree = uitree(app.TreeGrid);
-            app.Tree.SelectionChangedFcn = createCallbackFcn(app, @TreeSelectionChanged, true);
+            app.Tree = uitree(app.TreePanel);
+            app.Tree.SelectionChangedFcn = createCallbackFcn(app, @onTreeSelectionChanged, true);
             app.Tree.FontSize = 11;
-            app.Tree.Layout.Row = [1 7];
+            app.Tree.FontColor = [0.2 0.2 0.2];
+            app.Tree.Layout.Row = [3 9];
             app.Tree.Layout.Column = [1 2];
 
             % Create TreeNodeReceiver
@@ -1095,81 +1130,93 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreeNodeGPS.Text = 'GPS';
 
             % Create TreeAddNode
-            app.TreeAddNode = uiimage(app.TreeGrid);
-            app.TreeAddNode.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_add, true);
+            app.TreeAddNode = uiimage(app.TreePanel);
+            app.TreeAddNode.ImageClickedFcn = createCallbackFcn(app, @onTreeAddNodeButtonClicked, true);
             app.TreeAddNode.Enable = 'off';
             app.TreeAddNode.Tooltip = {''};
-            app.TreeAddNode.Layout.Row = 1;
+            app.TreeAddNode.Layout.Row = 3;
             app.TreeAddNode.Layout.Column = 3;
             app.TreeAddNode.ImageSource = 'addFileWithPlus_32.png';
 
             % Create TreeDelNode
-            app.TreeDelNode = uiimage(app.TreeGrid);
-            app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_del, true);
+            app.TreeDelNode = uiimage(app.TreePanel);
+            app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @onTreeDelNodeButtonClicked, true);
             app.TreeDelNode.Enable = 'off';
             app.TreeDelNode.Tooltip = {''};
-            app.TreeDelNode.Layout.Row = 3;
+            app.TreeDelNode.Layout.Row = 5;
             app.TreeDelNode.Layout.Column = 3;
             app.TreeDelNode.ImageSource = 'Delete_32Red.png';
 
             % Create TreeMoveUp
-            app.TreeMoveUp = uiimage(app.TreeGrid);
-            app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
+            app.TreeMoveUp = uiimage(app.TreePanel);
+            app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
             app.TreeMoveUp.Enable = 'off';
             app.TreeMoveUp.Tooltip = {''};
-            app.TreeMoveUp.Layout.Row = 5;
+            app.TreeMoveUp.Layout.Row = 7;
             app.TreeMoveUp.Layout.Column = 3;
             app.TreeMoveUp.ImageSource = 'ArrowUp_32.png';
 
             % Create TreeModeDown
-            app.TreeModeDown = uiimage(app.TreeGrid);
-            app.TreeModeDown.ImageClickedFcn = createCallbackFcn(app, @ImageClicked_UpDownArrows, true);
+            app.TreeModeDown = uiimage(app.TreePanel);
+            app.TreeModeDown.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
             app.TreeModeDown.Enable = 'off';
             app.TreeModeDown.Tooltip = {''};
-            app.TreeModeDown.Layout.Row = 7;
+            app.TreeModeDown.Layout.Row = 9;
             app.TreeModeDown.Layout.Column = 3;
             app.TreeModeDown.ImageSource = 'ArrowDown_32.png';
 
-            % Create ModePanelLabel
-            app.ModePanelLabel = uilabel(app.SubGrid1);
-            app.ModePanelLabel.VerticalAlignment = 'bottom';
-            app.ModePanelLabel.FontSize = 10;
-            app.ModePanelLabel.Layout.Row = 3;
-            app.ModePanelLabel.Layout.Column = 1;
-            app.ModePanelLabel.Text = 'MODO';
+            % Create TreeIcon
+            app.TreeIcon = uiimage(app.TreePanel);
+            app.TreeIcon.ScaleMethod = 'none';
+            app.TreeIcon.Layout.Row = 1;
+            app.TreeIcon.Layout.Column = 1;
+            app.TreeIcon.VerticalAlignment = 'top';
+            app.TreeIcon.ImageSource = 'circuit-board - blue.svg';
 
-            % Create ModeRadioGroup
-            app.ModeRadioGroup = uibuttongroup(app.SubGrid1);
-            app.ModeRadioGroup.AutoResizeChildren = 'off';
-            app.ModeRadioGroup.SelectionChangedFcn = createCallbackFcn(app, @ValueChanged_OperationMode, true);
-            app.ModeRadioGroup.BackgroundColor = [1 1 1];
-            app.ModeRadioGroup.Layout.Row = 4;
-            app.ModeRadioGroup.Layout.Column = 1;
-            app.ModeRadioGroup.FontSize = 10;
+            % Create TreeTitle
+            app.TreeTitle = uilabel(app.TreePanel);
+            app.TreeTitle.VerticalAlignment = 'top';
+            app.TreeTitle.WordWrap = 'on';
+            app.TreeTitle.FontSize = 15;
+            app.TreeTitle.FontColor = [0 0.4471 0.7412];
+            app.TreeTitle.Layout.Row = [1 2];
+            app.TreeTitle.Layout.Column = [2 3];
+            app.TreeTitle.Interpreter = 'html';
+            app.TreeTitle.Text = {'<b>Instrumentos</b>'; '<font style="color: gray; font-size: 11px;">Selecione um instrumento para visualizar seus detalhes e editar parâmetros (ou adicione um novo instrumento)</font>'};
 
-            % Create ViewModeButton
-            app.ViewModeButton = uiradiobutton(app.ModeRadioGroup);
-            app.ViewModeButton.Text = '<font style="color:#0000ff;">VISUALIZAR</font> lista';
-            app.ViewModeButton.FontSize = 11;
-            app.ViewModeButton.Interpreter = 'html';
-            app.ViewModeButton.Position = [6 5 117 22];
-            app.ViewModeButton.Value = true;
+            % Create ViewStateButton
+            app.ViewStateButton = uibutton(app.GridLayout, 'state');
+            app.ViewStateButton.ValueChangedFcn = createCallbackFcn(app, @onViewModeChanged, true);
+            app.ViewStateButton.Text = 'Visualizar lista';
+            app.ViewStateButton.BackgroundColor = [0 0.451 0.7412];
+            app.ViewStateButton.FontSize = 11;
+            app.ViewStateButton.FontWeight = 'bold';
+            app.ViewStateButton.FontColor = [1 1 1];
+            app.ViewStateButton.Layout.Row = 7;
+            app.ViewStateButton.Layout.Column = 2;
+            app.ViewStateButton.Value = true;
 
-            % Create EditModeGroup
-            app.EditModeGroup = uiradiobutton(app.ModeRadioGroup);
-            app.EditModeGroup.Text = '<font style="color:#a2142f;"><b>EDITAR</b></font> lista';
-            app.EditModeGroup.FontSize = 11;
-            app.EditModeGroup.Interpreter = 'html';
-            app.EditModeGroup.Position = [150 5 92 22];
+            % Create EditStateButton
+            app.EditStateButton = uibutton(app.GridLayout, 'state');
+            app.EditStateButton.ValueChangedFcn = createCallbackFcn(app, @onViewModeChanged, true);
+            app.EditStateButton.Text = 'Editar lista';
+            app.EditStateButton.BackgroundColor = [0.9412 0.9412 0.9412];
+            app.EditStateButton.FontSize = 11;
+            app.EditStateButton.FontWeight = 'bold';
+            app.EditStateButton.FontColor = [0 0.4471 0.7412];
+            app.EditStateButton.Layout.Row = 7;
+            app.EditStateButton.Layout.Column = 3;
+
+            % Create TaskPanel
+            app.TaskPanel = uipanel(app.GridLayout);
+            app.TaskPanel.Layout.Row = [4 7];
+            app.TaskPanel.Layout.Column = 5;
 
             % Create InstrumentGrid
-            app.InstrumentGrid = uigridlayout(app.SubGrid1);
-            app.InstrumentGrid.ColumnWidth = {110, 190, 1, '1x', 140, 22};
-            app.InstrumentGrid.RowHeight = {17, 22, 22, 22, 22, '1x', 22, 22, 150};
+            app.InstrumentGrid = uigridlayout(app.TaskPanel);
+            app.InstrumentGrid.ColumnWidth = {110, 178};
+            app.InstrumentGrid.RowHeight = {34, 17, 22, 22, 22, 22, '1x', 22, 22, 150};
             app.InstrumentGrid.RowSpacing = 5;
-            app.InstrumentGrid.Padding = [0 0 0 0];
-            app.InstrumentGrid.Layout.Row = [1 4];
-            app.InstrumentGrid.Layout.Column = 2;
             app.InstrumentGrid.BackgroundColor = [1 1 1];
 
             % Create StatusLabel
@@ -1177,17 +1224,17 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.StatusLabel.VerticalAlignment = 'bottom';
             app.StatusLabel.FontSize = 10;
             app.StatusLabel.FontColor = [0.149 0.149 0.149];
-            app.StatusLabel.Layout.Row = 1;
+            app.StatusLabel.Layout.Row = 2;
             app.StatusLabel.Layout.Column = 1;
             app.StatusLabel.Text = 'ESTADO';
 
             % Create Status
             app.Status = uidropdown(app.InstrumentGrid);
             app.Status.Items = {'ON', 'OFF'};
-            app.Status.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Status.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Status.FontSize = 11;
             app.Status.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.Status.Layout.Row = 2;
+            app.Status.Layout.Row = 3;
             app.Status.Layout.Column = 1;
             app.Status.Value = 'ON';
 
@@ -1195,17 +1242,17 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.FamilyLabel = uilabel(app.InstrumentGrid);
             app.FamilyLabel.VerticalAlignment = 'bottom';
             app.FamilyLabel.FontSize = 10;
-            app.FamilyLabel.Layout.Row = 1;
+            app.FamilyLabel.Layout.Row = 2;
             app.FamilyLabel.Layout.Column = 2;
             app.FamilyLabel.Text = 'FAMÍLIA';
 
             % Create Family
             app.Family = uidropdown(app.InstrumentGrid);
             app.Family.Items = {};
-            app.Family.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Family.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Family.FontSize = 11;
             app.Family.BackgroundColor = [1 1 1];
-            app.Family.Layout.Row = 2;
+            app.Family.Layout.Row = 3;
             app.Family.Layout.Column = 2;
             app.Family.Value = {};
 
@@ -1213,17 +1260,17 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.NameLabel = uilabel(app.InstrumentGrid);
             app.NameLabel.VerticalAlignment = 'bottom';
             app.NameLabel.FontSize = 10;
-            app.NameLabel.Layout.Row = 3;
-            app.NameLabel.Layout.Column = [1 3];
+            app.NameLabel.Layout.Row = 4;
+            app.NameLabel.Layout.Column = [1 2];
             app.NameLabel.Text = 'FABRICANTE E MODELO';
 
             % Create Name
             app.Name = uidropdown(app.InstrumentGrid);
             app.Name.Items = {};
-            app.Name.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Name.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Name.FontSize = 11;
             app.Name.BackgroundColor = [1 1 1];
-            app.Name.Layout.Row = 4;
+            app.Name.Layout.Row = 5;
             app.Name.Layout.Column = [1 2];
             app.Name.Value = {};
 
@@ -1231,40 +1278,40 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.DescriptionLabel = uilabel(app.InstrumentGrid);
             app.DescriptionLabel.VerticalAlignment = 'bottom';
             app.DescriptionLabel.FontSize = 10;
-            app.DescriptionLabel.Layout.Row = 5;
+            app.DescriptionLabel.Layout.Row = 6;
             app.DescriptionLabel.Layout.Column = [1 2];
             app.DescriptionLabel.Text = 'DESCRIÇÃO';
 
             % Create Description
             app.Description = uitextarea(app.InstrumentGrid);
-            app.Description.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Description.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Description.Editable = 'off';
             app.Description.FontSize = 11;
-            app.Description.Layout.Row = 6;
+            app.Description.Layout.Row = 7;
             app.Description.Layout.Column = [1 2];
 
             % Create ConnectionTypeLabel
             app.ConnectionTypeLabel = uilabel(app.InstrumentGrid);
             app.ConnectionTypeLabel.VerticalAlignment = 'bottom';
             app.ConnectionTypeLabel.FontSize = 10;
-            app.ConnectionTypeLabel.Layout.Row = 7;
+            app.ConnectionTypeLabel.Layout.Row = 8;
             app.ConnectionTypeLabel.Layout.Column = [1 2];
             app.ConnectionTypeLabel.Text = 'TIPO DE CONEXÃO';
 
             % Create ConnectionType
             app.ConnectionType = uidropdown(app.InstrumentGrid);
             app.ConnectionType.Items = {};
-            app.ConnectionType.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.ConnectionType.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.ConnectionType.FontSize = 11;
             app.ConnectionType.BackgroundColor = [1 1 1];
-            app.ConnectionType.Layout.Row = 8;
+            app.ConnectionType.Layout.Row = 9;
             app.ConnectionType.Layout.Column = [1 2];
             app.ConnectionType.Value = {};
 
             % Create ParametersPanel
             app.ParametersPanel = uipanel(app.InstrumentGrid);
             app.ParametersPanel.AutoResizeChildren = 'off';
-            app.ParametersPanel.Layout.Row = 9;
+            app.ParametersPanel.Layout.Row = 10;
             app.ParametersPanel.Layout.Column = [1 2];
 
             % Create ParametersGrid
@@ -1285,7 +1332,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create IP
             app.IP = uieditfield(app.ParametersGrid, 'text');
-            app.IP.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.IP.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.IP.Editable = 'off';
             app.IP.FontSize = 11;
             app.IP.Layout.Row = 2;
@@ -1301,7 +1348,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create Port
             app.Port = uieditfield(app.ParametersGrid, 'text');
-            app.Port.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Port.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Port.Editable = 'off';
             app.Port.FontSize = 11;
             app.Port.Layout.Row = 2;
@@ -1321,7 +1368,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.BaudRate.Limits = [0 Inf];
             app.BaudRate.RoundFractionalValues = 'on';
             app.BaudRate.ValueDisplayFormat = '%.0f';
-            app.BaudRate.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.BaudRate.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.BaudRate.Editable = 'off';
             app.BaudRate.FontSize = 11;
             app.BaudRate.Layout.Row = 2;
@@ -1341,7 +1388,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Timeout.Limits = [1 20];
             app.Timeout.RoundFractionalValues = 'on';
             app.Timeout.ValueDisplayFormat = '%.0f';
-            app.Timeout.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.Timeout.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Timeout.Editable = 'off';
             app.Timeout.FontSize = 11;
             app.Timeout.Layout.Row = 2;
@@ -1350,7 +1397,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create LocalhostCheckBox
             app.LocalhostCheckBox = uicheckbox(app.ParametersGrid);
-            app.LocalhostCheckBox.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.LocalhostCheckBox.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.LocalhostCheckBox.Enable = 'off';
             app.LocalhostCheckBox.Text = 'Localhost';
             app.LocalhostCheckBox.FontSize = 11;
@@ -1379,7 +1426,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create IPLocal
             app.IPLocal = uieditfield(app.LocalHostGrid, 'text');
-            app.IPLocal.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.IPLocal.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.IPLocal.Editable = 'off';
             app.IPLocal.FontSize = 11;
             app.IPLocal.Enable = 'off';
@@ -1395,54 +1442,102 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create IPublic
             app.IPublic = uieditfield(app.LocalHostGrid, 'text');
-            app.IPublic.ValueChangedFcn = createCallbackFcn(app, @ValueChanged_Parameter, true);
+            app.IPublic.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.IPublic.Editable = 'off';
             app.IPublic.FontSize = 11;
             app.IPublic.Enable = 'off';
             app.IPublic.Layout.Row = 2;
             app.IPublic.Layout.Column = 2;
 
-            % Create FeaturesLabel
-            app.FeaturesLabel = uilabel(app.InstrumentGrid);
-            app.FeaturesLabel.VerticalAlignment = 'bottom';
-            app.FeaturesLabel.FontSize = 10;
-            app.FeaturesLabel.Layout.Row = 1;
-            app.FeaturesLabel.Layout.Column = [4 6];
-            app.FeaturesLabel.Text = 'ESPECIFICAÇÕES TÉCNICAS';
+            % Create TaskTitle
+            app.TaskTitle = uilabel(app.InstrumentGrid);
+            app.TaskTitle.VerticalAlignment = 'top';
+            app.TaskTitle.WordWrap = 'on';
+            app.TaskTitle.FontColor = [0 0.451 0.7412];
+            app.TaskTitle.Layout.Row = 1;
+            app.TaskTitle.Layout.Column = [1 2];
+            app.TaskTitle.Interpreter = 'html';
+            app.TaskTitle.Text = {'<b>Instrumento selecionado</b>'; '<font style="color: gray; font-size: 10px;">Configurações gerais do instrumento</font>'};
+
+            % Create BandPanel
+            app.BandPanel = uipanel(app.GridLayout);
+            app.BandPanel.Layout.Row = [4 7];
+            app.BandPanel.Layout.Column = [7 9];
+
+            % Create GridLayout2
+            app.GridLayout2 = uigridlayout(app.BandPanel);
+            app.GridLayout2.ColumnWidth = {144, '1x'};
+            app.GridLayout2.RowHeight = {34, 17, 103, '1x'};
+            app.GridLayout2.ColumnSpacing = 6;
+            app.GridLayout2.RowSpacing = 5;
+            app.GridLayout2.Scrollable = 'on';
+            app.GridLayout2.BackgroundColor = [1 1 1];
 
             % Create Features
-            app.Features = uilabel(app.InstrumentGrid);
+            app.Features = uilabel(app.GridLayout2);
             app.Features.VerticalAlignment = 'top';
             app.Features.WordWrap = 'on';
             app.Features.FontSize = 11;
-            app.Features.Layout.Row = [2 9];
-            app.Features.Layout.Column = [4 6];
+            app.Features.Layout.Row = 4;
+            app.Features.Layout.Column = [1 2];
             app.Features.Interpreter = 'html';
             app.Features.Text = '';
 
+            % Create BandTitle
+            app.BandTitle = uilabel(app.GridLayout2);
+            app.BandTitle.VerticalAlignment = 'top';
+            app.BandTitle.WordWrap = 'on';
+            app.BandTitle.FontColor = [0 0.4471 0.7412];
+            app.BandTitle.Layout.Row = 1;
+            app.BandTitle.Layout.Column = [1 2];
+            app.BandTitle.Interpreter = 'html';
+            app.BandTitle.Text = {'<b>Especificação técnica</b>'; '<font style="color: gray; font-size: 10px;">Parâmetros técnicos de aquisição e detecção</font>'};
+
+            % Create StatusLabel_2
+            app.StatusLabel_2 = uilabel(app.GridLayout2);
+            app.StatusLabel_2.VerticalAlignment = 'bottom';
+            app.StatusLabel_2.FontSize = 10;
+            app.StatusLabel_2.FontColor = [0.149 0.149 0.149];
+            app.StatusLabel_2.Layout.Row = 2;
+            app.StatusLabel_2.Layout.Column = [1 2];
+            app.StatusLabel_2.Text = 'IDENTIFICAÇÃO';
+
+            % Create StatusLabel_3
+            app.StatusLabel_3 = uilabel(app.GridLayout2);
+            app.StatusLabel_3.VerticalAlignment = 'bottom';
+            app.StatusLabel_3.FontColor = [0.149 0.149 0.149];
+            app.StatusLabel_3.Layout.Row = 3;
+            app.StatusLabel_3.Layout.Column = 2;
+            app.StatusLabel_3.Interpreter = 'html';
+            app.StatusLabel_3.Text = '';
+
+            % Create ImageGrid
+            app.ImageGrid = uigridlayout(app.GridLayout2);
+            app.ImageGrid.ColumnWidth = {'1x'};
+            app.ImageGrid.RowHeight = {'1x'};
+            app.ImageGrid.Layout.Row = 3;
+            app.ImageGrid.Layout.Column = 1;
+
             % Create Image
-            app.Image = uiimage(app.InstrumentGrid);
-            app.Image.Visible = 'off';
-            app.Image.Layout.Row = [3 5];
-            app.Image.Layout.Column = 5;
-            app.Image.HorizontalAlignment = 'right';
-            app.Image.VerticalAlignment = 'top';
+            app.Image = uiimage(app.ImageGrid);
+            app.Image.Layout.Row = 1;
+            app.Image.Layout.Column = 1;
 
             % Create Toolbar
             app.Toolbar = uigridlayout(app.GridLayout);
-            app.Toolbar.ColumnWidth = {22, 22, 5, 22, '1x', 116};
+            app.Toolbar.ColumnWidth = {22, 22, 5, 22, '1x'};
             app.Toolbar.RowHeight = {'1x'};
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.RowSpacing = 0;
             app.Toolbar.Padding = [10 6 10 6];
-            app.Toolbar.Layout.Row = 7;
-            app.Toolbar.Layout.Column = [1 6];
+            app.Toolbar.Layout.Row = 9;
+            app.Toolbar.Layout.Column = [1 12];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
             % Create ImportButton
             app.ImportButton = uiimage(app.Toolbar);
             app.ImportButton.ScaleMethod = 'none';
-            app.ImportButton.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_open, true);
+            app.ImportButton.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
             app.ImportButton.Tooltip = {''};
             app.ImportButton.Layout.Row = 1;
             app.ImportButton.Layout.Column = 1;
@@ -1451,7 +1546,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             % Create ExportButton
             app.ExportButton = uiimage(app.Toolbar);
             app.ExportButton.ScaleMethod = 'none';
-            app.ExportButton.ImageClickedFcn = createCallbackFcn(app, @toolButtonPushed_export, true);
+            app.ExportButton.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
             app.ExportButton.Tooltip = {''};
             app.ExportButton.Layout.Row = 1;
             app.ExportButton.Layout.Column = 2;
@@ -1467,25 +1562,13 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
             % Create TestConnectivityButton
             app.TestConnectivityButton = uibutton(app.Toolbar, 'push');
-            app.TestConnectivityButton.ButtonPushedFcn = createCallbackFcn(app, @toolButtonPushed_connectTest, true);
+            app.TestConnectivityButton.ButtonPushedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
             app.TestConnectivityButton.Icon = 'Connectivity_32.png';
             app.TestConnectivityButton.BackgroundColor = [0.9412 0.9412 0.9412];
             app.TestConnectivityButton.Tooltip = {''};
             app.TestConnectivityButton.Layout.Row = 1;
             app.TestConnectivityButton.Layout.Column = 4;
             app.TestConnectivityButton.Text = '';
-
-            % Create ConfirmEditionButton
-            app.ConfirmEditionButton = uibutton(app.Toolbar, 'push');
-            app.ConfirmEditionButton.ButtonPushedFcn = createCallbackFcn(app, @toolButtonPushed_edit, true);
-            app.ConfirmEditionButton.Icon = 'save-16px-white.svg';
-            app.ConfirmEditionButton.BackgroundColor = [0.6392 0.0784 0.1804];
-            app.ConfirmEditionButton.FontSize = 11;
-            app.ConfirmEditionButton.FontColor = [1 1 1];
-            app.ConfirmEditionButton.Visible = 'off';
-            app.ConfirmEditionButton.Layout.Row = 1;
-            app.ConfirmEditionButton.Layout.Column = 6;
-            app.ConfirmEditionButton.Text = 'Salva alterações';
 
             % Create DockModule
             app.DockModule = uigridlayout(app.GridLayout);
@@ -1494,7 +1577,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.DockModule.Padding = [5 2 5 2];
             app.DockModule.Visible = 'off';
             app.DockModule.Layout.Row = [2 4];
-            app.DockModule.Layout.Column = [3 5];
+            app.DockModule.Layout.Column = [9 11];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
             % Create DockUndockButton
@@ -1513,6 +1596,27 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.DockCloseButton.Layout.Row = 1;
             app.DockCloseButton.Layout.Column = 2;
             app.DockCloseButton.ImageSource = 'Delete_12SVG_white.svg';
+
+            % Create ConfirmEditionButtonGrid
+            app.ConfirmEditionButtonGrid = uigridlayout(app.GridLayout);
+            app.ConfirmEditionButtonGrid.ColumnWidth = {'1x'};
+            app.ConfirmEditionButtonGrid.RowHeight = {'1x'};
+            app.ConfirmEditionButtonGrid.Padding = [0 10 0 10];
+            app.ConfirmEditionButtonGrid.Visible = 'off';
+            app.ConfirmEditionButtonGrid.Layout.Row = [8 9];
+            app.ConfirmEditionButtonGrid.Layout.Column = [8 9];
+            app.ConfirmEditionButtonGrid.BackgroundColor = [1 1 1];
+
+            % Create ConfirmEditionButton
+            app.ConfirmEditionButton = uibutton(app.ConfirmEditionButtonGrid, 'push');
+            app.ConfirmEditionButton.ButtonPushedFcn = createCallbackFcn(app, @onConfirmEditionButtonClicked, true);
+            app.ConfirmEditionButton.Icon = 'save-16px-white.svg';
+            app.ConfirmEditionButton.BackgroundColor = [0 0.451 0.7412];
+            app.ConfirmEditionButton.FontSize = 11;
+            app.ConfirmEditionButton.FontColor = [1 1 1];
+            app.ConfirmEditionButton.Layout.Row = 1;
+            app.ConfirmEditionButton.Layout.Column = 1;
+            app.ConfirmEditionButton.Text = 'Salvar alterações';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
