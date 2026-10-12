@@ -14,26 +14,25 @@ classdef winInstrument_exported < matlab.apps.AppBase
         ButtonsSeparator          matlab.ui.control.Image
         ExportButton              matlab.ui.control.Image
         ImportButton              matlab.ui.control.Image
-        BandPanel                 matlab.ui.container.Panel
-        GridLayout2               matlab.ui.container.GridLayout
+        InstrumentPanel2          matlab.ui.container.Panel
+        InstrumentGrid2           matlab.ui.container.GridLayout
+        Features                  matlab.ui.control.Label
+        ImageTag                  matlab.ui.control.Label
         ImageGrid                 matlab.ui.container.GridLayout
         Image                     matlab.ui.control.Image
-        StatusLabel_3             matlab.ui.control.Label
-        StatusLabel_2             matlab.ui.control.Label
-        BandTitle                 matlab.ui.control.Label
-        Features                  matlab.ui.control.Label
-        TaskPanel                 matlab.ui.container.Panel
-        InstrumentGrid            matlab.ui.container.GridLayout
-        TaskTitle                 matlab.ui.control.Label
+        ImageLabel                matlab.ui.control.Label
+        InstrumentTitle2          matlab.ui.control.Label
+        InstrumentPanel1          matlab.ui.container.Panel
+        InstrumentGrid1           matlab.ui.container.GridLayout
         ParametersPanel           matlab.ui.container.Panel
         ParametersGrid            matlab.ui.container.GridLayout
         LocalHostPanel            matlab.ui.container.Panel
         LocalHostGrid             matlab.ui.container.GridLayout
-        IPublic                   matlab.ui.control.EditField
-        IPPublicLabel             matlab.ui.control.Label
-        IPLocal                   matlab.ui.control.EditField
-        IPLocalLabel              matlab.ui.control.Label
-        LocalhostCheckBox         matlab.ui.control.CheckBox
+        ClientPublicIP            matlab.ui.control.EditField
+        ClientPublicIPLabel       matlab.ui.control.Label
+        ClientLocalIP             matlab.ui.control.EditField
+        ClientLocalIPLabel        matlab.ui.control.Label
+        ClientIPCheckBox          matlab.ui.control.CheckBox
         Timeout                   matlab.ui.control.NumericEditField
         TimeoutLabel              matlab.ui.control.Label
         BaudRate                  matlab.ui.control.NumericEditField
@@ -52,11 +51,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
         FamilyLabel               matlab.ui.control.Label
         Status                    matlab.ui.control.DropDown
         StatusLabel               matlab.ui.control.Label
+        InstrumentTitle1          matlab.ui.control.Label
         EditStateButton           matlab.ui.control.StateButton
         ViewStateButton           matlab.ui.control.StateButton
         TreePanel                 matlab.ui.container.GridLayout
-        TreeTitle                 matlab.ui.control.Label
-        TreeIcon                  matlab.ui.control.Image
         TreeModeDown              matlab.ui.control.Image
         TreeMoveUp                matlab.ui.control.Image
         TreeDelNode               matlab.ui.control.Image
@@ -64,6 +62,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
         Tree                      matlab.ui.container.Tree
         TreeNodeReceiver          matlab.ui.container.TreeNode
         TreeNodeGPS               matlab.ui.container.TreeNode
+        TreeTitle                 matlab.ui.control.Label
+        TreeIcon                  matlab.ui.control.Image
     end
 
     
@@ -176,8 +176,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 app.DockUndockButton.Enable = 1;
             end
 
-            app.TaskPanel.BorderColor = [0.9412 0.9412 0.9412];
-            app.BandPanel.BorderColor = [0.9412 0.9412 0.9412];
+            app.InstrumentPanel1.BorderColor = [0.9412 0.9412 0.9412];
+            app.InstrumentPanel2.BorderColor = [0.9412 0.9412 0.9412];
         end
 
         %-----------------------------------------------------------------%
@@ -286,18 +286,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
             set(setdiff(findobj(app.TreePanel, 'Type', 'uiimage'), app.TreeIcon), 'Enable', ~app.ViewMode)
             
             % Painéis do centro e à direita
-            % ...
-            app.Description.Editable = 'off';
-            set(findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
-            set(findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='off')
-            app.LocalhostCheckBox.Enable = 0;
-
-            if ~app.ViewMode
-                app.Description.Editable = 'on';
-                set(findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
-                set(findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield'), Editable='on')
-                app.LocalhostCheckBox.Enable = 1;
-            end
+            set([
+                app.Description;
+                findobj(app.ParametersGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield');
+                findobj(app.LocalHostGrid, 'Type', 'uinumericeditfield', '-or', 'Type', 'uieditfield')
+            ], 'Editable', ~app.ViewMode)
 
             % Toolbar
             app.ConfirmEditionButtonGrid.Visible = ~app.ViewMode;
@@ -319,13 +312,9 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             app.Family.Items = app.InstrumentListEdited.Family(instrIdx);
-            Layout_FamilyChanged(app, '')
-
             app.Name.Items = app.InstrumentListEdited.Name(instrIdx);
-            Layout_NameChanged(app, 'InstrumentParameterChanged')
-
-            app.Description.Value = app.InstrumentListEdited.Description{instrIdx};
             app.ConnectionType.Items = app.InstrumentListEdited.Type(instrIdx);
+            app.Description.Value = app.InstrumentListEdited.Description{instrIdx};
 
             parameters = jsondecode(app.InstrumentListEdited.Parameters{instrIdx});
             switch app.ConnectionType.Value
@@ -333,20 +322,20 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     app.IP.Value = '';
                     app.Port.Value = parameters.Port;
                     app.BaudRate.Value = parameters.BaudRate;
-                    app.LocalhostCheckBox.Value = 0;
+                    app.ClientIPCheckBox.Value = 0;
 
                 case {'TCPIP Socket', 'TCP/UDP IP Socket'}
                     app.IP.Value = parameters.IP;
                     app.Port.Value = parameters.Port;
 
                     if isfield(parameters, 'Localhost_Enable')
-                        app.LocalhostCheckBox.Value = parameters.Localhost_Enable;
-                        app.IPLocal.Value  = parameters.Localhost_localIP;
-                        app.IPublic.Value = parameters.Localhost_publicIP;
+                        app.ClientIPCheckBox.Value = parameters.Localhost_Enable;
+                        app.ClientLocalIP.Value  = parameters.Localhost_localIP;
+                        app.ClientPublicIP.Value = parameters.Localhost_publicIP;
                     else
-                        app.LocalhostCheckBox.Value = 0;
-                        app.IPLocal.Value = '';
-                        app.IPublic.Value = '';
+                        app.ClientIPCheckBox.Value = 0;
+                        app.ClientLocalIP.Value = '';
+                        app.ClientPublicIP.Value = '';
                     end
             end
 
@@ -359,11 +348,12 @@ classdef winInstrument_exported < matlab.apps.AppBase
             if ~app.ViewMode
                 set(app.Status, 'Items', {'ON', 'OFF'})
                 set(app.Family, 'Items', {'Receiver', 'GPS'})
-                Layout_FamilyChanged(app, 'InstrumentParameterChanged')
+                updateNameItems(app, '')
+                updateConnectionTypeItems(app, '')
             end
 
-            Layout_TypeValueChanged(app)
-            Layout_InstrumentSpecifications(app)
+            updateConnectionPanelState(app)
+            updateInstrumentSpecifications(app)
         end
 
         %-----------------------------------------------------------------%
@@ -375,7 +365,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             questionMsg = [ ...
-                'Foi evidenciada alteração de ao menos uma das tarefas. ' ...
+                'Foi evidenciada alteração de ao menos um dos instrumentos. ' ...
                 'Se as alterações não forem salvas, elas serão perdidas.' ...
                 '<br><br>Confirma descartar as alterações?' ...
             ];
@@ -384,7 +374,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function Layout_FamilyChanged(app, srcFcn)
+        function updateNameItems(app, srcFcn)
             switch app.Family.Value
                 case 'Receiver'
                     idx = strcmp(app.receiverObj.Config.Family, app.Family.Value);
@@ -396,12 +386,12 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             if strcmp(srcFcn, 'InstrumentParameterChanged')
-                Layout_NameChanged(app, srcFcn)
+                updateConnectionTypeItems(app, srcFcn)
             end
         end
 
         %-----------------------------------------------------------------%
-        function Layout_NameChanged(app, srcFcn)
+        function updateConnectionTypeItems(app, srcFcn)
             switch app.Family.Value
                 case 'Receiver'
                     idx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
@@ -413,22 +403,17 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             if strcmp(srcFcn, 'InstrumentParameterChanged')
-                Layout_TypeValueChanged(app)
+                applyConnectionTypeDefaults(app)
             end
         end
 
         %-----------------------------------------------------------------%
-        function Layout_TypeValueChanged(app)
+        function applyConnectionTypeDefaults(app)
             switch app.ConnectionType.Value
                 case 'Serial'
-                    app.ParametersGrid.ColumnWidth([1 3]) = {0, '1x'};
-                    app.BaudRateLabel.Visible = 'on';
                     portValidation = contains(app.Port.Value, 'COM');
 
                 otherwise
-                    app.ParametersGrid.ColumnWidth([1 3]) = {110, 0};
-                    app.BaudRateLabel.Visible = 'off';
-
                     if isempty(app.IP.Value)
                         app.IP.Value = '127.0.0.1';
                     end
@@ -436,15 +421,30 @@ classdef winInstrument_exported < matlab.apps.AppBase
             end
 
             if ~portValidation
-                Layout_DefaultPort(app)
+                applyDefaultPort(app)
             end
 
-            Layout_LocalhostCheckBox1(app)
-            Layout_LocalhostCheckBox2(app)
+            updateConnectionPanelState(app)
         end
 
         %-----------------------------------------------------------------%
-        function Layout_DefaultPort(app)
+        function updateConnectionPanelState(app)
+            switch app.ConnectionType.Value
+                case 'Serial'
+                    app.ParametersGrid.ColumnWidth([1 3]) = {0, '1x'};
+                    app.BaudRateLabel.Visible = 'on';
+
+                otherwise
+                    app.ParametersGrid.ColumnWidth([1 3]) = {110, 0};
+                    app.BaudRateLabel.Visible = 'off';
+            end
+
+            updateLocalhostCheckBoxState(app)
+            updateLocalhostPanelState(app)
+        end
+
+        %-----------------------------------------------------------------%
+        function applyDefaultPort(app)
             switch app.Family.Value
                 case 'Receiver'
                     idx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
@@ -457,17 +457,17 @@ classdef winInstrument_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function Layout_LocalhostCheckBox1(app)
-            app.LocalhostCheckBox.Enable = 0;
+        function updateLocalhostCheckBoxState(app)
+            app.ClientIPCheckBox.Enable = 0;
 
             if ~app.ViewMode && strcmp(app.ConnectionType.Value, "TCP/UDP IP Socket")
-                app.LocalhostCheckBox.Enable = 1;
+                app.ClientIPCheckBox.Enable = 1;
             end
         end
 
         %-----------------------------------------------------------------%
-        function Layout_LocalhostCheckBox2(app)
-            if app.LocalhostCheckBox.Value
+        function updateLocalhostPanelState(app)
+            if app.ClientIPCheckBox.Value
                 set(app.LocalHostGrid.Children, 'Enable', 1)
 
             else
@@ -482,17 +482,17 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     localhostPublicIP = ''; 
                 end
 
-                set(app.IPLocal, 'Enable', 0, 'Value', localhostLocalIP)
-                set(app.IPublic, 'Enable', 0, 'Value', localhostPublicIP)
+                set(app.ClientLocalIP, 'Enable', 0, 'Value', localhostLocalIP)
+                set(app.ClientPublicIP, 'Enable', 0, 'Value', localhostPublicIP)
             end
         end
 
         %-----------------------------------------------------------------%
-        function Layout_InstrumentSpecifications(app)            
+        function updateInstrumentSpecifications(app)            
             instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
             [tag, features, img] = util.HtmlTextGenerator.Instrument(app.receiverObj, app.gpsObj, app.InstrumentListEdited, instrIdx);
 
-            app.StatusLabel_3.Text = tag;
+            app.ImageTag.Text = tag;
             app.Features.Text = features;
             set(app.Image, 'ImageSource', img, 'Visible', 'on')
         end
@@ -517,7 +517,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     ));
                 
                 case 'TCP/UDP IP Socket'
-                    if app.LocalhostCheckBox.Value
+                    if app.ClientIPCheckBox.Value
                         localhostEnable = 1;
                     else
                         localhostEnable = 0;
@@ -528,8 +528,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
                         'Port', app.Port.Value, ...
                         'Timeout', app.Timeout.Value, ...
                         'Localhost_Enable', localhostEnable, ...
-                        'Localhost_localIP', app.IPLocal.Value, ...
-                        'Localhost_publicIP', app.IPublic.Value ...
+                        'Localhost_localIP', app.ClientLocalIP.Value, ...
+                        'Localhost_publicIP', app.ClientPublicIP.Value ...
                     ));
             end
         end
@@ -575,11 +575,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
                         case app.IP
                             ipAddress = app.IP.Value;
 
-                        case app.IPLocal
-                            ipAddress = app.IPLocal.Value;
+                        case app.ClientLocalIP
+                            ipAddress = app.ClientLocalIP.Value;
 
-                        case app.IPublic
-                            ipAddress = app.IPublic.Value;
+                        case app.ClientPublicIP
+                            ipAddress = app.ClientPublicIP.Value;
                     end
         
                     ipString = regexp(ipAddress, '\d*[.]{1}\d{1,3}[.]{1}\d{1,3}[.]{1}\d*', 'match');
@@ -600,11 +600,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
                             case app.IP
                                 app.IP.Value = event.PreviousValue;
 
-                            case app.IPLocal
-                                app.IPLocal.Value = event.PreviousValue;
+                            case app.ClientLocalIP
+                                app.ClientLocalIP.Value = event.PreviousValue;
 
-                            case app.IPublic
-                                app.IPublic.Value = event.PreviousValue;
+                            case app.ClientPublicIP
+                                app.ClientPublicIP.Value = event.PreviousValue;
                         end
 
                     else
@@ -613,11 +613,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
                                 case app.IP
                                     app.IP.Value = char(ipString);
 
-                                case app.IPLocal
-                                    app.IPLocal.Value = char(ipString);
+                                case app.ClientLocalIP
+                                    app.ClientLocalIP.Value = char(ipString);
 
-                                case app.IPublic
-                                    app.IPublic.Value = char(ipString);
+                                case app.ClientPublicIP
+                                    app.ClientPublicIP.Value = char(ipString);
                             end
                         end
                     end
@@ -625,32 +625,38 @@ classdef winInstrument_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function [instrIdx, msgError] = SelectionNodeValidation(app)
-            try
-                instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+        function flag = isValidIPv4(~, ipAddress)
+            tokens = regexp(ipAddress, '^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$', 'tokens', 'once');
+            flag = ~isempty(tokens) && all(str2double(tokens) <= 255);
+        end
 
-                if isempty(instrIdx)
-                    switch app.Tree.SelectedNodes
-                        case app.TreeNodeReceiver
-                            app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
-    
-                        case app.TreeNodeGPS
-                            if ~isempty(app.TreeNodeGPS.Children)
-                                app.Tree.SelectedNodes = app.TreeNodeGPS.Children(1);
-                            else
-                                app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
-                            end
-                    end
+        %-----------------------------------------------------------------%
+        function errorMsg = validateInstrumentListIPs(app)
+            errorMsg = '';
 
-                    instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+            for instrIdx = 1:height(app.InstrumentListEdited)
+                if ~ismember(app.InstrumentListEdited.Type{instrIdx}, {'TCPIP Socket', 'TCP/UDP IP Socket'})
+                    continue
                 end
 
-                msgError = '';
+                parameters = jsondecode(app.InstrumentListEdited.Parameters{instrIdx});
+                instrName  = app.InstrumentListEdited.Name{instrIdx};
 
-            catch ME
-                app.Tree.SelectedNodes = app.TreeNodeReceiver.Children(1);
-                instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
-                msgError = ME.message;
+                if ~isValidIPv4(app, parameters.IP)
+                    errorMsg = sprintf('O endereço IP "%s" do instrumento "%s" é inválido.', parameters.IP, instrName);
+                    return
+                end
+
+                if isfield(parameters, 'Localhost_Enable') && parameters.Localhost_Enable
+                    localhostIPs = {parameters.Localhost_localIP, parameters.Localhost_publicIP};
+                    localhostIPs = localhostIPs(~cellfun(@isempty, localhostIPs));
+
+                    invalidIdx = find(~cellfun(@(ip) isValidIPv4(app, ip), localhostIPs), 1);
+                    if ~isempty(invalidIdx)
+                        errorMsg = sprintf('O endereço IP "%s" (localhost) do instrumento "%s" é inválido.', localhostIPs{invalidIdx}, instrName);
+                        return
+                    end
+                end
             end
         end
 
@@ -726,6 +732,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
+            if ~confirmDiscardEdition(app)
+                return
+            end
+
             ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', app.Context)
             delete(app)
             
@@ -734,6 +744,10 @@ classdef winInstrument_exported < matlab.apps.AppBase
         % Image clicked function: DockCloseButton, DockUndockButton
         function onDockModuleGroupButtonClicked(app, event)
             
+            if ~confirmDiscardEdition(app)
+                return
+            end
+
             [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
 
             switch event.Source
@@ -794,7 +808,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     if hasChanged
                         app.InstrumentListEdited = app.InstrumentList;
 
-                        instrIdx = min(app.Tree.SelectedNodes.NodeData.instrIdx, numel(app.InstrumentList));
+                        instrIdx = min(app.Tree.SelectedNodes.NodeData.instrIdx, height(app.InstrumentList));
                         buildTaskTree(app, instrIdx)
                         return
                     end
@@ -808,16 +822,11 @@ classdef winInstrument_exported < matlab.apps.AppBase
             
         end
 
-        % Value changed function: BaudRate, ConnectionType, Description, 
-        % ...and 9 other components
+        % Value changed function: BaudRate, ClientIPCheckBox, 
+        % ...and 10 other components
         function onParameterValueChanged(app, event)
             
-            [instrIdx, msgError] = SelectionNodeValidation(app);
-
-            if ~isempty(msgError)
-                onTreeSelectionChanged(app)
-                return
-            end
+            instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
 
             switch event.Source
                 %---------------------------------------------------------%
@@ -830,42 +839,42 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
                 %---------------------------------------------------------%
                 case app.Family
-                    Layout_FamilyChanged(app, 'InstrumentParameterChanged')
+                    updateNameItems(app, 'InstrumentParameterChanged')
                     
                     app.InstrumentListEdited.Family{instrIdx} = app.Family.Value;
                     app.InstrumentListEdited.Name{instrIdx}   = app.Name.Value;
                     app.InstrumentListEdited.Type{instrIdx}   = app.ConnectionType.Value;
 
                     if strcmp(app.Family.Value, 'Receiver')
-                        Layout_DefaultPort(app)
+                        applyDefaultPort(app)
                     end
                     
-                    Layout_InstrumentSpecifications(app)
+                    updateInstrumentSpecifications(app)
                     updateParametersField(app)
                     
                 %---------------------------------------------------------%
                 case app.Name
-                    Layout_NameChanged(app, 'InstrumentParameterChanged')
+                    updateConnectionTypeItems(app, 'InstrumentParameterChanged')
 
                     app.InstrumentListEdited.Name{instrIdx} = app.Name.Value;
                     app.InstrumentListEdited.Type{instrIdx} = app.ConnectionType.Value;
 
                     if strcmp(app.Family.Value, 'Receiver')
-                        Layout_DefaultPort(app)
+                        applyDefaultPort(app)
                     end
 
-                    Layout_InstrumentSpecifications(app)
+                    updateInstrumentSpecifications(app)
                     updateParametersField(app)
 
                 %---------------------------------------------------------%
                 case app.ConnectionType
-                    Layout_TypeValueChanged(app)                    
+                    applyConnectionTypeDefaults(app)                    
 
                     app.InstrumentListEdited.Type{instrIdx} = app.ConnectionType.Value;
                     updateParametersField(app)
 
                 %---------------------------------------------------------%
-                case {app.Port, app.IP, app.IPLocal, app.IPublic}
+                case {app.Port, app.IP, app.ClientLocalIP, app.ClientPublicIP}
                     Flag = 0;
 
                     if ~isempty(event.Source.Value)
@@ -889,8 +898,8 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     updateParametersField(app)
 
                 %---------------------------------------------------------%
-                case app.LocalhostCheckBox
-                    Layout_LocalhostCheckBox2(app)
+                case app.ClientIPCheckBox
+                    updateLocalhostPanelState(app)
                     updateParametersField(app)
 
                 %---------------------------------------------------------%
@@ -898,75 +907,69 @@ classdef winInstrument_exported < matlab.apps.AppBase
                     app.InstrumentListEdited.Description{instrIdx} = strjoin(app.Description.Value);
             end
 
-            % Recriando a árvore...
-            buildTaskTree(app, instrIdx)
+            % Alteração de família move o nó entre "Receiver" e "GPS".
+            if event.Source == app.Family
+                buildTaskTree(app, instrIdx)
+            else
+                app.Tree.SelectedNodes.Text = getInstrumentTag(app, instrIdx);
+                applyTreeStyle(app)
+            end
             
         end
 
         % Image clicked function: TreeAddNode
         function onTreeAddNodeButtonClicked(app, event)
             
-            [instrIdx, msgError] = SelectionNodeValidation(app);
+            instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+            instrIdxNew = height(app.InstrumentListEdited) + 1;
 
-            if isempty(msgError)
-                idx_old = instrIdx;
-                idx_new = height(app.InstrumentListEdited) + 1;
-    
-                app.InstrumentListEdited(idx_new,:) = app.InstrumentListEdited(idx_old,:);
-                buildTaskTree(app, idx_new)
-            end
+            app.InstrumentListEdited(instrIdxNew, :) = app.InstrumentListEdited(instrIdx, :);
+            buildTaskTree(app, instrIdxNew)
 
         end
 
         % Image clicked function: TreeDelNode
         function onTreeDelNodeButtonClicked(app, event)
             
-            [instrIdx, msgError] = SelectionNodeValidation(app);
-
-            if isempty(msgError)
-                nodeParent = app.Tree.SelectedNodes.Parent;
-
-                if nodeParent == app.TreeNodeReceiver    
-                    if isscalar(nodeParent.Children)
-                        return;
-                    end
+            instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+            
+            nodeParent = app.Tree.SelectedNodes.Parent;
+            if nodeParent == app.TreeNodeReceiver    
+                if isscalar(nodeParent.Children)
+                    return
                 end
-
-                app.InstrumentListEdited(instrIdx,:) = [];
-                buildTaskTree(app, [])
             end
+
+            app.InstrumentListEdited(instrIdx, :) = [];
+            buildTaskTree(app, [])
 
         end
 
         % Image clicked function: TreeModeDown, TreeMoveUp
         function onTreeNodeUpDownButtonClicked(app, event)
             
-            [instrIdx, msgError] = SelectionNodeValidation(app);
+            instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+            nodeParentIdxPrevious = app.Tree.SelectedNodes.NodeData.nodeParentIdx;
+            parentNode = app.Tree.SelectedNodes.Parent;
 
-            if isempty(msgError)
-                instrIdxPrevious = instrIdx;
-                nodeParentIdxPrevious = app.Tree.SelectedNodes.NodeData.nodeParentIdx;
-                parentNode = app.Tree.SelectedNodes.Parent;
-    
-                flag = false;
-                switch event.Source
-                    case app.TreeMoveUp
-                        if nodeParentIdxPrevious > 1
-                            instrIdxNew = parentNode.Children(nodeParentIdxPrevious-1).NodeData.instrIdx;
-                            flag = true;
-                        end
-    
-                    case app.TreeModeDown
-                        if nodeParentIdxPrevious < numel(parentNode.Children)
-                            instrIdxNew = parentNode.Children(nodeParentIdxPrevious+1).NodeData.instrIdx;
-                            flag = true;
-                        end
-                end
-    
-                if flag
-                    app.InstrumentListEdited([instrIdxPrevious, instrIdxNew],:) = flip(app.InstrumentListEdited([instrIdxPrevious, instrIdxNew],:));
-                    buildTaskTree(app, instrIdxNew)
-                end
+            flag = false;
+            switch event.Source
+                case app.TreeMoveUp
+                    if nodeParentIdxPrevious > 1
+                        instrIdxNew = parentNode.Children(nodeParentIdxPrevious-1).NodeData.instrIdx;
+                        flag = true;
+                    end
+
+                case app.TreeModeDown
+                    if nodeParentIdxPrevious < numel(parentNode.Children)
+                        instrIdxNew = parentNode.Children(nodeParentIdxPrevious+1).NodeData.instrIdx;
+                        flag = true;
+                    end
+            end
+
+            if flag
+                app.InstrumentListEdited([instrIdx, instrIdxNew],:) = flip(app.InstrumentListEdited([instrIdx, instrIdxNew],:));
+                buildTaskTree(app, instrIdxNew)
             end
 
         end
@@ -1006,34 +1009,31 @@ classdef winInstrument_exported < matlab.apps.AppBase
                 case app.TestConnectivityButton
                     app.progressDialog.Visible = 'visible';
         
-                    [instrIdx, msgError] = SelectionNodeValidation(app);
+                    instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
+                    notification = [];
         
-                    if isempty(msgError)
-                        notification = [];
-            
-                        switch app.Family.Value
-                            case 'Receiver'
-                                receiverIdx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
-                                instrInfo = struct( ...
-                                    'Type', app.ConnectionType.Value, ...
-                                    'Tag', app.receiverObj.Config.Tag{receiverIdx}, ...
-                                    'Parameters', jsondecode(app.InstrumentListEdited.Parameters{instrIdx}) ...
-                                );
-            
-                                [~, notification] = testConnectivity(app.receiverObj, instrInfo, 1);
-            
-                            case 'GPS'
-                                instrInfo = struct( ...
-                                    'Type', app.ConnectionType.Value, ...
-                                    'Parameters', jsondecode(app.InstrumentListEdited.Parameters{instrIdx}) ...
-                                );
-            
-                                [~, ~, notification] = testConnectivity(app.gpsObj, instrInfo, 1);
-                        end
+                    switch app.Family.Value
+                        case 'Receiver'
+                            receiverIdx = find(strcmp(app.receiverObj.Config.Name, app.Name.Value), 1);
+                            instrInfo = struct( ...
+                                'Type', app.ConnectionType.Value, ...
+                                'Tag', app.receiverObj.Config.Tag{receiverIdx}, ...
+                                'Parameters', jsondecode(app.InstrumentListEdited.Parameters{instrIdx}) ...
+                            );
+        
+                            [~, notification] = testConnectivity(app.receiverObj, instrInfo, 1);
+        
+                        case 'GPS'
+                            instrInfo = struct( ...
+                                'Type', app.ConnectionType.Value, ...
+                                'Parameters', jsondecode(app.InstrumentListEdited.Parameters{instrIdx}) ...
+                            );
+        
+                            [~, ~, notification] = testConnectivity(app.gpsObj, instrInfo, 1);
+                    end
 
-                        if ~isempty(notification)
-                            ui.Dialog(app.UIFigure, notification.type, notification.message);
-                        end
+                    if ~isempty(notification)
+                        ui.Dialog(app.UIFigure, notification.type, notification.message);
                     end
         
                     app.progressDialog.Visible = 'hidden';
@@ -1047,14 +1047,23 @@ classdef winInstrument_exported < matlab.apps.AppBase
             hasChanged = ~isequal(app.InstrumentList, app.InstrumentListEdited);
 
             if hasChanged
-                app.InstrumentList = app.InstrumentListEdited;
-                updateInstrumentFile(app)
+                errorMsg = validateInstrumentListIPs(app);
+
+                if ~isempty(errorMsg)
+                    ui.Dialog(app.UIFigure, 'warning', errorMsg);
+                    return
+                end
             end
 
             app.ViewMode = true;
 
-            updateUIControlState(app)
-            updateUIControlContent(app)
+            if hasChanged
+                app.InstrumentList = app.InstrumentListEdited;
+                updateInstrumentFile(app)
+            else
+                updateUIControlState(app)
+                updateUIControlContent(app)
+            end
 
         end
     end
@@ -1113,6 +1122,25 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreePanel.Layout.Column = [2 3];
             app.TreePanel.BackgroundColor = [1 1 1];
 
+            % Create TreeIcon
+            app.TreeIcon = uiimage(app.TreePanel);
+            app.TreeIcon.ScaleMethod = 'none';
+            app.TreeIcon.Layout.Row = 1;
+            app.TreeIcon.Layout.Column = 1;
+            app.TreeIcon.VerticalAlignment = 'top';
+            app.TreeIcon.ImageSource = 'circuit-board - blue.svg';
+
+            % Create TreeTitle
+            app.TreeTitle = uilabel(app.TreePanel);
+            app.TreeTitle.VerticalAlignment = 'top';
+            app.TreeTitle.WordWrap = 'on';
+            app.TreeTitle.FontSize = 15;
+            app.TreeTitle.FontColor = [0 0.4471 0.7412];
+            app.TreeTitle.Layout.Row = [1 2];
+            app.TreeTitle.Layout.Column = [2 3];
+            app.TreeTitle.Interpreter = 'html';
+            app.TreeTitle.Text = {'<b>Instrumentos</b>'; '<font style="color: gray; font-size: 11px;">Selecione um instrumento para visualizar seus detalhes e editar parâmetros (ou adicione um novo instrumento)</font>'};
+
             % Create Tree
             app.Tree = uitree(app.TreePanel);
             app.Tree.SelectionChangedFcn = createCallbackFcn(app, @onTreeSelectionChanged, true);
@@ -1165,25 +1193,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreeModeDown.Layout.Column = 3;
             app.TreeModeDown.ImageSource = 'ArrowDown_32.png';
 
-            % Create TreeIcon
-            app.TreeIcon = uiimage(app.TreePanel);
-            app.TreeIcon.ScaleMethod = 'none';
-            app.TreeIcon.Layout.Row = 1;
-            app.TreeIcon.Layout.Column = 1;
-            app.TreeIcon.VerticalAlignment = 'top';
-            app.TreeIcon.ImageSource = 'circuit-board - blue.svg';
-
-            % Create TreeTitle
-            app.TreeTitle = uilabel(app.TreePanel);
-            app.TreeTitle.VerticalAlignment = 'top';
-            app.TreeTitle.WordWrap = 'on';
-            app.TreeTitle.FontSize = 15;
-            app.TreeTitle.FontColor = [0 0.4471 0.7412];
-            app.TreeTitle.Layout.Row = [1 2];
-            app.TreeTitle.Layout.Column = [2 3];
-            app.TreeTitle.Interpreter = 'html';
-            app.TreeTitle.Text = {'<b>Instrumentos</b>'; '<font style="color: gray; font-size: 11px;">Selecione um instrumento para visualizar seus detalhes e editar parâmetros (ou adicione um novo instrumento)</font>'};
-
             % Create ViewStateButton
             app.ViewStateButton = uibutton(app.GridLayout, 'state');
             app.ViewStateButton.ValueChangedFcn = createCallbackFcn(app, @onViewModeChanged, true);
@@ -1207,20 +1216,30 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.EditStateButton.Layout.Row = 7;
             app.EditStateButton.Layout.Column = 3;
 
-            % Create TaskPanel
-            app.TaskPanel = uipanel(app.GridLayout);
-            app.TaskPanel.Layout.Row = [4 7];
-            app.TaskPanel.Layout.Column = 5;
+            % Create InstrumentPanel1
+            app.InstrumentPanel1 = uipanel(app.GridLayout);
+            app.InstrumentPanel1.Layout.Row = [4 7];
+            app.InstrumentPanel1.Layout.Column = 5;
 
-            % Create InstrumentGrid
-            app.InstrumentGrid = uigridlayout(app.TaskPanel);
-            app.InstrumentGrid.ColumnWidth = {110, 178};
-            app.InstrumentGrid.RowHeight = {34, 17, 22, 22, 22, 22, '1x', 22, 22, 150};
-            app.InstrumentGrid.RowSpacing = 5;
-            app.InstrumentGrid.BackgroundColor = [1 1 1];
+            % Create InstrumentGrid1
+            app.InstrumentGrid1 = uigridlayout(app.InstrumentPanel1);
+            app.InstrumentGrid1.ColumnWidth = {110, 178};
+            app.InstrumentGrid1.RowHeight = {34, 17, 22, 22, 22, 22, '1x', 22, 22, 150};
+            app.InstrumentGrid1.RowSpacing = 5;
+            app.InstrumentGrid1.BackgroundColor = [1 1 1];
+
+            % Create InstrumentTitle1
+            app.InstrumentTitle1 = uilabel(app.InstrumentGrid1);
+            app.InstrumentTitle1.VerticalAlignment = 'top';
+            app.InstrumentTitle1.WordWrap = 'on';
+            app.InstrumentTitle1.FontColor = [0 0.451 0.7412];
+            app.InstrumentTitle1.Layout.Row = 1;
+            app.InstrumentTitle1.Layout.Column = [1 2];
+            app.InstrumentTitle1.Interpreter = 'html';
+            app.InstrumentTitle1.Text = {'<b>Instrumento selecionado</b>'; '<font style="color: gray; font-size: 10px;">Configurações gerais do instrumento</font>'};
 
             % Create StatusLabel
-            app.StatusLabel = uilabel(app.InstrumentGrid);
+            app.StatusLabel = uilabel(app.InstrumentGrid1);
             app.StatusLabel.VerticalAlignment = 'bottom';
             app.StatusLabel.FontSize = 10;
             app.StatusLabel.FontColor = [0.149 0.149 0.149];
@@ -1229,7 +1248,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.StatusLabel.Text = 'ESTADO';
 
             % Create Status
-            app.Status = uidropdown(app.InstrumentGrid);
+            app.Status = uidropdown(app.InstrumentGrid1);
             app.Status.Items = {'ON', 'OFF'};
             app.Status.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Status.FontSize = 11;
@@ -1239,7 +1258,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Status.Value = 'ON';
 
             % Create FamilyLabel
-            app.FamilyLabel = uilabel(app.InstrumentGrid);
+            app.FamilyLabel = uilabel(app.InstrumentGrid1);
             app.FamilyLabel.VerticalAlignment = 'bottom';
             app.FamilyLabel.FontSize = 10;
             app.FamilyLabel.Layout.Row = 2;
@@ -1247,7 +1266,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.FamilyLabel.Text = 'FAMÍLIA';
 
             % Create Family
-            app.Family = uidropdown(app.InstrumentGrid);
+            app.Family = uidropdown(app.InstrumentGrid1);
             app.Family.Items = {};
             app.Family.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Family.FontSize = 11;
@@ -1257,7 +1276,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Family.Value = {};
 
             % Create NameLabel
-            app.NameLabel = uilabel(app.InstrumentGrid);
+            app.NameLabel = uilabel(app.InstrumentGrid1);
             app.NameLabel.VerticalAlignment = 'bottom';
             app.NameLabel.FontSize = 10;
             app.NameLabel.Layout.Row = 4;
@@ -1265,7 +1284,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.NameLabel.Text = 'FABRICANTE E MODELO';
 
             % Create Name
-            app.Name = uidropdown(app.InstrumentGrid);
+            app.Name = uidropdown(app.InstrumentGrid1);
             app.Name.Items = {};
             app.Name.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Name.FontSize = 11;
@@ -1275,7 +1294,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Name.Value = {};
 
             % Create DescriptionLabel
-            app.DescriptionLabel = uilabel(app.InstrumentGrid);
+            app.DescriptionLabel = uilabel(app.InstrumentGrid1);
             app.DescriptionLabel.VerticalAlignment = 'bottom';
             app.DescriptionLabel.FontSize = 10;
             app.DescriptionLabel.Layout.Row = 6;
@@ -1283,7 +1302,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.DescriptionLabel.Text = 'DESCRIÇÃO';
 
             % Create Description
-            app.Description = uitextarea(app.InstrumentGrid);
+            app.Description = uitextarea(app.InstrumentGrid1);
             app.Description.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.Description.Editable = 'off';
             app.Description.FontSize = 11;
@@ -1291,7 +1310,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Description.Layout.Column = [1 2];
 
             % Create ConnectionTypeLabel
-            app.ConnectionTypeLabel = uilabel(app.InstrumentGrid);
+            app.ConnectionTypeLabel = uilabel(app.InstrumentGrid1);
             app.ConnectionTypeLabel.VerticalAlignment = 'bottom';
             app.ConnectionTypeLabel.FontSize = 10;
             app.ConnectionTypeLabel.Layout.Row = 8;
@@ -1299,7 +1318,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.ConnectionTypeLabel.Text = 'TIPO DE CONEXÃO';
 
             % Create ConnectionType
-            app.ConnectionType = uidropdown(app.InstrumentGrid);
+            app.ConnectionType = uidropdown(app.InstrumentGrid1);
             app.ConnectionType.Items = {};
             app.ConnectionType.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
             app.ConnectionType.FontSize = 11;
@@ -1309,7 +1328,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.ConnectionType.Value = {};
 
             % Create ParametersPanel
-            app.ParametersPanel = uipanel(app.InstrumentGrid);
+            app.ParametersPanel = uipanel(app.InstrumentGrid1);
             app.ParametersPanel.AutoResizeChildren = 'off';
             app.ParametersPanel.Layout.Row = 10;
             app.ParametersPanel.Layout.Column = [1 2];
@@ -1395,14 +1414,14 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Timeout.Layout.Column = 4;
             app.Timeout.Value = 5;
 
-            % Create LocalhostCheckBox
-            app.LocalhostCheckBox = uicheckbox(app.ParametersGrid);
-            app.LocalhostCheckBox.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
-            app.LocalhostCheckBox.Enable = 'off';
-            app.LocalhostCheckBox.Text = 'Localhost';
-            app.LocalhostCheckBox.FontSize = 11;
-            app.LocalhostCheckBox.Layout.Row = 3;
-            app.LocalhostCheckBox.Layout.Column = [1 2];
+            % Create ClientIPCheckBox
+            app.ClientIPCheckBox = uicheckbox(app.ParametersGrid);
+            app.ClientIPCheckBox.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
+            app.ClientIPCheckBox.Enable = 'off';
+            app.ClientIPCheckBox.Text = 'Informar IP do cliente (appColeta)';
+            app.ClientIPCheckBox.FontSize = 11;
+            app.ClientIPCheckBox.Layout.Row = 3;
+            app.ClientIPCheckBox.Layout.Column = [1 4];
 
             % Create LocalHostPanel
             app.LocalHostPanel = uipanel(app.ParametersGrid);
@@ -1417,102 +1436,73 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.LocalHostGrid.Padding = [10 10 10 5];
             app.LocalHostGrid.BackgroundColor = [1 1 1];
 
-            % Create IPLocalLabel
-            app.IPLocalLabel = uilabel(app.LocalHostGrid);
-            app.IPLocalLabel.FontSize = 11;
-            app.IPLocalLabel.Layout.Row = 1;
-            app.IPLocalLabel.Layout.Column = 1;
-            app.IPLocalLabel.Text = 'IP local:';
+            % Create ClientLocalIPLabel
+            app.ClientLocalIPLabel = uilabel(app.LocalHostGrid);
+            app.ClientLocalIPLabel.FontSize = 11;
+            app.ClientLocalIPLabel.Layout.Row = 1;
+            app.ClientLocalIPLabel.Layout.Column = 1;
+            app.ClientLocalIPLabel.Text = 'IP local do cliente:';
 
-            % Create IPLocal
-            app.IPLocal = uieditfield(app.LocalHostGrid, 'text');
-            app.IPLocal.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
-            app.IPLocal.Editable = 'off';
-            app.IPLocal.FontSize = 11;
-            app.IPLocal.Enable = 'off';
-            app.IPLocal.Layout.Row = 2;
-            app.IPLocal.Layout.Column = 1;
+            % Create ClientLocalIP
+            app.ClientLocalIP = uieditfield(app.LocalHostGrid, 'text');
+            app.ClientLocalIP.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
+            app.ClientLocalIP.Editable = 'off';
+            app.ClientLocalIP.FontSize = 11;
+            app.ClientLocalIP.Enable = 'off';
+            app.ClientLocalIP.Layout.Row = 2;
+            app.ClientLocalIP.Layout.Column = 1;
 
-            % Create IPPublicLabel
-            app.IPPublicLabel = uilabel(app.LocalHostGrid);
-            app.IPPublicLabel.FontSize = 11;
-            app.IPPublicLabel.Layout.Row = 1;
-            app.IPPublicLabel.Layout.Column = 2;
-            app.IPPublicLabel.Text = 'IP público:';
+            % Create ClientPublicIPLabel
+            app.ClientPublicIPLabel = uilabel(app.LocalHostGrid);
+            app.ClientPublicIPLabel.FontSize = 11;
+            app.ClientPublicIPLabel.Layout.Row = 1;
+            app.ClientPublicIPLabel.Layout.Column = 2;
+            app.ClientPublicIPLabel.Text = 'IP público do cliente:';
 
-            % Create IPublic
-            app.IPublic = uieditfield(app.LocalHostGrid, 'text');
-            app.IPublic.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
-            app.IPublic.Editable = 'off';
-            app.IPublic.FontSize = 11;
-            app.IPublic.Enable = 'off';
-            app.IPublic.Layout.Row = 2;
-            app.IPublic.Layout.Column = 2;
+            % Create ClientPublicIP
+            app.ClientPublicIP = uieditfield(app.LocalHostGrid, 'text');
+            app.ClientPublicIP.ValueChangedFcn = createCallbackFcn(app, @onParameterValueChanged, true);
+            app.ClientPublicIP.Editable = 'off';
+            app.ClientPublicIP.FontSize = 11;
+            app.ClientPublicIP.Enable = 'off';
+            app.ClientPublicIP.Layout.Row = 2;
+            app.ClientPublicIP.Layout.Column = 2;
 
-            % Create TaskTitle
-            app.TaskTitle = uilabel(app.InstrumentGrid);
-            app.TaskTitle.VerticalAlignment = 'top';
-            app.TaskTitle.WordWrap = 'on';
-            app.TaskTitle.FontColor = [0 0.451 0.7412];
-            app.TaskTitle.Layout.Row = 1;
-            app.TaskTitle.Layout.Column = [1 2];
-            app.TaskTitle.Interpreter = 'html';
-            app.TaskTitle.Text = {'<b>Instrumento selecionado</b>'; '<font style="color: gray; font-size: 10px;">Configurações gerais do instrumento</font>'};
+            % Create InstrumentPanel2
+            app.InstrumentPanel2 = uipanel(app.GridLayout);
+            app.InstrumentPanel2.Layout.Row = [4 7];
+            app.InstrumentPanel2.Layout.Column = [7 9];
 
-            % Create BandPanel
-            app.BandPanel = uipanel(app.GridLayout);
-            app.BandPanel.Layout.Row = [4 7];
-            app.BandPanel.Layout.Column = [7 9];
+            % Create InstrumentGrid2
+            app.InstrumentGrid2 = uigridlayout(app.InstrumentPanel2);
+            app.InstrumentGrid2.ColumnWidth = {144, '1x'};
+            app.InstrumentGrid2.RowHeight = {34, 17, 103, '1x'};
+            app.InstrumentGrid2.ColumnSpacing = 6;
+            app.InstrumentGrid2.RowSpacing = 5;
+            app.InstrumentGrid2.Scrollable = 'on';
+            app.InstrumentGrid2.BackgroundColor = [1 1 1];
 
-            % Create GridLayout2
-            app.GridLayout2 = uigridlayout(app.BandPanel);
-            app.GridLayout2.ColumnWidth = {144, '1x'};
-            app.GridLayout2.RowHeight = {34, 17, 103, '1x'};
-            app.GridLayout2.ColumnSpacing = 6;
-            app.GridLayout2.RowSpacing = 5;
-            app.GridLayout2.Scrollable = 'on';
-            app.GridLayout2.BackgroundColor = [1 1 1];
+            % Create InstrumentTitle2
+            app.InstrumentTitle2 = uilabel(app.InstrumentGrid2);
+            app.InstrumentTitle2.VerticalAlignment = 'top';
+            app.InstrumentTitle2.WordWrap = 'on';
+            app.InstrumentTitle2.FontColor = [0 0.4471 0.7412];
+            app.InstrumentTitle2.Layout.Row = 1;
+            app.InstrumentTitle2.Layout.Column = [1 2];
+            app.InstrumentTitle2.Interpreter = 'html';
+            app.InstrumentTitle2.Text = {'<b>Especificação técnica</b>'; '<font style="color: gray; font-size: 10px;">Parâmetros técnicos de aquisição e detecção</font>'};
 
-            % Create Features
-            app.Features = uilabel(app.GridLayout2);
-            app.Features.VerticalAlignment = 'top';
-            app.Features.WordWrap = 'on';
-            app.Features.FontSize = 11;
-            app.Features.Layout.Row = 4;
-            app.Features.Layout.Column = [1 2];
-            app.Features.Interpreter = 'html';
-            app.Features.Text = '';
-
-            % Create BandTitle
-            app.BandTitle = uilabel(app.GridLayout2);
-            app.BandTitle.VerticalAlignment = 'top';
-            app.BandTitle.WordWrap = 'on';
-            app.BandTitle.FontColor = [0 0.4471 0.7412];
-            app.BandTitle.Layout.Row = 1;
-            app.BandTitle.Layout.Column = [1 2];
-            app.BandTitle.Interpreter = 'html';
-            app.BandTitle.Text = {'<b>Especificação técnica</b>'; '<font style="color: gray; font-size: 10px;">Parâmetros técnicos de aquisição e detecção</font>'};
-
-            % Create StatusLabel_2
-            app.StatusLabel_2 = uilabel(app.GridLayout2);
-            app.StatusLabel_2.VerticalAlignment = 'bottom';
-            app.StatusLabel_2.FontSize = 10;
-            app.StatusLabel_2.FontColor = [0.149 0.149 0.149];
-            app.StatusLabel_2.Layout.Row = 2;
-            app.StatusLabel_2.Layout.Column = [1 2];
-            app.StatusLabel_2.Text = 'IDENTIFICAÇÃO';
-
-            % Create StatusLabel_3
-            app.StatusLabel_3 = uilabel(app.GridLayout2);
-            app.StatusLabel_3.VerticalAlignment = 'bottom';
-            app.StatusLabel_3.FontColor = [0.149 0.149 0.149];
-            app.StatusLabel_3.Layout.Row = 3;
-            app.StatusLabel_3.Layout.Column = 2;
-            app.StatusLabel_3.Interpreter = 'html';
-            app.StatusLabel_3.Text = '';
+            % Create ImageLabel
+            app.ImageLabel = uilabel(app.InstrumentGrid2);
+            app.ImageLabel.VerticalAlignment = 'bottom';
+            app.ImageLabel.FontSize = 10;
+            app.ImageLabel.FontColor = [0.149 0.149 0.149];
+            app.ImageLabel.Layout.Row = 2;
+            app.ImageLabel.Layout.Column = [1 2];
+            app.ImageLabel.Text = 'IDENTIFICAÇÃO';
 
             % Create ImageGrid
-            app.ImageGrid = uigridlayout(app.GridLayout2);
+            app.ImageGrid = uigridlayout(app.InstrumentGrid2);
             app.ImageGrid.ColumnWidth = {'1x'};
             app.ImageGrid.RowHeight = {'1x'};
             app.ImageGrid.Layout.Row = 3;
@@ -1522,6 +1512,25 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.Image = uiimage(app.ImageGrid);
             app.Image.Layout.Row = 1;
             app.Image.Layout.Column = 1;
+
+            % Create ImageTag
+            app.ImageTag = uilabel(app.InstrumentGrid2);
+            app.ImageTag.VerticalAlignment = 'bottom';
+            app.ImageTag.FontColor = [0.149 0.149 0.149];
+            app.ImageTag.Layout.Row = 3;
+            app.ImageTag.Layout.Column = 2;
+            app.ImageTag.Interpreter = 'html';
+            app.ImageTag.Text = '';
+
+            % Create Features
+            app.Features = uilabel(app.InstrumentGrid2);
+            app.Features.VerticalAlignment = 'top';
+            app.Features.WordWrap = 'on';
+            app.Features.FontSize = 11;
+            app.Features.Layout.Row = 4;
+            app.Features.Layout.Column = [1 2];
+            app.Features.Interpreter = 'html';
+            app.Features.Text = '';
 
             % Create Toolbar
             app.Toolbar = uigridlayout(app.GridLayout);

@@ -116,7 +116,7 @@ classdef (Abstract) TaskScriptIO
 
                 % Salva arquivo.
                 fileID = fopen(fullfile(FullFolder, 'TaskList.json'), 'wt');
-                fwrite(fileID, jsonencode(List, 'PrettyPrint', true));
+                fwrite(fileID, jsonencode(List, 'PrettyPrint', true, 'ConvertInfAndNaN', false));
                 fclose(fileID);
 
             catch ME

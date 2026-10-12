@@ -1108,15 +1108,28 @@ classdef winTaskList_exported < matlab.apps.AppBase
                         return
                     end
 
+                    observationType = app.TaskListEdited(taskIdx).Observation.Type;
+
                     for bandIdx = 1:numel(app.TaskListEdited(taskIdx).Band)
                         freqStart = app.TaskListEdited(taskIdx).Band(bandIdx).FreqStart;
                         freqStop  = app.TaskListEdited(taskIdx).Band(bandIdx).FreqStop;
+                        observationSamples = app.TaskListEdited(taskIdx).Band(bandIdx).ObservationSamples;
 
                         if freqStart >= freqStop
                             warningMsg = sprintf([ ...
                                 'A faixa <b>%.3f - %.3f MHz</b>, da tarefa "%s", ' ...
                                 'é inválida. A frequência final de uma faixa deve ' ...
                                 'ser superior à inicial.' ...
+                            ], freqStart/1e+6, freqStop/1e+6, taskName);
+                            ui.Dialog(app.UIFigure, "warning", warningMsg);
+
+                            return
+                        end
+
+                        if strcmp(observationType, 'Samples') && observationSamples <= 0
+                            warningMsg = sprintf([ ...
+                                'O número de amostras a coletar da faixa <b>%.3f - %.3f MHz</b>, da tarefa "%s", ' ...
+                                'é inválido. Valor deve ser maior do que zero.' ...
                             ], freqStart/1e+6, freqStop/1e+6, taskName);
                             ui.Dialog(app.UIFigure, "warning", warningMsg);
 

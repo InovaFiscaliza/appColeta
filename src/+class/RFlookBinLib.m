@@ -42,6 +42,10 @@ classdef RFlookBinLib
 
         %-----------------------------------------------------------------%
         function specObj = CloseFile(specObj, idx)
+            if isempty(specObj.Bands(idx).OutputFile.CurrentFile)
+                return
+            end
+            
             switch specObj.Bands(idx).OutputFile.Fileversion
                 case 'RFlookBin v.1'
                     AlocatedSamples = specObj.Bands(idx).OutputFile.CurrentFile.AlocatedSamples;
