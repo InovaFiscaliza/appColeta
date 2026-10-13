@@ -1315,7 +1315,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create TaskTitle
             app.TaskTitle = uilabel(app.TaskGrid);
             app.TaskTitle.VerticalAlignment = 'top';
-            app.TaskTitle.WordWrap = 'on';
             app.TaskTitle.FontColor = [0 0.4471 0.7412];
             app.TaskTitle.Layout.Row = 1;
             app.TaskTitle.Layout.Column = [1 2];
@@ -1647,7 +1646,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             % Create BandTitle
             app.BandTitle = uilabel(app.BandGrid);
             app.BandTitle.VerticalAlignment = 'top';
-            app.BandTitle.WordWrap = 'on';
             app.BandTitle.FontColor = [0 0.4471 0.7412];
             app.BandTitle.Layout.Row = 1;
             app.BandTitle.Layout.Column = [1 5];

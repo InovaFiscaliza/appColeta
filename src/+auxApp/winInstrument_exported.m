@@ -1231,7 +1231,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             % Create InstrumentTitle1
             app.InstrumentTitle1 = uilabel(app.InstrumentGrid1);
             app.InstrumentTitle1.VerticalAlignment = 'top';
-            app.InstrumentTitle1.WordWrap = 'on';
             app.InstrumentTitle1.FontColor = [0 0.451 0.7412];
             app.InstrumentTitle1.Layout.Row = 1;
             app.InstrumentTitle1.Layout.Column = [1 2];
@@ -1485,7 +1484,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             % Create InstrumentTitle2
             app.InstrumentTitle2 = uilabel(app.InstrumentGrid2);
             app.InstrumentTitle2.VerticalAlignment = 'top';
-            app.InstrumentTitle2.WordWrap = 'on';
             app.InstrumentTitle2.FontColor = [0 0.4471 0.7412];
             app.InstrumentTitle2.Layout.Row = 1;
             app.InstrumentTitle2.Layout.Column = [1 2];
