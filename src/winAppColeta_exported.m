@@ -225,7 +225,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                 showTaskLog(app, taskIdx)
                         end
 
-                    case 'auxApp.winAddTask.AntennaList_Tree'
+                    case 'auxApp.winAddTask.AntennaTree'
                         ipcMainMatlabCallAuxiliarApp(app, 'TASK_ADD', 'MATLAB', 'deleteAddedAntenna')
 
                     otherwise
