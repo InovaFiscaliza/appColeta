@@ -1587,11 +1587,11 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 switch app.infoEdition.type
                     case 'new'
                         app.taskList = mainApp.taskList;
-                        app.ConfirmEditionButton.Text = 'Inclui tarefa';
                         
                     case 'edit'
                         app.taskList = util.TaskScriptIO.toRawScript(mainApp.TaskController.Tasks(editionType.idx).TaskSpec.Script);
-                        app.ConfirmEditionButton.Text = 'Edita tarefa';
+                        app.ConfirmEditionButton.Text = 'Editar tarefa';
+                        app.HeaderTitle.Text = {'<b>Edita tarefa de monitoração</b>'; '<font style="color: gray; font-size: 11px;">Escolha os instrumentos que serão empregados (receptor, GPS, comutador de antena etc)</font>'};
                 end
 
                 appEngine.boot(app, app.Role, mainApp)
@@ -3557,7 +3557,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.ConfirmEditionButton.FontColor = [1 1 1];
             app.ConfirmEditionButton.Layout.Row = 1;
             app.ConfirmEditionButton.Layout.Column = 1;
-            app.ConfirmEditionButton.Text = 'Inclui tarefa';
+            app.ConfirmEditionButton.Text = 'Incluir tarefa';
 
             % Create DockModule
             app.DockModule = uigridlayout(app.GridLayout);

@@ -751,7 +751,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.versionInfoLabel.FontSize = 10;
             app.versionInfoLabel.Layout.Row = 1;
             app.versionInfoLabel.Layout.Column = 1;
-            app.versionInfoLabel.Text = 'AMBIENTE:';
+            app.versionInfoLabel.Text = 'AMBIENTE';
 
             % Create versionInfo
             app.versionInfo = uilabel(app.SubGrid1);
@@ -814,7 +814,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.general_FileLabel.FontSize = 10;
             app.general_FileLabel.Layout.Row = 1;
             app.general_FileLabel.Layout.Column = 1;
-            app.general_FileLabel.Text = 'ESTAÇÃO';
+            app.general_FileLabel.Text = 'ESTAÇÃO DE MONITORAÇÃO (aplicável apenas quando se tratar de ERMx, UMS ou EMSat)';
 
             % Create general_FileLock
             app.general_FileLock = uiimage(app.SubGrid2);
@@ -925,7 +925,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.general_versionLabel.FontSize = 10;
             app.general_versionLabel.Layout.Row = 3;
             app.general_versionLabel.Layout.Column = 1;
-            app.general_versionLabel.Text = 'API';
+            app.general_versionLabel.Text = 'SERVIÇO DE COMUNICAÇÃO (TCP)';
 
             % Create general_versionLock
             app.general_versionLock = uiimage(app.SubGrid2);
@@ -1053,7 +1053,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_TiledSpacingLabel.FontSize = 10;
             app.plot_TiledSpacingLabel.Layout.Row = 1;
             app.plot_TiledSpacingLabel.Layout.Column = [1 3];
-            app.plot_TiledSpacingLabel.Text = 'ESPAÇAMENTO ENTRE EIXOS:';
+            app.plot_TiledSpacingLabel.Text = 'ESPAÇAMENTO ENTRE EIXOS';
 
             % Create plot_TiledSpacing
             app.plot_TiledSpacing = uidropdown(app.SubGrid3);
@@ -1063,7 +1063,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_TiledSpacing.BackgroundColor = [1 1 1];
             app.plot_TiledSpacing.Layout.Row = 2;
             app.plot_TiledSpacing.Layout.Column = 1;
-            app.plot_TiledSpacing.Value = 'loose';
+            app.plot_TiledSpacing.Value = 'compact';
 
             % Create plot_colorsLabel
             app.plot_colorsLabel = uilabel(app.SubGrid3);
@@ -1071,7 +1071,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_colorsLabel.FontSize = 10;
             app.plot_colorsLabel.Layout.Row = 3;
             app.plot_colorsLabel.Layout.Column = 1;
-            app.plot_colorsLabel.Text = 'CORES:';
+            app.plot_colorsLabel.Text = 'CORES';
 
             % Create plot_colorsPanel
             app.plot_colorsPanel = uipanel(app.SubGrid3);
@@ -1183,7 +1183,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_WaterfallColormap.BackgroundColor = [1 1 1];
             app.plot_WaterfallColormap.Layout.Row = 2;
             app.plot_WaterfallColormap.Layout.Column = 1;
-            app.plot_WaterfallColormap.Value = 'gray';
+            app.plot_WaterfallColormap.Value = 'hot';
 
             % Create plot_WaterfallDepthLabel
             app.plot_WaterfallDepthLabel = uilabel(app.plot_WaterfallGrid);
@@ -1209,7 +1209,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationLabel.FontSize = 10;
             app.plot_IntegrationLabel.Layout.Row = 7;
             app.plot_IntegrationLabel.Layout.Column = 1;
-            app.plot_IntegrationLabel.Text = 'INTEGRAÇÃO:';
+            app.plot_IntegrationLabel.Text = 'INTEGRAÇÃO';
 
             % Create plot_IntegrationPanel
             app.plot_IntegrationPanel = uipanel(app.SubGrid3);
@@ -1280,7 +1280,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_WaterfallLabel.FontSize = 10;
             app.plot_WaterfallLabel.Layout.Row = 5;
             app.plot_WaterfallLabel.Layout.Column = 1;
-            app.plot_WaterfallLabel.Text = 'WATERFALL:';
+            app.plot_WaterfallLabel.Text = 'WATERFALL';
 
             % Create SubTab4
             app.SubTab4 = uitab(app.SubTabGroup);
@@ -1302,7 +1302,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.DATAHUBPOSTLabel.FontSize = 10;
             app.DATAHUBPOSTLabel.Layout.Row = 1;
             app.DATAHUBPOSTLabel.Layout.Column = 1;
-            app.DATAHUBPOSTLabel.Text = 'DATAHUB - POST:';
+            app.DATAHUBPOSTLabel.Text = 'DATAHUB - POST';
 
             % Create DataHubPOST
             app.DataHubPOST = uieditfield(app.SubGrid4, 'text');
@@ -1328,7 +1328,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.userPathLabel.FontSize = 10;
             app.userPathLabel.Layout.Row = 3;
             app.userPathLabel.Layout.Column = 1;
-            app.userPathLabel.Text = 'PASTA DO USUÁRIO:';
+            app.userPathLabel.Text = 'PASTA DO USUÁRIO';
 
             % Create userPath
             app.userPath = uieditfield(app.SubGrid4, 'text');
