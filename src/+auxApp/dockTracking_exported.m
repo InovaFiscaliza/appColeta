@@ -4,8 +4,6 @@ classdef dockTracking_exported < matlab.apps.AppBase
     properties (Access = public)
         UIFigure           matlab.ui.Figure
         GridLayout         matlab.ui.container.GridLayout
-        btnClose           matlab.ui.control.Image
-        DocumentGrid       matlab.ui.container.GridLayout
         ErrorLabel         matlab.ui.control.Label
         LOGButton          matlab.ui.control.Button
         Panel              matlab.ui.container.Panel
@@ -48,9 +46,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
 
     properties (Access = private)
         %-----------------------------------------------------------------%
-        EMSatObj
-        antennaName
-        LOG = struct('type', {}, 'time', {}, 'msg',  {})
+        LogEntries = struct('type', {}, 'time', {}, 'msg',  {})
         UpdateStatus = true
     end
     
@@ -66,21 +62,18 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.AzimuthGauge.Value = antennaPos.Azimuth;
             if targetPos.Azimuth ~= antennaPos.Azimuth
                 [minAz, maxAz] = bounds([antennaPos.Azimuth, targetPos.Azimuth]);
-                set(app.AzimuthGauge, 'ScaleColors', {[0 1 0] [1 1 0] [0 1 0]}, ...
-                                      'ScaleColorLimits', [0 minAz; minAz maxAz; maxAz 360])
+                set(app.AzimuthGauge, 'ScaleColors', {[0 1 0] [1 1 0] [0 1 0]}, 'ScaleColorLimits', [0 minAz; minAz maxAz; maxAz 360])
             end
 
             app.ElevationGauge.Value = antennaPos.Elevation;
             if targetPos.Elevation ~= antennaPos.Elevation
-                set(app.ElevationGauge, 'ScaleColors', [1 1 0], ...
-                                        'ScaleColorLimits', sort([antennaPos.Elevation, targetPos.Elevation]))
+                set(app.ElevationGauge, 'ScaleColors', [1 1 0], 'ScaleColorLimits', sort([antennaPos.Elevation, targetPos.Elevation]))
             end
 
             app.PolarizationGauge.Value = antennaPos.Polarization;
             if targetPos.Polarization ~= antennaPos.Polarization
                 [minPol, maxPol] = bounds([antennaPos.Polarization, targetPos.Polarization]);
-                set(app.PolarizationGauge, 'ScaleColors', {[0 1 0] [1 1 0] [0 1 0]}, ...
-                                           'ScaleColorLimits', [0 minPol; minPol maxPol; maxPol 360])
+                set(app.PolarizationGauge, 'ScaleColors', {[0 1 0] [1 1 0] [0 1 0]}, 'ScaleColorLimits', [0 minPol; minPol maxPol; maxPol 360])
             end
 
             drawnow
@@ -90,8 +83,8 @@ classdef dockTracking_exported < matlab.apps.AppBase
         function screenUpdate(app, antennaPos)
             app.actualPosValue.Text  = sprintf('(%.3fº, %.3fº, %.3fº)', antennaPos.Azimuth, antennaPos.Elevation, antennaPos.Polarization);
 
-            app.Azimuth.Text      = sprintf('%.3fº', antennaPos.Azimuth);
-            app.Elevation.Text    = sprintf('%.3fº', antennaPos.Elevation);
+            app.Azimuth.Text = sprintf('%.3fº', antennaPos.Azimuth);
+            app.Elevation.Text = sprintf('%.3fº', antennaPos.Elevation);
             app.Polarization.Text = sprintf('%.3fº', antennaPos.Polarization);
         end
 
@@ -102,7 +95,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
             if abs(targetPos.Azimuth      - antennaPos.Azimuth)      >= errorTol || ...
                abs(targetPos.Elevation    - antennaPos.Elevation)    >= errorTol || ...
                abs(targetPos.Polarization - antennaPos.Polarization) >= errorTol
-                msgError = app.EMSatObj.AntennaPositionSET(targetPos);
+                msgError = app.mainApp.EMSatObj.AntennaPositionSET(targetPos);
 
                 if ~isempty(msgError)
                     error(msgError)
@@ -115,9 +108,8 @@ classdef dockTracking_exported < matlab.apps.AppBase
         function updatePosition(app, antennaPos, targetPos)
             errorTol = class.Constants.errorPosTolerance;
 
-            % Posição de referência
-            refPos   = struct('Azimuth', [], 'Elevation', [], 'Polarization', []);
-            refPos   = updateReference(app, refPos, antennaPos);
+            refPos = struct('Azimuth', [], 'Elevation', [], 'Polarization', []);
+            refPos = updateReference(app, refPos, antennaPos);
 
             trackTic = tic;
             while app.UpdateStatus
@@ -130,8 +122,8 @@ classdef dockTracking_exported < matlab.apps.AppBase
                     trackTic = tic;
                 end
 
-                [newAntennaPos, errorMsg] = app.EMSatObj.AntennaPositionGET(targetPos.Name);
-                Timestamp = datestr(now, 'dd/mm/yyyy HH:MM:ss');
+                [newAntennaPos, errorMsg] = app.mainApp.EMSatObj.AntennaPositionGET(targetPos.Name);
+                timestamp = datestr(now, 'dd/mm/yyyy HH:MM:ss');
 
                 if isempty(errorMsg)
                     antennaPos = newAntennaPos;
@@ -141,8 +133,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
                     app.PolarizationGauge.Value = antennaPos.Polarization;
                     screenUpdate(app, antennaPos)
     
-                    set(app.ErrorLabel, FontColor = 'black', ...
-                                        Text = sprintf('%s - Coleta da posição atual do conjunto antena/LNB realizada com sucesso', Timestamp))
+                    set(app.ErrorLabel, 'FontColor', 'black', 'Text', sprintf('%s - Coleta da posição atual do conjunto antena/LNB realizada com sucesso', timestamp))
     
                     if abs(targetPos.Azimuth      - antennaPos.Azimuth)      < errorTol && ...
                        abs(targetPos.Elevation    - antennaPos.Elevation)    < errorTol && ...
@@ -151,9 +142,8 @@ classdef dockTracking_exported < matlab.apps.AppBase
                     end
 
                 else
-                    app.LOG(end+1) = struct('type', 'error', 'time', Timestamp, 'msg', errorMsg);
-                    set(app.ErrorLabel, FontColor = 'red', ...
-                                        Text = sprintf('%s - Registro de erro na coleta da posição atual do conjunto antena/LNB', Timestamp))
+                    app.LogEntries(end+1) = struct('type', 'error', 'time', timestamp, 'msg', errorMsg);
+                    set(app.ErrorLabel, 'FontColor', 'red', 'Text', sprintf('%s - Registro de erro na coleta da posição atual do conjunto antena/LNB', timestamp))
                 end
                 drawnow
             end
@@ -162,7 +152,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function refAntennaPos = updateReference(app, refAntennaPos, antennaPos)
+        function refAntennaPos = updateReference(~, refAntennaPos, antennaPos)
             refAntennaPos.Azimuth      = antennaPos.Azimuth;
             refAntennaPos.Elevation    = antennaPos.Elevation;
             refAntennaPos.Polarization = antennaPos.Polarization;
@@ -179,7 +169,6 @@ classdef dockTracking_exported < matlab.apps.AppBase
             try
                 appEngine.boot(app, app.Role, mainApp, [])
 
-                app.EMSatObj = mainApp.EMSatObj;
                 screenStartup(app,  antennaPos, targetPos)
                 setNewPosition(app, antennaPos, targetPos)
                 updatePosition(app, antennaPos, targetPos)
@@ -190,10 +179,9 @@ classdef dockTracking_exported < matlab.apps.AppBase
 
         end
 
-        % Callback function: UIFigure, btnClose
+        % Close request function: UIFigure
         function closeFcn(app, event)
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcnCallFromPopupApp')
             delete(app)
             
         end
@@ -201,8 +189,8 @@ classdef dockTracking_exported < matlab.apps.AppBase
         % Button pushed function: LOGButton
         function LOGButtonPushed(app, event)
             
-            if ~isempty(app.LOG)
-                logTable = struct2table(app.LOG);
+            if ~isempty(app.LogEntries)
+                logTable = struct2table(app.LogEntries);
                 logMsg   = strjoin("<b>" + logTable.time + " - " + upper(logTable.type) + "</b>" + newline + logTable.msg, '\n\n');
             else
                 logMsg = 'Não há registro de erro.';
@@ -249,24 +237,15 @@ classdef dockTracking_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {'1x', 30};
-            app.GridLayout.RowHeight = {30, '1x'};
-            app.GridLayout.RowSpacing = 0;
-            app.GridLayout.Padding = [0 0 0 0];
-            app.GridLayout.BackgroundColor = [0.902 0.902 0.902];
-
-            % Create DocumentGrid
-            app.DocumentGrid = uigridlayout(app.GridLayout);
-            app.DocumentGrid.ColumnWidth = {22, 272, '1x'};
-            app.DocumentGrid.RowHeight = {17, 25, '1x', 22};
-            app.DocumentGrid.ColumnSpacing = 5;
-            app.DocumentGrid.RowSpacing = 5;
-            app.DocumentGrid.Layout.Row = 2;
-            app.DocumentGrid.Layout.Column = [1 2];
-            app.DocumentGrid.BackgroundColor = [0.9804 0.9804 0.9804];
+            app.GridLayout.ColumnWidth = {22, 555};
+            app.GridLayout.RowHeight = {17, 25, 183, 22};
+            app.GridLayout.ColumnSpacing = 5;
+            app.GridLayout.RowSpacing = 5;
+            app.GridLayout.Padding = [20 20 20 20];
+            app.GridLayout.BackgroundColor = [1 1 1];
 
             % Create antennaNameLabel
-            app.antennaNameLabel = uilabel(app.DocumentGrid);
+            app.antennaNameLabel = uilabel(app.GridLayout);
             app.antennaNameLabel.VerticalAlignment = 'bottom';
             app.antennaNameLabel.FontSize = 14;
             app.antennaNameLabel.FontWeight = 'bold';
@@ -275,14 +254,14 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.antennaNameLabel.Text = 'MCL-1';
 
             % Create PositionGrid
-            app.PositionGrid = uigridlayout(app.DocumentGrid);
+            app.PositionGrid = uigridlayout(app.GridLayout);
             app.PositionGrid.ColumnWidth = {'1x', '1x', '1x'};
             app.PositionGrid.ColumnSpacing = 0;
             app.PositionGrid.RowSpacing = 0;
             app.PositionGrid.Padding = [0 0 0 0];
             app.PositionGrid.Layout.Row = 2;
-            app.PositionGrid.Layout.Column = [1 3];
-            app.PositionGrid.BackgroundColor = [0.9804 0.9804 0.9804];
+            app.PositionGrid.Layout.Column = [1 2];
+            app.PositionGrid.BackgroundColor = [1 1 1];
 
             % Create initialPosLabel
             app.initialPosLabel = uilabel(app.PositionGrid);
@@ -340,11 +319,11 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.finalPosValue.Text = '(0.000º, 0.000º, 0.000º)';
 
             % Create Panel
-            app.Panel = uipanel(app.DocumentGrid);
+            app.Panel = uipanel(app.GridLayout);
             app.Panel.AutoResizeChildren = 'off';
             app.Panel.BackgroundColor = [1 1 1];
             app.Panel.Layout.Row = 3;
-            app.Panel.Layout.Column = [1 3];
+            app.Panel.Layout.Column = [1 2];
 
             % Create GridLayout2
             app.GridLayout2 = uigridlayout(app.Panel);
@@ -442,7 +421,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.Polarization.Text = '0.000º';
 
             % Create LOGButton
-            app.LOGButton = uibutton(app.DocumentGrid, 'push');
+            app.LOGButton = uibutton(app.GridLayout, 'push');
             app.LOGButton.ButtonPushedFcn = createCallbackFcn(app, @LOGButtonPushed, true);
             app.LOGButton.Icon = 'LOG_32.png';
             app.LOGButton.BackgroundColor = [1 1 1];
@@ -452,20 +431,11 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.LOGButton.Text = '';
 
             % Create ErrorLabel
-            app.ErrorLabel = uilabel(app.DocumentGrid);
+            app.ErrorLabel = uilabel(app.GridLayout);
             app.ErrorLabel.FontSize = 11;
             app.ErrorLabel.Layout.Row = 4;
-            app.ErrorLabel.Layout.Column = [2 3];
+            app.ErrorLabel.Layout.Column = 2;
             app.ErrorLabel.Text = '';
-
-            % Create btnClose
-            app.btnClose = uiimage(app.GridLayout);
-            app.btnClose.ScaleMethod = 'none';
-            app.btnClose.ImageClickedFcn = createCallbackFcn(app, @closeFcn, true);
-            app.btnClose.Tag = 'Close';
-            app.btnClose.Layout.Row = 1;
-            app.btnClose.Layout.Column = 2;
-            app.btnClose.ImageSource = 'Delete_12SVG.svg';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
