@@ -162,6 +162,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
         mainApp
         jsBackDoor
         progressDialog
+        popupContainer
 
         taskList
         receiverObj
@@ -199,9 +200,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     case {'winAppColeta', 'winAppColeta_exported'}
                         switch operationType
                             % auxApp.dockTracking >> winAppColeta >> auxApp.winAddTask
-                            case 'closeFcnCallFromPopupApp'
-                                app.popupContainer.Parent.Visible = 0;
-
                             case 'deleteAddedAntenna'
                                 onAntennaDelButtonClicked(app)
 

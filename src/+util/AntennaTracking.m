@@ -26,15 +26,15 @@ classdef (Abstract) AntennaTracking
         function verifyPointing(callingApp, context, antennaMetaData, progressDialog)
             arguments
                 callingApp
-                context {mustBeMember(context, {'mainApp', 'TASK_ADD'})}
+                context {mustBeMember(context, {'mainApp', 'TASK_VIEW', 'TASK_ADD'})}
                 antennaMetaData
                 progressDialog
             end
 
             toleranceDeg = class.Constants.errorPosTolerance;
-            isMispointed = false;
 
             for ii = 1:numel(antennaMetaData)
+                isMispointed  = false;
                 antennaTarget = util.AntennaTracking.parseAntennaTarget(antennaMetaData(ii), antennaMetaData(ii).Name);
                 antennaName   = antennaTarget.Name;
 
@@ -99,7 +99,7 @@ classdef (Abstract) AntennaTracking
                                 mainApp = callingApp;
                             end
 
-                            ipcMainMatlabOpenPopupApp(mainApp, callingApp, 'Tracking', currentPosition, antennaTarget)
+                            ipcMainMatlabOpenPopupApp(mainApp, callingApp, 'Tracking', context, currentPosition, antennaTarget)
                         end
 
                     case 'Manual'

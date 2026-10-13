@@ -180,8 +180,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             deleteContextMenu(app.tabGroupController, hApp.UIFigure, popupCurrentAppTag)
                         end
 
-                        delete(app.popupCurrentApp)
-                        app.popupCurrentApp = [];
+                        if contains(class(app.popupCurrentApp), popupCurrentAppTag)
+                            delete(app.popupCurrentApp)
+                            app.popupCurrentApp = [];
+                        end
                     
                     case 'customForm'
                         switch event.HTMLEventData.uuid

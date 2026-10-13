@@ -4,28 +4,28 @@ classdef dockTracking_exported < matlab.apps.AppBase
     properties (Access = public)
         UIFigure           matlab.ui.Figure
         GridLayout         matlab.ui.container.GridLayout
-        ErrorLabel         matlab.ui.control.Label
-        LOGButton          matlab.ui.control.Button
-        Panel              matlab.ui.container.Panel
-        GridLayout2        matlab.ui.container.GridLayout
-        Polarization       matlab.ui.control.Label
+        StatusLabel        matlab.ui.control.Label
+        LogButton          matlab.ui.control.Button
+        GaugePanel         matlab.ui.container.Panel
+        GaugeGrid          matlab.ui.container.GridLayout
+        PolarizationValue  matlab.ui.control.Label
         PolarizationGauge  matlab.ui.control.Gauge
         PolarizationLabel  matlab.ui.control.Label
-        Elevation          matlab.ui.control.Label
+        ElevationValue     matlab.ui.control.Label
         ElevationGrid      matlab.ui.container.GridLayout
         ElevationGauge     matlab.ui.control.NinetyDegreeGauge
         ElevationLabel     matlab.ui.control.Label
-        Azimuth            matlab.ui.control.Label
+        AzimuthValue       matlab.ui.control.Label
         AzimuthGauge       matlab.ui.control.Gauge
         AzimuthLabel       matlab.ui.control.Label
         PositionGrid       matlab.ui.container.GridLayout
-        finalPosValue      matlab.ui.control.Label
-        finalPosLabel      matlab.ui.control.Label
-        actualPosValue     matlab.ui.control.Label
-        actualPosLabel     matlab.ui.control.Label
-        initialPosValue    matlab.ui.control.Label
-        initialPosLabel    matlab.ui.control.Label
-        antennaNameLabel   matlab.ui.control.Label
+        TargetPosValue     matlab.ui.control.Label
+        TargetPosLabel     matlab.ui.control.Label
+        CurrentPosValue    matlab.ui.control.Label
+        CurrentPosLabel    matlab.ui.control.Label
+        InitialPosValue    matlab.ui.control.Label
+        InitialPosLabel    matlab.ui.control.Label
+        AntennaNameLabel   matlab.ui.control.Label
     end
 
     
@@ -38,7 +38,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
     properties (Access = public)
         %-----------------------------------------------------------------%
         Container
-        isDocked = true        
+        isDocked = false        
         mainApp
         callingApp
     end
@@ -47,33 +47,28 @@ classdef dockTracking_exported < matlab.apps.AppBase
     properties (Access = private)
         %-----------------------------------------------------------------%
         LogEntries = struct('type', {}, 'time', {}, 'msg',  {})
-        UpdateStatus = true
+        UpdateStatus = false
+        TrackingActive = false
+        TrackingTimer
+        InitialPosition
+        TargetPosition
     end
     
 
     methods (Access = private)
         %-----------------------------------------------------------------%
         function screenStartup(app, antennaPos, targetPos)
-            app.antennaNameLabel.Text = targetPos.Name;
-            app.initialPosValue.Text  = sprintf('(%.3fº, %.3fº, %.3fº)', antennaPos.Azimuth, antennaPos.Elevation, antennaPos.Polarization);
-            app.finalPosValue.Text    = sprintf('(%.3fº, %.3fº, %.3fº)', targetPos.Azimuth,  targetPos.Elevation,  targetPos.Polarization);
+            app.AntennaNameLabel.Text = targetPos.Name;
+            app.InitialPosValue.Text  = sprintf('(%.3fº, %.3fº, %.3fº)', antennaPos.Azimuth, antennaPos.Elevation, antennaPos.Polarization);
+            app.TargetPosValue.Text   = sprintf('(%.3fº, %.3fº, %.3fº)', targetPos.Azimuth,  targetPos.Elevation,  targetPos.Polarization);
             screenUpdate(app, antennaPos)
 
-            app.AzimuthGauge.Value = antennaPos.Azimuth;
-            if targetPos.Azimuth ~= antennaPos.Azimuth
-                [minAz, maxAz] = bounds([antennaPos.Azimuth, targetPos.Azimuth]);
-                set(app.AzimuthGauge, 'ScaleColors', {[0 1 0] [1 1 0] [0 1 0]}, 'ScaleColorLimits', [0 minAz; minAz maxAz; maxAz 360])
-            end
+            setCircularGaugeScale(app, app.AzimuthGauge, [antennaPos.Azimuth, targetPos.Azimuth])
+            setCircularGaugeScale(app, app.PolarizationGauge, [antennaPos.Polarization, targetPos.Polarization])
 
-            app.ElevationGauge.Value = antennaPos.Elevation;
-            if targetPos.Elevation ~= antennaPos.Elevation
-                set(app.ElevationGauge, 'ScaleColors', [1 1 0], 'ScaleColorLimits', sort([antennaPos.Elevation, targetPos.Elevation]))
-            end
-
-            app.PolarizationGauge.Value = antennaPos.Polarization;
-            if targetPos.Polarization ~= antennaPos.Polarization
-                [minPol, maxPol] = bounds([antennaPos.Polarization, targetPos.Polarization]);
-                set(app.PolarizationGauge, 'ScaleColors', {[0 1 0] [1 1 0] [0 1 0]}, 'ScaleColorLimits', [0 minPol; minPol maxPol; maxPol 360])
+            elevationRange = sort(min(max([antennaPos.Elevation, targetPos.Elevation], 0), 90));
+            if diff(elevationRange) > 0
+                set(app.ElevationGauge, 'ScaleColors', [1 1 0], 'ScaleColorLimits', elevationRange)
             end
 
             drawnow
@@ -81,81 +76,136 @@ classdef dockTracking_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function screenUpdate(app, antennaPos)
-            app.actualPosValue.Text  = sprintf('(%.3fº, %.3fº, %.3fº)', antennaPos.Azimuth, antennaPos.Elevation, antennaPos.Polarization);
+            app.CurrentPosValue.Text  = sprintf('(%.3fº, %.3fº, %.3fº)', antennaPos.Azimuth, antennaPos.Elevation, antennaPos.Polarization);
 
-            app.Azimuth.Text = sprintf('%.3fº', antennaPos.Azimuth);
-            app.Elevation.Text = sprintf('%.3fº', antennaPos.Elevation);
-            app.Polarization.Text = sprintf('%.3fº', antennaPos.Polarization);
+            app.AzimuthValue.Text = sprintf('%.3fº', antennaPos.Azimuth);
+            app.ElevationValue.Text = sprintf('%.3fº', antennaPos.Elevation);
+            app.PolarizationValue.Text = sprintf('%.3fº', antennaPos.Polarization);
+
+            % O ACU pode reportar ângulos fora dos limites dos medidores.
+            app.AzimuthGauge.Value      = mod(antennaPos.Azimuth, 360);
+            app.ElevationGauge.Value    = min(max(antennaPos.Elevation, 0), 90);
+            app.PolarizationGauge.Value = mod(antennaPos.Polarization, 360);
+        end
+
+        %-----------------------------------------------------------------%
+        function setCircularGaugeScale(~, hGauge, values)
+            [minValue, maxValue] = bounds(mod(values, 360));
+
+            if maxValue > minValue
+                scaleLimits = [0 minValue; minValue maxValue; maxValue 360];
+                scaleColors = {[0 1 0] [1 1 0] [0 1 0]};
+                isValid     = diff(scaleLimits, 1, 2) > 0;
+
+                set(hGauge, 'ScaleColors', scaleColors(isValid), 'ScaleColorLimits', scaleLimits(isValid, :))
+            end
         end
 
         %-----------------------------------------------------------------%
         function setNewPosition(app, antennaPos, targetPos)
             errorTol = class.Constants.errorPosTolerance;
 
-            if abs(targetPos.Azimuth      - antennaPos.Azimuth)      >= errorTol || ...
-               abs(targetPos.Elevation    - antennaPos.Elevation)    >= errorTol || ...
-               abs(targetPos.Polarization - antennaPos.Polarization) >= errorTol
-                msgError = app.mainApp.EMSatObj.AntennaPositionSET(targetPos);
+            if ~isSamePosition(app, targetPos, antennaPos, errorTol)
+                msgError = AntennaPositionSET(app.mainApp.EMSatObj, targetPos);
 
                 if ~isempty(msgError)
                     error(msgError)
-                    closeFcn(app)
                 end
             end
         end
 
         %-----------------------------------------------------------------%
         function updatePosition(app, antennaPos, targetPos)
-            errorTol = class.Constants.errorPosTolerance;
+            STALL_TIME = 10;    % s
+            TIMEOUT    = 600;   % s
+            errorTol   = class.Constants.errorPosTolerance;
 
-            refPos = struct('Azimuth', [], 'Elevation', [], 'Polarization', []);
-            refPos = updateReference(app, refPos, antennaPos);
+            refPos      = antennaPos;
+            stallWarned = false;
+            trackTic    = tic;
+            totalTic    = tic;
 
-            trackTic = tic;
-            while app.UpdateStatus
-                if toc(trackTic) > 10
-                    if isequal(refPos, antennaPos)
-                        ui.Dialog(app.UIFigure, 'warning', 'Não alterado o apontamento da antena mesmo após decorridos 10 segundos...');
+            while isvalid(app) && app.UpdateStatus
+                if toc(totalTic) > TIMEOUT
+                    error('A antena não atingiu a posição alvo após decorridos %d segundos.', TIMEOUT)
+                end
+
+                if toc(trackTic) > STALL_TIME
+                    if isSamePosition(app, refPos, antennaPos, errorTol)
+                        msgWarning = sprintf('Não alterado o apontamento da antena mesmo após decorridos %d segundos...', STALL_TIME);
+                        app.LogEntries(end+1) = struct('type', 'warning', 'time', datestr(now, 'dd/mm/yyyy HH:MM:ss'), 'msg', msgWarning);
+
+                        if ~stallWarned
+                            ui.Dialog(app.UIFigure, 'warning', msgWarning);
+                            stallWarned = true;
+                        end
                     else
-                        refPos = updateReference(app, refPos, antennaPos);
+                        refPos = antennaPos;
+                        stallWarned = false;
                     end
                     trackTic = tic;
                 end
 
-                [newAntennaPos, errorMsg] = app.mainApp.EMSatObj.AntennaPositionGET(targetPos.Name);
+                [newAntennaPos, errorMsg] = AntennaPositionGET(app.mainApp.EMSatObj, targetPos.Name);
+                if isempty(errorMsg) && isempty(newAntennaPos)
+                    errorMsg = 'Resposta do ACU não reconhecida.';
+                end
                 timestamp = datestr(now, 'dd/mm/yyyy HH:MM:ss');
 
                 if isempty(errorMsg)
                     antennaPos = newAntennaPos;
-    
-                    app.AzimuthGauge.Value      = antennaPos.Azimuth;
-                    app.ElevationGauge.Value    = antennaPos.Elevation;
-                    app.PolarizationGauge.Value = antennaPos.Polarization;
                     screenUpdate(app, antennaPos)
-    
-                    set(app.ErrorLabel, 'FontColor', 'black', 'Text', sprintf('%s - Coleta da posição atual do conjunto antena/LNB realizada com sucesso', timestamp))
-    
-                    if abs(targetPos.Azimuth      - antennaPos.Azimuth)      < errorTol && ...
-                       abs(targetPos.Elevation    - antennaPos.Elevation)    < errorTol && ...
-                       abs(targetPos.Polarization - antennaPos.Polarization) < errorTol
+
+                    set(app.StatusLabel, 'FontColor', 'black', 'Text', sprintf('%s - Coleta da posição atual do conjunto antena/LNB realizada com sucesso', timestamp))
+
+                    if isSamePosition(app, targetPos, antennaPos, errorTol)
                         break
                     end
 
                 else
                     app.LogEntries(end+1) = struct('type', 'error', 'time', timestamp, 'msg', errorMsg);
-                    set(app.ErrorLabel, 'FontColor', 'red', 'Text', sprintf('%s - Registro de erro na coleta da posição atual do conjunto antena/LNB', timestamp))
+                    set(app.StatusLabel, 'FontColor', 'red', 'Text', sprintf('%s - Registro de erro na coleta da posição atual do conjunto antena/LNB', timestamp))
                 end
-                drawnow
-            end
 
-            closeFcn(app)
+                pause(.5)
+            end
         end
 
         %-----------------------------------------------------------------%
-        function refAntennaPos = updateReference(~, refAntennaPos, antennaPos)
-            refAntennaPos.Azimuth      = antennaPos.Azimuth;
-            refAntennaPos.Elevation    = antennaPos.Elevation;
-            refAntennaPos.Polarization = antennaPos.Polarization;
+        function status = isSamePosition(~, posA, posB, tolerance)
+            status = abs(wrapTo180(posA.Azimuth      - posB.Azimuth))      < tolerance && ...
+                     abs(posA.Elevation              - posB.Elevation)    < tolerance && ...
+                     abs(wrapTo180(posA.Polarization - posB.Polarization)) < tolerance;
+        end
+
+        %-----------------------------------------------------------------%
+        function showError(app, ME)
+            ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
+        end
+
+        %-----------------------------------------------------------------%
+        function startTracking(app)
+            delete(app.TrackingTimer)
+
+            app.TrackingActive = true;
+            app.UpdateStatus   = true;
+
+            try
+                setNewPosition(app, app.InitialPosition, app.TargetPosition)
+                updatePosition(app, app.InitialPosition, app.TargetPosition)
+
+            catch ME
+                if isvalid(app)
+                    app.TrackingActive = false;
+                    showError(app, ME)
+                end
+                return
+            end
+
+            if isvalid(app)
+                app.TrackingActive = false;
+                closeFcn(app)
+            end
         end
     end
     
@@ -164,17 +214,30 @@ classdef dockTracking_exported < matlab.apps.AppBase
     methods (Access = private)
 
         % Code that executes after component creation
-        function startupFcn(app, mainApp, callingApp, antennaPos, targetPos)
+        function startupFcn(app, mainApp, callingApp, context, antennaPos, targetPos)
             
             try
-                appEngine.boot(app, app.Role, mainApp, [])
+                appEngine.boot(app, app.Role, mainApp, callingApp)
+
+                app.InitialPosition = antennaPos;
+                app.TargetPosition  = targetPos;
 
                 screenStartup(app,  antennaPos, targetPos)
-                setNewPosition(app, antennaPos, targetPos)
-                updatePosition(app, antennaPos, targetPos)
+
+                % O atraso permite que o popup seja exibido antes do laço bloqueante.
+                app.TrackingTimer = timer( ...
+                    'ExecutionMode', 'singleShot', ...
+                    'StartDelay',    1, ...
+                    'TimerFcn',      @(~,~)startTracking(app) ...
+                );
+                start(app.TrackingTimer)
+
+                % Evita o disparo do timer caso o app seja deletado durante o atraso.
+                trackingTimer = app.TrackingTimer;
+                app.GridLayout.DeleteFcn = @(~,~)delete(trackingTimer);
                 
             catch ME
-                ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
+                showError(app, ME)
             end
 
         end
@@ -182,12 +245,30 @@ classdef dockTracking_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            delete(app)
+            % Com o acompanhamento ativo, o laço encerra o app ao terminar.
+            if app.TrackingActive
+                app.UpdateStatus = false;
+                return
+            end
+
+            if app.isDocked && ~isempty(app.callingApp) && isvalid(app.callingApp) && isstruct(app.GridLayout.UserData) && isfield(app.GridLayout.UserData, 'id')
+                % O fechamento do overlay aciona closeFcnCallFromPopupApp, que deleta o app.
+                sendEventToHTMLSource(app.callingApp.jsBackDoor, 'closePopupAppRequest', struct('dataTag', app.GridLayout.UserData.id));
+
+                waitTic = tic;
+                while isvalid(app) && toc(waitTic) < 2
+                    pause(.1)
+                end
+            end
+
+            if isvalid(app)
+                delete(app)
+            end
             
         end
 
-        % Button pushed function: LOGButton
-        function LOGButtonPushed(app, event)
+        % Button pushed function: LogButton
+        function LogButtonPushed(app, event)
             
             if ~isempty(app.LogEntries)
                 logTable = struct2table(app.LogEntries);
@@ -244,14 +325,14 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.GridLayout.Padding = [20 20 20 20];
             app.GridLayout.BackgroundColor = [1 1 1];
 
-            % Create antennaNameLabel
-            app.antennaNameLabel = uilabel(app.GridLayout);
-            app.antennaNameLabel.VerticalAlignment = 'bottom';
-            app.antennaNameLabel.FontSize = 14;
-            app.antennaNameLabel.FontWeight = 'bold';
-            app.antennaNameLabel.Layout.Row = 1;
-            app.antennaNameLabel.Layout.Column = [1 2];
-            app.antennaNameLabel.Text = 'MCL-1';
+            % Create AntennaNameLabel
+            app.AntennaNameLabel = uilabel(app.GridLayout);
+            app.AntennaNameLabel.VerticalAlignment = 'bottom';
+            app.AntennaNameLabel.FontSize = 14;
+            app.AntennaNameLabel.FontWeight = 'bold';
+            app.AntennaNameLabel.Layout.Row = 1;
+            app.AntennaNameLabel.Layout.Column = [1 2];
+            app.AntennaNameLabel.Text = 'MCL-1';
 
             % Create PositionGrid
             app.PositionGrid = uigridlayout(app.GridLayout);
@@ -263,77 +344,77 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.PositionGrid.Layout.Column = [1 2];
             app.PositionGrid.BackgroundColor = [1 1 1];
 
-            % Create initialPosLabel
-            app.initialPosLabel = uilabel(app.PositionGrid);
-            app.initialPosLabel.VerticalAlignment = 'bottom';
-            app.initialPosLabel.FontSize = 11;
-            app.initialPosLabel.FontColor = [0.502 0.502 0.502];
-            app.initialPosLabel.Layout.Row = 1;
-            app.initialPosLabel.Layout.Column = 1;
-            app.initialPosLabel.Text = 'Posição inicial:';
+            % Create InitialPosLabel
+            app.InitialPosLabel = uilabel(app.PositionGrid);
+            app.InitialPosLabel.VerticalAlignment = 'bottom';
+            app.InitialPosLabel.FontSize = 11;
+            app.InitialPosLabel.FontColor = [0.502 0.502 0.502];
+            app.InitialPosLabel.Layout.Row = 1;
+            app.InitialPosLabel.Layout.Column = 1;
+            app.InitialPosLabel.Text = 'Posição inicial:';
 
-            % Create initialPosValue
-            app.initialPosValue = uilabel(app.PositionGrid);
-            app.initialPosValue.FontSize = 11;
-            app.initialPosValue.FontColor = [0.502 0.502 0.502];
-            app.initialPosValue.Layout.Row = 2;
-            app.initialPosValue.Layout.Column = 1;
-            app.initialPosValue.Text = '(0.000º, 0.000º, 0.000º)';
+            % Create InitialPosValue
+            app.InitialPosValue = uilabel(app.PositionGrid);
+            app.InitialPosValue.FontSize = 11;
+            app.InitialPosValue.FontColor = [0.502 0.502 0.502];
+            app.InitialPosValue.Layout.Row = 2;
+            app.InitialPosValue.Layout.Column = 1;
+            app.InitialPosValue.Text = '(0.000º, 0.000º, 0.000º)';
 
-            % Create actualPosLabel
-            app.actualPosLabel = uilabel(app.PositionGrid);
-            app.actualPosLabel.HorizontalAlignment = 'center';
-            app.actualPosLabel.VerticalAlignment = 'bottom';
-            app.actualPosLabel.FontSize = 11;
-            app.actualPosLabel.FontColor = [1 0 0];
-            app.actualPosLabel.Layout.Row = 1;
-            app.actualPosLabel.Layout.Column = 2;
-            app.actualPosLabel.Text = 'Posição atual:';
+            % Create CurrentPosLabel
+            app.CurrentPosLabel = uilabel(app.PositionGrid);
+            app.CurrentPosLabel.HorizontalAlignment = 'center';
+            app.CurrentPosLabel.VerticalAlignment = 'bottom';
+            app.CurrentPosLabel.FontSize = 11;
+            app.CurrentPosLabel.FontColor = [1 0 0];
+            app.CurrentPosLabel.Layout.Row = 1;
+            app.CurrentPosLabel.Layout.Column = 2;
+            app.CurrentPosLabel.Text = 'Posição atual:';
 
-            % Create actualPosValue
-            app.actualPosValue = uilabel(app.PositionGrid);
-            app.actualPosValue.HorizontalAlignment = 'center';
-            app.actualPosValue.FontSize = 11;
-            app.actualPosValue.FontColor = [1 0 0];
-            app.actualPosValue.Layout.Row = 2;
-            app.actualPosValue.Layout.Column = 2;
-            app.actualPosValue.Text = '(0.000º, 0.000º, 0.000º)';
+            % Create CurrentPosValue
+            app.CurrentPosValue = uilabel(app.PositionGrid);
+            app.CurrentPosValue.HorizontalAlignment = 'center';
+            app.CurrentPosValue.FontSize = 11;
+            app.CurrentPosValue.FontColor = [1 0 0];
+            app.CurrentPosValue.Layout.Row = 2;
+            app.CurrentPosValue.Layout.Column = 2;
+            app.CurrentPosValue.Text = '(0.000º, 0.000º, 0.000º)';
 
-            % Create finalPosLabel
-            app.finalPosLabel = uilabel(app.PositionGrid);
-            app.finalPosLabel.HorizontalAlignment = 'right';
-            app.finalPosLabel.VerticalAlignment = 'bottom';
-            app.finalPosLabel.FontSize = 11;
-            app.finalPosLabel.FontColor = [0 0.4471 0.7412];
-            app.finalPosLabel.Layout.Row = 1;
-            app.finalPosLabel.Layout.Column = 3;
-            app.finalPosLabel.Text = 'Posição alvo:';
+            % Create TargetPosLabel
+            app.TargetPosLabel = uilabel(app.PositionGrid);
+            app.TargetPosLabel.HorizontalAlignment = 'right';
+            app.TargetPosLabel.VerticalAlignment = 'bottom';
+            app.TargetPosLabel.FontSize = 11;
+            app.TargetPosLabel.FontColor = [0 0.4471 0.7412];
+            app.TargetPosLabel.Layout.Row = 1;
+            app.TargetPosLabel.Layout.Column = 3;
+            app.TargetPosLabel.Text = 'Posição alvo:';
 
-            % Create finalPosValue
-            app.finalPosValue = uilabel(app.PositionGrid);
-            app.finalPosValue.HorizontalAlignment = 'right';
-            app.finalPosValue.FontSize = 11;
-            app.finalPosValue.FontColor = [0 0.4471 0.7412];
-            app.finalPosValue.Layout.Row = 2;
-            app.finalPosValue.Layout.Column = 3;
-            app.finalPosValue.Text = '(0.000º, 0.000º, 0.000º)';
+            % Create TargetPosValue
+            app.TargetPosValue = uilabel(app.PositionGrid);
+            app.TargetPosValue.HorizontalAlignment = 'right';
+            app.TargetPosValue.FontSize = 11;
+            app.TargetPosValue.FontColor = [0 0.4471 0.7412];
+            app.TargetPosValue.Layout.Row = 2;
+            app.TargetPosValue.Layout.Column = 3;
+            app.TargetPosValue.Text = '(0.000º, 0.000º, 0.000º)';
 
-            % Create Panel
-            app.Panel = uipanel(app.GridLayout);
-            app.Panel.AutoResizeChildren = 'off';
-            app.Panel.BackgroundColor = [1 1 1];
-            app.Panel.Layout.Row = 3;
-            app.Panel.Layout.Column = [1 2];
+            % Create GaugePanel
+            app.GaugePanel = uipanel(app.GridLayout);
+            app.GaugePanel.AutoResizeChildren = 'off';
+            app.GaugePanel.BackgroundColor = [1 1 1];
+            app.GaugePanel.Layout.Row = 3;
+            app.GaugePanel.Layout.Column = [1 2];
 
-            % Create GridLayout2
-            app.GridLayout2 = uigridlayout(app.Panel);
-            app.GridLayout2.ColumnWidth = {'1x', '1x', '1x'};
-            app.GridLayout2.RowHeight = {17, '1x', 17};
-            app.GridLayout2.RowSpacing = 5;
-            app.GridLayout2.BackgroundColor = [1 1 1];
+            % Create GaugeGrid
+            app.GaugeGrid = uigridlayout(app.GaugePanel);
+            app.GaugeGrid.ColumnWidth = {'1x', '1x', '1x'};
+            app.GaugeGrid.RowHeight = {17, '1x', 17};
+            app.GaugeGrid.RowSpacing = 5;
+            app.GaugeGrid.BackgroundColor = [1 1 1];
 
             % Create AzimuthLabel
-            app.AzimuthLabel = uilabel(app.GridLayout2);
+            app.AzimuthLabel = uilabel(app.GaugeGrid);
             app.AzimuthLabel.HorizontalAlignment = 'center';
             app.AzimuthLabel.FontWeight = 'bold';
             app.AzimuthLabel.Layout.Row = 1;
@@ -341,7 +422,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.AzimuthLabel.Text = 'AZIMUTE';
 
             % Create AzimuthGauge
-            app.AzimuthGauge = uigauge(app.GridLayout2, 'circular');
+            app.AzimuthGauge = uigauge(app.GaugeGrid, 'circular');
             app.AzimuthGauge.Limits = [0 360];
             app.AzimuthGauge.MajorTicks = [0 45 90 135 180 225 270 315 360];
             app.AzimuthGauge.MajorTickLabels = {'0', '45', '90', '135', '180', '225', '270', '315', '360'};
@@ -349,17 +430,17 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.AzimuthGauge.Layout.Row = 2;
             app.AzimuthGauge.Layout.Column = 1;
 
-            % Create Azimuth
-            app.Azimuth = uilabel(app.GridLayout2);
-            app.Azimuth.HorizontalAlignment = 'center';
-            app.Azimuth.FontSize = 11;
-            app.Azimuth.FontColor = [1 0 0];
-            app.Azimuth.Layout.Row = 3;
-            app.Azimuth.Layout.Column = 1;
-            app.Azimuth.Text = '0.000º';
+            % Create AzimuthValue
+            app.AzimuthValue = uilabel(app.GaugeGrid);
+            app.AzimuthValue.HorizontalAlignment = 'center';
+            app.AzimuthValue.FontSize = 11;
+            app.AzimuthValue.FontColor = [1 0 0];
+            app.AzimuthValue.Layout.Row = 3;
+            app.AzimuthValue.Layout.Column = 1;
+            app.AzimuthValue.Text = '0.000º';
 
             % Create ElevationLabel
-            app.ElevationLabel = uilabel(app.GridLayout2);
+            app.ElevationLabel = uilabel(app.GaugeGrid);
             app.ElevationLabel.HorizontalAlignment = 'center';
             app.ElevationLabel.FontWeight = 'bold';
             app.ElevationLabel.Layout.Row = 1;
@@ -367,7 +448,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.ElevationLabel.Text = 'ELEVAÇÃO';
 
             % Create ElevationGrid
-            app.ElevationGrid = uigridlayout(app.GridLayout2);
+            app.ElevationGrid = uigridlayout(app.GaugeGrid);
             app.ElevationGrid.ColumnWidth = {'1x'};
             app.ElevationGrid.RowHeight = {'1x'};
             app.ElevationGrid.Padding = [20 10 20 10];
@@ -385,17 +466,17 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.ElevationGauge.Layout.Row = 1;
             app.ElevationGauge.Layout.Column = 1;
 
-            % Create Elevation
-            app.Elevation = uilabel(app.GridLayout2);
-            app.Elevation.HorizontalAlignment = 'center';
-            app.Elevation.FontSize = 11;
-            app.Elevation.FontColor = [1 0 0];
-            app.Elevation.Layout.Row = 3;
-            app.Elevation.Layout.Column = 2;
-            app.Elevation.Text = '0.000º';
+            % Create ElevationValue
+            app.ElevationValue = uilabel(app.GaugeGrid);
+            app.ElevationValue.HorizontalAlignment = 'center';
+            app.ElevationValue.FontSize = 11;
+            app.ElevationValue.FontColor = [1 0 0];
+            app.ElevationValue.Layout.Row = 3;
+            app.ElevationValue.Layout.Column = 2;
+            app.ElevationValue.Text = '0.000º';
 
             % Create PolarizationLabel
-            app.PolarizationLabel = uilabel(app.GridLayout2);
+            app.PolarizationLabel = uilabel(app.GaugeGrid);
             app.PolarizationLabel.HorizontalAlignment = 'center';
             app.PolarizationLabel.FontWeight = 'bold';
             app.PolarizationLabel.Layout.Row = 1;
@@ -403,7 +484,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.PolarizationLabel.Text = 'POLARIZAÇÃO';
 
             % Create PolarizationGauge
-            app.PolarizationGauge = uigauge(app.GridLayout2, 'circular');
+            app.PolarizationGauge = uigauge(app.GaugeGrid, 'circular');
             app.PolarizationGauge.Limits = [0 360];
             app.PolarizationGauge.MajorTicks = [0 45 90 135 180 225 270 315 360];
             app.PolarizationGauge.MajorTickLabels = {'0', '45', '90', '135', '180', '225', '270', '315', '360'};
@@ -411,31 +492,31 @@ classdef dockTracking_exported < matlab.apps.AppBase
             app.PolarizationGauge.Layout.Row = 2;
             app.PolarizationGauge.Layout.Column = 3;
 
-            % Create Polarization
-            app.Polarization = uilabel(app.GridLayout2);
-            app.Polarization.HorizontalAlignment = 'center';
-            app.Polarization.FontSize = 11;
-            app.Polarization.FontColor = [1 0 0];
-            app.Polarization.Layout.Row = 3;
-            app.Polarization.Layout.Column = 3;
-            app.Polarization.Text = '0.000º';
+            % Create PolarizationValue
+            app.PolarizationValue = uilabel(app.GaugeGrid);
+            app.PolarizationValue.HorizontalAlignment = 'center';
+            app.PolarizationValue.FontSize = 11;
+            app.PolarizationValue.FontColor = [1 0 0];
+            app.PolarizationValue.Layout.Row = 3;
+            app.PolarizationValue.Layout.Column = 3;
+            app.PolarizationValue.Text = '0.000º';
 
-            % Create LOGButton
-            app.LOGButton = uibutton(app.GridLayout, 'push');
-            app.LOGButton.ButtonPushedFcn = createCallbackFcn(app, @LOGButtonPushed, true);
-            app.LOGButton.Icon = 'LOG_32.png';
-            app.LOGButton.BackgroundColor = [1 1 1];
-            app.LOGButton.Tooltip = {'Apresenta LOG do processo de apontamento da antena'};
-            app.LOGButton.Layout.Row = 4;
-            app.LOGButton.Layout.Column = 1;
-            app.LOGButton.Text = '';
+            % Create LogButton
+            app.LogButton = uibutton(app.GridLayout, 'push');
+            app.LogButton.ButtonPushedFcn = createCallbackFcn(app, @LogButtonPushed, true);
+            app.LogButton.Icon = 'LOG_32.png';
+            app.LogButton.BackgroundColor = [1 1 1];
+            app.LogButton.Tooltip = {'Apresenta LOG do processo de apontamento da antena'};
+            app.LogButton.Layout.Row = 4;
+            app.LogButton.Layout.Column = 1;
+            app.LogButton.Text = '';
 
-            % Create ErrorLabel
-            app.ErrorLabel = uilabel(app.GridLayout);
-            app.ErrorLabel.FontSize = 11;
-            app.ErrorLabel.Layout.Row = 4;
-            app.ErrorLabel.Layout.Column = 2;
-            app.ErrorLabel.Text = '';
+            % Create StatusLabel
+            app.StatusLabel = uilabel(app.GridLayout);
+            app.StatusLabel.FontSize = 11;
+            app.StatusLabel.Layout.Row = 4;
+            app.StatusLabel.Layout.Column = 2;
+            app.StatusLabel.Text = '';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
