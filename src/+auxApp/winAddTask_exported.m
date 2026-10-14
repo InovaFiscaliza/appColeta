@@ -2256,9 +2256,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 % STREAMING (UDP SOCKET)
                 streamHandle = [];
                 if receiverDriver.IsStreaming
-                    [app.mainApp.udpPortArray, udpIndex] = util.SocketPorts.findOrCreateUdpPort(app.mainApp.udpPortArray, app.mainApp.EB500Obj.udpPort);
+                    [app.mainApp.TaskController.UDPPortArray, udpIndex] = util.SocketPorts.findOrCreateUdpPort(app.mainApp.TaskController.UDPPortArray, app.mainApp.EB500Obj.udpPort);
                     if ~isempty(udpIndex)
-                        streamHandle = app.mainApp.udpPortArray{udpIndex};
+                        streamHandle = app.mainApp.TaskController.UDPPortArray{udpIndex};
                     end
                 end
 
