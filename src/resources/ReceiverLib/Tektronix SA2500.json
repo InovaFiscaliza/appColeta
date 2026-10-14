@@ -10,6 +10,7 @@
         ],
         "defaultPort": 34835,
         "terminator": "LF",
+        "protocol": "scpi",
         "traceData": {
             "acquisitionMode": "polling",
             "dataType": "level"

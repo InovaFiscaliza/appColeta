@@ -11,6 +11,7 @@
             ],
             "defaultPort": 5555,
             "terminator": "LF",
+            "protocol": "scpi",
             "traceData": {
                 "acquisitionMode": "streaming",
                 "dataType": "level"
@@ -220,6 +221,7 @@
             ],
             "defaultPort": 5555,
             "terminator": "LF",
+            "protocol": "scpi",
             "traceData": {
                 "acquisitionMode": "streaming",
                 "dataType": "level+azimuth"

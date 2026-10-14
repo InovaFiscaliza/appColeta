@@ -159,6 +159,7 @@ classdef Receiver < handle
                     switch type
                         case {'TCPIP Socket', 'TCP/UDP IP Socket'}
                             receiverHandle = tcpclient(ip, port);
+                            configureTerminator(receiverHandle, definition.connection.terminator)
                             idn = identify(model.ReceiverDriver.create(definition, receiverHandle));
 
                         otherwise
