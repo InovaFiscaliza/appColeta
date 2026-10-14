@@ -10,7 +10,14 @@ classdef ReceiverDriver < handle
     % ';:'), a condição "when" e o "postDelay"; "parameters" traz o "write" e o
     % "read" de cada parâmetro; "query" e "fetch" trazem as demais requisições.
     %
-    % driver = model.ReceiverDriver(definition, receiverHandle);
+    % driver = model.ReceiverDriver.create(definition, receiverHandle);
+    %
+    % A fábrica "create" escolhe a classe pelo "connection.protocol" do registro:
+    % "scpi" (padrão, esta classe) ou "json" (model.ReceiverDriverTSMW, que
+    % troca mensagens JSON). As subclasses sobrescrevem apenas as primitivas de
+    % E/S (sendCommand, readResponse), a montagem dos comandos (composeCommand)
+    % e a interpretação das respostas (parseIdentification, parseBandConfig,
+    % fetchTraceData, fetchGps).
     %---------------------------------------------------------------------%
 
     properties (SetAccess = private)
@@ -78,20 +85,9 @@ classdef ReceiverDriver < handle
 
             idn = '';
 
-            flush(obj.Handle)
-            writeline(obj.Handle, obj.Definition.communication.query.identification)
-
-            statusTic = tic;
-            t = toc(statusTic);
-            while t < class.Constants.idnTimeout
-                if obj.Handle.NumBytesAvailable
-                    idn = readline(obj.Handle);
-                    if ~isempty(idn)
-                        idn = replace(strtrim(idn), {'"', ''''}, {'', ''});
-                        break
-                    end
-                end
-                t = toc(statusTic);
+            response = request(obj, obj.Definition.communication.query.identification, class.Constants.idnTimeout);
+            if ~isempty(response)
+                idn = parseIdentification(obj, response);
             end
 
             if isempty(idn)
@@ -119,7 +115,7 @@ classdef ReceiverDriver < handle
         %-----------------------------------------------------------------%
         function initialize(obj, resetEnabled, syncMode)
             for command = buildInitCommands(obj, resetEnabled, syncMode)
-                writeline(obj.Handle, command.Text);
+                sendCommand(obj, command.Text);
 
                 if ~obj.IsVirtual && (command.PostDelay > 0)
                     pause(command.PostDelay)
@@ -143,10 +139,20 @@ classdef ReceiverDriver < handle
         end
 
         %-----------------------------------------------------------------%
-        function params = bandParameters(obj, rawBand, freqStart, freqStop)
+        function params = bandParameters(obj, rawBand, freqStart, freqStop, syncMode)
             % Converte a banda da tarefa (TaskList.json) nos valores a serem
             % programados no receptor, nomeados conforme "communicationParameters"
-            % de "ReceiverLib.json".
+            % de "ReceiverLib.json". O "syncMode" é opcional: quando informado, 
+            % gera "sweepMode", para os receptores em que o sincronismo faz 
+            % parte do comando de configuração da banda (R&S TSMW).
+
+            arguments
+                obj
+                rawBand
+                freqStart
+                freqStop
+                syncMode = ''
+            end
 
             features = obj.Definition.features;
 
@@ -202,6 +208,10 @@ classdef ReceiverDriver < handle
             params.dfSquelchMode  = rawBand.DF_SquelchMode;
             params.dfSquelchValue = rawBand.DF_SquelchValue;
             params.dfMeasTime     = rawBand.DF_MeasTime;
+
+            if ~isempty(syncMode)
+                params.sweepMode = sweepModeValue(obj, syncMode);
+            end
         end
 
         %-----------------------------------------------------------------%
@@ -235,40 +245,17 @@ classdef ReceiverDriver < handle
             sendBandCommand(obj, 'bandConfig', commands.configSET)
             sendBandCommand(obj, 'attenuationValue', commands.attSET)
 
-            flush(obj.Handle)
-            writeline(obj.Handle, obj.Definition.communication.query.bandConfig);
-
-            rawAnswer = '';
-
-            statusTic = tic;
-            t = toc(statusTic);
-            while t < class.Constants.Timeout
-                if obj.Handle.NumBytesAvailable
-                    rawAnswer = readline(obj.Handle);
-                    if ~isempty(rawAnswer)
-                        rawAnswer = strtrim(rawAnswer);
-                        break
-                    end
-                end
-                t = toc(statusTic);
-            end
-
+            rawAnswer = request(obj, obj.Definition.communication.query.bandConfig, class.Constants.Timeout);
             if isempty(rawAnswer)
                 error(mismatchMessage(1, 'Empty string', commands.configSET, ''))
             end
 
-            splitAnswer    = strsplit(rawAnswer, ';');
-            parameterNames = bandConfigParameterNames(obj);
-
-            answer = struct();
-            for ii = 1:numel(parameterNames)
-                answer.(parameterNames{ii}) = splitAnswer{ii};
-            end
+            answer      = parseBandConfig(obj, rawAnswer);
             rawMetaData = jsonencode(answer);
 
             parameters = model.ReceiverDriver.parametersOf(obj.Definition);
-            for ii = 1:numel(parameterNames)
-                parameterName = parameterNames{ii};
+            for parameterField = fieldnames(answer)'
+                parameterName = parameterField{1};
                 parameterIdx  = find(strcmp({parameters.name}, parameterName), 1);
 
                 if isempty(parameterIdx) || ~parameters(parameterIdx).requireMatch || ~isfield(params, parameterName)
@@ -277,9 +264,13 @@ classdef ReceiverDriver < handle
 
                 expectedValue = params.(parameterName);
                 if isnumeric(expectedValue)
-                    hasMismatch = str2double(splitAnswer{ii}) ~= expectedValue;
+                    receivedValue = answer.(parameterName);
+                    if ~isnumeric(receivedValue)
+                        receivedValue = str2double(receivedValue);
+                    end
+                    hasMismatch = receivedValue ~= expectedValue;
                 else
-                    hasMismatch = ~strcmp(splitAnswer{ii}, expectedValue);
+                    hasMismatch = ~strcmp(answer.(parameterName), expectedValue);
                 end
 
                 if hasMismatch
@@ -290,11 +281,11 @@ classdef ReceiverDriver < handle
 
         %-----------------------------------------------------------------%
         function configureBand(obj, commands)
-            writeline(obj.Handle, commands.configSET);
+            sendCommand(obj, commands.configSET);
             pause(.001)
 
             if ~isempty(commands.attSET)
-                writeline(obj.Handle, commands.attSET);
+                sendCommand(obj, commands.attSET);
             end
         end
 
@@ -307,7 +298,7 @@ classdef ReceiverDriver < handle
             setOperationMode(obj)
 
             startup = findCommand(obj, 'initialization', 'startup');
-            writeline(obj.Handle, composeCommand(obj, startup, struct()));
+            sendCommand(obj, composeCommand(obj, startup, struct()));
             pause(.001)
 
             configureBand(obj, commands)
@@ -325,13 +316,49 @@ classdef ReceiverDriver < handle
 
         %-----------------------------------------------------------------%
         function traceData = fetchTraceData(obj)
-            writeline(obj.Handle, obj.Definition.communication.fetch.traceData);
+            sendCommand(obj, obj.Definition.communication.fetch.traceData);
             traceData = readbinblock(obj.Handle, 'single');
+        end
+
+        %-----------------------------------------------------------------%
+        function value = usesDriverGps(~)
+            % Quando verdadeiro, a leitura do GPS embarcado é feita por "fetchGps"; 
+            % caso contrário, por model.GPS (requisições SCPI por receptor).
+
+            value = false;
+        end
+
+        %-----------------------------------------------------------------%
+        function gps = fetchGps(~, ~)
+            % Implementada pelas subclasses que respondem por "usesDriverGps".
+            error('ReceiverLib:GpsNotSupported', 'A leitura do GPS pelo driver não é suportada por este receptor.')
         end
     end
 
 
     methods (Static)
+        %-----------------------------------------------------------------%
+        function driver = create(definition, receiverHandle)
+            arguments
+                definition (1, 1) struct
+                receiverHandle = []
+            end
+
+            protocol = 'scpi';
+            if isfield(definition.connection, 'protocol') && ~isempty(definition.connection.protocol)
+                protocol = definition.connection.protocol;
+            end
+
+            switch protocol
+                case 'scpi'
+                    driver = model.ReceiverDriver(definition, receiverHandle);
+                case 'json'
+                    driver = model.ReceiverDriverTSMW(definition, receiverHandle);
+                otherwise
+                    error('ReceiverLib:UnknownProtocol', 'Protocolo "%s" não suportado (receptor %s).', protocol, definition.name)
+            end
+        end
+
         %-----------------------------------------------------------------%
         function parameters = parametersOf(definition)
             % O jsondecode devolve um cell, e não um struct array, quando os
@@ -348,13 +375,64 @@ classdef ReceiverDriver < handle
             stepIdx  = find(strcmp({steps.step}, stepName), 1);
 
             commands = normalizeStructs(steps(stepIdx).commands, ...
-                {'name', 'parameterNames', 'mandatory', 'postDelay', 'when'}, ...
-                {'', {}, false, 0, ''});
+                {'name', 'parameterNames', 'mandatory', 'postDelay', 'when', 'code', 'request'}, ...
+                {'', {}, false, 0, '', [], ''});
         end
     end
 
 
-    methods (Access = private)
+    methods (Access = protected)
+        %-----------------------------------------------------------------%
+        function sendCommand(obj, text)
+            writeline(obj.Handle, text);
+        end
+
+        %-----------------------------------------------------------------%
+        function response = readResponse(obj, timeout)
+            % Aguarda, por até "timeout" segundos, a primeira linha não vazia
+            % da resposta. Retorna '' se não houver resposta no prazo.
+
+            response = '';
+
+            statusTic = tic;
+            t = toc(statusTic);
+            while t < timeout
+                if obj.Handle.NumBytesAvailable
+                    line = strtrim(readline(obj.Handle));
+                    if strlength(line) > 0
+                        response = line;
+                        break
+                    end
+                end
+                t = toc(statusTic);
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function response = request(obj, text, timeout)
+            flush(obj.Handle)
+            sendCommand(obj, text)
+            response = readResponse(obj, timeout);
+        end
+
+        %-----------------------------------------------------------------%
+        function idn = parseIdentification(~, response)
+            idn = replace(response, {'"', ''''}, {'', ''});
+        end
+
+        %-----------------------------------------------------------------%
+        function answer = parseBandConfig(obj, response)
+            % A ordem dos campos da resposta é a de "query.bandConfigParameterNames".
+
+            splitAnswer    = strsplit(response, ';');
+            parameterNames = bandConfigParameterNames(obj);
+
+            answer = struct();
+            for ii = 1:numel(parameterNames)
+                answer.(parameterNames{ii}) = splitAnswer{ii};
+            end
+        end
+
         %-----------------------------------------------------------------%
         function text = fillTemplate(~, template, params)
             names  = fieldnames(params);
@@ -365,17 +443,18 @@ classdef ReceiverDriver < handle
         end
 
         %-----------------------------------------------------------------%
-        function text = composeCommand(obj, command, params)
-            % Une os "write" dos parâmetros do comando com ';:', respeitando a
-            % ordem de "parameterNames" e as condições "when".
+        function [parts, isActive] = composeParts(obj, command, params)
+            % Preenche os "write" dos parâmetros do comando, respeitando a
+            % ordem de "parameterNames" e as condições "when". "isActive" é 
+            % falso quando a condição "when" do próprio comando não é atendida.
 
-            text = '';
-            if ~evaluateCondition(command.when, params)
+            parts    = {};
+            isActive = evaluateCondition(command.when, params);
+            if ~isActive
                 return
             end
 
             parameters = model.ReceiverDriver.parametersOf(obj.Definition);
-            parts      = {};
 
             for name = cellstr(command.parameterNames)'
                 parameterIdx = find(strcmp({parameters.name}, name{1}), 1);
@@ -397,17 +476,31 @@ classdef ReceiverDriver < handle
                     parts{end+1} = fillTemplate(obj, template, params); %#ok<AGROW>
                 end
             end
-
-            text = strjoin(parts, ';:');
         end
 
+        %-----------------------------------------------------------------%
+        function text = composeCommand(obj, command, params)
+            % Une os "write" dos parâmetros do comando com ';:'.
+
+            parts = composeParts(obj, command, params);
+            text  = strjoin(parts, ';:');
+        end
+
+        %-----------------------------------------------------------------%
+        function names = bandConfigParameterNames(obj)
+            names = cellstr(obj.Definition.communication.query.bandConfigParameterNames);
+        end
+    end
+
+
+    methods (Access = private)
         %-----------------------------------------------------------------%
         function sendBandCommand(obj, name, text)
             if isempty(text)
                 return
             end
 
-            writeline(obj.Handle, text);
+            sendCommand(obj, text)
 
             if ~obj.IsVirtual
                 delay = commandPostDelay(obj, 'acquisition', name);
@@ -433,11 +526,6 @@ classdef ReceiverDriver < handle
             end
 
             value = getListItem(splitList(sweepMode.values), itemIdx);
-        end
-
-        %-----------------------------------------------------------------%
-        function names = bandConfigParameterNames(obj)
-            names = cellstr(obj.Definition.communication.query.bandConfigParameterNames);
         end
 
         %-----------------------------------------------------------------%

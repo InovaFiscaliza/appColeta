@@ -7,6 +7,7 @@
         "R&S FSL",
         "R&S FSVR",
         "R&S FSW",
+        "R&S TSMW",
         "Tektronix SA2500"
     ],
     "configFileKeys": [
@@ -31,6 +32,10 @@
     "traceDataTypes": [
         "level",
         "level+azimuth"
+    ],
+    "connectionProtocols": [
+        "scpi",
+        "json"
     ],
     "communicationParameters": [
         "attenuationMode",

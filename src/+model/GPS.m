@@ -267,7 +267,15 @@ classdef GPS < handle
             switch gpsType
                 case 'Built-in'
                     receiverId = varargin{1};
-                    gps = model.GPS.queryReceiverGPS(gps, handle, receiverId);
+
+                    % Receptores cujo protocolo não é SCPI (R&S TSMW) leem o GPS
+                    % por meio do próprio driver.
+                    driver = model.GPS.receiverDriver(handle);
+                    if ~isempty(driver) && usesDriverGps(driver)
+                        gps = fetchGps(driver, gps);
+                    else
+                        gps = model.GPS.queryReceiverGPS(gps, handle, receiverId);
+                    end
 
                 case 'External'
                     gps = model.GPS.queryExternalGPS(gps, handle);
@@ -277,6 +285,17 @@ classdef GPS < handle
 
 
     methods (Static = true, Access = private)
+        %-----------------------------------------------------------------%
+        function driver = receiverDriver(receiverHandle)
+            % O registro do receptor fica em UserData do handle (ver model.Receiver.connect).
+
+            driver = [];
+
+            if isprop(receiverHandle, 'UserData') && isstruct(receiverHandle.UserData) && isfield(receiverHandle.UserData, 'Definition')
+                driver = model.ReceiverDriver.create(receiverHandle.UserData.Definition, receiverHandle);
+            end
+        end
+
         %-----------------------------------------------------------------%
         function gps = queryReceiverGPS(gps, receiverHandle, receiverId)
             %-------------------------------------------------------------%

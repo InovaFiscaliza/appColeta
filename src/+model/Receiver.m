@@ -128,7 +128,7 @@ classdef Receiver < handle
                             transportHandle.connect
                         end
 
-                        idn = identify(model.ReceiverDriver(definition, receiverHandle));
+                        idn = identify(model.ReceiverDriver.create(definition, receiverHandle));
                         break
 
                     catch ME
@@ -159,7 +159,7 @@ classdef Receiver < handle
                     switch type
                         case {'TCPIP Socket', 'TCP/UDP IP Socket'}
                             receiverHandle = tcpclient(ip, port);
-                            idn = identify(model.ReceiverDriver(definition, receiverHandle));
+                            idn = identify(model.ReceiverDriver.create(definition, receiverHandle));
 
                         otherwise
                             error('appColeta supports only TCPIP Socket connection type.')
@@ -181,7 +181,7 @@ classdef Receiver < handle
                                 [~, clientIP] = ipsFind(obj, ip);
                             end
 
-                            receiverHandle.UserData = struct('IDN', idn, 'ClientIP', clientIP, 'SyncMode', '', 'Config', receiver);
+                            receiverHandle.UserData = struct('IDN', idn, 'ClientIP', clientIP, 'SyncMode', '', 'Config', receiver, 'Definition', definition);
                             obj.Table{idx, :} = {"Receiver", socketTag, receiverHandle, "Connected"};
 
                         else
@@ -214,7 +214,7 @@ classdef Receiver < handle
 
             if isempty(msgError)
                 try
-                    restoreConfiguration(model.ReceiverDriver(definition, obj.Table.Handle{idx}), bandCommands)
+                    restoreConfiguration(model.ReceiverDriver.create(definition, obj.Table.Handle{idx}), bandCommands)
 
                 catch ME
                     msgError = ME.message;

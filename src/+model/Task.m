@@ -90,7 +90,7 @@ classdef Task < matlab.mixin.Copyable
             try
                 receiverHandle = obj(idx).Connections.receiver;
                 if ~isempty(receiverHandle) && isvalid(receiverHandle)
-                    driver = model.ReceiverDriver(obj(idx).TaskSpec.Receiver.Config, receiverHandle);
+                    driver = model.ReceiverDriver.create(obj(idx).TaskSpec.Receiver.Config, receiverHandle);
 
                     initialize(driver, strcmp(obj(idx).TaskSpec.Receiver.Reset, 'On'), obj(idx).TaskSpec.Receiver.Sync)
                     specificAspects(driver)
@@ -159,7 +159,7 @@ classdef Task < matlab.mixin.Copyable
                     end
             
                     % Programa a banda no receptor e confirma que os parâmetros foram aceitos.
-                    params = bandParameters(driver, rawBands(ii), freqStart, freqStop);
+                    params = bandParameters(driver, rawBands(ii), freqStart, freqStop, taskSpec.Receiver.Sync);
                     [taskBands(ii).ScpiCommands, taskBands(ii).ReceiverState] = applyBandConfig(driver, params);
 
                     taskBands(ii).DataPoints   = params.dataPoints;

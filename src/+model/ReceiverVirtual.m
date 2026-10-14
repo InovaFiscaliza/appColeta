@@ -5,7 +5,8 @@ classdef ReceiverVirtual < handle
     %
     % Receptor virtual para testar o appColeta sem hardware: servidor TCP
     % (tcpserver) que responde aos comandos SCPI de "resources/ReceiverLib/<name>.json"
-    % e, no caso do R&S EB500, transmite os traços por datagramas UDP no
+    % (ou às requisições JSON, quando "connection.protocol" é "json", como no
+    % R&S TSMW) e, no caso do R&S EB500, transmite os traços por datagramas UDP no
     % formato lido por class.EB500Lib. O traço gerado é ruído gaussiano.
     %
     % Deve ser executado em outra sessão do MATLAB, que precisa ficar ociosa 
@@ -30,6 +31,7 @@ classdef ReceiverVirtual < handle
         StreamTarget = struct('Address', "", 'Port', 0, 'Mode', '')
         DatagramId = 0
         SelectivityMap
+        Protocol = 'scpi'
     end
 
 
@@ -72,8 +74,18 @@ classdef ReceiverVirtual < handle
                 obj.Port = definitions{1}.connection.defaultPort;
             end
 
-            obj.Models = compileModels(definitions);
-            obj.State  = defaultState(obj.Models);
+            if isfield(definitions{1}.connection, 'protocol') && ~isempty(definitions{1}.connection.protocol)
+                obj.Protocol = definitions{1}.connection.protocol;
+            end
+
+            if strcmp(obj.Protocol, 'json')
+                % O protocolo JSON (R&S TSMW) não usa os modelos de comandos SCPI.
+                obj.Models = struct('Definition', {}, 'Exact', {}, 'Patterns', {}, 'AnswerNames', {});
+                obj.State  = defaultJsonState(definitions{1});
+            else
+                obj.Models = compileModels(definitions);
+                obj.State  = defaultState(obj.Models);
+            end
 
             hasSelectivity = arrayfun(@(x) any(arrayfun(@(p) ismember('selectivity', p.Names), x.Patterns)), obj.Models);
             if any(hasSelectivity)
@@ -133,6 +145,11 @@ classdef ReceiverVirtual < handle
 
         %-----------------------------------------------------------------%
         function handleCommand(obj, src, line)
+            if strcmp(obj.Protocol, 'json')
+                handleJsonCommand(obj, src, line)
+                return
+            end
+
             command = normalizeCommand(line);
             if isempty(command)
                 return
@@ -241,6 +258,43 @@ classdef ReceiverVirtual < handle
         function reply(obj, src, text)
             logMessage(obj, 'TX', text)
             writeline(src, text)
+        end
+
+        %-----------------------------------------------------------------%
+        function handleJsonCommand(obj, src, line)
+            % Como o TSMW, confirma cada requisição com um "ACK" e envia os dados
+            % em seguida, em uma linha JSON (ver class.TSMWLib).
+
+            logMessage(obj, 'RX', line)
+
+            request = jsondecode(line);
+            reply(obj, src, jsonencode(struct('ACK', true, 'CODE', request.CODE)))
+
+            switch lower(request.COMMAND)
+                case '*idn?'
+                    reply(obj, src, jsonencode(struct('message', sprintf('R&S VIRTUAL,%s,B000000,1.000', obj.Tag))))
+
+                case 'powerscanconfig'
+                    for name = fieldnames(request.ARGS)'
+                        obj.State.(name{1}) = request.ARGS.(name{1});
+                    end
+
+                case 'getsettings'
+                    reply(obj, src, jsonencode(struct('sweepSettings', obj.State)))
+
+                case 'startpowerscanmeasurement'
+                    nPoints = max(1, round(obj.State.numBins));
+                    trace   = single(-80 + 3 .* randn(1, nPoints));
+
+                    pause(.200) % 200ms
+                    reply(obj, src, jsonencode(struct('spectrumDbmBase64', matlab.net.base64encode(typecast(trace, 'uint8')))))
+
+                case 'gpsgetlocation'
+                    reply(obj, src, jsonencode(struct('latitude', -12.993198, 'longitude', -38.463093, 'altitude', 26)))
+
+                otherwise
+                    logMessage(obj, 'AVISO', sprintf('Comando não reconhecido: %s', request.COMMAND))
+            end
         end
 
         %-----------------------------------------------------------------%
@@ -607,6 +661,13 @@ function state = defaultState(models)
         end
     end
     state.sampleTimeValue = '0.01';
+end
+
+%-------------------------------------------------------------------------%
+function state = defaultJsonState(definition)
+    limits = definition.features.dataPoints;
+
+    state = struct('startFrequency', 0, 'stopFrequency', 0, 'numBins', floor(limits(1)));
 end
 
 %-------------------------------------------------------------------------%

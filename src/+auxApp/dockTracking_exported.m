@@ -38,7 +38,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
     properties (Access = public)
         %-----------------------------------------------------------------%
         Container
-        isDocked = false        
+        isDocked = true        
         mainApp
         callingApp
     end
@@ -46,12 +46,14 @@ classdef dockTracking_exported < matlab.apps.AppBase
 
     properties (Access = private)
         %-----------------------------------------------------------------%
-        LogEntries = struct('type', {}, 'time', {}, 'msg',  {})
-        UpdateStatus = false
         TrackingActive = false
         TrackingTimer
+
         InitialPosition
         TargetPosition
+
+        UpdateStatus = false
+        LogEntries = struct('type', {}, 'time', {}, 'msg',  {})
     end
     
 
@@ -174,7 +176,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function status = isSamePosition(~, posA, posB, tolerance)
             status = abs(wrapTo180(posA.Azimuth      - posB.Azimuth))      < tolerance && ...
-                     abs(posA.Elevation              - posB.Elevation)    < tolerance && ...
+                     abs(posA.Elevation              - posB.Elevation)     < tolerance && ...
                      abs(wrapTo180(posA.Polarization - posB.Polarization)) < tolerance;
         end
 
@@ -222,7 +224,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
                 app.InitialPosition = antennaPos;
                 app.TargetPosition  = targetPos;
 
-                screenStartup(app,  antennaPos, targetPos)
+                screenStartup(app, antennaPos, targetPos)
 
                 % O atraso permite que o popup seja exibido antes do laço bloqueante.
                 app.TrackingTimer = timer( ...
@@ -232,10 +234,6 @@ classdef dockTracking_exported < matlab.apps.AppBase
                 );
                 start(app.TrackingTimer)
 
-                % Evita o disparo do timer caso o app seja deletado durante o atraso.
-                trackingTimer = app.TrackingTimer;
-                app.GridLayout.DeleteFcn = @(~,~)delete(trackingTimer);
-                
             catch ME
                 showError(app, ME)
             end
@@ -245,18 +243,16 @@ classdef dockTracking_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            % Com o acompanhamento ativo, o laço encerra o app ao terminar.
             if app.TrackingActive
                 app.UpdateStatus = false;
                 return
             end
 
             if app.isDocked && ~isempty(app.callingApp) && isvalid(app.callingApp) && isstruct(app.GridLayout.UserData) && isfield(app.GridLayout.UserData, 'id')
-                % O fechamento do overlay aciona closeFcnCallFromPopupApp, que deleta o app.
                 sendEventToHTMLSource(app.callingApp.jsBackDoor, 'closePopupAppRequest', struct('dataTag', app.GridLayout.UserData.id));
 
                 waitTic = tic;
-                while isvalid(app) && toc(waitTic) < 2
+                while isvalid(app) && toc(waitTic) < 1
                     pause(.1)
                 end
             end

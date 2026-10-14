@@ -2250,7 +2250,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab4Button = uibutton(app.NavBar, 'state');
             app.Tab4Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.Tab4Button.Tag = 'TASK_ADD';
-            app.Tab4Button.Tooltip = {'Adiciona nova tarefa'};
+            app.Tab4Button.Tooltip = {'Inclui nova tarefa de monitoração'};
             app.Tab4Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'empty-window.svg');
             app.Tab4Button.Text = '';
             app.Tab4Button.BackgroundColor = [0.2 0.2 0.2];
@@ -2271,7 +2271,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab5Button = uibutton(app.NavBar, 'state');
             app.Tab5Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.Tab5Button.Tag = 'SERVER';
-            app.Tab5Button.Tooltip = {'Comunicação externa'};
+            app.Tab5Button.Tooltip = {'Servidor de comunicação (TCP)'};
             app.Tab5Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'cloud-upload.svg');
             app.Tab5Button.Text = '';
             app.Tab5Button.BackgroundColor = [0.2 0.2 0.2];

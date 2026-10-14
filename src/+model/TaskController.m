@@ -134,7 +134,7 @@ classdef TaskController < handle
                     receiverHandle   = obj.Tasks(taskIdx).Connections.receiver;
                     udpPortHandle  = obj.Tasks(taskIdx).Connections.stream;
                     gpsHandle        = obj.Tasks(taskIdx).Connections.gps;
-                    receiverDriver   = model.ReceiverDriver(obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
+                    receiverDriver   = model.ReceiverDriver.create(obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
 
                     configMode  = true;
 
@@ -742,7 +742,7 @@ classdef TaskController < handle
             timeout  = class.Constants.Timeout;
             acquired = false;
 
-            receiverDriver = model.ReceiverDriver(obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
+            receiverDriver = model.ReceiverDriver.create(obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
             if ~receiverDriver.IsStreaming
                 traceSource = 'polling';
             elseif receiverDriver.IsLevelAzimuth
