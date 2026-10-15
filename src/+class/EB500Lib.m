@@ -15,7 +15,7 @@ classdef EB500Lib < handle
 
     methods
         %-----------------------------------------------------------------%
-        function obj = EB500Lib(RootFolder)
+        function obj = EB500Lib(resourcesFolder)
             % Selectivity x Resolution Mapping
             SelectivityMap = table('Size', [15, 3],                                 ...
                                    'VariableTypes', {'double', 'double', 'double'}, ...
@@ -53,7 +53,7 @@ classdef EB500Lib < handle
             obj.FFMSpanStepMap = FFMSpanStepMap;
 
             % Firmware version, udpPort & nDatagrams
-            tempStruct = jsondecode(fileread(fullfile(RootFolder, 'config', 'EB500Lib.json')));
+            tempStruct = jsondecode(fileread(fullfile(resourcesFolder, 'EB500Lib.json')));
 
             obj.Firmware   = tempStruct.Firmware;
             obj.udpPort    = tempStruct.udpPort;
@@ -63,6 +63,24 @@ classdef EB500Lib < handle
 
 
     methods(Static = true)
+        %-----------------------------------------------------------------%
+        function isRunning = isGUIRunning()
+            % Ao executar o comando 'tasklist', a saída típica para o processo 
+            % EB500Gui.exe é:
+            % "EB500Gui.exe","3564","Console","2","119.648 K"
+
+            isRunning = false;
+            if ~ispc
+                return
+            end
+
+            [status, cmdout] = system('tasklist /FO CSV /NH');
+            if ~status
+                isRunning = ~isempty(regexpi(cmdout, 'EB500Gui', 'once'));
+            end
+        end
+
+
         %-----------------------------------------------------------------%
         function OperationMode(hReceiver, ID)
             switch ID
@@ -82,10 +100,10 @@ classdef EB500Lib < handle
             Timeout  = class.Constants.Timeout;
             udpPort  = hStreaming.LocalPort;
 
-            for ii = 1:numel(specObj.Band)
+            for ii = 1:numel(specObj.Bands)
                 specDatagram = [];
                 
-                writeline(hReceiver, specObj.Band(ii).SpecificSCPI.configSET);
+                writeline(hReceiver, specObj.Bands(ii).ScpiCommands.configSET);
 
                 flush(hStreaming)
                 class.EB500Lib.DatagramRead_OnOff('PSCAN', 'Open', udpPort, hReceiver)
@@ -130,9 +148,9 @@ classdef EB500Lib < handle
 
                     if (MagicNumber == 963072)                                     && ...
                             (DataSize   == numel(specDatagram(jj).Data))           && ...
-                            (FreqStart  == specObj.Task.Script.Band(ii).FreqStart) && ...
-                            (FreqStop   == specObj.Task.Script.Band(ii).FreqStop)  && ...
-                            (DataPoints == specObj.Band(ii).DataPoints)
+                            (FreqStart  == specObj.TaskSpec.Script.Band(ii).FreqStart) && ...
+                            (FreqStop   == specObj.TaskSpec.Script.Band(ii).FreqStop)  && ...
+                            (DataPoints == specObj.Bands(ii).DataPoints)
                         nDatagrams = nDatagrams + 1;
                         if typecast(specDatagram(jj).Data(end:-1:end-1), 'uint16') == 2000
                             nTerminator = nTerminator + 1;
@@ -141,7 +159,7 @@ classdef EB500Lib < handle
                 end
                 
                 if nTerminator
-                    specObj.Band(ii).Datagrams = round(nDatagrams/nTerminator);
+                    specObj.Bands(ii).Datagrams = round(nDatagrams/nTerminator);
                 else
                     error(['ERROR - Não identificada a estimativa do número de datagramas que representam um único traço do fluxo %d.\n' ...
                            'Possíveis causas:\n'                                                                     ...

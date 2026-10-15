@@ -4,6 +4,7 @@ classdef TaskStatus
         %-----------------------------------------------------------------%
         Pending
         Running
+        CancellationRequested
         Completed
         Cancelled
         Error
@@ -17,6 +18,8 @@ classdef TaskStatus
                     str = 'Na fila';
                 case model.TaskStatus.Running
                     str = 'Em andamento';
+                case model.TaskStatus.CancellationRequested
+                    str = 'Cancelamento solicitado';
                 case model.TaskStatus.Completed
                     str = 'Concluída';
                 case model.TaskStatus.Cancelled

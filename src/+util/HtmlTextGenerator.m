@@ -56,15 +56,15 @@ classdef (Abstract) HtmlTextGenerator
         function log = LOG(specObj, idx)
             log = '';
 
-            if ~isempty(specObj(idx).LOG)
-                logTable = struct2table(specObj(idx).LOG);
-                log = strjoin("<b>" + logTable.time + " - " + upper(logTable.type) + "</b>" + newline + logTable.msg, '\n\n');
+            if ~isempty(specObj(idx).LogEntries)
+                logTable = struct2table(specObj(idx).LogEntries);
+                log = strjoin("<b>" + logTable.timestamp + " - " + upper(logTable.level) + "</b>" + newline + logTable.message, '\n\n');
             end
         end
 
         %-----------------------------------------------------------------%
-        function htmlContent = Task(specObj, revisitObj, idxTask, idxBand)
-            Task   = specObj(idxTask).Task;
+        function htmlContent = Task(specObj, revisitObj, taskIdx, bandIdx)
+            Task   = specObj(taskIdx).TaskSpec;
             Script = Task.Script;
 
             % ObservationType
@@ -76,24 +76,24 @@ classdef (Abstract) HtmlTextGenerator
         
             % ObservationSamples
             if observationType == "Quantidade específica de amostras"
-                observationSamples = Script.Band(idxBand).instrObservationSamples;
+                observationSamples = Script.Band(bandIdx).instrObservationSamples;
             else
                 observationSamples = -1;
             end
         
             % StepWidth
-            if isnumeric(Script.Band(idxBand).instrStepWidth)
-                StepWidth = sprintf('%.3f kHz', Script.Band(idxBand).instrStepWidth/1e+3);
+            if isnumeric(Script.Band(bandIdx).instrStepWidth)
+                StepWidth = sprintf('%.3f kHz', Script.Band(bandIdx).instrStepWidth/1e+3);
             else
-                StepWidth = Script.Band(idxBand).instrStepWidth;
+                StepWidth = Script.Band(bandIdx).instrStepWidth;
             end
             
             % Receiver RevisitTime
-            receiverRevisitTime = sprintf('%.3f seg', Script.Band(idxBand).RevisitTime);
+            receiverRevisitTime = sprintf('%.3f seg', Script.Band(bandIdx).RevisitTime);
             try
-                if revisitObj.Band(idxTask).RevisitFactors(idxBand+1) ~= -1
-                    receiverRevisitTime = sprintf('%.3f → %.3f seg (norm)', Script.Band(idxBand).RevisitTime, ...
-                                                                            revisitObj.GlobalRevisitTime * revisitObj.Band(idxTask).RevisitFactors(idxBand+1));
+                if revisitObj.Band(taskIdx).RevisitFactors(bandIdx+1) ~= -1
+                    receiverRevisitTime = sprintf('%.3f → %.3f seg (norm)', Script.Band(bandIdx).RevisitTime, ...
+                                                                            revisitObj.GlobalRevisitTime * revisitObj.Band(taskIdx).RevisitFactors(bandIdx+1));
                 end
             catch
             end
@@ -103,9 +103,9 @@ classdef (Abstract) HtmlTextGenerator
                 gpsRevisitTime = sprintf('%.3f seg', Script.GPS.RevisitTime);
         
                 try
-                    if revisitObj.Band(idxTask).RevisitFactors(1) ~= -1
+                    if revisitObj.Band(taskIdx).RevisitFactors(1) ~= -1
                         gpsRevisitTime = sprintf('%.3f → %.3f seg (norm)', Script.GPS.RevisitTime, ...
-                                                                           revisitObj.GlobalRevisitTime * revisitObj.Band(idxTask).RevisitFactors(1));
+                                                                           revisitObj.GlobalRevisitTime * revisitObj.Band(taskIdx).RevisitFactors(1));
                     end
                 catch
                 end
@@ -114,9 +114,9 @@ classdef (Abstract) HtmlTextGenerator
             end
         
             % MaskTrigger
-            if ~isempty(specObj(idxTask).Band(idxBand).Mask)
-                maskTrigger = struct('Status',    Task.Script.Band(idxBand).MaskTrigger.Status, ...
-                                     'FindPeaks', specObj(idxTask).Band(idxBand).Mask.FindPeaks);
+            if ~isempty(specObj(taskIdx).Bands(bandIdx).Mask)
+                maskTrigger = struct('Status',        Task.Script.Band(bandIdx).MaskTrigger.Status, ...
+                                     'Configuration', specObj(taskIdx).Bands(bandIdx).Mask.Configuration);
             else
                 maskTrigger = 'NA';
             end
@@ -126,12 +126,12 @@ classdef (Abstract) HtmlTextGenerator
                                                 'Observation',   observationType,                          ...
                                                 'FileVersion',   class.Constants.fileVersion,              ...
                                                 'BitsPerSample', sprintf('%d bits', Script.BitsPerSample), ...
-                                                'Receiver',      specObj(idxTask).IDN,                     ...
+                                                'Receiver',      specObj(taskIdx).ReceiverId,                     ...
                                                 'gpsType',       Script.GPS.Type));
 
             if contains(Task.Type, 'Rompimento de Máscara Espectral')
-                maskTrigger = Task.Script.Band(idxBand).MaskTrigger;
-                maskTrigger.StatusInfo = class.taskList.maskTriggerStatus(Task.Script.Band(idxBand).MaskTrigger.Status);
+                maskTrigger = Task.Script.Band(bandIdx).MaskTrigger;
+                maskTrigger.StatusInfo = util.TaskScriptIO.maskTriggerDescription(Task.Script.Band(bandIdx).MaskTrigger.Status);
 
                 dataStruct(end+1) = struct( ...
                     'group', 'TASKTRIGGER', ...
@@ -142,14 +142,14 @@ classdef (Abstract) HtmlTextGenerator
             dataStruct(end+1) = struct( ...
                 'group', 'RECEPTOR', ...
                 'value', struct( ...
-                    'FreqStart', Script.Band(idxBand).FreqStart, ...
-                    'FreqStop', Script.Band(idxBand).FreqStop, ...
+                    'FreqStart', Script.Band(bandIdx).FreqStart, ...
+                    'FreqStop', Script.Band(bandIdx).FreqStop, ...
                     'StepWidth', StepWidth, ...
-                    'DataPoints', Script.Band(idxBand).instrDataPoints, ...
-                    'Resolution', Script.Band(idxBand).instrResolution, ...
-                    'Detector', Script.Band(idxBand).instrDetector, ...
-                    'TraceMode', Script.Band(idxBand).TraceMode, ...
-                    'IntegrationFactor', Script.Band(idxBand).IntegrationFactor, ...
+                    'DataPoints', Script.Band(bandIdx).instrDataPoints, ...
+                    'Resolution', Script.Band(bandIdx).instrResolution, ...
+                    'Detector', Script.Band(bandIdx).instrDetector, ...
+                    'TraceMode', Script.Band(bandIdx).TraceMode, ...
+                    'IntegrationFactor', Script.Band(bandIdx).IntegrationFactor, ...
                     'Reset', Task.Receiver.Reset, ...
                     'Sync', Task.Receiver.Sync ...
                 ) ...
@@ -161,13 +161,13 @@ classdef (Abstract) HtmlTextGenerator
             % tarefa o seu valor seja igual a -1) ou o valor mais próximo da relação 
             % de VBWs disponíveis no analisador (atualmente incluído apenas R&S FSL, 
             % FSVR e FSW).
-            if ~isempty(Script.Band(idxBand).instrVBW) && ~strcmp(Script.Band(idxBand).instrVBW, 'auto')
-                dataStruct(end).value.VBW = Script.Band(idxBand).instrVBW;
+            if ~isempty(Script.Band(bandIdx).instrVBW) && ~strcmp(Script.Band(bandIdx).instrVBW, 'auto')
+                dataStruct(end).value.VBW = Script.Band(bandIdx).instrVBW;
             end
             
             dataStruct(end+1) = struct( ...
                 'group', 'ANTENA', ...
-                'value', specObj(idxTask).Band(idxBand).Antenna ...
+                'value', specObj(taskIdx).Bands(bandIdx).Antenna ...
             );
         
             dataStruct(end+1) = struct( ...
@@ -181,7 +181,7 @@ classdef (Abstract) HtmlTextGenerator
             dataStruct(end+1) = struct( ...
                 'group', 'OUTROS ASPECTOS', ...
                 'value', struct( ...
-                    'Description', Script.Band(idxBand).Description, ...
+                    'Description', Script.Band(bandIdx).Description, ...
                     'ObservationSamples', observationSamples,          ...
                     'MaskTrigger', maskTrigger ...
                 ) ...
@@ -191,28 +191,33 @@ classdef (Abstract) HtmlTextGenerator
         end
 
         %-----------------------------------------------------------------%
-        function [htmlContent, imgSource] = Instrument(receiverObj, gpsObj, editedList, idx1)
+        function [tag, features, img] = Instrument(receiverObj, gpsObj, editedList, idx1)
             switch editedList.Family{idx1}
                 case 'Receiver'
-                    idx2 = find(strcmp(receiverObj.Config.Name, editedList.Name{idx1}), 1);
-                    imgSource = receiverObj.Config.Image{idx2};
+                    receiverIdx = find(strcmp(receiverObj.Config.Name, editedList.Name{idx1}), 1);
+                    definition = receiverObj.Config.Definition{receiverIdx};
+                    
+                    tag = sprintf('%s<br><font style="font-size: 10px; color: gray;">%s</font>', definition.name, definition.band);
+                    img = definition.image;
 
-                    dataStruct    = struct('group', 'IDENTIFICAÇÃO', ...
-                                           'value', table2struct(receiverObj.Config(idx2,1:4)));        
-                    dataStruct(2) = struct('group', 'PARÂMETROS', ...
-                                           'value', table2struct(receiverObj.Config(idx2,[7:9, 21:end])));
+                    dataStruct = [ ...
+                        struct('group', 'ASPECTOS GERAIS', 'value', table2struct(receiverObj.Config(receiverIdx, {'Family', 'Tag'}))), ...
+                        struct('group', 'ATRIBUTOS',       'value', receiverParameters(definition)) ...
+                    ];
 
                 case 'GPS'
-                    idx2 = find(strcmp(gpsObj.Config.Name, editedList.Name{idx1}), 1);
-                    imgSource = gpsObj.Config.Image{idx2};
+                    gpsIdx = find(strcmp(gpsObj.Config.Name, editedList.Name{idx1}), 1);
 
-                    dataStruct    = struct('group', 'IDENTIFICAÇÃO', ...
-                                           'value', table2struct(gpsObj.Config(idx2,1:3)));        
-                    dataStruct(2) = struct('group', 'PARÂMETROS', ...
-                                           'value', table2struct(gpsObj.Config(idx2,6:7)));
+                    tag = sprintf('%s<br><font style="font-size: 10px; color: gray;">%s</font>', gpsObj.Config.Name{gpsIdx}, gpsObj.Config.connectPort{gpsIdx});
+                    img = gpsObj.Config.Image{gpsIdx};
+
+                    dataStruct = [ ...
+                        struct('group', 'ASPECTOS GERAIS', 'value', table2struct(gpsObj.Config(gpsIdx, {'Family', 'Tag'}))), ...
+                        struct('group', 'ATRIBUTOS',       'value', table2struct(gpsObj.Config(gpsIdx, {'connectType', 'connectPort'}))) ...
+                    ];
             end
 
-            htmlContent = textFormatGUI.struct2PrettyPrintList(dataStruct);
+            features = textFormatGUI.struct2PrettyPrintList(dataStruct, "delete");
         end
 
         %-----------------------------------------------------------------%
@@ -293,5 +298,59 @@ classdef (Abstract) HtmlTextGenerator
 
             htmlContent   = textFormatGUI.struct2PrettyPrintList(dataStruct);
         end
+
+        %-----------------------------------------------------------------%
+        function tag = createTag(type, varargin)
+            arguments
+                type {mustBeMember(type, {'Flow', 'Emission', 'Channel'})}
+            end
+
+            arguments (Repeating)
+                varargin
+            end
+
+            switch type
+                case 'Flow'
+                    startFrequencyHz = varargin{1};
+                    stopFrequencyHz = varargin{2};
+                    flowId = varargin{3};
+
+                    tag = sprintf('%.3f – %.3f MHz', startFrequencyHz/1e+6, stopFrequencyHz/1e+6);
+
+                    if ~isempty(flowId)
+                        tag = [sprintf('ID %d: ', flowId), tag];
+                    end
+
+                case 'Emission'
+                    frequencyMHz = varargin{1};
+                    bandWidthkHz = varargin{2};
+                    tag = sprintf('%.3f MHz ⌂ %.1f kHz', frequencyMHz, bandWidthkHz);
+
+                case 'Channel'
+                    frequencyMHz = varargin{1};
+                    bandWidthMHz = varargin{2};
+                    tag = sprintf('%.3f MHz @ %.3f MHz', bandWidthMHz, frequencyMHz);
+            end
+        end
     end
+end
+
+
+%-------------------------------------------------------------------------%
+function parameters = receiverParameters(definition)
+    features = definition.features;
+
+    parameters = struct( ...
+        'connectType',     strjoin(definition.connection.types, ', '), ...
+        'connectPort',     definition.connection.defaultPort, ...
+        'traceMode',       features.traceMode.items, ...
+        'detector',        features.detector.items, ...
+        'levelUnits',      strjoin(unique(strsplit(features.levelUnits, ',')), ', '), ...
+        'stepWidths',      features.stepWidths, ...
+        'dataPoints',      unique(round(features.dataPoints)), ...
+        'resolutions',     features.resolutions, ...
+        'videoBandWidths', features.videoBandWidths, ...
+        'attenuationValues', features.attenuationValues, ...
+        'sweepMode',       features.sweepMode.items ...
+    );
 end

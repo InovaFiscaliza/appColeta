@@ -28,8 +28,13 @@ classdef EMSatLib < handle
                           '<0001/LBCHN=4', '>0001/LBCHN=4'};
             lnbCommand = table((1:4)', lnbCommand(:,1), lnbCommand(:,2), 'VariableNames', {'Port', 'set', 'get'});
             
-            % Antenna/LNB list
-            tempStruct = jsondecode(fileread(fullfile(RootFolder, 'config', 'EMSatLib.json')));
+            % Antenna/LNB list (versão em ProgramData, se existir, tem precedência)
+            [projectFolder, programDataFolder] = appEngine.util.Path(class.Constants.appName, RootFolder);
+            emsatFile = fullfile(programDataFolder, 'EMSatLib.json');
+            if ~isfile(emsatFile)
+                emsatFile = fullfile(projectFolder, 'EMSatLib.json');
+            end
+            tempStruct = jsondecode(fileread(emsatFile));
 
             tempStruct.LNB        = struct2table(tempStruct.LNB);
             tempStruct.LNB.Name   = string(tempStruct.LNB.Name);

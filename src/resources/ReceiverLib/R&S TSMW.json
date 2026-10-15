@@ -1,0 +1,281 @@
+{
+    "family": "Receiver",
+    "name": "R&S TSMW",
+    "tag": "TSMW",
+    "band": "10 kHz - 6.2 GHz",
+    "image": "Instr_R&S_TSMW.png",
+    "connection": {
+        "types": [
+            "TCPIP Socket"
+        ],
+        "defaultPort": 5555,
+        "terminator": "LF",
+        "protocol": "json",
+        "traceData": {
+            "acquisitionMode": "polling",
+            "dataType": "level"
+        }
+    },
+    "communication": {
+        "set": [
+            {
+                "step": "initialization",
+                "commands": [
+                    {
+                        "name": "startup",
+                        "code": 6,
+                        "request": "powerScanConfig",
+                        "parameterNames": [
+                            "startup"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0
+                    }
+                ]
+            },
+            {
+                "step": "acquisition",
+                "commands": [
+                    {
+                        "name": "bandConfig",
+                        "code": 6,
+                        "request": "powerScanConfig",
+                        "parameterNames": [
+                            "frontEndMask",
+                            "freqStart",
+                            "freqStop",
+                            "requireRawData",
+                            "maxReportingRate",
+                            "maxDeviceMeasurementRate",
+                            "windowType",
+                            "fftSize",
+                            "autoBandwidth",
+                            "resolutionValue",
+                            "sensitivityMode",
+                            "threshold",
+                            "preamp",
+                            "attenuationMode",
+                            "attenuationValue",
+                            "sampleTimeValue",
+                            "measurementDetectorType",
+                            "dataPoints",
+                            "detector",
+                            "timeDetectorType",
+                            "timeDetectorIntervalType",
+                            "timeParameter",
+                            "useMarker",
+                            "returnPowerValues",
+                            "sweepMode"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0.1
+                    }
+                ]
+            }
+        ],
+        "query": {
+            "identification": "{\"CODE\":4,\"COMMAND\":\"*idn?\",\"ARGS\":{}}",
+            "status": "",
+            "bandConfig": "{\"CODE\":5,\"COMMAND\":\"getSettings\",\"ARGS\":{}}",
+            "attenuation": "",
+            "bandConfigParameterNames": [
+                "freqStart",
+                "freqStop",
+                "resolutionValue",
+                "sensitivityMode",
+                "preamp",
+                "attenuationMode",
+                "attenuationValue",
+                "dataPoints",
+                "detector",
+                "sweepMode"
+            ]
+        },
+        "fetch": {
+            "traceData": "{\"CODE\":7,\"COMMAND\":\"startPowerScanMeasurement\",\"ARGS\":{}}",
+            "gpsData": "{\"CODE\":2,\"COMMAND\":\"gpsGetLocation\",\"ARGS\":{}}"
+        },
+        "parameters": [
+            {
+                "name": "attenuationMode",
+                "write": "\"autoAttenuation\":%attenuationMode%",
+                "read": "autoAttenuation",
+                "requireMatch": false
+            },
+            {
+                "name": "attenuationValue",
+                "write": "\"attenuation\":%attenuationValue%",
+                "read": "attenuation",
+                "requireMatch": false
+            },
+            {
+                "name": "autoBandwidth",
+                "write": "\"autoBandwidth\":true",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "dataPoints",
+                "write": "\"numBins\":%dataPoints%",
+                "read": "numBins",
+                "requireMatch": true
+            },
+            {
+                "name": "detector",
+                "write": "\"frequencyDetectorType\":%detector%",
+                "read": "frequencyDetectorType",
+                "requireMatch": false
+            },
+            {
+                "name": "fftSize",
+                "write": "\"fftSize\":1024",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "freqStart",
+                "write": "\"startFrequency\":%freqStart%",
+                "read": "startFrequency",
+                "requireMatch": true
+            },
+            {
+                "name": "freqStop",
+                "write": "\"stopFrequency\":%freqStop%",
+                "read": "stopFrequency",
+                "requireMatch": true
+            },
+            {
+                "name": "frontEndMask",
+                "write": "\"frontEndMask\":1",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "maxDeviceMeasurementRate",
+                "write": "\"maxDeviceMeasurementRate\":30",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "maxReportingRate",
+                "write": "\"maxReportingRate\":10",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "measurementDetectorType",
+                "write": "\"measurementDetectorType\":1",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "preamp",
+                "write": "\"preamplifier\":%preamp%",
+                "read": "preamplifier",
+                "requireMatch": false
+            },
+            {
+                "name": "requireRawData",
+                "write": "\"requireRawData\":false",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "resolutionValue",
+                "write": "\"bandwidth\":%resolutionValue%",
+                "read": "bandwidth",
+                "requireMatch": false
+            },
+            {
+                "name": "returnPowerValues",
+                "write": "\"returnPowerValues\":false",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "sampleTimeValue",
+                "write": "\"measurementTime\":1000000",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "sensitivityMode",
+                "write": "\"levelThreshold\":%sensitivityMode%",
+                "read": "levelThreshold",
+                "requireMatch": false
+            },
+            {
+                "name": "startup",
+                "write": "",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "sweepMode",
+                "write": "\"singleSweepMode\":%sweepMode%",
+                "read": "singleSweepMode",
+                "requireMatch": false
+            },
+            {
+                "name": "threshold",
+                "write": "\"threshold\":-100",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "timeDetectorIntervalType",
+                "write": "\"timeDetectorIntervalType\":1",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "timeDetectorType",
+                "write": "\"timeDetectorType\":1",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "timeParameter",
+                "write": "\"timeParameter\":1000",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "useMarker",
+                "write": "\"useMarker\":false",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "windowType",
+                "write": "\"windowType\":1",
+                "read": "",
+                "requireMatch": false
+            }
+        ]
+    },
+    "features": {
+        "attenuationValues": "0 dB,5 dB,10 dB,15 dB,20 dB,25 dB,30 dB",
+        "levelUnits": "DBM,DBM",
+        "stepWidths": "",
+        "resolutions": "1.000 kHz,3.000 kHz,10.000 kHz,30.000 kHz,100.000 kHz,300.000 kHz,1000.000 kHz,3000.000 kHz,10000.000 kHz",
+        "videoBandWidths": "",
+        "dataPoints": [
+            512,
+            8192
+        ],
+        "detector": {
+            "items": "Average/RMS",
+            "values": "1"
+        },
+        "sweepMode": {
+            "items": "Single Sweep,Continuous Sweep",
+            "values": "true,false"
+        },
+        "traceMode": {
+            "items": "ClearWrite",
+            "values": "0",
+            "requiresAverageModeFor": []
+        }
+    }
+}

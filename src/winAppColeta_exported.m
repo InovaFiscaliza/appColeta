@@ -2,78 +2,78 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        UIFigure               matlab.ui.Figure
-        GridLayout             matlab.ui.container.GridLayout
-        NavBar                 matlab.ui.container.GridLayout
-        AppInfo                matlab.ui.control.Image
-        FigurePosition         matlab.ui.control.Image
-        jsBackDoor             matlab.ui.control.HTML
-        Tab6Button             matlab.ui.control.StateButton
-        Tab5Button             matlab.ui.control.StateButton
-        ButtonsSeparator2      matlab.ui.control.Image
-        Tab4Button             matlab.ui.control.StateButton
-        Tab3Button             matlab.ui.control.StateButton
-        Tab2Button             matlab.ui.control.StateButton
-        ButtonsSeparator1      matlab.ui.control.Image
-        Tab1Button             matlab.ui.control.StateButton
-        AppName                matlab.ui.control.Label
-        TabGroup               matlab.ui.container.TabGroup
-        Tab1_Task              matlab.ui.container.Tab
-        Tab1Grid               matlab.ui.container.GridLayout
-        task_toolGrid          matlab.ui.container.GridLayout
-        tool_RevisitTime       matlab.ui.control.Label
-        tool_ButtonLOG         matlab.ui.control.Image
-        tool_Separator2        matlab.ui.control.Image
-        tool_ButtonDel         matlab.ui.control.Image
-        tool_ButtonPlay        matlab.ui.control.Image
-        tool_Separator1        matlab.ui.control.Image
-        tool_LeftPanel         matlab.ui.control.Image
-        task_docGrid           matlab.ui.container.GridLayout
-        MetaData               matlab.ui.control.Label
-        DropDown               matlab.ui.control.DropDown
-        FAIXADEFREQUNCIALabel  matlab.ui.control.Label
-        play_axesToolbar       matlab.ui.container.GridLayout
-        axesTool_Waterfall     matlab.ui.control.Image
-        axesTool_Peak          matlab.ui.control.Image
-        axesTool_MaxHold       matlab.ui.control.Image
-        axesTool_Average       matlab.ui.control.Image
-        axesTool_MinHold       matlab.ui.control.Image
-        axesTool_PlotSource    matlab.ui.control.DropDown
-        axesTool_RestoreView   matlab.ui.control.Image
-        TaskInfo_Panel         matlab.ui.container.GridLayout
-        lastGPS_Panel          matlab.ui.container.Panel
-        lastGPS_Grid1          matlab.ui.container.GridLayout
-        errorCount_img_2       matlab.ui.control.Image
-        errorCount_txt_2       matlab.ui.control.Label
-        lastGPS_Grid2          matlab.ui.container.GridLayout
-        lastGPS_color          matlab.ui.control.Lamp
-        lastGPS_text           matlab.ui.control.Label
-        lastGPS_label          matlab.ui.control.Label
-        lastMask_Panel         matlab.ui.container.Panel
-        lastMask_Grid          matlab.ui.container.GridLayout
-        lastMask_text          matlab.ui.control.Label
-        lastMask_label         matlab.ui.control.Label
-        Sweeps_Panel           matlab.ui.container.Panel
-        Sweeps_Grid            matlab.ui.container.GridLayout
-        errorCount_img         matlab.ui.control.Image
-        errorCount_txt         matlab.ui.control.Label
-        Sweeps                 matlab.ui.control.Label
-        Sweeps_Label           matlab.ui.control.Label
-        Sweeps_REC             matlab.ui.control.Image
-        Plot_Panel             matlab.ui.container.Panel
-        UITable                matlab.ui.control.Table
-        Tab2_InstrumentList    matlab.ui.container.Tab
-        Tab3_TaskEdition       matlab.ui.container.Tab
-        Tab4_TaskAdd           matlab.ui.container.Tab
-        Tab5_Server            matlab.ui.container.Tab
-        Tab6_Config            matlab.ui.container.Tab
+        UIFigure                 matlab.ui.Figure
+        GridLayout               matlab.ui.container.GridLayout
+        NavBar                   matlab.ui.container.GridLayout
+        AppInfo                  matlab.ui.control.Image
+        FigurePosition           matlab.ui.control.Image
+        DataHubLamp              matlab.ui.control.Image
+        jsBackDoor               matlab.ui.control.HTML
+        Tab6Button               matlab.ui.control.StateButton
+        Tab5Button               matlab.ui.control.StateButton
+        ButtonsSeparator2        matlab.ui.control.Image
+        Tab4Button               matlab.ui.control.StateButton
+        Tab3Button               matlab.ui.control.StateButton
+        Tab2Button               matlab.ui.control.StateButton
+        ButtonsSeparator1        matlab.ui.control.Image
+        Tab1Button               matlab.ui.control.StateButton
+        AppName                  matlab.ui.control.Label
+        TabGroup                 matlab.ui.container.TabGroup
+        Tab1_Task                matlab.ui.container.Tab
+        Tab1Grid                 matlab.ui.container.GridLayout
+        Toolbar                  matlab.ui.container.GridLayout
+        RevisitTimeInfo          matlab.ui.control.Label
+        SelectedTaskInfo         matlab.ui.control.Label
+        SelectedTaskSeparator    matlab.ui.control.Image
+        TableVisibility          matlab.ui.control.Image
+        PanelLeftVisibility      matlab.ui.control.Image
+        Document                 matlab.ui.container.GridLayout
+        TaskStatusGrid           matlab.ui.container.GridLayout
+        GPSLastFixPanel          matlab.ui.container.Panel
+        GPSLastFixGrid           matlab.ui.container.GridLayout
+        GPSErrorCountIcon        matlab.ui.control.Image
+        GPSErrorCount            matlab.ui.control.Label
+        GPSLastFix               matlab.ui.control.Label
+        GPSLastFixIconGrid       matlab.ui.container.GridLayout
+        GPSLastFixIcon           matlab.ui.control.Lamp
+        GPSLastFixLabel          matlab.ui.control.Label
+        MaskPanel                matlab.ui.container.Panel
+        MaskGrid                 matlab.ui.container.GridLayout
+        MaskStatus               matlab.ui.control.Label
+        MaskLabel                matlab.ui.control.Label
+        SweepsPanel              matlab.ui.container.Panel
+        SweepsGrid               matlab.ui.container.GridLayout
+        ReceiverErrorCountIcon   matlab.ui.control.Image
+        ReceiverErrorCount       matlab.ui.control.Label
+        RecordingIcon            matlab.ui.control.Image
+        Sweeps                   matlab.ui.control.Label
+        SweepsLabel              matlab.ui.control.Label
+        AxesToolbar              matlab.ui.container.GridLayout
+        axesTool_Waterfall       matlab.ui.control.Image
+        axesTool_Peak            matlab.ui.control.Image
+        axesTool_MaxHold         matlab.ui.control.Image
+        axesTool_Average         matlab.ui.control.Image
+        axesTool_MinHold         matlab.ui.control.Image
+        axesTool_PlotSource      matlab.ui.control.DropDown
+        axesTool_ExportGraphics  matlab.ui.control.Image
+        axesTool_RestoreView     matlab.ui.control.Image
+        AxesContainer            matlab.ui.container.Panel
+        MetaData                 matlab.ui.control.Label
+        SpectrumFlowList         matlab.ui.control.DropDown
+        UITable                  matlab.ui.control.Table
+        Tab2_InstrumentList      matlab.ui.container.Tab
+        Tab3_TaskEdition         matlab.ui.container.Tab
+        Tab4_TaskAdd             matlab.ui.container.Tab
+        Tab5_Server              matlab.ui.container.Tab
+        Tab6_Config              matlab.ui.container.Tab
     end
 
     
     properties (Access = private)
         %-----------------------------------------------------------------%
         Role = 'mainApp'
-        Context = 'TASK:VIEW'
+        Context = 'TASK_VIEW'
+        AppHandleNameInBase
     end
 
 
@@ -93,38 +93,25 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         SubTabGroup = struct('Children', -1, 'UserData', [])
 
-        % taskController
-        % taskList
+        % TAREFA+INSTRUMENTOS
+        TaskController
+        TaskSchedulerTimer
 
-        specObj
-        revisitObj
-        timerObj_task
         taskList
-
-        Flag_running = 0
-        Flag_editing = 0
-        plotStyleEditing = 0
-
-        axes1
-        axes2
-        restoreView = struct('ID', {}, 'xLim', {}, 'yLim', {}, 'cLim', {})
-        
-        line_ClrWrite
-        line_MinHold
-        line_Average
-        line_MaxHold
-        peakExcursion
-        surface_WFall
-
         tcpServer
-        
         receiverObj
         gpsObj
-        udpPortArray = {}
-
         EB500Obj
         EMSatObj
         ERMxObj
+
+        % PLOT
+        UIAxes1
+        UIAxes2
+        RestoreView = struct('Id', {}, 'XLim', {}, 'YLim', {}, 'CLim', {})
+
+        PlotHandles
+        PlotStyleDirty (1, 1) logical = false
     end
 
 
@@ -158,18 +145,18 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         if ~app.renderCount
                             appEngine.activate(app, app.Role, MFilePath, parpoolFlag)
                         else
-                            selection = app.UITable.Selection;
-                            if ~isempty(selection)
+                            currentTaskIdx = app.UITable.Selection;
+                            if ~isempty(currentTaskIdx)
                                 app.UITable.Selection = [];
-                                onTableSelectionChanged(app)
+                                onTaskSelectionChanged(app, struct('PreviousSelection', [], 'Selection', []))
                             end
 
                             appEngine.beforeReload(app, app.Role)
                             appEngine.activate(app, app.Role, MFilePath, parpoolFlag)
 
-                            if ~isempty(selection)
-                                app.UITable.Selection = selection;
-                                onTableSelectionChanged(app)
+                            if ~isempty(currentTaskIdx)
+                                app.UITable.Selection = currentTaskIdx;
+                                onTaskSelectionChanged(app, struct('PreviousSelection', [], 'Selection', currentTaskIdx))
                             end
                         end
                         
@@ -193,8 +180,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             deleteContextMenu(app.tabGroupController, hApp.UIFigure, popupCurrentAppTag)
                         end
 
-                        delete(app.popupCurrentApp)
-                        app.popupCurrentApp = [];
+                        if contains(class(app.popupCurrentApp), popupCurrentAppTag)
+                            delete(app.popupCurrentApp)
+                            app.popupCurrentApp = [];
+                        end
                     
                     case 'customForm'
                         switch event.HTMLEventData.uuid
@@ -217,8 +206,29 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             app.General.AppVersion.application.resourceStaticURL = resourceStaticURL;
                         end
 
-                    case 'auxApp.winAddTask.AntennaList_Tree'
-                        ipcMainMatlabCallAuxiliarApp(app, 'TASK:ADD', 'MATLAB', 'deleteAddedAntenna')
+                    case {'onStartTaskRequest', 'onStopTaskRequest', 'onEditTaskRequested', 'onDeleteTaskRequest', 'onViewLogRequest'}
+                        % event.HTMLEventData é o índice da tarefa (linha da tabela).
+                        taskIdx = event.HTMLEventData;
+
+                        if taskIdx < 1 || taskIdx > numel(app.TaskController.Tasks)
+                            return
+                        end
+
+                        switch event.HTMLEventName
+                            case 'onStartTaskRequest'
+                                startOrReplayTask(app, taskIdx)
+                            case 'onStopTaskRequest'
+                                stopTask(app, taskIdx)
+                            case 'onEditTaskRequested'
+                                editTask(app, taskIdx)
+                            case 'onDeleteTaskRequest'
+                                deleteTask(app, taskIdx)
+                            case 'onViewLogRequest'
+                                showTaskLog(app, taskIdx)
+                        end
+
+                    case 'auxApp.winAddTask.AntennaTree'
+                        ipcMainMatlabCallAuxiliarApp(app, 'TASK_ADD', 'MATLAB', 'deleteAddedAntenna')
 
                     otherwise
                         error('winAppColeta:UnexpectedEvent', 'Unexpected event "%s"', event.HTMLEventName)
@@ -242,7 +252,15 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                     case 'dockButtonPushed'
                         auxAppTag = varargin{1};
-                        varargout{1} = auxAppInputArguments(app, auxAppTag);
+                        varargout{1} = {app};
+
+                        if strcmp(auxAppTag, 'TASK_ADD')
+                            [auxAppIsOpen, auxAppHandle] = checkStatusModule(app.tabGroupController, auxAppTag);
+
+                            if auxAppIsOpen
+                                varargout{1} = {app, auxAppHandle.infoEdition};
+                            end
+                        end
 
                     case 'onUpdateLastVisitedFolder'
                         filePath = varargin{1};
@@ -254,7 +272,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                             case {'auxApp.winConfig', 'auxApp.winConfig_exported'}
                                 switch eventName
                                     case 'checkDataHubLampStatus'
-                                        DataHubWarningLamp(app)
+                                        updateWarningLampVisibility(app)
 
                                     case 'openDevTools'
                                         dialogBox    = struct('id', 'login',    'label', 'Usuário: ', 'type', 'text');
@@ -263,33 +281,33 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         
                                     case 'onAxesTileSpacingChange'
                                         tileSpacing = varargin{1};
-                                        app.axes1.Parent.TileSpacing = tileSpacing;
+                                        app.UIAxes1.Parent.TileSpacing = tileSpacing;
                 
                                     case 'onPlotColorChange'
                                         plotTag = varargin{1};
-                                        if ~isempty(eval(['app.line_' plotTag]))
-                                            app.plotStyleEditing = 1;
+                                        if ~isempty(eval(sprintf('app.PlotHandles.%s', plotTag)))
+                                            app.PlotStyleDirty = true;
                                         end
                 
                                     case 'onWaterfallColormapChange'
                                         waterfallColormap = varargin{1};
-                                        colormap(app.axes2, waterfallColormap)
+                                        colormap(app.UIAxes2, waterfallColormap)
         
                                     otherwise
                                         error('winAppColeta:UnexpectedCall', 'Unexpected call "%s"', eventName)
                                 end
 
-                            % auxApp.winTaskList (TASK:EDIT)
+                            % auxApp.winTaskList (TASK_EDIT)
                             case {'auxApp.winTaskList', 'auxApp.winTaskList_exported'}
                                 switch eventName
                                     case 'onTaskListEdit'
-                                        app.taskList = class.taskList.rawFileParser(app.rootFolder, 'winAppColetaV2');
+                                        app.taskList = util.TaskScriptIO.loadScriptList(app.rootFolder, 'winAppColetaV2');
         
                                     otherwise
                                         error('winAppColeta:UnexpectedCall', 'Unexpected call "%s"', eventName)
                                 end
 
-                            % auxApp.winAddTask (TASK:ADD)
+                            % auxApp.winAddTask (TASK_ADD)
                             case {'auxApp.winAddTask', 'auxApp.winAddTask_exported'}
                                 switch eventName
                                     case 'onTaskAddingOrEditing'
@@ -298,22 +316,32 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                                         newTask     = varargin{3};
                 
                                         closeModule(app.tabGroupController, auxAppTag, app.General)
+
+                                        if contains(newTask.Type, 'Drive-test (Level+Azimuth)') && (strcmp(app.executionMode, 'webApp') || ~class.EB500Lib.isGUIRunning())
+                                            ui.Dialog(app.UIFigure, 'warning', [ ...
+                                                'A tarefa "Drive-test (Level+Azimuth)" usa comandos não ' ...
+                                                'documentados do receptor R&S EB500, sendo operacional ' ...
+                                                'apenas quando a aplicação EB500GUI está aberta. Não foi possível ' ...
+                                                'confirmar, entre os processos em execução neste computador, ' ...
+                                                'que esta aplicação está aberta, operação que deve ser realizada ' ...
+                                                'pelo usuário previamente ao início da execução da tarefa.' ...
+                                            ]);
+                                        end
                 
                                         % O try/catch possibilita a inclusão do progressDialog sem que 
                                         % exista o risco dele ficar visível, caso ocorra algum erro não
                                         % mapeado no método da classe.
                                         try
                                             app.progressDialog.Visible = 'visible';
-                                            [app.specObj, msgError]    = app.specObj.AddOrEditTask(infoEdition, newTask, app.EMSatObj, app.ERMxObj);
+                                            [app.TaskController.Tasks, msgError]    = AddOrEditTask(app.TaskController.Tasks, infoEdition, newTask, app.EMSatObj, app.ERMxObj);
                                             app.progressDialog.Visible = 'hidden';
                             
                                             if isempty(msgError)
-                                                RegularTask_timerFcn(app)                                 % Startup of every task
+                                                taskSchedulerTimerFcn(app)                                 % Startup of every task
                                             else
                                                 ui.Dialog(app.UIFigure, 'warning', msgError);
                                             end
-                                        catch ME
-                                            struct2table(ME.stack)
+                                        catch
                                         end
 
                                     otherwise
@@ -352,7 +380,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 app
                 callingApp
                 auxAppName char {mustBeMember(auxAppName, {'Tracking'})}
-                context    char {mustBeMember(context, {'mainApp', 'TASK:VIEW', 'TASK:EDIT', 'TASK:ADD', 'INSTRUMENT', 'SERVER', 'CONFIG'})}
+                context    char {mustBeMember(context, {'mainApp', 'TASK_VIEW', 'TASK_EDIT', 'TASK_ADD', 'INSTRUMENT', 'SERVER', 'CONFIG'})}
             end
 
             arguments (Repeating)
@@ -435,12 +463,22 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                         app.Tab4Button;
                         app.Tab5Button;
                         app.Tab6Button;
+                        ...
+                        app.SpectrumFlowList;
                         app.MetaData;
-                        app.play_axesToolbar;
-                        app.tool_LeftPanel;
-                        app.tool_ButtonPlay;
-                        app.tool_ButtonDel;
-                        app.tool_ButtonLOG
+                        app.AxesToolbar;
+                        ...
+                        app.axesTool_RestoreView;
+                        app.axesTool_ExportGraphics;
+                        app.axesTool_PlotSource;
+                        app.axesTool_MinHold;
+                        app.axesTool_Average;
+                        app.axesTool_MaxHold;
+                        app.axesTool_Peak;
+                        app.axesTool_Waterfall;
+                        ...
+                        app.PanelLeftVisibility;
+                        app.TableVisibility
                     };
                     ui.CustomizationBase.getElementsDataTag(elToModify);
 
@@ -451,11 +489,20 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
                     try
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                            struct('appName', appName, 'dataTag', app.play_axesToolbar.UserData.id, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0')), ...
-                            struct('appName', appName, 'dataTag', app.tool_LeftPanel.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonPlay.UserData.id,  'tooltip', struct('defaultPosition', 'top', 'textContent', 'Inicia ou interrompe tarefa')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonDel.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exclui tarefa')), ...
-                            struct('appName', appName, 'dataTag', app.tool_ButtonLOG.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'LOG tarefa')) ...
+                            struct('appName', appName, 'dataTag', app.AxesToolbar.UserData.id, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0')), ...
+                            struct('appName', appName, 'dataTag', app.SpectrumFlowList.UserData.id, 'selector', 'input', 'styleImportant', struct('height', '44px'), 'dropDownBackgroundColor', struct('items', 'rgba(183, 49, 44, 0.75)', 'selectedItem', 'rgb(108, 4, 4)')), ...
+                            ...
+                            struct('appName', appName, 'dataTag', app.axesTool_RestoreView.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Restaura limites iniciais dos eixos')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_ExportGraphics.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta plot')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_PlotSource.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Seleciona tipo de plot')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_MinHold.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "MinHold"')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_Average.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "Average"')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_MaxHold.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "MaxHold"')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_Peak.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Excursão de pico')), ...
+                            struct('appName', appName, 'dataTag', app.axesTool_Waterfall.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe waterfall')), ...
+                            ...
+                            struct('appName', appName, 'dataTag', app.PanelLeftVisibility.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
+                            struct('appName', appName, 'dataTag', app.TableVisibility.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade da tabela')) ...
                         });
                     catch
                     end
@@ -479,6 +526,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             mkdir(tempDir)
             app.General_I.fileFolder.tempPath  = tempDir;
             app.General_I.fileFolder.MFilePath = MFilePath;
+            app.General_I.context.CONFIG.station.computer = appEngine.util.OperationSystem("computerName");
 
             switch app.executionMode
                 case 'webApp'
@@ -512,8 +560,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Ideia é identificar URL de pasta estática servida pelo backend, de 
             % forma que possam ser inseridas imagens em uilabel (como ui.TextView).
             try
-                [~, resourceName, resourceExt] = fileparts(app.tool_ButtonPlay.ImageSource);
-                sendEventToHTMLSource(app.jsBackDoor, 'findResourceStaticURL', struct('resourceName', [resourceName resourceExt], 'resourceTag', 'img', 'resourceId', app.tool_ButtonPlay.UserData.id))
+                [~, resourceName, resourceExt] = fileparts(app.PanelLeftVisibility.ImageSource);
+                sendEventToHTMLSource(app.jsBackDoor, 'findResourceStaticURL', struct('resourceName', [resourceName resourceExt], 'resourceTag', 'img', 'resourceId', app.PanelLeftVisibility.UserData.id))
             catch
             end
         end
@@ -522,24 +570,29 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         function initializeAppProperties(app)
             % Um dos arquivos que compõem a subpasta "config", copiada para
             % "ProgramData/ANATEL/appColeta" na primeira execução, é o arquivo 
-            % "taskList.json".
-            app.taskList    = class.taskList.rawFileParser(app.rootFolder, 'winAppColetaV2');
+            % "TaskList.json".
+            app.taskList = util.TaskScriptIO.loadScriptList(app.rootFolder, 'winAppColetaV2');
 
             % Others...
-            app.specObj     = class.specClass.empty;
-            app.receiverObj = class.ReceiverLib(app.rootFolder);
-            app.gpsObj      = class.GPSLib(app.rootFolder);            
-            app.EB500Obj    = class.EB500Lib(app.rootFolder);
-            app.EMSatObj    = class.EMSatLib(app.rootFolder);
-            app.ERMxObj     = class.ERMxLib(app.rootFolder);            
+            resourcesFolder = fullfile(app.General.fileFolder.MFilePath, 'resources');
+            app.receiverObj = model.Receiver(app.rootFolder, resourcesFolder);
+            app.gpsObj = model.GPS(app.rootFolder, resourcesFolder);            
+            app.EB500Obj = class.EB500Lib(resourcesFolder);
+            app.EMSatObj = class.EMSatLib(app.rootFolder);
+            app.ERMxObj = class.ERMxLib(resourcesFolder);            
 
-            if app.General.tcpServer.Status
+            app.TaskController = model.TaskController(app);
+            registerTaskControllerListeners(app)
+
+            if app.General.context.SERVER.status
                 try
-                    app.tcpServer = class.tcpServerLib(app);
+                    app.tcpServer = model.TcpServer(app);
                 catch
                     app.tcpServer = [];
                 end
             end
+
+            resetRestoreView(app)
         end
 
         %-----------------------------------------------------------------%
@@ -558,16 +611,25 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.axesTool_MaxHold.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'MaxHold_32Filled.png', 'Off', 'MaxHold_32.png'));
             app.axesTool_Peak.UserData       = struct('id', '', 'status', false);
             app.axesTool_Waterfall.UserData  = struct('id', '', 'status', false);
+
+            app.PanelLeftVisibility.UserData.status = true;
+            app.TableVisibility.UserData.status = true;
             
-            startup_Axes(app)
+            initializeAxes(app)
+
+            % Customiza uitable, atualizando-se em seguida.
+            addStyle(app.UITable, uistyle("Interpreter", "html"));
+            addStyle(app.UITable, uistyle("HorizontalAlignment", "center"), "column", 7);
+            app.UITable.RowName = 'numbered';
         end
 
         %-----------------------------------------------------------------%
         function applyInitialLayout(app)
-            RegularTask_timerCreation(app)
+            updateWarningLampVisibility(app)
+            createTaskSchedulerTimer(app)
 
-            if app.General.startupInfo
-                startup_specObjRead(app)
+            if app.General.context.CONFIG.restoreLastSession
+                restoreTasksFromFile(app)
             end
         end
     end
@@ -575,1197 +637,486 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
     methods (Access = private)
         %-----------------------------------------------------------------%
-        function DataHubWarningLamp(app)
-            % if isfolder(app.General.fileFolder.DataHub_POST)
-            %     app.DataHubLamp.Visible = 0;
-            % else
-            %     app.DataHubLamp.Visible = 1;
-            % end
-        end
-
-
-        %-----------------------------------------------------------------%
-        function startup_Axes(app)
-            % Axes creation:
-            hParent   = tiledlayout(app.Plot_Panel, 3, 1, "Padding", "compact", "TileSpacing", "compact");
-            app.axes1 = plot.axesCreation(hParent, 'Cartesian', {'UserData', struct('CLimMode', 'auto', 'Colormap', '')});
-            app.axes1.Layout.Tile = 1;
-            app.axes1.Layout.TileSpan = [3,1];
-            
-            app.axes2 = plot.axesCreation(hParent, 'Cartesian', {'Visible', 0, 'Layer', 'top', 'Box', 'on', 'XGrid', 'off', 'XMinorGrid', 'off', 'YGrid', 'off', 'YMinorGrid', 'off', 'UserData', struct('CLimMode', 'auto', 'Colormap', '')});
-            app.axes2.Layout.Tile = 4;
-
-            colormap(app.axes2, app.General.Plot.Waterfall.Colormap);
-            plot.axesColorbar(app.axes2, "eastoutside", {'Visible', false})
-
-            % Axes fixed labels:
-            xlabel(app.axes1, 'Frequência (MHz)')
-            ylabel(app.axes1, 'Nível (dB)')
-            ysecondarylabel(app.axes1, sprintf('\n\n'))
-            
-            xlabel(app.axes2, 'Frequência (MHz)')
-            ylabel(app.axes2, 'Amostras')
-
-            % Axes listeners:
-            linkaxes([app.axes1, app.axes2], 'x')
-
-            % Axes interactions:
-            plot.axesInteractivity.DefaultCreation([app.axes1, app.axes2], [dataTipInteraction, regionZoomInteraction, rulerPanInteraction ])
-        end
-
-        %-----------------------------------------------------------------%
-        function startup_specObjRead(app)
-            [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
-            if isfile(fullfile(programDataFolder, 'startupInfo.mat'))
-                app.progressDialog.Visible = 'visible';
-
-                load(fullfile(programDataFolder, 'startupInfo.mat'), 'SpecObj');
-
-                % É possível que o MATLAB não consiga instancionar o objeto
-                % "class.specClass", lendo-o como "uint32", o que inviabiliza 
-                % o aproveitamento da informação salva...
-
-                % Warning: Variable 'SpecObj' originally saved as a class.specClass cannot be instantiated as an object and will be read in as a uint32.
-
-                if exist('SpecObj', 'var') && isa(SpecObj, 'class.specClass') && ~isempty(SpecObj)
-                    for ii = 1:numel(SpecObj)
-                        SpecObj(ii) = startup_specObjRead_Receiver(app, SpecObj(ii));
-                        SpecObj(ii) = startup_specObjRead_Streaming(app, SpecObj(ii));
-                        SpecObj(ii) = startup_specObjRead_GPS(app, SpecObj(ii));
-
-                        if ismember(SpecObj(ii).Status, {'Na fila', 'Em andamento'})
-                            SpecObj(ii).Status = 'Erro';
-                        end
-                    end
-
-                    app.specObj = SpecObj;
-                    Layout_tableBuilding(app, 1)
-
-                    % Ida ao modo de "Execução das tarefas da monitoração"
-                    % de forma programática:
-                    app.Tab1Button.Value = 1;
-                    onTabNavigatorButtonPushed(app, struct('Source', app.Tab1Button, 'PreviousValue', 0))
-                end
-
-                app.progressDialog.Visible = 'hidden';
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function [SpecObj, msgError] = startup_specObjRead_Receiver(app, SpecObj)
-            % Função funcionalmente idêntica à fcn.ConnectivityTest_Receiver.
-            % A "duplicação" garante que seja usado a informação constante
-            % no objeto SpecObj, ao invés da informação constante no arquivo 
-            % "instrumentList.json", que pode ter sido editado.
-
-            instrSelected = Instrument(SpecObj);
-            [idx, msgError] = Connect(app.receiverObj ,instrSelected);
-            
-            if isempty(msgError)
-                SpecObj.Task.Receiver.Handle = app.receiverObj.Table.Handle{idx};
-                SpecObj.hReceiver            = SpecObj.Task.Receiver.Handle;
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function SpecObj = startup_specObjRead_Streaming(app, SpecObj)
-
-            receiverName = SpecObj.Task.Receiver.Selection.Name{1};
-            taskType     = SpecObj.Task.Type;
-
-            idx1 = SelectedReceiverIndex(app, receiverName, taskType);
-            if ismember(app.receiverObj.Config.connectFlag(idx1), [2, 3])
-                [app.udpPortArray, idx2] = fcn.udpSockets(app.udpPortArray, app.EB500Obj.udpPort);
-                if ~isempty(idx2)
-                    SpecObj.Task.Streaming.Handle = app.udpPortArray{idx2};
-                    SpecObj.hStreaming            = SpecObj.Task.Streaming.Handle;
-                end
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function [SpecObj, msgError] = startup_specObjRead_GPS(app, SpecObj)
-
-            % Função funcionalmente idêntica à fcn.ConnectivityTest_GPS.
-            % A "duplicação" garante que seja usado a informação constante
-            % no objeto SpecObj, ao invés da informação constante no arquivo 
-            % "instrumentList.json", que pode ter sido editado.
-
-            msgError = '';
-
-            if ~isempty(SpecObj.Task.GPS.Selection)
-                instrSelected = struct('Type',       SpecObj.Task.GPS.Selection.Type{1}, ...
-                                       'Parameters', jsondecode(SpecObj.Task.GPS.Selection.Parameters{1}));
-
-                [idx2, msgError] = app.gpsObj.Connect(instrSelected);
-                if isempty(msgError)
-                    SpecObj.Task.GPS.Handle = app.gpsObj.Table.Handle{idx2};
-                    SpecObj.hGPS = SpecObj.Task.GPS.Handle;
-                end
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function inputArguments = menu_auxAppInputArguments(app, auxAppName)
+        function refreshTaskTable(app, selectedTaskIdx)
             arguments
                 app
-                auxAppName char {mustBeMember(auxAppName, {'TASK:VIEW', 'INSTRUMENT', 'TASK:EDIT', 'TASK:ADD', 'SERVER', 'CONFIG'})}
+                selectedTaskIdx = []
             end
 
-            switch auxAppName
-                case 'TASK:ADD'
-                    [~, idxApp] = ismember(auxAppName, app.tabGroupController.Components.Tag);
-                    appHandle   = app.tabGroupController.Components.appHandle{idxApp};
-                    if ~isempty(appHandle) && isvalid(appHandle)
-                        inputArguments = {app, appHandle.infoEdition};
-                    else
-                        inputArguments = {app, struct('type', 'new')};
-                    end
-                otherwise
-                    inputArguments = {app};
-            end
-        end
-
-        %-----------------------------------------------------------------%
-        function idx = SelectedReceiverIndex(app, receiverName, taskType)
-            idx = find(strcmp(app.receiverObj.Config.Name, receiverName));
-            if numel(idx) > 1
-                connectFlagList = app.receiverObj.Config.connectFlag(idx);
-                if contains(taskType, 'Drive-test (Level+Azimuth)')
-                    idx = idx(connectFlagList == 3);
-                else
-                    idx = idx(connectFlagList ~= 3);
-                end
-                idx = idx(1);
-            end
-        end
-
-
-        %-----------------------------------------------------------------%
-        % TIMER 
-        %-----------------------------------------------------------------%
-        function RegularTask_timerCreation(app)
-            app.timerObj_task = timer("ExecutionMode", "fixedRate", ...
-                                      "Period",        10,          ...
-                                      "TimerFcn",      @(~,~)app.RegularTask_timerFcn);
-            start(app.timerObj_task)
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_timerFcn(app)
-            if ~app.Flag_running
-                Flag = false;
-                for ii = 1:numel(app.specObj)
-                    if RegularTask_StatusTaskCheck(app, ii, '')
-                        Flag = true;
-                        break
-                    end
-                end
-
-                if Flag
-                    RegularTask_MainLoop(app)
-                end
-            end
-
-            if numel(app.specObj) ~= height(app.UITable.Data)
-                Layout_tableBuilding(app, app.UITable.Selection)
-            end
-        end
-
-
-        %-----------------------------------------------------------------%
-        % REGULAR TASK
-        %-----------------------------------------------------------------%
-        function RegularTask_specObjSave(app)
-            % Ao salvar "app.specObj" em um arquivo .MAT, reabrindo-o
-            % posteriormente, os objetos de comunicação (tcpclient, por
-            % exemplo) não retém o valor da propriedade "UserData".
-            %
-            % Por essa razão, esses objetos não serão salvos, devendo ser
-            % recriados na inicialização do app.
-
-            SpecObj = copy(app.specObj);
-            
-            for ii = 1:numel(SpecObj)
-                SpecObj(ii).hReceiver  = [];
-                SpecObj(ii).hStreaming = [];
-                SpecObj(ii).hGPS       = [];
-
-                SpecObj(ii).Task.Receiver.Handle  = [];
-                SpecObj(ii).Task.Streaming.Handle = [];
-                SpecObj(ii).Task.GPS.Handle       = [];
-            end
-
-            [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
-            save(fullfile(programDataFolder, 'startupInfo.mat'), 'SpecObj')
-        end
-
-
-        %-----------------------------------------------------------------%
-        function Flag = RegularTask_StatusTaskCheck(app, idx, evtName)
-            % Função responsável por trocar o estado das tarefas, de "Na
-            % fila" para "Em andamento", "Em andamento" para "Cancelada",
-            % "Em andamento" para "Erro" e por aí vai...
-            %
-            % Lembrando que o estado de uma nova tarefa é "Na fila", exceto
-            % quando ocorre algum erro no processo de criação (decorrente 
-            % de uma configuração de um parâmetro não aceito pelo receptor,
-            % por exemplo). Nesse caso, o estado será "Erro".
-            %
-            % Caso não exista alguma tarefa em execução, o app.Flag_running
-            % será igual a 0, e o app.timerObj estará ativo, o que o fará
-            % avaliar a cada minuto o estado de todas as tarefas, nesta 
-            % função, de forma que:
-            % (a) Seja iniciada uma tarefa no estado "Na fila";
-            % (b) Seja realizada uma nova tentativa de iniciar uma tarefa 
-            %     no estado "Erro" (o que ocorrerá a cada 15 minutos).
-            
-            Timestamp = datetime('now');
-
-            Flag = false;
-            initialStatus = app.specObj(idx).Status;
-            
-            switch app.specObj(idx).Status
-                case 'Em andamento'
-                    if app.specObj(idx).Observation.EndTime < Timestamp || ismember(evtName, {'DeleteButtonPushed', 'ErrorTrigger'})
-                        Flag = true;
-
-                        if app.specObj(idx).Observation.EndTime < Timestamp
-                            app.specObj(idx).Status = 'Concluída';
-                        else
-                            switch evtName
-                                case 'DeleteButtonPushed'
-                                    app.specObj(idx).Status = 'Cancelada';
-                                case 'ErrorTrigger'
-                                    app.specObj(idx).Status = 'Erro';
-                            end
-                        end
-                        
-                        app.specObj(idx).hReceiver.UserData.nTasks = app.specObj(idx).hReceiver.UserData.nTasks-1;
-                        app.specObj(idx).LOG(end+1) = struct('type', 'task', 'time', char(Timestamp), 'msg', sprintf('Alterado o estado da tarefa: Em andamento → %s.', app.specObj(idx).Status));
-
-                        for ii = 1:numel(app.specObj(idx).Band)
-                            app.specObj(idx) = class.RFlookBinLib.CloseFile(app.specObj(idx), ii);
-                            app.specObj(idx).Band(ii).Status = false;
-                        end
-
-                    else
-                        if strcmp(app.specObj(idx).Task.Script.Observation.Type, 'Samples')
-                            tempFlag = [];                            
-                            for ii = 1:numel(app.specObj(idx).Band)
-                                if app.specObj(idx).Band(ii).Status
-                                    if app.specObj(idx).Band(ii).nSweeps == app.specObj(idx).Task.Script.Band(ii).instrObservationSamples
-                                        app.specObj(idx) = class.RFlookBinLib.CloseFile(app.specObj(idx), ii);
-                                        app.specObj(idx).Band(ii).Status = false;
-                                        tempFlag(end+1) = true;
-
-                                    else
-                                        tempFlag(end+1) = false;
-                                    end
-                                end
-                            end
-
-                            if all(tempFlag)
-                                Flag = true;
-
-                                app.specObj(idx).Status = 'Concluída';
-                                app.specObj(idx).hReceiver.UserData.nTasks = app.specObj(idx).hReceiver.UserData.nTasks-1;
-                                app.specObj(idx).Observation.EndTime = Timestamp;
-                                app.specObj(idx).LOG(end+1) = struct('type', 'task', 'time', char(Timestamp), 'msg', sprintf('Alterado o estado da tarefa: Em andamento → %s.', app.specObj(idx).Status));
-
-                            elseif any(tempFlag)
-                                Flag = true;
-                            end
-                        end
-                    end
-
-                case {'Na fila', 'Erro'}
-                    if strcmp(app.specObj(idx).Status, 'Erro') 
-                        if isnat(app.specObj(idx).Observation.StartUp)
-                            app.specObj(idx).Observation.StartUp = Timestamp;
-                        end
-
-                        StartUp = app.specObj(idx).Observation.StartUp;
-                        if isequal([year(Timestamp), month(Timestamp), day(Timestamp), hour(Timestamp), minute(Timestamp)], ...
-                                [year(StartUp), month(StartUp), day(StartUp), hour(StartUp), minute(StartUp)])
-                            return
-                        end
-                    end
-
-                    if app.specObj(idx).Observation.BeginTime < Timestamp
-                        switch app.specObj(idx).Task.Script.Observation.Type
-                            case {'Duration', 'Time'}
-                                if isnat(app.specObj(idx).Observation.EndTime) || (app.specObj(idx).Observation.EndTime > Timestamp)
-                                    Flag = true;
-                                end
-
-                            case 'Samples'
-                                Flag = true;
-                        end
-                    end
-
-                    if Flag
-                        try
-                            if strcmp(app.timerObj_task.Running, 'on')
-                                stop(app.timerObj_task)
-                            end
-                            RegularTask_StartUp(app, idx);
-
-                            app.specObj(idx).Status = 'Em andamento';
-                            app.specObj(idx).hReceiver.UserData.nTasks   = app.specObj(idx).hReceiver.UserData.nTasks+1;
-                            app.specObj(idx).hReceiver.UserData.SyncMode = app.specObj(idx).Task.Receiver.Sync;
-                            app.specObj(idx).LOG(end+1) = struct('type', 'task', 'time', char(Timestamp), 'msg', 'Iniciada a execução da tarefa.');
-
-                        catch ME
-                            if strcmp(app.timerObj_task.Running, 'off') && ~app.Flag_running
-                                start(app.timerObj_task)
-                            end
-                            app.specObj(idx).Status = 'Erro';
-                            app.specObj(idx).LOG(end+1) = struct('type', 'error', 'time', char(Timestamp), 'msg', getReport(ME));
-
-                            Flag = false;
-                        end
-                    end
-            end
-
-            if Flag
-                Layout_tableBuilding(app, app.UITable.Selection)
-            end
-
-            if ~strcmp(initialStatus, app.specObj(idx).Status)
-                RegularTask_specObjSave(app)
-            end
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_RestartStatus(app, idx, nSweepsFlag)
-
-            for ii = 1:numel(app.specObj(idx).Band)
-                app.specObj(idx).Band(ii).SyncModeRef   = -1;
-                app.specObj(idx).Band(ii).LastTimeStamp = [];
-                app.specObj(idx).Band(ii).Status        = true;
-
-                if nSweepsFlag
-                    app.specObj(idx).Band(ii).nSweeps   = 0;
-                end
-            end
-        end
-
-
-        %-----------------------------------------------------------------%
-        % Notas sobre a interface TCPCLIENT:
-        % (a) Não existe uma função que retorna os objetos TCPCLIENT 
-        %     (como instrfind p/ os objetos TCPIP). 
-        % (b) Algumas chamadas a um objeto não mais válido (decorrente 
-        %     de uma perda de conectividade, por exemplo) apresentam a 
-        %     mensagem de erro na janela de comandos do Matlab, mesmo 
-        %     "protegidos" num bloco try/catch. A execução não para, 
-        %     mas imprimir a mensagem na janela de comandos é um 
-        %     comportamento não esperado.
-        % (c) A propriedade que indica que o objeto não mais está conectado 
-        %     ao instrumento é privada, sendo acessível usando struct.
-        % (d) A propriedade "UserData" se perde quando da reinicialização
-        %     do app, sendo necessária criá-la novamente.
-        %-----------------------------------------------------------------%
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_StartUp(app, idx)
-            Task = app.specObj(idx).Task;
-            
-            % RECEIVER
-            msgError = app.receiverObj.ReconnectAttempt(Instrument(app.specObj(idx)),                      ...
-                                                        app.specObj(idx).Task.Receiver.Config.connectFlag, ...
-                                                        app.specObj(idx).Task.Receiver.Config.StartUp{1},  ...
-                                                        app.specObj(idx).Band(1).SpecificSCPI);
-            if ~isempty(msgError)
-                error(msgError)
-            end
-            hReceiver = app.specObj(idx).hReceiver;
-
-            % STREAMING
-            if isempty(app.specObj(idx).hStreaming)
-                if ismember(Task.Receiver.Config.connectFlag, [2, 3])
-                    app.specObj(idx) = startup_specObjRead_Streaming(app, app.specObj(idx));
-                end
-            else
-                if contains(app.specObj(idx).IDN, 'EB500')                 && ...
-                        ~contains(Task.Type, 'Drive-test (Level+Azimuth)') &&...
-                        isempty(app.specObj(idx).Band(1).Datagrams)
-
-                    hStreaming = app.specObj(idx).hStreaming;
-                    app.specObj(idx) = class.EB500Lib.DatagramRead_PSCAN_PreTask(app.EB500Obj, app.specObj(idx), hReceiver, hStreaming);
-                end
-            end
-
-            % GPS
-            if isempty(app.specObj(idx).hGPS)
-                if ~isempty(Task.GPS.Selection)
-                    [app.specObj(idx), msgError] = startup_specObjRead_GPS(app, app.specObj(idx));
-                    if ~isempty(msgError)
-                        error(msgError)
-                    end
-                end
-            end
-
-            % ANTENNA TRACKING (EMSat)
-            if strcmp(Task.Antenna.Switch.Name, 'EMSat')
-                fcn.antennaTracking(app, 'mainApp', Task.Antenna.MetaData, app.progressDialog);
-            end
-
-            % MASK, FILE & WATERFALL MATRIX
-            baseName = sprintf('appColeta_%s', datestr(now, 'yymmdd_THHMMSS'));
-            for ii = 1:numel(app.specObj(idx).Band)
-                ID = Task.Script.Band(ii).ID;
-
-                % ANTENNA SWITCH & ACU
-                % Esse trecho do código consiste na tentativa de obter a posição 
-                % da antena, inserindo-a no arquivo binário e apresentando no 
-                % painel de metadados. 
-                % 
-                % Erros retornáveis:
-                % - Caso não tenha sido desabilitado o Polling/Bus da ACU 
-                % no Compass.
-                % - Caso a ACU não esteja acessível ('MCL-3' e 'MCC-1' ainda
-                % não possuem); e 'MKA-1' ainda não é controlável por falta
-                % de conectividade de rede (o app não "enxerga" a ACU).
-                %
-                % Os erros não travam a execução do código pois a antena
-                % pode ter sido apontada manualmente ou automaticamente - este
-                % último poderia ter sido conduzido no momento de criação da 
-                % tarefa (e posteriormente reabilitado o controle da ACU pelo 
-                % Compass.
-                if strcmp(Task.Antenna.Switch.Name, 'EMSat')
-                    antennaName = extractBefore(Task.Script.Band(ii).instrAntenna, ' ');
-                    [antennaPos, errorMsg] = app.EMSatObj.AntennaPositionGET(antennaName);
-                    app.specObj(idx).Band(ii).Antenna.Position = jsonencode(antennaPos);
-
-                    if ~isempty(errorMsg)
-                        app.specObj(idx).LOG(end+1) = struct('type', 'startup', 'time', datestr(now), 'msg', sprintf('ID: %.0f\n%s ACU - %s', ID, antennaName, errorMsg));
-                    end
-                end
-
-                % MASK
-                app.specObj(idx).Band(ii).Mask = [];
-                if contains(Task.Type, 'Rompimento de Máscara Espectral') && Task.Script.Band(ii).MaskTrigger.Status
-                    maskInfo  = class.maskLib.FileRead(Task.MaskFile);
-                    maskArray = class.maskLib.ArrayConstructor(maskInfo, Task.Script.Band(ii));
-
-                    FindPeaks = Task.Script.Band(ii).MaskTrigger.FindPeaks;
-                    if isempty(FindPeaks)
-                        FindPeaks = class.Constants.FindPeaks;
-                    end
-
-                    app.specObj(idx).Band(ii).Mask = struct('Table', maskInfo.Table, 'Array', maskArray, 'Validations', 0, ...
-                                                            'BrokenArray', zeros(1, Task.Script.Band(ii).instrDataPoints), ...
-                                                            'BrokenCount', 0, 'Peaks', '', 'TimeStamp', NaT, 'FindPeaks', FindPeaks);
-                    app.specObj(idx).LOG(end+1)    = struct('type', 'mask', 'time', datestr(now), 'msg', sprintf('ID %.0f\n%s', ID, jsonencode(maskInfo.Table)));
-                end
-
-                % FILE
-                app.specObj(idx).Band(ii).File = struct('Fileversion', class.Constants.fileVersion,     ...
-                                                        'Basename', sprintf('%s_ID%.0f', baseName, ID), ...
-                                                        'Filecount', 0, 'WritedSamples', 0, 'CurrentFile', []);
-
-                [app.specObj(idx).Band(ii).File.Filecount, ...
-                    app.specObj(idx).Band(ii).File.CurrentFile] = class.RFlookBinLib.OpenFile(app.specObj(idx), ii, app.General.fileFolder.userPath);
-
-                logMsg = sprintf(['ID: %.0f\n'             ...
-                                  'scpiSet_Config: "%s"\n' ...
-                                  'scpiSet_Att: "%s"\n'    ...
-                                  'rawMetaData: "%s"\n'    ...
-                                  'Filename (base): %s'], ID,                                               ...
-                                                          app.specObj(idx).Band(ii).SpecificSCPI.configSET, ...
-                                                          app.specObj(idx).Band(ii).SpecificSCPI.attSET,    ...
-                                                          app.specObj(idx).Band(ii).rawMetaData,            ...
-                                                          app.specObj(idx).Band(ii).File.Basename);                
-                app.specObj(idx).LOG(end+1) = struct('type', 'startup', 'time', datestr(now), 'msg', logMsg);
-
-
-                % WATERFALL MATRIX
-                DataPoints     = Task.Script.Band(ii).instrDataPoints;
-                WaterfallDepth = app.General.Plot.Waterfall.Depth;
-                if strcmp(Task.Script.Observation.Type, 'Samples')
-                    WaterfallDepth = min([WaterfallDepth, Task.Script.Band(ii).instrObservationSamples]);
-                end              
-
-                app.specObj(idx).Band(ii).Waterfall = struct('idx', 0, 'Depth', WaterfallDepth, 'Matrix', -1000 .* ones(WaterfallDepth, DataPoints, 'single'));
-            end
-
-            RegularTask_RestartStatus(app, idx, 0)
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_MainLoop(app)
-            app.Flag_running = 1;
-            app.Flag_editing = 1;
-
-            stop(app.timerObj_task)
-
-            while app.Flag_running
-                if app.Flag_editing
-                    app.revisitObj = fcn.RevisitFactors(app.specObj);
-                    Layout_metadataTab(app)
-
-                    if isempty(app.revisitObj.GlobalRevisitTime)
-                        app.Flag_running = 0;
-                        break
-                    end
-                    
-                    nn = 0;
-                    app.Flag_editing = 0;
-                end
-
-                sweepTic = tic;
-                for ii = 1:numel(app.specObj)
-                    if RegularTask_StatusTaskCheck(app, ii, '')
-                        app.Flag_editing = 1;
-                        break
-                    end
-
-                    if ~strcmp(app.specObj(ii).Status, 'Em andamento')
-                        continue
-                    end
-
-                    regularTask = ~contains(app.specObj(ii).Task.Type, 'PRÉVIA');
-                    
-                    hReceiver   = app.specObj(ii).hReceiver;
-                    hStreaming  = app.specObj(ii).hStreaming;
-                    hGPS        = app.specObj(ii).hGPS;
-
-                    configMode  = true;
-
-                    nBands = numel(app.specObj(ii).Band);    
-                    for jj = 0:nBands
-                        if mod(nn, app.revisitObj.Band(ii).RevisitFactors(jj+1)) || app.revisitObj.Band(ii).RevisitFactors(jj+1) == -1
-                            continue
-                        end
-                        newTimeStamp = datetime('now');
-    
-                        if jj == 0
-                            % A atualização das coordenadas geográficas do
-                            % ponto de monitoração não precisa ser feita para 
-                            % a tarefa "Drive-test (Level+Azimuth)" porque essa 
-                            % tarefa já possui, no seu datagrama, a informação 
-                            % das coordenadas.
-
-                            if app.specObj(ii).Task.Receiver.Config.connectFlag ~= 3
-                                RegularTask_gpsData(app, ii, hReceiver, hGPS, newTimeStamp);
-                            end
-
-                        else
-                            app.specObj(ii) = class.RFlookBinLib.CheckFile(app.specObj(ii), jj, app.General.fileFolder.userPath);
-                            
-                            try
-                                % ANTENNA SWITCH (IF APPLICABLE)
-                                RegularTask_AntennaSwitch(app, ii, jj)
-
-                                % RECEIVER RECONFIGURATION (IF APPLICABLE)
-                                if (nBands > 1) || (hReceiver.UserData.nTasks > 1)
-                                    if configMode
-                                        if ismember(app.specObj(ii).Task.Receiver.Config.connectFlag, [2, 3])                                            
-                                            class.EB500Lib.OperationMode(hReceiver, app.specObj(ii).Task.Receiver.Config.connectFlag)
-                                        end
-                                        configMode = false;
-                                    end
-
-                                    RegularTask_ConfigBand(app, ii, jj, hReceiver)
-                                end
-
-                                attFactor = -1;
-                                if ~isempty(app.specObj(ii).GeneralSCPI.attGET)
-                                % Bloco try/catch protege eventual erro, o que não causará dano à 
-                                % monitoração em si por se tratar de informação não essencial.
-                                    try
-                                        attFactor = str2double(fcn.WriteRead(hReceiver, app.specObj(ii).GeneralSCPI.attGET));
-                                    catch
-                                    end
-                                end
-
-                                % maskTrigger: Variável local que registra se foi evidenciado rompimento da máscara espectral.
-                                maskTrigger = 0;
-
-                                if isempty(app.specObj(ii).Band(jj).Mask)
-                                    % SINGLE TRACE
-                                    newArray = RegularTask_specData(app, ii, jj, hReceiver, hStreaming, newTimeStamp);
-                                    app.specObj(ii).Band(jj).nSweeps = app.specObj(ii).Band(jj).nSweeps+1;
-                                
-                                else
-                                    % BURST OF TRACES
-                                    nSweeps  = app.specObj(ii).Band(jj).Mask.FindPeaks.nSweeps;
-                                    newArray = zeros(nSweeps, app.specObj(ii).Band(jj).DataPoints, 'single');                                    
-                                    for kk = 1:nSweeps
-                                        newArray(kk,:) = RegularTask_specData(app, ii, jj, hReceiver, hStreaming, newTimeStamp);
-                                        app.specObj(ii).Band(jj).nSweeps = app.specObj(ii).Band(jj).nSweeps+1;
-                                    end
-                                    smoothedArray = mean(newArray, 1);
-
-                                    % METADATA UPDATE
-                                    app.specObj(ii).Band(jj).Mask.Validations = app.specObj(ii).Band(jj).Mask.Validations + 1;
-
-                                    % MASK BROKEN ANALISYS                                    
-                                    validationArray = (smoothedArray - app.specObj(ii).Band(jj).Mask.Array) > 0;
-                                    if any(validationArray)
-                                        app.specObj(ii).Band(jj).Mask.BrokenArray = app.specObj(ii).Band(jj).Mask.BrokenArray + validationArray;
-
-                                        peaksTable = fcn.FindPeaks(app.specObj(ii), jj, smoothedArray, validationArray);
-                                        if ~isempty(peaksTable)
-                                            app.specObj(ii).Band(jj).Mask.BrokenCount = app.specObj(ii).Band(jj).Mask.BrokenCount + 1;
-                                            app.specObj(ii).Band(jj).Mask.Peaks       = peaksTable;
-                                            app.specObj(ii).Band(jj).Mask.TimeStamp   = newTimeStamp;
-
-                                            if regularTask
-                                                writematrix(jsonencode(rmfield(app.specObj(ii).Band(jj).Mask, {'Table', 'Array', 'Validations', 'BrokenArray', 'FindPeaks'})), ...
-                                                    replace(app.specObj(ii).Band(jj).File.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
-                                            end
-
-                                            maskTrigger = 1;
-                                        end
-                                    end
-
-                                    newArray = newArray(end,:);
-                                end
-                                
-                                app.specObj(ii).Error(1,2:4) = {NaT, NaT, 0};
-
-                                % WATERFALL MATRIX
-                                idx = app.specObj(ii).Band(jj).Waterfall.idx + 1;
-                                if idx > app.specObj(ii).Band(jj).Waterfall.Depth; idx = 1;
-                                end
-
-                                app.specObj(ii).Band(jj).Waterfall.idx = idx;
-                                app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:) = newArray(:,:,1);
-
-                                [~, ~, nDim] = size(newArray);
-                                if nDim > 1
-                                    app.specObj(ii).Band(jj).Azimuth = newArray(:,:,2);
-                                end
-
-                                % ESTIMATED REVISIT TIME
-                                if isempty(app.specObj(ii).Band(jj).LastTimeStamp)
-                                    app.specObj(ii).Band(jj).RevisitTime = app.revisitObj.GlobalRevisitTime * app.revisitObj.Band(ii).RevisitFactors(jj+1);
-                                else
-                                    app.specObj(ii).Band(jj).RevisitTime = ((app.General.Integration.SampleTime-1)*app.specObj(ii).Band(jj).RevisitTime + seconds(newTimeStamp-app.specObj(ii).Band(jj).LastTimeStamp))/app.General.Integration.SampleTime;
-                                end
-                                app.specObj(ii).Band(jj).LastTimeStamp = newTimeStamp;
-
-                                % PLOT, WRITEDSAMPLES & MASKINFO (IF APPLICABLE)
-                                if app.UITable.Selection == ii
-                                    Layout_errorCount(app, ii)
-
-                                    if app.DropDown.Value == jj
-                                        plot_Draw(app, ii, jj)
-                                        if ~isempty(app.specObj(ii).Band(jj).Mask)
-                                            Layout_lastMaskValidation(app, maskTrigger, ii, jj)
-                                        end
-                                        app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.specObj(ii).Band(jj).nSweeps, app.specObj(ii).Band(jj).RevisitTime);
-                                    end
-                                end
-
-                                % FILE
-                                if regularTask && (isempty(app.specObj(ii).Band(jj).Mask) || ismember(app.specObj(ii).Task.Script.Band(jj).MaskTrigger.Status, [0, 3]) || ((app.specObj(ii).Task.Script.Band(jj).MaskTrigger.Status == 2) && maskTrigger))
-                                    class.RFlookBinLib.EditFile(app.specObj(ii), jj, newArray, attFactor, newTimeStamp)
-                                    app.specObj(ii).Band(jj).File.WritedSamples = app.specObj(ii).Band(jj).File.WritedSamples + 1;
-
-                                    if (app.UITable.Selection == ii) && (app.DropDown.Value == jj)
-                                        app.Sweeps.Text = string(app.specObj(ii).Band(jj).File.WritedSamples);
-                                    end                                    
-                                end
-
-                                if (app.UITable.Selection == ii) && (app.DropDown.Value == jj)
-                                    drawnow
-                                end
-    
-                            catch ME
-                                % O controle de erro do GPS se dá na função "RegularTask_gpsData".
-                                % 
-                                % O controle de erro do RECEPTOR se dá aqui, neste trecho da função 
-                                % "RegularTask_MainLoop".
-                                %
-                                % O app tentará reativar a conexão toda vez que o contador de
-                                % erro atingir um múltiplo de "class.Constants.errorCountTrigger".
-                                % E, além disso, caso ultrapassado o tempo (em segundos) definido 
-                                % em "class.Constants.errorTimeTrigger", o app trocará o estado da 
-                                % tarefa de "Em andamento" → "Erro".
-
-                                if ME.message == "If you specify a message identifier argument, you must specify the message text argument."
-                                    pause(1)
-                                end
-
-                                app.specObj(ii).LOG(end+1) = struct('type', 'error (RECEIVER)', 'time', char(newTimeStamp), 'msg', ME.message);
-                                RegularTask_errorHandle(app, 'Receiver', ii, newTimeStamp)
-
-                                if app.UITable.Selection == ii
-                                    Layout_errorCount(app, ii)
-                                    drawnow
-                                end
-                                beep
-
-                                msgError = app.receiverObj.ReconnectAttempt(app.specObj(ii).hReceiver.UserData.instrSelected, ...
-                                                                            app.specObj(ii).Task.Receiver.Config.connectFlag, ...
-                                                                            app.specObj(ii).Task.Receiver.Config.StartUp{1},  ...
-                                                                            app.specObj(ii).Band(jj).SpecificSCPI);
-                                if ~isempty(msgError)
-                                    RegularTask_StatusTaskCheck(app, ii, 'ErrorTrigger');
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-
-                nn = nn+1;
-                pause(max(app.revisitObj.GlobalRevisitTime-toc(sweepTic), .001))
-            end
-
-            start(app.timerObj_task)
-
-            app.revisitObj = [];
-            Layout_metadataTab(app)
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_ConfigBand(app, ii, jj, hReceiver)
-            writeline(hReceiver, app.specObj(ii).Band(jj).SpecificSCPI.configSET);
-            pause(.001)
-            
-            if ~isempty(app.specObj(ii).Band(jj).SpecificSCPI.attSET)
-                writeline(hReceiver, app.specObj(ii).Band(jj).SpecificSCPI.attSET);
-            end
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_gpsData(app, ii, hReceiver, hGPS, newTimeStamp)
-            % O controle de erro do RECEPTOR se dá na função "RegularTask_MainLoop".
-            %
-            % O controle de erro do GPS, por outro lado, se dá diretamente aqui, 
-            % nesta função, e é restrito ao caso em que o receptor é "External",
-            % ou seja, não se trata de GPS embarcado no RECEPTOR (GPS conectado
-            % à porta USB do computador que executa o app, por exemplo).
-            %
-            % Caso a tarefa seja do tipo "Drive-test", toda vez que for manifestada 
-            % uma desconexão, o app tentará reativar a conexao. Ou, em sendo uma tarefa 
-            % de outro tipo, o app tentará reativar a conexão toda vez que o contador de
-            % erro atingir um múltiplo de "class.Constants.errorGPSCountTrigger".
-             
-            gpsData = struct('Status', 0, 'Latitude', -1, 'Longitude', -1, 'TimeStamp', '');
-
-            try
-                switch app.specObj(ii).Task.Script.GPS.Type
-                    case 'Built-in'
-                        gpsData = fcn.gpsBuiltInReader(hReceiver);
-                    case 'External'
-                        gpsData = fcn.gpsExternalReader(hGPS, 1);
-                        app.specObj(ii).Error(2,2:4) = {NaT, NaT, 0};
-                end
-
-            catch ME
-                app.specObj(ii).LOG(end+1) = struct('type', 'error (GPS)', 'time', char(newTimeStamp), 'msg', ME.message);
-
-                if strcmp(app.specObj(ii).Task.Script.GPS.Type, 'External')
-                    RegularTask_errorHandle(app, 'GPS', ii, newTimeStamp)
-
-                    if contains(app.specObj(ii).Task.Type, 'Drive-test') || ~mod(app.specObj(ii).Error.Count(2), class.Constants.errorGPSCountTrigger)
-                        app.gpsObj.ReconnectAttempt(hGPS.UserData.instrSelected);
-                    end
-                end
-            end
-
-            % As coordenadas da estação - registradas em app.General.stationInfo
-            % - são atualizadas apenas se a estação for do tipo móvel ("Mobile") 
-            % e as novas coordenadas geográficas forem válidas.
-
-            if strcmp(app.General.stationInfo.Type, 'Mobile') && gpsData.Status
-                app.General.stationInfo.Latitude  = gpsData.Latitude;
-                app.General.stationInfo.Longitude = gpsData.Longitude;
-            end
-
-            RegularTask_gpsUpdate(app, ii, gpsData, newTimeStamp)
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_gpsUpdate(app, ii, gpsData, newTimeStamp)
-            if isempty(gpsData.TimeStamp)
-                gpsData.TimeStamp = char(newTimeStamp);
-            end
-            app.specObj(ii).lastGPS = gpsData;
-
-            if (app.UITable.Selection == ii)
-                Layout_lastGPS(app, gpsData)
-            end
-        end
-        
-        
-        %-----------------------------------------------------------------%
-        function RegularTask_AntennaSwitch(app, ii, jj)
-            switch app.specObj(ii).Task.Antenna.Switch.Name
-                case 'EMSat'
-                    msgError = app.EMSatObj.MatrixSwitch(app.specObj(ii).Band(jj).Antenna.SwitchPort,    ...
-                                                         app.specObj(ii).Task.Antenna.Switch.OutputPort, ...
-                                                         app.specObj(ii).Band(jj).Antenna.LNBChannel,    ...
-                                                         app.specObj(ii).Band(jj).Antenna.LNBIndex);
-                    if ~isempty(msgError)
-                        error(msgError)
-                    end
-
-                case 'ERMx'
-                    msgError = app.ERMxObj.MatrixSwitch( app.specObj(ii).Band(jj).Antenna.SwitchPort, ...
-                                                         app.specObj(ii).Task.Antenna.Switch.OutputPort);
-                    if ~isempty(msgError)
-                        error(msgError)
-                    end
-            end
-        end
-
-
-        %-----------------------------------------------------------------%
-        function newArray = RegularTask_specData(app, ii, jj, hReceiver, hStreaming, newTimeStamp)
-            Timeout = class.Constants.Timeout;
-            Flag_success = false;
-
-            switch app.specObj(ii).Task.Receiver.Config.connectFlag
-                case 1
-                    % Spectrum analyzers (R&S, KeySight, Tektronix, Anritsu)
-
-                    recTic = tic;
-                    t1 = toc(recTic);
-                    while t1 < Timeout
-                        try
-                            writeline(hReceiver, app.specObj(ii).GeneralSCPI.dataGET);
-                            newArray = readbinblock(hReceiver, 'single');
-                                                        
-                            if numel(newArray) == app.specObj(ii).Band(jj).DataPoints
-                                if strcmp(app.specObj(ii).Task.Receiver.Sync, 'Continuous Sweep')
-                                    SyncModeRef = sum(newArray);
-
-                                    if SyncModeRef ~= app.specObj(ii).Band(jj).SyncModeRef
-                                        app.specObj(ii).Band(jj).SyncModeRef = SyncModeRef;
-                                    else
-                                        continue
-                                    end                                    
-                                end
-
-                                Flag_success = true;
-                                break
-                            end
-    
-                        catch
-                        end
-                        t1 = toc(recTic);
-                    end
-                    
-                case 2
-                    % R&S EB500: Tarefas ordinárias
-                    
-                    taskInfo = struct('Type',       app.specObj(ii).Task.Type,                      ...
-                                      'FreqStart',  app.specObj(ii).Task.Script.Band(jj).FreqStart, ...
-                                      'FreqStop',   app.specObj(ii).Task.Script.Band(jj).FreqStop,  ...
-                                      'DataPoints', app.specObj(ii).Band(jj).DataPoints,            ...
-                                      'nDatagrams', app.specObj(ii).Band(jj).Datagrams,             ...
-                                      'udpPort',    app.EB500Obj.udpPort);
-
-                    [newArray, Flag_success] = class.EB500Lib.DatagramRead_PSCAN(taskInfo, hReceiver, hStreaming);
-
-                case 3
-                    % R&S EB500 - Tarefa "Drive-test (Level+Azimuth)"
-                    % O newArray gerado aqui, e apenas aqui, possui informações
-                    % de nível, azimute e nota de qualidade do azimute. A dimensão 
-                    % dele é 1 (Height) x DataPoints (Width) x 3 (Depth).
-
-                    taskInfo = struct('Type',       app.specObj(ii).Task.Type,                                                                          ...
-                                      'FreqCenter', (app.specObj(ii).Task.Script.Band(jj).FreqStart + app.specObj(ii).Task.Script.Band(jj).FreqStop)/2, ...
-                                      'FreqSpan',   app.specObj(ii).Task.Script.Band(jj).FreqStop - app.specObj(ii).Task.Script.Band(jj).FreqStart,     ...
-                                      'DataPoints', app.specObj(ii).Band(jj).DataPoints,                                                                ...
-                                      'udpPort',    app.EB500Obj.udpPort);
-
-                    [newArray, gpsData, Flag_success] = class.EB500Lib.DatagramRead_FFM(taskInfo, hReceiver, hStreaming);
-
-                    % No datagrama tem a informação de gps... então vamos aproveitar! :)
-                    RegularTask_gpsUpdate(app, ii, gpsData, newTimeStamp)
-            end
-            flush(hReceiver)
-            
-            if Flag_success
-                if app.specObj(ii).Band(jj).FlipArray
-                    newArray(:,:,1) = flip(newArray(:,:,1));
-                end
-            else
-                error('Não foi lido corretamente o vetor de nível do receptor dentro do tempo limite (%.0f segundos).', Timeout)
-            end            
-        end
-
-
-        %-----------------------------------------------------------------%
-        function RegularTask_errorHandle(app, errorType, ii, newTimeStamp)
-            switch errorType
-                case 'Receiver'; idx = 1;
-                case 'GPS';      idx = 2;
-            end
-                                
-            if isnat(app.specObj(ii).Error.CreatedTime(idx))
-                app.specObj(ii).Error.CreatedTime(idx) = newTimeStamp;
-            end
-            app.specObj(ii).Error.LastTime(idx) = newTimeStamp;
-            app.specObj(ii).Error.Count(idx) = app.specObj(ii).Error.Count(idx) + 1;
-        end
-
-        %-----------------------------------------------------------------%
-        function Layout_tableBuilding(app, idx)
-            tempTable = table('Size', [0, 7],                                                                          ...
-                              'VariableTypes', {'double', 'string', 'string', 'string', 'string', 'string', 'string'}, ...
-                              'VariableNames', {'ID', 'Name', 'Receiver', 'Created', 'BeginTime', 'EndTime', 'Status'});
-            tempTable.Properties.UserData = char(matlab.lang.internal.uuid());
-            
-            for ii = 1:numel(app.specObj)
-                EndTime = '-';
-                if ~isnat(app.specObj(ii).Observation.EndTime) && ~isinf(app.specObj(ii).Observation.EndTime)
-                    EndTime = datestr(app.specObj(ii).Observation.EndTime, 'dd/mm/yyyy HH:MM:SS');
-                end
-        
-                tempTable(end+1,:) = {app.specObj(ii).ID,                        ...
-                                      app.specObj(ii).Task.Script.Name,          ...
-                                      app.specObj(ii).IDN,                       ...
-                                      app.specObj(ii).Observation.Created,       ...
-                                      datestr(app.specObj(ii).Observation.BeginTime, 'dd/mm/yyyy HH:MM:SS'), ...
-                                      EndTime,                                   ...
-                                      app.specObj(ii).Status};
-            end    
-        
-            if all(~strcmp(tempTable.Status, "Em andamento"))
-                app.Flag_running = 0;
-            end
-        
-            if height(tempTable)
-                app.UITable.Data      = tempTable;
-                app.UITable.Selection = max([1, idx]);
-                app.UITable.UserData  = app.UITable.Selection;
-                pause(.100)
-        
-                app.tool_ButtonPlay.Enable = 1;
-                app.tool_ButtonDel.Enable  = 1;
-                app.tool_ButtonLOG.Enable  = 1;
-            else
-                app.UITable.Data     = table;
-                app.UITable.UserData = [];
-        
-                app.tool_ButtonPlay.Enable = 0;
-                app.tool_ButtonDel.Enable  = 0;
-                app.tool_ButtonLOG.Enable  = 0;
-            end
-            Layout_errorCount(app, app.UITable.Selection)
-            drawnow
-        
-            previousSelection = 1;
-            if ~isempty(app.DropDown.Items)
-                previousSelection = app.DropDown.Value;
-            end
-            Layout_treeBuilding(app, previousSelection)
-        end
-
-        %-----------------------------------------------------------------%
-        function Layout_treeBuilding(app, Selection)
-            if app.UITable.Selection
-                idx = app.UITable.Selection;
-                numBands = numel(app.specObj(idx).Task.Script.Band);
-                ids = {};
-
-                for ii = 1:numBands
-                    Antenna = app.specObj(idx).Task.Script.Band(ii).instrAntenna;
-                    if ~isempty(Antenna)
-                        Antenna = sprintf('(%s)', Antenna);
-                    end
-                    
-                    ids{end+1} = sprintf('ID %d: %.3f - %.3f MHz %s',                            ...
-                                         app.specObj(idx).Task.Script.Band(ii).ID,               ...
-                                         app.specObj(idx).Task.Script.Band(ii).FreqStart / 1e+6, ...
-                                         app.specObj(idx).Task.Script.Band(ii).FreqStop  / 1e+6, ...
-                                         Antenna);
+            taskTable = table( ...
+                'Size', [0, 7], ...
+                'VariableTypes', {'string', 'string', 'string', 'string', 'string', 'string', 'cell'}, ...
+                'VariableNames', {'Name', 'Receiver', 'Created', 'BeginTime', 'EndTime', 'Status', 'Operation'} ...
+            );
+
+            hasTask = ~isempty(app.TaskController.Tasks);
+
+            if hasTask
+                % Verifica se o handle para o app continua ativo no workspace
+                % base do MATLAB, possibilitando que clicks na uitable sejam 
+                % capturados corretamente.
+                appHandleNameInBase = app.AppHandleNameInBase;
+                if isempty(appHandleNameInBase) || ~evalin('base', sprintf('exist("%s", "var") && isa(%s, "%s") && isvalid(%s)', appHandleNameInBase, appHandleNameInBase, class(app), appHandleNameInBase))
+                    app.AppHandleNameInBase = ui.Table.exportAppHandleToBaseWorkspace(app);
                 end
                 
-                set(app.DropDown, 'Items', ids, 'ItemsData', 1:numBands, 'Value', Selection)
-                onTaskSelectionChanged(app)
+                for taskIdx = 1:numel(app.TaskController.Tasks)
+                    endedAt = '-';
+                    if ~isnat(app.TaskController.Tasks(taskIdx).Timing.endedAt) && ~isinf(app.TaskController.Tasks(taskIdx).Timing.endedAt)
+                        endedAt = datestr(app.TaskController.Tasks(taskIdx).Timing.endedAt, 'dd/mm/yyyy HH:MM:SS');
+                    end
+    
+                    operation = {
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStartTaskRequest'''',  ''''HTMLEventData'''', %d))'')">▶️</a>', app.AppHandleNameInBase, taskIdx);
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onStopTaskRequest'''',   ''''HTMLEventData'''', %d))'')">⬛</a>', app.AppHandleNameInBase, taskIdx);
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onEditTaskRequested'''', ''''HTMLEventData'''', %d))'')">✏️</a>', app.AppHandleNameInBase, taskIdx);
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onDeleteTaskRequest'''', ''''HTMLEventData'''', %d))'')">❌</a>', app.AppHandleNameInBase, taskIdx);
+                        sprintf('<a href="matlab:evalin(''base'', ''ipcMainJSEventsHandler(%s, struct(''''HTMLEventName'''', ''''onViewLogRequest'''',    ''''HTMLEventData'''', %d))'')">📋</a>', app.AppHandleNameInBase, taskIdx)
+                    };
+    
+                    % Índices: 1 iniciar, 2 interromper, 3 editar, 4 excluir, 5 log.
+                    taskStatus   = app.TaskController.Tasks(taskIdx).Status;
+                    removedItems = 2;
+                    if strcmp(taskStatus, 'Em andamento')
+                        removedItems = 1;
+                    end
+    
+                    if ismember(taskStatus, {'Na fila', 'Em andamento'})
+                        removedItems(end+1) = 3;
+                    end
+                    operation(removedItems) = [];
+            
+                    taskTable(end+1,:) = { ...
+                        app.TaskController.Tasks(taskIdx).TaskSpec.Script.Name, ...
+                        app.TaskController.Tasks(taskIdx).ReceiverId, ...
+                        app.TaskController.Tasks(taskIdx).Timing.createdAt, ...
+                        datestr(app.TaskController.Tasks(taskIdx).Timing.startedAt, 'dd/mm/yyyy HH:MM:SS'), ...
+                        endedAt, ...
+                        app.TaskController.Tasks(taskIdx).Status, ...
+                        strjoin(operation, '&emsp;') ...
+                    };
+                end
+
+                if isempty(selectedTaskIdx) || selectedTaskIdx > height(taskTable)
+                    selectedTaskIdx = 1;
+                end
+            end
+
+            set(app.UITable, 'Data', taskTable, 'Selection', selectedTaskIdx)
+            updateErrorCount(app, app.UITable.Selection)
+        
+            selectedBandIdx = 1;
+            loadSelectedTask(app, selectedBandIdx)
+            
+            drawnow
+        end
+
+        %-----------------------------------------------------------------%
+        function loadSelectedTask(app, selectedBandIdx)
+            taskTable = app.UITable.Data;
+            taskIdx = app.UITable.Selection;
+
+            cellStyleIdxs = find(app.UITable.StyleConfigurations.Target == "cell");
+            if ~isempty(cellStyleIdxs)
+                removeStyle(app.UITable, cellStyleIdxs)
+            end
+
+            if ~isempty(taskTable) && ~isempty(taskIdx)
+                addStyle(app.UITable, uistyle('Icon', 'eye.svg', 'IconAlignment', 'rightmargin'), 'cell', [taskIdx, 1])
+
+                numBands = numel(app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band);
+                items = {};
+
+                for bandIdx = 1:numBands
+                    if bandIdx < 10
+                        charSpace = '&emsp;&emsp;&ensp;';
+                    else
+                        charSpace = '&emsp;&emsp;&emsp;';
+                    end
+
+
+                    antenna = app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrAntenna;
+                    if ~isempty(antenna)
+                        antenna = sprintf('(%s)', antenna);
+                    end
+                    
+                    items{end+1} = sprintf('ID %d: %.3f – %.3f MHz %s<br>%s%d pts&nbsp;&nbsp;•&nbsp;&nbsp;%s&nbsp;&nbsp;•&nbsp;&nbsp;%s', ...
+                         app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).ID, ...
+                         app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart / 1e+6, ...
+                         app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop  / 1e+6, ...
+                         antenna, ...
+                         charSpace, ...
+                         app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrDataPoints, ...
+                         app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrResolution, ...
+                         app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrDetector ...
+                     );
+                end
+                
+                if isempty(app.SpectrumFlowList.StyleConfigurations)
+                    addStyle(app.SpectrumFlowList, uistyle('Interpreter', 'html'))
+                end
+
+                set(app.SpectrumFlowList, 'Items', items, 'ItemsData', 1:numBands, 'Value', selectedBandIdx)
+
             else
-                app.DropDown.Items = {};
+                removeStyle(app.SpectrumFlowList)
+                app.SpectrumFlowList.Items = {};
+            end
+
+            onBandSelectionChanged(app)
+            drawnow
+        end
+
+        %-----------------------------------------------------------------%
+        function loadSelectedBand(app, taskIdx, bandIdx)
+            taskTable = app.UITable.Data;
+            hasSelection = ~isempty(taskTable) && ~isempty(taskIdx);
+            hasBands = false;
+
+            if hasSelection
+                hasBands = ~isempty(app.TaskController.Tasks(taskIdx).Bands);
+            end
+
+            resetPlotState(app)
+            updatePlotSourceOptions(app, hasSelection, hasBands, taskIdx, bandIdx);
+
+            updateTaskMetaData(app)
+            updateMaskStatus(app, true, taskIdx, bandIdx)
+
+            if hasSelection && hasBands
+                if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall)
+                    waterfallIdx = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx;
+
+                    if waterfallIdx
+                        updatePlot(app, taskIdx, bandIdx)
+                    end
+                end
+
+                if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).OutputFile)
+                    recordedSweeps = app.TaskController.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples;
+                else
+                    recordedSweeps = -1;
+                end
+                app.Sweeps.Text = string(recordedSweeps);
+
+                if ~contains(app.TaskController.Tasks(taskIdx).TaskSpec.Type, 'PRÉVIA') && strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento') && app.TaskController.Tasks(taskIdx).Bands(bandIdx).IsActive
+                    app.RecordingIcon.Visible = 'on';
+                else
+                    app.RecordingIcon.Visible = 'off';
+                end
+
+                updateGPSStatus(app, app.TaskController.Tasks(taskIdx).GPSLastFix)
+
+                app.SelectedTaskInfo.Text = sprintf('Tarefa "<b>%s</b>"\nFaixa %d de %d: %.3f – %.3f MHz', app.TaskController.Tasks(taskIdx).TaskSpec.Script.Name, bandIdx, numel(app.TaskController.Tasks(taskIdx).Bands), app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart / 1e+6, app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop  / 1e+6);
+                app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).NumSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
+
+            else
+                app.Sweeps.Text = string(-1);
+                app.RecordingIcon.Visible = 'off';
+                updateGPSStatus(app, [])
+                
+                app.SelectedTaskInfo.Text = '';
+                app.RevisitTimeInfo.Text = '';
+            end
+
+            app.SelectedTaskSeparator.Visible = ~isempty(app.SelectedTaskInfo.Text);
+        end
+
+        %-----------------------------------------------------------------%
+        function updateTaskMetaData(app)
+            taskTable = app.UITable.Data;
+            taskIdx = app.UITable.Selection;
+            bandIdx = app.SpectrumFlowList.Value;
+
+            hasSelection = ~isempty(taskTable) && ~isempty(taskIdx);
+            hasBands = false;
+
+            if hasSelection
+                hasBands = ~isempty(app.TaskController.Tasks(taskIdx).Bands);
+            end
+
+            if hasSelection && hasBands
+                app.MetaData.Text = util.HtmlTextGenerator.Task(app.TaskController.Tasks, app.TaskController.RevisitInfo, taskIdx, bandIdx);
+            else
                 app.MetaData.Text = '';
-
-                plot_Startup(app)
-                plot_PlotSource(app, -1, -1)
-
-                app.Sweeps.Text = '-1';
-                app.Sweeps_REC.Visible = 0;
-                Layout_errorCount(app, [])                
-                Layout_lastMaskInitialState(app)
-                app.lastGPS_text.Text = {'<b style="color: #a2142f; font-size: 14;">-1.000</b> LAT '; '<b style="color: #a2142f; font-size: 14;">-1.000</b> LON '; 'dd-mmm-yyyy '; 'HH:MM:SS '};
-                app.tool_RevisitTime.Text = '';
-            end            
-            drawnow
+            end
         end
 
         %-----------------------------------------------------------------%
-        function Layout_metadataTab(app)
-            app.MetaData.Text = util.HtmlTextGenerator.Task(app.specObj, app.revisitObj, app.UITable.Selection, app.DropDown.Value);
-        end
-
-        %-----------------------------------------------------------------%
-        function Layout_errorCount(app, idx)
-            if ~isempty(idx) && app.specObj(idx).Error.Count(1)
-                set(app.errorCount_txt, 'Text', string(app.specObj(idx).Error.Count(1)), 'Visible', 'on')
-                app.errorCount_img.Visible = 'on';
+        function updateErrorCount(app, taskIdx)
+            if ~isempty(taskIdx) && app.TaskController.Tasks(taskIdx).RetryPolicy.receiver.failureCount
+                set(app.ReceiverErrorCount, 'Text', string(app.TaskController.Tasks(taskIdx).RetryPolicy.receiver.failureCount), 'Visible', 'on')
+                app.ReceiverErrorCountIcon.Visible = 'on';
             else
-                set(app.errorCount_txt, 'Text', '0', 'Visible', 'off')
-                app.errorCount_img.Visible = 'off';
+                set(app.ReceiverErrorCount, 'Text', '0', 'Visible', 'off')
+                app.ReceiverErrorCountIcon.Visible = 'off';
             end
         end
 
         %-----------------------------------------------------------------%
-        function Layout_lastGPS(app, gpsData)
+        function updateGPSStatus(app, gpsData)
+            if isempty(gpsData)
+                app.GPSLastFix.Text = {'<b style="color: #a2142f; font-size: 14;">-1.000</b> LAT '; '<b style="color: #a2142f; font-size: 14;">-1.000</b> LON '; 'dd-mmm-yyyy '; 'HH:MM:SS '};
+                app.GPSLastFixIcon.Color = [0.50,0.50,0.50];
+                return
+            end
+
             switch gpsData.Status
-                case  1; newColor = [0.47,0.67,0.19];
-                case  0; newColor = [0.64,0.08,0.18];
-                case -1; newColor = [0.50,0.50,0.50];
+                case  1
+                    iconColor = [0.47,0.67,0.19];
+                case  0
+                    iconColor = [0.64,0.08,0.18];
+                case -1
+                    iconColor = [0.50,0.50,0.50];
             end
         
-            app.lastGPS_text.Text   = sprintf(['<b style="color: #a2142f; font-size: 14;">%.3f</b> LAT \n' ...
-                                               '<b style="color: #a2142f; font-size: 14;">%.3f</b> LON \n' ...
-                                               '%s \n%s '], gpsData.Latitude, gpsData.Longitude,           ...
-                                                            extractBefore(gpsData.TimeStamp, ' '),         ...
-                                                            extractAfter(gpsData.TimeStamp, ' '));
-            app.lastGPS_color.Color = newColor;
+            app.GPSLastFix.Text = sprintf([ ...
+                '<b style="color: #a2142f; font-size: 14;">%.3f</b> LAT \n' ...
+                '<b style="color: #a2142f; font-size: 14;">%.3f</b> LON \n' ...
+                '%s \n%s ' ...
+            ], gpsData.Latitude, gpsData.Longitude, extractBefore(gpsData.TimeStamp, ' '), extractAfter(gpsData.TimeStamp, ' '));
+            app.GPSLastFixIcon.Color = iconColor;
         end
 
         %-----------------------------------------------------------------%
-        function Layout_lastMaskInitialState(app)
-            app.lastMask_text.Enable = 0;
-            app.lastMask_text.Text   = {'<b style="color: #a2142f; font-size: 14;">-1</b> ';                ...
-                                        'VALIDAÇÕES '; '<b style="color: #a2142f; font-size: 14;">-1</b> '; ...
-                                        'ROMPIMENTOS '; '<font style="color: #a2142f;">-1.000 MHz ';        ...
-                                        '⌂ -1.0 kHz ';                                                      ...
-                                        'Ʌ -1.0 dB </font>';                                                ...
-                                        'dd-mmm-yyyy ';                                                     ...
-                                        'HH:MM:SS '};
-        end
+        function updateMaskStatus(app, maskTrigger, taskIdx, bandIdx)
+            taskTable = app.UITable.Data;
+            hasSelection = ~isempty(taskTable) && ~isempty(taskIdx);
+            hasMask = false;
 
-        %-----------------------------------------------------------------%
-        function Layout_lastMaskValidation(app, maskTrigger, ii, jj)
+            if hasSelection
+                hasBands = ~isempty(app.TaskController.Tasks(taskIdx).Bands);
+                if hasBands
+                    hasMask = ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask);
+                end
+            end
+
+            if ~hasMask
+                app.MaskStatus.Enable = 0;
+                app.MaskStatus.Text = {
+                    '<b style="color: #a2142f; font-size: 14;">-1</b> ';
+                    'VALIDAÇÕES '; '<b style="color: #a2142f; font-size: 14;">-1</b> ';
+                    'ROMPIMENTOS '; '<font style="color: #a2142f;">-1.000 MHz ';
+                    '⌂ -1.0 kHz ';
+                    'Ʌ -1.0 dB </font>';
+                    'dd-mmm-yyyy ';
+                    'HH:MM:SS '
+                };
+                return
+            end
+
+            app.MaskStatus.Enable = 1;
+            validations = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ValidationCount;
+            brokenCount = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationCount;
+
             if maskTrigger
-                Validations = app.specObj(ii).Band(jj).Mask.Validations;
-                BrokenCount = app.specObj(ii).Band(jj).Mask.BrokenCount;
-        
-                if ~isempty(app.specObj(ii).Band(jj).Mask.Peaks)
-                    nPeaks      = sprintf(' (%d)', height(app.specObj(ii).Band(jj).Mask.Peaks));
-                    FreqCenter  = app.specObj(ii).Band(jj).Mask.Peaks.FreqCenter(1);
-                    BandWidth   = app.specObj(ii).Band(jj).Mask.Peaks.BW(1);
-                    Prominence  = app.specObj(ii).Band(jj).Mask.Peaks.Prominence(1);
-                    dTimeStamp  = extractBefore(char(app.specObj(ii).Band(jj).Mask.TimeStamp), ' ');
-                    hTimeStamp  = extractAfter(char(app.specObj(ii).Band(jj).Mask.TimeStamp), ' ');
+                if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks)
+                    numPeaks = sprintf(' (%d)', height(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks));
+                    freqCenter = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks.centerFrequencyMHz(1);
+                    bandWidth = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks.bandwidthKHz(1);
+                    prominence = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks.prominence(1);
+                    dayTimeStamp = extractBefore(char(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.LastViolationAt), ' ');
+                    hourTimeStamp = extractAfter(char(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.LastViolationAt), ' ');
                 else
-                    nPeaks      = '';
-                    FreqCenter  = -1;
-                    BandWidth   = -1;
-                    Prominence  = -1;
-                    dTimeStamp  = 'dd-mmm-yyyy';
-                    hTimeStamp  = 'HH:MM:SS';
+                    numPeaks = '';
+                    freqCenter = -1;
+                    bandWidth = -1;
+                    prominence = -1;
+                    dayTimeStamp = 'dd-mmm-yyyy';
+                    hourTimeStamp = 'HH:MM:SS';
                 end
         
-                app.lastMask_text.Text = sprintf(['<b style="color: #a2142f; font-size: 14;">%.0f</b> \nVALIDAÇÕES \n'                  ...
-                                                  '<b style="color: #a2142f; font-size: 14;">%.0f%s</b> \nROMPIMENTOS \n'               ...
-                                                  '<font style="color: #a2142f;">%.3f MHz \n⌂ %.1f kHz \nɅ %.1f dB</font> \n%s \n%s '], ...
-                                                  Validations, BrokenCount, nPeaks, FreqCenter, BandWidth, Prominence, dTimeStamp, hTimeStamp);
+                app.MaskStatus.Text = sprintf([ ...
+                    '<b style="color: #a2142f; font-size: 14;">%.0f</b> \nVALIDAÇÕES \n' ...
+                    '<b style="color: #a2142f; font-size: 14;">%.0f%s</b> \nROMPIMENTOS \n' ...
+                    '<font style="color: #a2142f;">%.3f MHz \n⌂ %.1f kHz \nɅ %.1f dB</font> \n%s \n%s ' ...
+                ], validations, brokenCount, numPeaks, freqCenter, bandWidth, prominence, dayTimeStamp, hourTimeStamp);
+
             else
-                app.lastMask_text.Text = replace(app.lastMask_text.Text, [extractBefore(app.lastMask_text.Text, 'VALIDAÇÕES') 'VALIDAÇÕES'], ...
-                    sprintf('<b style="color: #a2142f; font-size: 14;">%.0f</b> \nVALIDAÇÕES', app.specObj(ii).Band(jj).Mask.Validations));
+                app.MaskStatus.Text = replace(app.MaskStatus.Text, [extractBefore(app.MaskStatus.Text, 'VALIDAÇÕES') 'VALIDAÇÕES'], sprintf('<b style="color: #a2142f; font-size: 14;">%.0f</b> \nVALIDAÇÕES', validations));
+            end
+        end
+
+
+        %-----------------------------------------------------------------%
+        % ## EXECUÇÃO DAS TAREFAS ##
+        %-----------------------------------------------------------------%
+        function startOrReplayTask(app, taskIdx)
+            switch app.TaskController.Tasks(taskIdx).Status
+                case {'Cancelada', 'Erro', 'Concluída'}
+                    timestamp = datetime('now');
+
+                    switch app.TaskController.Tasks(taskIdx).TaskSpec.Script.Observation.Type
+                        case 'Duration'
+                            app.TaskController.Tasks(taskIdx).Timing.startedAt = timestamp;
+                            app.TaskController.Tasks(taskIdx).Timing.endedAt   = timestamp + seconds(app.TaskController.Tasks(taskIdx).TaskSpec.Script.Observation.Duration);
+
+                        case 'Time'
+                            if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Concluída')
+                                ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Concluída" somente poderá ser executada novamente se o tipo do período de observação for "Duração" ou "Quantidade específica de amostras".');
+                                return
+                            end
+
+                        case 'Samples'
+                            app.TaskController.Tasks(taskIdx).Timing.startedAt = timestamp;
+                            app.TaskController.Tasks(taskIdx).Timing.endedAt   = NaT;
+                    end
+
+                    app.TaskController.Tasks(taskIdx).Status = 'Na fila';
+                    app.TaskController.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(timestamp), 'message', 'Reincluída na fila a tarefa.');
+
+                    resetTaskBands(app.TaskController, taskIdx, 1)
+                    taskSchedulerTimerFcn(app)
+
+                case 'Na fila'
+                    ui.Dialog(app.UIFigure, 'warning', 'A tarefa já está na fila de execução.');
             end
         end
 
         %-----------------------------------------------------------------%
-        % PLOT
-        %-----------------------------------------------------------------%
-        function plot_Layout(app)
-            if app.axesTool_Waterfall.UserData.status
-                set(app.axes1,          Visible=1)
-                set(app.axes1.Children, Visible=1)
-                app.axes1.Layout.Tile     = 1;
-                app.axes1.Layout.TileSpan = [1 1];
-                app.axes1.XTickLabel      = {};
-                xlabel(app.axes1, '')
+        function stopTask(app, taskIdx)
+            if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
+                updateTaskStatus(app.TaskController, taskIdx, 'cancellationRequested');
+            end
+        end
 
-                set(app.axes2,          Visible=1)
-                set(app.axes2.Children, Visible=1)
-                app.axes2.Layout.Tile     = 2;
-                app.axes2.Layout.TileSpan = [2 1];
-            else
-                set(app.axes1,          Visible=1)
-                set(app.axes1.Children, Visible=1)
-                app.axes1.Layout.Tile     = 1;
-                app.axes1.Layout.TileSpan = [3 1];
-                app.axes1.XTickLabelMode  = 'auto';
-                xlabel(app.axes1, 'Frequência (MHz)')
-                
-                set(app.axes2,          Visible=0)
-                set(app.axes2.Children, Visible=0)
-                app.axes2.Layout.Tile     = 4;
-                app.axes2.Layout.TileSpan = [1 1];
+        %-----------------------------------------------------------------%
+        function editTask(app, taskIdx)
+            if ismember(app.TaskController.Tasks(taskIdx).Status, {'Na fila', 'Em andamento'})
+                ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Na fila" ou "Em andamento" não poderá ser editada.');
+                return
             end
 
-            cb = findobj(app.axes2.Parent.Children, 'Type', 'colorbar');
+            [isOpen, hApp] = checkStatusModule(app.tabGroupController, 'TASK_ADD');
+            if isOpen && ~(strcmp(hApp.infoEdition.type, 'edit') && hApp.infoEdition.idx == taskIdx)
+                ui.Dialog(app.UIFigure, 'warning', 'O módulo "TASK_ADD" já está aberto. Conclua ou feche a inclusão/edição em andamento antes de editar outra tarefa.');
+                return
+            end
+
+            app.Tab4Button.Value = true;
+            openModule(app.tabGroupController, app.Tab4Button, false, app.General, app, struct('type', 'edit', 'idx', taskIdx))
+        end
+
+        %-----------------------------------------------------------------%
+        function deleteTask(app, taskIdx)
+            if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
+                ui.Dialog(app.UIFigure, 'warning', 'A tarefa precisa ser interrompida antes da tentativa de exclusão.');
+                return
+            end
+
+            if all(~strcmp({app.TaskController.Tasks.Status}, 'Em andamento')) && app.TaskController.IsRunning
+                app.TaskController.IsRunning = false;
+            end
+
+            if ~app.TaskController.IsRunning
+                app.TaskController.Tasks(taskIdx) = [];
+
+                % A exclusão reordena os índices da lista, invalidando a inclusão/edição em andamento.
+                if checkStatusModule(app.tabGroupController, 'TASK_ADD')
+                    closeModule(app.tabGroupController, 'TASK_ADD', app.General)
+                end
+
+                refreshTaskTable(app)
+            else
+                ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa poderá ser excluída, sendo eliminada da lista de tarefas, somente se não estiver sendo executada nenhuma tarefa.');
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function showTaskLog(app, taskIdx)
+            log = util.HtmlTextGenerator.LOG(app.TaskController.Tasks, taskIdx);
+            ui.Dialog(app.UIFigure, 'warning', log);
+        end
+
+
+        %-----------------------------------------------------------------%
+        % ## PLOT CONTROLLER ##
+        %-----------------------------------------------------------------%
+        function resetPlotState(app)
+            cla(app.UIAxes1)
+            cla(app.UIAxes2)
+            
+            resetRestoreView(app)
+
+            app.PlotHandles = struct( ...
+                'ClearWrite', [], ...
+                'MinHold', [], ...
+                'Average', [], ...
+                'MaxHold', [], ...
+                'PeakExcursion', [], ...
+                'Waterfall', [] ...
+            );          
+        end
+
+        %-----------------------------------------------------------------%
+        function resetRestoreView(app)
+            app.RestoreView(1) = struct('Id', 'app.UIAxes1', 'XLim', [0, 1], 'YLim', [0, 1], 'CLim', 'auto');
+            app.RestoreView(2) = struct('Id', 'app.UIAxes2', 'XLim', [0, 1], 'YLim', [0, 1], 'CLim', 'auto');
+        end
+
+        %-----------------------------------------------------------------%
+        function updatePlotLayout(app)
+            if app.axesTool_Waterfall.UserData.status
+                set(findobj(app.UIAxes1), 'Visible', true)
+                
+                app.UIAxes1.Layout.Tile = 1;
+                app.UIAxes1.Layout.TileSpan = [1 1];
+                app.UIAxes1.XTickLabel = {};
+                xlabel(app.UIAxes1, '')
+
+                set(findobj(app.UIAxes2), 'Visible', true)
+                app.UIAxes2.Layout.Tile = 2;
+                app.UIAxes2.Layout.TileSpan = [2 1];
+
+            else
+                set(findobj(app.UIAxes1), 'Visible', true)
+
+                app.UIAxes1.Layout.Tile = 1;
+                app.UIAxes1.Layout.TileSpan = [3 1];
+                app.UIAxes1.XTickLabelMode = 'auto';
+                xlabel(app.UIAxes1, 'Frequência (MHz)')
+                
+                set(findobj(app.UIAxes2), 'Visible', false)
+                app.UIAxes2.Layout.Tile = 4;
+                app.UIAxes2.Layout.TileSpan = [1 1];
+            end
+
+            cb = findobj(app.UIAxes2.Parent.Children, 'Type', 'colorbar');
             if ~isempty(cb)
                 cb.Visible = app.axesTool_Waterfall.UserData.status;
             end
         end
 
         %-----------------------------------------------------------------%
-        function plot_PlotSource(app, ii, jj)
+        function updatePlotSourceOptions(app, hasSelection, hasBands, taskIdx, bandIdx)
             sources = {'Nível'};
 
-            if ii > 0 && jj > 0
-                if contains(app.specObj(ii).Task.Type, 'Drive-test (Level+Azimuth)')
+            if hasSelection && hasBands
+                if contains(app.TaskController.Tasks(taskIdx).TaskSpec.Type, 'Drive-test (Level+Azimuth)')
                     sources{end+1} = 'Azimute';
                 end
     
                 % Se a tarefa for "Rompimento de Máscara Espectral" e o Status for 
                 % maior do que zero, então o campo "Mask" será diferente de vazio.
-                % A validação abaixo é idêntica (funcionalmente) à:
-                
-              % if contains(app.specObj(ii).Task.Type, 'Rompimento de Máscara Espectral') && app.specObj(ii).Task.Script.Band(jj).MaskTrigger.Status
-                if ~isempty(app.specObj(ii).Band(jj).Mask)
+                if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask)
                     sources{end+1} = 'Máscara';
                 end
             end
 
             set(app.axesTool_PlotSource, 'Items', sources, 'Enable', numel(sources) > 1)
-            set([app.axesTool_MinHold, app.axesTool_Average, app.axesTool_MaxHold, app.axesTool_Peak], 'Enable', strcmp(app.axesTool_PlotSource.Value, 'Nível'))
+            updateToolbar(app)
         end
 
         %-----------------------------------------------------------------%
-        function plot_Startup(app)
-            cla(app.axes1)
-            cla(app.axes2)
-            ysecondarylabel(app.axes1, sprintf('\n\n'))
-        
-            app.line_ClrWrite = [];
-            app.line_MinHold  = [];
-            app.line_Average  = [];
-            app.line_MaxHold  = [];
-            app.peakExcursion = [];
-            app.surface_WFall = [];            
-        end
-
-        %-----------------------------------------------------------------%
-        function [xArray, downYLim, upYLim, FreqStart, FreqStop, LevelUnit, strUnit] = plot_AxesParameters(app, ii, jj, newArray)
+        function [xArray, downYLim, upYLim, freqStart, freqStop, levelUnit, strUnit] = getPlotParameters(app, taskIdx, bandIdx, newArray)
             % xArray
-            FreqStart = app.specObj(ii).Task.Script.Band(jj).FreqStart / 1e+6;
-            FreqStop  = app.specObj(ii).Task.Script.Band(jj).FreqStop  / 1e+6;
-            LevelUnit = app.specObj(ii).Task.Script.Band(jj).instrLevelUnit;
-            xArray    = linspace(FreqStart, FreqStop, app.specObj(ii).Band(jj).DataPoints);
+            freqStart = app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart / 1e+6;
+            freqStop  = app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop  / 1e+6;
+            levelUnit = app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrLevelUnit;
+            xArray    = linspace(freqStart, freqStop, app.TaskController.Tasks(taskIdx).Bands(bandIdx).DataPoints);
     
             % General settings
-            [~, strUnit] = class.Constants.yAxisUpLimit(app.specObj(ii).Task.Script.Band(jj).instrLevelUnit);
+            [~, strUnit] = class.Constants.yAxisUpLimit(app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrLevelUnit);
     
             [downYLim, upYLim] = bounds(newArray);
             downYLim  = downYLim - mod(downYLim, 10);
@@ -1780,132 +1131,329 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function plot_Draw(app, ii, jj)
-            idx = app.specObj(ii).Band(jj).Waterfall.idx;
-            newArray = app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:);
+        function updatePlot(app, taskIdx, bandIdx)
+            waterfallIdx = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx;
+            newArray = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.Matrix(waterfallIdx, :);
 
-            if app.plotStyleEditing
-                app.plotStyleEditing = 0;
+            if app.PlotStyleDirty
+                app.PlotStyleDirty = false;
 
-                cla(app.axes1)
-                app.line_ClrWrite = [];
+                cla(app.UIAxes1)
+                app.PlotHandles.ClearWrite = [];
             end
         
-            if isempty(app.line_ClrWrite)
-                [xArray, downYLim, upYLim, FreqStart, FreqStop, LevelUnit, strUnit] = plot_AxesParameters(app, ii, jj, newArray);
+            if isempty(app.PlotHandles.ClearWrite)
+                [xArray, downYLim, upYLim, freqStart, freqStop, LevelUnit, strUnit] = getPlotParameters(app, taskIdx, bandIdx, newArray);
 
                 switch app.axesTool_PlotSource.Value
                     case 'Nível'
                         % ORDINARY PLOT (SPECTRUM + MASK THRESHOLD)
-                        ylabel(app.axes1, sprintf('Nível (%s)', strUnit));
-                        set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[downYLim, upYLim], YScale='linear')
+                        ylabel(app.UIAxes1, sprintf('Nível (%s)', strUnit));
+                        set(app.UIAxes1, XLim=[freqStart, freqStop], YLim=[downYLim, upYLim], YScale='linear')
             
                         % Mask threshold
-                        if ~isempty(app.specObj(ii).Band(jj).Mask)
-                            plot.draw2D.mask(app.axes1, app.specObj(ii), jj)
+                        if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask)
+                            plot.draw2D.mask(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx)
                         end
                 
                         % ClearWrite, MinHold, Average and MaxHold
-                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, newArray, LevelUnit, 'ClrWrite', app.General);
+                        app.PlotHandles.ClearWrite = plot.draw2D.clearWrite(app.UIAxes1, xArray, newArray, LevelUnit, 'ClrWrite', app.General);
                         
                         if app.axesTool_MinHold.UserData.status
-                            app.line_MinHold  = plot.draw2D.minHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                            app.PlotHandles.MinHold  = plot.draw2D.minHold(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, LevelUnit, app.General);
                         end
                 
                         if app.axesTool_Average.UserData.status
-                            app.line_Average  = plot.draw2D.Average(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                            app.PlotHandles.Average  = plot.draw2D.average(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, LevelUnit, app.General);
                         end
                 
                         if app.axesTool_MaxHold.UserData.status
-                            app.line_MaxHold  = plot.draw2D.maxHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                            app.PlotHandles.MaxHold  = plot.draw2D.maxHold(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, LevelUnit, app.General);
                         end
             
                         if app.axesTool_Peak.UserData.status
-                            app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
+                            app.PlotHandles.PeakExcursion = plot.draw2D.peakExcursion(app.PlotHandles.PeakExcursion, app.PlotHandles.ClearWrite, app.TaskController.Tasks(taskIdx), bandIdx, newArray);
                         end
 
                     case 'Azimute'
-                        ylabel(app.axes1, 'Azimute (º)');
-                        set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[0, 360], YScale='linear')
+                        ylabel(app.UIAxes1, 'Azimute (º)');
+                        set(app.UIAxes1, XLim=[freqStart, freqStop], YLim=[0, 360], YScale='linear')
 
-                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, app.specObj(ii).Band(jj).Azimuth, LevelUnit, 'ClrWrite', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
+                        app.PlotHandles.ClearWrite = plot.draw2D.clearWrite(app.UIAxes1, xArray, app.TaskController.Tasks(taskIdx).Bands(bandIdx).AzimuthTrace, LevelUnit, 'ClrWrite', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
 
                     case 'Máscara'
-                        ylabel(app.axes1, 'Rompimento (%)');
-                        set(app.axes1, XLim=[FreqStart, FreqStop], YLim=[.1, 100], YScale='log')
+                        ylabel(app.UIAxes1, 'Rompimento (%)');
+                        set(app.UIAxes1, XLim=[freqStart, freqStop], YLim=[.1, 100], YScale='log')
             
-                        KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
-                        app.line_ClrWrite = plot.draw2D.clearWrite(app.axes1, xArray, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, '%%', 'MaskPlot', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
+                        KK = 100/app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ValidationCount;
+                        app.PlotHandles.ClearWrite = plot.draw2D.clearWrite(app.UIAxes1, xArray, KK.*app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationsPerBin, '%%', 'MaskPlot', app.General, 'Marker', '.', 'MarkerSize', 12, 'LineStyle', 'none');
                 end
-                app.restoreView(1) = struct('ID', 'app.axes1', 'xLim', app.axes1.XLim, 'yLim', app.axes1.YLim,  'cLim', 'auto');
+                
+                app.RestoreView(1).XLim = app.UIAxes1.XLim;
+                app.RestoreView(1).YLim = app.UIAxes1.YLim;
 
             else
                 switch app.axesTool_PlotSource.Value
                     case 'Nível'
-                        plot.draw2D.update(app.line_ClrWrite, newArray, app.General)
+                        plot.draw2D.update(app.PlotHandles.ClearWrite, newArray, app.General)
                         
-                        if ~isempty(app.line_MinHold)
-                            plot.draw2D.update(app.line_MinHold, newArray, app.General)
+                        if ~isempty(app.PlotHandles.MinHold)
+                            plot.draw2D.update(app.PlotHandles.MinHold, newArray, app.General)
                         end
                         
-                        if ~isempty(app.line_Average)
-                            plot.draw2D.update(app.line_Average, newArray, app.General)
+                        if ~isempty(app.PlotHandles.Average)
+                            plot.draw2D.update(app.PlotHandles.Average, newArray, app.General)
                         end
                         
-                        if ~isempty(app.line_MaxHold)
-                            plot.draw2D.update(app.line_MaxHold, newArray, app.General)
+                        if ~isempty(app.PlotHandles.MaxHold)
+                            plot.draw2D.update(app.PlotHandles.MaxHold, newArray, app.General)
                         end
     
-                        if ~isempty(app.peakExcursion)
-                            app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
+                        if ~isempty(app.PlotHandles.PeakExcursion)
+                            app.PlotHandles.PeakExcursion = plot.draw2D.peakExcursion(app.PlotHandles.PeakExcursion, app.PlotHandles.ClearWrite, app.TaskController.Tasks(taskIdx), bandIdx, newArray);
                         end
 
                     case 'Azimute'
-                        plot.draw2D.update(app.line_ClrWrite, app.specObj(ii).Band(jj).Azimuth, app.General)
+                        plot.draw2D.update(app.PlotHandles.ClearWrite, app.TaskController.Tasks(taskIdx).Bands(bandIdx).AzimuthTrace, app.General)
 
                     case 'Máscara'
-                        KK = 100/app.specObj(ii).Band(jj).Mask.Validations;
-                        plot.draw2D.update(app.line_ClrWrite, KK.*app.specObj(ii).Band(jj).Mask.BrokenArray, app.General)
+                        KK = 100/app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ValidationCount;
+                        plot.draw2D.update(app.PlotHandles.ClearWrite, KK.*app.TaskController.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationsPerBin, app.General)
                 end
             end
 
             % Waterfall
             if app.axesTool_Waterfall.UserData.status
-                if isempty(app.surface_WFall)
+                if isempty(app.PlotHandles.Waterfall)
                     if ~exist('xArray', 'var')
-                        [xArray, downYLim, upYLim, FreqStart, FreqStop] = plot_AxesParameters(app, ii, jj, newArray);
+                        [xArray, downYLim, upYLim, freqStart, freqStop] = getPlotParameters(app, taskIdx, bandIdx, newArray);
                     end
-                    set(app.axes2, 'YLim', [1, app.specObj(ii).Band(jj).Waterfall.Depth], 'View', [0, 90], 'CLim', [downYLim, upYLim])
-                    app.restoreView(2) = struct('ID', 'app.axes2', 'xLim', [FreqStart, FreqStop], 'yLim', app.axes2.YLim,  'cLim', app.axes2.CLim);
+                    set(app.UIAxes2, 'YLim', [1, app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.Depth], 'View', [0, 90], 'CLim', [downYLim, upYLim])
 
-                    app.surface_WFall = plot.draw3D.Waterfall(app.axes2, app.specObj(ii), jj, xArray);
+                    app.RestoreView(2).XLim = [freqStart, freqStop];
+                    app.RestoreView(2).YLim = app.UIAxes2.YLim;
+                    app.RestoreView(2).CLim = app.UIAxes2.CLim;
+
+                    app.PlotHandles.Waterfall = plot.draw3D.waterfall(app.UIAxes2, app.TaskController.Tasks(taskIdx), bandIdx, xArray);
                 else
-                    app.surface_WFall.CData = circshift(app.specObj(ii).Band(jj).Waterfall.Matrix, -idx);
+                    app.PlotHandles.Waterfall.CData = circshift(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.Matrix, -waterfallIdx);
                 end
             end
         end
 
         %-----------------------------------------------------------------%
-        function inputArguments = auxAppInputArguments(app, auxAppName)
-            arguments
-                app
-                auxAppName char {mustBeMember(auxAppName, {'INSTRUMENT', 'TASK:EDIT', 'TASK:ADD', 'SERVER', 'CONFIG'})}
-            end
+        function updateToolbar(app)
+            isLevel = strcmp(app.axesTool_PlotSource.Value, 'Nível');
+
+            set([ ...
+                app.axesTool_MinHold, ...
+                app.axesTool_Average, ...
+                app.axesTool_MaxHold, ...
+                app.axesTool_Peak ...
+            ], 'Enable', isLevel)
+        end
+
+
+        %-----------------------------------------------------------------%
+        % INICIALIZAÇÃO E CICLO DE VIDA
+        %-----------------------------------------------------------------%
+        function initializeAxes(app)
+            axesContainer = tiledlayout(app.AxesContainer, 3, 1, "Padding", "compact", "TileSpacing", "compact");
+
+            app.UIAxes1 = plot.axesCreation(axesContainer, 'Cartesian', {'UserData', struct('CLimMode', 'auto', 'Colormap', '')});
+            app.UIAxes1.Layout.Tile = 1;
+            app.UIAxes1.Layout.TileSpan = [3,1];
             
-            [auxAppIsOpen, ...
-             auxAppHandle] = checkStatusModule(app.tabGroupController, auxAppName);
+            app.UIAxes2 = plot.axesCreation(axesContainer, 'Cartesian', {'Visible', 0, 'Layer', 'top', 'Box', 'on', 'XGrid', 'off', 'XMinorGrid', 'off', 'YGrid', 'off', 'YMinorGrid', 'off', 'UserData', struct('CLimMode', 'auto', 'Colormap', '')});
+            app.UIAxes2.Layout.Tile = 4;
 
-            inputArguments = {app};
+            colormap(app.UIAxes2, app.General.plot.waterfall.Colormap);
+            plot.axesColorbar(app.UIAxes2, "eastoutside", {'Visible', false})
 
-            switch auxAppName
-                case 'TASK:ADD'
-                    if auxAppIsOpen
-                        inputArguments = {app, auxAppHandle.infoEdition};
+            xlabel(app.UIAxes1, 'Frequência (MHz)')
+            ylabel(app.UIAxes1, 'Nível (dB)')
+            ysecondarylabel(app.UIAxes1, sprintf('\n\n'))
+            
+            xlabel(app.UIAxes2, 'Frequência (MHz)')
+            ylabel(app.UIAxes2, 'Amostras')
+
+            linkaxes([app.UIAxes1, app.UIAxes2], 'x')
+
+            plot.axesInteractivity.DefaultCreation([app.UIAxes1, app.UIAxes2], [dataTipInteraction, regionZoomInteraction, rulerPanInteraction])
+        end
+
+        %-----------------------------------------------------------------%
+        function restoreTasksFromFile(app)
+            [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
+            if isfile(fullfile(programDataFolder, 'taskListState.mat'))
+                app.progressDialog.Visible = 'visible';
+
+                load(fullfile(programDataFolder, 'taskListState.mat'), 'tasks');
+
+                % É possível que o MATLAB não consiga instancionar o objeto
+                % "model.Task", lendo-o como "uint32", o que inviabiliza 
+                % o aproveitamento da informação salva...
+
+                % Warning: Variable 'Tasks' originally saved as a model.Task cannot be instantiated as an object and will be read in as a uint32.
+
+                if exist('tasks', 'var') && isa(tasks, 'model.Task') && ~isempty(tasks)
+                    for ii = 1:numel(tasks)
+                        tasks(ii) = initializeTaskReceiver(tasks(ii));
+                        tasks(ii) = resolveStreamingHandle(app.TaskController, tasks(ii));
+                        tasks(ii) = resolveGpsHandle(app.TaskController, tasks(ii));
+
+                        if ismember(tasks(ii).Status, {'Na fila', 'Em andamento'})
+                            tasks(ii).Status = 'Erro';
+                        end
                     end
 
-                otherwise
-                    % ...
+                    app.TaskController.Tasks = tasks;
+                    refreshTaskTable(app)
+
+                    % Ida ao modo de "Execução das tarefas da monitoração"
+                    % de forma programática:
+                    app.Tab1Button.Value = 1;
+                    onTabNavigatorButtonPushed(app, struct('Source', app.Tab1Button, 'PreviousValue', 0))
+                end
+
+                app.progressDialog.Visible = 'hidden';
             end
+
+            function [task, msgError] = initializeTaskReceiver(task)
+                % Função quase idêntica a model.Receiver.testConnectivity.
+                % Uso de informação constante no objeto "model.Task" ao
+                % invés da constante em arquivo "InstrumentList.json".
+    
+                receiver = buildReceiverConfig(task);
+                [idx, msgError] = connect(app.receiverObj, receiver);
+                
+                if isempty(msgError)
+                    task.TaskSpec.Receiver.Handle = app.receiverObj.Table.Handle{idx};
+                    task.Connections.receiver = task.TaskSpec.Receiver.Handle;
+                end
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function saveTasksToFile(app)
+            tasks = copy(app.TaskController.Tasks);
+            
+            for ii = 1:numel(tasks)
+                tasks(ii).Connections.receiver = [];
+                tasks(ii).Connections.stream = [];
+                tasks(ii).Connections.gps = [];
+
+                tasks(ii).TaskSpec.Receiver.Handle = [];
+                tasks(ii).TaskSpec.Streaming.Handle = [];
+                tasks(ii).TaskSpec.GPS.Handle = [];
+            end
+
+            [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
+            save(fullfile(programDataFolder, 'taskListState.mat'), 'tasks')
+        end
+
+        %-----------------------------------------------------------------%
+        % TIMER 
+        %-----------------------------------------------------------------%
+        function createTaskSchedulerTimer(app)
+            app.TaskSchedulerTimer = timer("ExecutionMode", "fixedRate", "Period", 10, "TimerFcn", @(~,~) taskSchedulerTimerFcn(app));
+            start(app.TaskSchedulerTimer)
+        end
+
+        %-----------------------------------------------------------------%
+        function taskSchedulerTimerFcn(app)
+            if ~app.TaskController.IsRunning
+                runLoop(app.TaskController)
+            end
+
+            % Validação que garante sincronismo entre tarefas e a sua
+            % disposição na tabela da GUI.
+            if numel(app.TaskController.Tasks) ~= height(app.UITable.Data)
+                refreshTaskTable(app, app.UITable.Selection)
+            end
+        end
+
+
+        %-----------------------------------------------------------------%
+        % REGISTRO DOS LISTENERS E SEUS CALLBACKS
+        %-----------------------------------------------------------------%
+        function registerTaskControllerListeners(app)
+            % Inscreve o app nos eventos disparados por "app.TaskController"
+            % (model.TaskController), substituindo as antigas chamadas diretas
+            % a métodos de interface dentro do loop de monitoração (antigo
+            % "RegularTask_MainLoop" e demais funções "RegularTask_*" que
+            % foram migradas para model.TaskController).
+
+            addlistener(app.TaskController, 'StatusChanged',      @(~,~)   refreshTaskTable(app, app.UITable.Selection));
+            addlistener(app.TaskController, 'TasksChanged',       @(~,~)   saveTasksToFile(app));
+            addlistener(app.TaskController, 'BandDataAcquired',   @(~,evt) onTaskBandDataAcquired(evt));
+            addlistener(app.TaskController, 'GpsUpdated',         @(~,evt) onTaskGpsUpdated(evt));
+            addlistener(app.TaskController, 'ErrorRaised',        @(~,evt) onTaskErrorRaised(evt));
+            addlistener(app.TaskController, 'RevisitInfoChanged', @(~,~)   updateTaskMetaData(app));
+
+            function onTaskBandDataAcquired(evt)
+                taskIdx = evt.TaskId;
+                bandIdx = evt.BandId;
+                maskTrigger = evt.Payload;
+    
+                if app.UITable.Selection == taskIdx
+                    updateErrorCount(app, taskIdx)
+    
+                    if app.SpectrumFlowList.Value == bandIdx
+                        updatePlot(app, taskIdx, bandIdx)
+                        updateMaskStatus(app, maskTrigger, taskIdx, bandIdx)
+                        app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).NumSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
+                        app.Sweeps.Text = string(app.TaskController.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples);
+                        drawnow
+                    end
+                end
+            end
+    
+            function onTaskGpsUpdated(evt)
+                taskIdx = evt.TaskId;
+                gpsData = evt.Payload;
+    
+                % As coordenadas da estação - registradas em app.General.context.CONFIG.station
+                % - são atualizadas apenas se a estação for do tipo móvel ("Mobile") 
+                % e as novas coordenadas geográficas forem válidas.
+                if strcmp(app.General.context.CONFIG.station.type, 'Mobile') && gpsData.Status
+                    app.General.context.CONFIG.station.latitude  = gpsData.Latitude;
+                    app.General.context.CONFIG.station.longitude = gpsData.Longitude;
+                end
+    
+                if app.UITable.Selection == taskIdx
+                    updateGPSStatus(app, gpsData)
+                end
+            end
+
+            function onTaskErrorRaised(evt)
+                taskIdx = evt.TaskId;
+    
+                if app.UITable.Selection == taskIdx
+                    updateErrorCount(app, taskIdx)
+                end
+                beep
+            end
+        end
+
+
+        %-----------------------------------------------------------------%
+        % MISCELÂNEAS
+        %-----------------------------------------------------------------%
+        function updateWarningLampVisibility(app)
+            if isfolder(app.General.fileFolder.DataHub_POST)
+                app.DataHubLamp.Visible = 0;
+            else
+                app.DataHubLamp.Visible = 1;
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function updateLastVisitedFolder(app, filePath)
+            app.General_I.fileFolder.lastVisited = filePath;
+            app.General.fileFolder.lastVisited   = filePath;
+
+            appEngine.util.generalSettingsSave(class.Constants.appName, app.rootFolder, app.General_I, app.executionMode)
         end
     end
     
@@ -1932,39 +1480,35 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 return
             end
 
-            % <EspecificidadeAppColeta1>
-            if app.Flag_running
+            if app.TaskController.IsRunning
                 ui.Dialog(app.UIFigure, 'warning', 'Existe uma tarefa em execução...');
                 return
             end
-            % </EspecificidadeAppColeta1>
 
-            if ~strcmp(app.executionMode, 'webApp') && ~isempty(app.specObj)
-                msgQuestion   = 'Deseja fechar o aplicativo?';
-                userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', msgQuestion, {'Sim', 'Não'}, 1, 2);
+            if ~strcmp(app.executionMode, 'webApp')
+                questionMsg = 'Deseja fechar o aplicativo?';
+                userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', questionMsg, {'Sim', 'Não'}, 1, 2);
                 if userSelection == "Não"
                     return
                 end
             end
 
-            % <EspecificidadeAppColeta2>
-            if app.General.startupInfo
-                RegularTask_specObjSave(app)
+            if app.General.context.CONFIG.restoreLastSession
+                saveTasksToFile(app)
             else
                 [~, programDataFolder] = appEngine.util.Path(class.Constants.appName, app.rootFolder);
-                if isfile(fullfile(programDataFolder, 'startupInfo.mat'))
-                    delete(fullfile(programDataFolder, 'startupInfo.mat'))
+                if isfile(fullfile(programDataFolder, 'taskListState.mat'))
+                    delete(fullfile(programDataFolder, 'taskListState.mat'))
                 end
             end
 
-            if app.General.stationInfo.Type == "Mobile"
-                fcn.GeneralSettings(app.General, app.rootFolder)
+            if app.General.context.CONFIG.station.type == "Mobile"
+                appEngine.util.generalSettingsSave(class.Constants.appName, app.rootFolder, app.General_I, app.executionMode)
             end
 
             if ~isempty(app.tcpServer)
                 delete(app.tcpServer.Server)
             end
-            % </EspecificidadeAppColeta2>
 
             % Aspectos gerais (carregar em todos os apps):
             appEngine.beforeDeleteApp(app.progressDialog, app.General_I.fileFolder.tempPath, app.tabGroupController, app.executionMode)
@@ -1978,39 +1522,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             switch event.Source
                 case {app.Tab1Button, app.Tab2Button, app.Tab3Button, app.Tab4Button, app.Tab5Button, app.Tab6Button}
-                    clickedButton  = event.Source;
-                    auxAppTag      = clickedButton.Tag;
-                    inputArguments = menu_auxAppInputArguments(app, auxAppTag);
-        
-                    if event.Source == app.Tab4Button
-                        % A operação padrão, ao clicar em app.Tab4Button, é criar uma 
-                        % nova tarefa. Caso esteja selecionado o módulo de visualização 
-                        % de tarefas, e esteja selecionada uma tarefa, questiona-se se 
-                        % deve ser feito a inclusão de uma nova tarefa ou a edição da 
-                        % selecionada. 
-                        idx = app.UITable.Selection;
-        
-                        if  ~checkStatusModule(app.tabGroupController, 'TASK:ADD') && app.Tab1Button.Value && ~isempty(idx)
-                            msgQuestion   = 'Deseja criar uma nova tarefa, ou editar a tarefa selecionada em tabela?';
-                            userSelection = ui.Dialog(app.UIFigure, 'uiconfirm', msgQuestion, {'Criar nova', 'Editar selecionada', 'Cancelar'}, 1, 3);
-                            switch userSelection
-                                case 'Editar selecionada'
-                                    if ismember(app.specObj(idx).Status, {'Na fila', 'Em andamento'})
-                                        ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Na fila" ou "Em andamento" não poderá ser editada.');
-                                        app.Tab4Button.Value = 0;
-                                        return
-                                    end
-        
-                                    inputArguments = {app, struct('type', 'edit', 'idx', idx)};
-        
-                                case 'Cancelar'
-                                    app.Tab4Button.Value = 0;
-                                    return
-                            end
-                        end
-                    end
-        
-                    openModule(app.tabGroupController, event.Source, event.PreviousValue, app.General, inputArguments{:})
+                    openModule(app.tabGroupController, event.Source, event.PreviousValue, app.General, app)
 
                 case app.FigurePosition
                     app.UIFigure.Position(3:4) = class.Constants.windowSize;
@@ -2031,81 +1543,32 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         % Selection changed function: UITable
-        function onTableSelectionChanged(app, event)
+        function onTaskSelectionChanged(app, event)
 
-            oldSelection = app.UITable.UserData;
-            newSelection = app.UITable.Selection;
+            if isempty(event.Selection)
+                if ~isempty(event.PreviousSelection)
+                    app.UITable.Selection = event.PreviousSelection;
+                end
 
-            if isempty(newSelection) && ~isempty(oldSelection)
-                app.UITable.Selection = oldSelection;
-                drawnow
-
-            else
-                app.UITable.UserData = newSelection;
-                Layout_treeBuilding(app, 1)
+                return
             end
+
+            loadSelectedTask(app, 1)
             
         end
 
-        % Value changed function: DropDown
-        function onTaskSelectionChanged(app, event)
+        % Value changed function: SpectrumFlowList
+        function onBandSelectionChanged(app, event)
 
             try
-                ii = app.UITable.Selection;
-                jj = app.DropDown.Value;
-
-                plot_Startup(app)
-                plot_PlotSource(app, ii, jj);
-                
-                if ~isempty(app.specObj(ii).Band(jj).Waterfall)
-                    idx = app.specObj(ii).Band(jj).Waterfall.idx;
-    
-                    if idx
-                        plot_Draw(app, ii, jj)
-                    end
-                end
-    
-                % TASK INFO THAT ARE UPDATED IN REAL TIME
-                % (LEFT PANEL)
-                Layout_metadataTab(app)
-    
-                % (RIGHT PANEL)
-                if ~isempty(app.specObj(ii).Band(jj).File); WritedSamples = app.specObj(ii).Band(jj).File.WritedSamples;
-                else;                                       WritedSamples = -1; 
-                end
-                app.Sweeps.Text = string(WritedSamples);
-    
-                if ~contains(app.specObj(ii).Task.Type, 'PRÉVIA') && strcmp(app.specObj(ii).Status, 'Em andamento') && app.specObj(ii).Band(jj).Status
-                    app.Sweeps_REC.Visible = 1;
-                else
-                    app.Sweeps_REC.Visible = 0;
-                end
-                
-                if ~isempty(app.specObj(ii).Band(jj).Mask)                    
-                    app.lastMask_text.Enable = 1;
-                    Layout_lastMaskValidation(app, true, ii, jj)
-                else
-                    Layout_lastMaskInitialState(app)
-                end
-                Layout_lastGPS(app, app.specObj(ii).lastGPS)
-    
-                % (DOWN STATUS PANEL)
-                ysecondarylabel(app.axes1, sprintf('%s\n%s\n', app.UITable.Data.Receiver(ii), app.DropDown.Items{app.DropDown.Value}))
-                if ~isempty(app.tool_RevisitTime.Text); app.tool_RevisitTime.Text = sprintf('%d varreduras\n%.3f seg', app.specObj(ii).Band(jj).nSweeps, app.specObj(ii).Band(jj).RevisitTime);
-                else;                                   app.tool_RevisitTime.Text = '';
-                end
-
-                % PLAY BUTTON
-                switch app.specObj(ii).Status
-                    case 'Na fila';      set(app.tool_ButtonPlay, 'Enable', 'off', 'ImageSource', 'play_32.png')
-                    case 'Em andamento'; set(app.tool_ButtonPlay, 'Enable', 'on',  'ImageSource', 'stop_32.png')
-                    otherwise;           set(app.tool_ButtonPlay, 'Enable', 'on',  'ImageSource', 'play_32.png')
-                end
+                taskIdx = app.UITable.Selection;
+                bandIdx = app.SpectrumFlowList.Value;
+                loadSelectedBand(app, taskIdx, bandIdx)
 
             catch ME
                 if exist('event', 'var')
                     event.Source.Value = event.Source.PreviousValue;
-                    onTaskSelectionChanged(app)
+                    onBandSelectionChanged(app)
                 end
 
                 ui.Dialog(app.UIFigure, 'error', getReport(ME));
@@ -2114,98 +1577,61 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: tool_ButtonPlay
-        function Toolbar_ToggleTaskStatusButtonPushed(app, event)
+        % Image clicked function: axesTool_RestoreView
+        function onAxesToolbarRestoreViewImageClicked(app, event)
             
-            idx = app.UITable.Selection;
-            if idx 
-                switch app.specObj(idx).Status
-                    %-----------------------------------------------------%
-                    % PLAY
-                    %-----------------------------------------------------%
-                    case {'Cancelada', 'Erro', 'Concluída'}
-                        Timestamp = datetime('now');
-        
-                        switch app.specObj(idx).Task.Script.Observation.Type
-                            case 'Duration'
-                                app.specObj(idx).Observation.BeginTime = Timestamp;
-                                app.specObj(idx).Observation.EndTime   = Timestamp + seconds(app.specObj(idx).Task.Script.Observation.Duration);
-            
-                            case 'Time'
-                                if strcmp(app.specObj(idx).Status, 'Concluída')
-                                    ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Concluída" somente poderá ser executada novamente se o tipo do período de observação for "Duração" ou "Quantidade específica de amostras".');
-                                    return
-                                end
-            
-                            case 'Samples'
-                                app.specObj(idx).Observation.BeginTime = Timestamp;
-                                app.specObj(idx).Observation.EndTime   = NaT;
-                        end
-        
-                        app.specObj(idx).Status = 'Na fila';
-                        app.specObj(idx).LOG(end+1) = struct('type', 'task', 'time', char(Timestamp), 'msg', 'Reincluída na fila a tarefa.');
+            set(app.UIAxes1, 'XLim', app.RestoreView(1).XLim, 'YLim', app.RestoreView(1).YLim)
+            set(app.UIAxes2, 'XLim', app.RestoreView(2).XLim, 'YLim', app.RestoreView(2).YLim)
 
-                        RegularTask_RestartStatus(app, idx, 1)        
-                        RegularTask_timerFcn(app)
-
-                    %-----------------------------------------------------%
-                    % STOP
-                    %-----------------------------------------------------%
-                    case 'Em andamento'
-                        RegularTask_StatusTaskCheck(app, idx, 'DeleteButtonPushed');
-                end
-            end
-            
         end
 
-        % Image clicked function: tool_ButtonDel
-        function Toolbar_DelTaskButtonPushed(app, event)
+        % Image clicked function: axesTool_ExportGraphics
+        function onAxesToolbarExportGraphicsClicked(app, event)
             
-            idx = app.UITable.Selection;
-            if idx
-                switch app.specObj(idx).Status
-                    case 'Em andamento'
-                        ui.Dialog(app.UIFigure, 'warning', 'A tarefa precisa ser interrompida antes da tentativa de exclusão.');
+            fileFormats = {'*.jpeg', '(*.jpeg)'};
+            fileFullPath = ui.Dialog(app.UIFigure, 'uiputfile', '', fileFormats, app.General.fileFolder.userPath);
+            if isempty(fileFullPath)
+                return
+            end
 
-                    otherwise
-                        if ~app.Flag_running
-                            app.specObj(idx) = [];    
-                            Layout_tableBuilding(app, 1)
-                        else
-                            ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa poderá ser excluída, sendo eliminada da lista de tarefas, somente se não estiver sendo executada nenhuma tarefa.');
-                        end
+            app.progressDialog.Visible = 'visible';
+
+            try
+                exportgraphics(app.AxesContainer, fileFullPath, 'ContentType', 'image', 'Resolution', app.General.reportLib.image.resolutionDpi, 'BackgroundColor', [0,0,0])
+            catch ME
+                ui.Dialog(app.UIFigure, 'error', ME.message);
+            end
+
+            app.progressDialog.Visible = 'hidden';
+
+        end
+
+        % Value changed function: axesTool_PlotSource
+        function onAxesToolbarPlotSourceImageClicked(app, event)
+            
+            taskIdx = app.UITable.Selection;
+            bandIdx = app.SpectrumFlowList.Value;
+
+            if isempty(app.TaskController.Tasks(taskIdx).Bands)
+                return
+            end
+            
+            if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall)
+                waterfallIdx = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx;
+
+                if waterfallIdx
+                    app.PlotStyleDirty = true;
+                    updatePlot(app, taskIdx, bandIdx)
                 end
             end
 
-        end
-
-        % Image clicked function: tool_ButtonLOG
-        function Toolbar_ShowTaskLogButtonPushed(app, event)
-
-            idx = app.UITable.Selection;
-            if idx
-                log = util.HtmlTextGenerator.LOG(app.specObj, idx);
-                ui.Dialog(app.UIFigure, 'warning', log);
-            end
-
-        end
-
-        % Image clicked function: tool_LeftPanel
-        function Toolbar_PanelVisibilityImageClicked(app, event)
-            
-            if app.task_docGrid.ColumnWidth{1}
-                app.tool_LeftPanel.ImageSource = 'layout-sidebar-left-off.svg';
-                app.task_docGrid.ColumnWidth(1:2) = {0,0};
-            else
-                app.tool_LeftPanel.ImageSource = 'layout-sidebar-left.svg';
-                app.task_docGrid.ColumnWidth(1:2) = {320,10};
-            end
+            updateToolbar(app)
             
         end
 
         % Image clicked function: axesTool_Average, axesTool_MaxHold, 
         % ...and 2 other components
-        function axesTool_TraceModeImageClicked(app, event)
+        function onAxesToolbarTraceModeImageClicked(app, event)
             
             event.Source.UserData.status = ~event.Source.UserData.status;
             if isfield(event.Source.UserData, 'icon')
@@ -2216,55 +1642,59 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 end
             end
 
-            if isempty(app.UITable.Selection) || isempty(app.DropDown.Items) || strcmp(app.axesTool_PlotSource.Value, 'Máscara')
+            if isempty(app.UITable.Selection) || isempty(app.SpectrumFlowList.Items) || strcmp(app.axesTool_PlotSource.Value, 'Máscara')
                 return
             end
 
-            ii = app.UITable.Selection;
-            jj = app.DropDown.Value;
+            taskIdx = app.UITable.Selection;
+            bandIdx = app.SpectrumFlowList.Value;
 
-            if ~isempty(app.specObj(ii).Band(jj).Waterfall)
-                idx = app.specObj(ii).Band(jj).Waterfall.idx;
+            if isempty(app.TaskController.Tasks(taskIdx).Bands)
+                return
+            end
 
-                if idx
-                    FreqStart = app.specObj(ii).Task.Script.Band(jj).FreqStart / 1e+6;
-                    FreqStop  = app.specObj(ii).Task.Script.Band(jj).FreqStop  / 1e+6;
-                    LevelUnit = app.specObj(ii).Task.Script.Band(jj).instrLevelUnit;
+            if ~isempty(app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall)
+                waterfallIdx = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx;
 
-                    xArray    = linspace(FreqStart, FreqStop, app.specObj(ii).Band(jj).DataPoints);
-                    newArray = app.specObj(ii).Band(jj).Waterfall.Matrix(idx,:);
+                if waterfallIdx
+                    freqStart = app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart / 1e+6;
+                    freqStop  = app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop  / 1e+6;
+                    levelUnit = app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).instrLevelUnit;
+
+                    xArray    = linspace(freqStart, freqStop, app.TaskController.Tasks(taskIdx).Bands(bandIdx).DataPoints);
+                    newArray  = app.TaskController.Tasks(taskIdx).Bands(bandIdx).Waterfall.Matrix(waterfallIdx, :);
 
                     switch event.Source
                         case app.axesTool_MinHold
                             if event.Source.UserData.status
-                                app.line_MinHold  = plot.draw2D.minHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                                app.PlotHandles.MinHold = plot.draw2D.minHold(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, levelUnit, app.General);
                             else
-                                delete(app.line_MinHold)
-                                app.line_MinHold  = [];
+                                delete(app.PlotHandles.MinHold)
+                                app.PlotHandles.MinHold = [];
                             end
 
                         case app.axesTool_Average
                             if event.Source.UserData.status
-                                app.line_Average  = plot.draw2D.Average(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                                app.PlotHandles.Average = plot.draw2D.average(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, levelUnit, app.General);
                             else
-                                delete(app.line_Average)
-                                app.line_Average  = [];
+                                delete(app.PlotHandles.Average)
+                                app.PlotHandles.Average = [];
                             end
 
                         case app.axesTool_MaxHold
                             if event.Source.UserData.status
-                                app.line_MaxHold  = plot.draw2D.maxHold(app.axes1, app.specObj(ii), jj, xArray, newArray, LevelUnit, app.General);
+                                app.PlotHandles.MaxHold = plot.draw2D.maxHold(app.UIAxes1, app.TaskController.Tasks(taskIdx), bandIdx, xArray, newArray, levelUnit, app.General);
                             else
-                                delete(app.line_MaxHold)
-                                app.line_MaxHold  = [];
+                                delete(app.PlotHandles.MaxHold)
+                                app.PlotHandles.MaxHold = [];
                             end
 
                         case app.axesTool_Peak
                             if event.Source.UserData.status
-                                app.peakExcursion = plot.draw2D.peakExcursion(app.peakExcursion, app.line_ClrWrite, app.specObj(ii), jj, newArray);
+                                app.PlotHandles.PeakExcursion = plot.draw2D.peakExcursion(app.PlotHandles.PeakExcursion, app.PlotHandles.ClearWrite, app.TaskController.Tasks(taskIdx), bandIdx, newArray);
                             else
-                                delete(app.peakExcursion)
-                                app.peakExcursion = [];
+                                delete(app.PlotHandles.PeakExcursion)
+                                app.PlotHandles.PeakExcursion = [];
                             end
                     end
                     drawnow
@@ -2274,45 +1704,40 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         % Image clicked function: axesTool_Waterfall
-        function axesTool_ShowWaterfallImageClicked(app, event)
+        function onAxesToolbarShowWaterfallImageClicked(app, event)
             
             event.Source.UserData.status = ~event.Source.UserData.status;
-            plot_Layout(app)
+            updatePlotLayout(app)
 
-            if ~isempty(app.UITable.Selection) && ~app.Flag_running
-                axesTool_PlotSourceImageClicked(app)
+            if ~isempty(app.UITable.Selection) && ~app.TaskController.IsRunning
+                onAxesToolbarPlotSourceImageClicked(app)
             end
 
         end
 
-        % Image clicked function: axesTool_RestoreView
-        function axesTool_RestoreViewImageClicked(app, event)
+        % Image clicked function: PanelLeftVisibility, TableVisibility
+        function onToolbarButtonToogleVisibility(app, event)
             
-            if ~isempty(app.axes1.Children)
-                set(app.axes1, 'XLim', app.restoreView(1).xLim, 'YLim', app.restoreView(1).yLim)
-            end
+            switch event.Source
+                case app.PanelLeftVisibility
+                    app.PanelLeftVisibility.UserData.status = ~app.PanelLeftVisibility.UserData.status;
+                    if app.PanelLeftVisibility.UserData.status
+                        app.PanelLeftVisibility.ImageSource = 'layout-sidebar-left.svg';
+                        app.Document.ColumnWidth(1:2) = {320,10};
+                    else
+                        app.PanelLeftVisibility.ImageSource = 'layout-sidebar-left-off.svg';
+                        app.Document.ColumnWidth(1:2) = {0,0};
+                    end
 
-            if ~isempty(app.axes2.Children)
-                set(app.axes2, 'XLim', app.restoreView(2).xLim, 'YLim', app.restoreView(2).yLim, 'CLim', app.restoreView(2).cLim)
-            end
-
-        end
-
-        % Value changed function: axesTool_PlotSource
-        function axesTool_PlotSourceImageClicked(app, event)
-            
-            set([app.axesTool_MinHold, app.axesTool_Average, app.axesTool_MaxHold, app.axesTool_Peak], 'Enable', strcmp(app.axesTool_PlotSource.Value, 'Nível'))
-            
-            ii = app.UITable.Selection;
-            jj = app.DropDown.Value;
-            
-            if ~isempty(app.specObj(ii).Band(jj).Waterfall)
-                idx = app.specObj(ii).Band(jj).Waterfall.idx;
-
-                if idx
-                    app.plotStyleEditing = 1;
-                    plot_Draw(app, ii, jj)
-                end
+                case app.TableVisibility
+                    app.TableVisibility.UserData.status = ~app.TableVisibility.UserData.status;
+                    if app.TableVisibility.UserData.status
+                        app.Document.RowHeight(1:2) = {144,10};
+                        app.UITable.Visible = 'on';
+                    else
+                        app.Document.RowHeight(1:2) = {0,0};
+                        app.UITable.Visible = 'off';
+                    end
             end
             
         end
@@ -2353,7 +1778,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab1_Task
             app.Tab1_Task = uitab(app.TabGroup);
             app.Tab1_Task.AutoResizeChildren = 'off';
-            app.Tab1_Task.Title = 'TASK:VIEW';
+            app.Tab1_Task.Title = 'TASK_VIEW';
 
             % Create Tab1Grid
             app.Tab1Grid = uigridlayout(app.Tab1_Task);
@@ -2364,330 +1789,43 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab1Grid.Padding = [0 0 0 0];
             app.Tab1Grid.BackgroundColor = [1 1 1];
 
-            % Create task_docGrid
-            app.task_docGrid = uigridlayout(app.Tab1Grid);
-            app.task_docGrid.ColumnWidth = {320, 10, '1x', 258, 5, 10, 130};
-            app.task_docGrid.RowHeight = {140, 10, 17, 5, 2, 20, 5, '1x'};
-            app.task_docGrid.ColumnSpacing = 0;
-            app.task_docGrid.RowSpacing = 0;
-            app.task_docGrid.Padding = [10 10 10 40];
-            app.task_docGrid.Layout.Row = 1;
-            app.task_docGrid.Layout.Column = 1;
-            app.task_docGrid.BackgroundColor = [1 1 1];
+            % Create Document
+            app.Document = uigridlayout(app.Tab1Grid);
+            app.Document.ColumnWidth = {320, 10, 5, 292, '1x', 10, 130};
+            app.Document.RowHeight = {144, 10, 17, 5, 2, 20, 5, '1x'};
+            app.Document.ColumnSpacing = 0;
+            app.Document.RowSpacing = 0;
+            app.Document.Padding = [20 20 20 50];
+            app.Document.Layout.Row = 1;
+            app.Document.Layout.Column = 1;
+            app.Document.BackgroundColor = [1 1 1];
 
             % Create UITable
-            app.UITable = uitable(app.task_docGrid);
-            app.UITable.ColumnName = {'ID'; 'TAREFA'; 'RECEPTOR'; 'INCLUSÃO'; 'INÍCIO|OBSERVAÇÃO'; 'FIM|OBSERVAÇÃO'; 'ESTADO'};
-            app.UITable.ColumnWidth = {40, 'auto', 'auto', 120, 120, 120, 120};
+            app.UITable = uitable(app.Document);
+            app.UITable.ColumnName = {'TAREFA'; 'RECEPTOR'; 'INCLUSÃO'; 'INÍCIO|OBSERVAÇÃO'; 'FIM|OBSERVAÇÃO'; 'ESTADO'; ''};
+            app.UITable.ColumnWidth = {'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 110};
             app.UITable.RowName = {};
+            app.UITable.ColumnSortable = [true true true true true true false];
             app.UITable.SelectionType = 'row';
-            app.UITable.SelectionChangedFcn = createCallbackFcn(app, @onTableSelectionChanged, true);
+            app.UITable.SelectionChangedFcn = createCallbackFcn(app, @onTaskSelectionChanged, true);
             app.UITable.Multiselect = 'off';
             app.UITable.Layout.Row = 1;
             app.UITable.Layout.Column = [1 7];
             app.UITable.FontSize = 11;
 
-            % Create Plot_Panel
-            app.Plot_Panel = uipanel(app.task_docGrid);
-            app.Plot_Panel.AutoResizeChildren = 'off';
-            app.Plot_Panel.BorderType = 'none';
-            app.Plot_Panel.BackgroundColor = [0 0 0];
-            app.Plot_Panel.Layout.Row = [3 8];
-            app.Plot_Panel.Layout.Column = [3 5];
-
-            % Create TaskInfo_Panel
-            app.TaskInfo_Panel = uigridlayout(app.task_docGrid);
-            app.TaskInfo_Panel.ColumnWidth = {'1x'};
-            app.TaskInfo_Panel.RowHeight = {82, '1x', '1x'};
-            app.TaskInfo_Panel.Padding = [0 0 0 0];
-            app.TaskInfo_Panel.Layout.Row = [3 8];
-            app.TaskInfo_Panel.Layout.Column = 7;
-            app.TaskInfo_Panel.BackgroundColor = [1 1 1];
-
-            % Create Sweeps_Panel
-            app.Sweeps_Panel = uipanel(app.TaskInfo_Panel);
-            app.Sweeps_Panel.AutoResizeChildren = 'off';
-            app.Sweeps_Panel.Layout.Row = 1;
-            app.Sweeps_Panel.Layout.Column = 1;
-
-            % Create Sweeps_Grid
-            app.Sweeps_Grid = uigridlayout(app.Sweeps_Panel);
-            app.Sweeps_Grid.ColumnWidth = {32, '1x', 18};
-            app.Sweeps_Grid.RowHeight = {27, '1x', 18};
-            app.Sweeps_Grid.ColumnSpacing = 0;
-            app.Sweeps_Grid.RowSpacing = 0;
-            app.Sweeps_Grid.Padding = [5 5 5 5];
-            app.Sweeps_Grid.Tag = 'COLORLOCKED';
-            app.Sweeps_Grid.BackgroundColor = [1 1 1];
-
-            % Create Sweeps_REC
-            app.Sweeps_REC = uiimage(app.Sweeps_Grid);
-            app.Sweeps_REC.ScaleMethod = 'scaledown';
-            app.Sweeps_REC.Visible = 'off';
-            app.Sweeps_REC.Layout.Row = 3;
-            app.Sweeps_REC.Layout.Column = 1;
-            app.Sweeps_REC.HorizontalAlignment = 'left';
-            app.Sweeps_REC.VerticalAlignment = 'bottom';
-            app.Sweeps_REC.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'REC.gif');
-
-            % Create Sweeps_Label
-            app.Sweeps_Label = uilabel(app.Sweeps_Grid);
-            app.Sweeps_Label.FontSize = 10;
-            app.Sweeps_Label.FontColor = [0.149 0.149 0.149];
-            app.Sweeps_Label.Layout.Row = 1;
-            app.Sweeps_Label.Layout.Column = [1 3];
-            app.Sweeps_Label.Text = {'VARREDURAS'; 'EM ARQUIVO'};
-
-            % Create Sweeps
-            app.Sweeps = uilabel(app.Sweeps_Grid);
-            app.Sweeps.HorizontalAlignment = 'right';
-            app.Sweeps.WordWrap = 'on';
-            app.Sweeps.FontSize = 14;
-            app.Sweeps.FontWeight = 'bold';
-            app.Sweeps.FontColor = [0.6706 0.302 0.349];
-            app.Sweeps.Layout.Row = 2;
-            app.Sweeps.Layout.Column = [1 3];
-            app.Sweeps.Text = '-1';
-
-            % Create errorCount_txt
-            app.errorCount_txt = uilabel(app.Sweeps_Grid);
-            app.errorCount_txt.HorizontalAlignment = 'right';
-            app.errorCount_txt.FontSize = 10;
-            app.errorCount_txt.FontWeight = 'bold';
-            app.errorCount_txt.FontColor = [1 0.651 0.651];
-            app.errorCount_txt.Visible = 'off';
-            app.errorCount_txt.Layout.Row = 3;
-            app.errorCount_txt.Layout.Column = 2;
-            app.errorCount_txt.Text = '0';
-
-            % Create errorCount_img
-            app.errorCount_img = uiimage(app.Sweeps_Grid);
-            app.errorCount_img.ScaleMethod = 'none';
-            app.errorCount_img.Visible = 'off';
-            app.errorCount_img.Layout.Row = 3;
-            app.errorCount_img.Layout.Column = 3;
-            app.errorCount_img.HorizontalAlignment = 'right';
-            app.errorCount_img.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Warn_18.png');
-
-            % Create lastMask_Panel
-            app.lastMask_Panel = uipanel(app.TaskInfo_Panel);
-            app.lastMask_Panel.AutoResizeChildren = 'off';
-            app.lastMask_Panel.Layout.Row = 2;
-            app.lastMask_Panel.Layout.Column = 1;
-
-            % Create lastMask_Grid
-            app.lastMask_Grid = uigridlayout(app.lastMask_Panel);
-            app.lastMask_Grid.ColumnWidth = {'1x'};
-            app.lastMask_Grid.RowHeight = {15, '1x'};
-            app.lastMask_Grid.ColumnSpacing = 2;
-            app.lastMask_Grid.RowSpacing = 0;
-            app.lastMask_Grid.Padding = [5 5 5 5];
-            app.lastMask_Grid.Tag = 'COLORLOCKED';
-            app.lastMask_Grid.BackgroundColor = [1 1 1];
-
-            % Create lastMask_label
-            app.lastMask_label = uilabel(app.lastMask_Grid);
-            app.lastMask_label.VerticalAlignment = 'top';
-            app.lastMask_label.FontSize = 10;
-            app.lastMask_label.FontColor = [0.149 0.149 0.149];
-            app.lastMask_label.Layout.Row = 1;
-            app.lastMask_label.Layout.Column = 1;
-            app.lastMask_label.Text = 'MÁSCARA';
-
-            % Create lastMask_text
-            app.lastMask_text = uilabel(app.lastMask_Grid);
-            app.lastMask_text.HorizontalAlignment = 'right';
-            app.lastMask_text.VerticalAlignment = 'top';
-            app.lastMask_text.WordWrap = 'on';
-            app.lastMask_text.FontSize = 10;
-            app.lastMask_text.FontColor = [0.502 0.502 0.502];
-            app.lastMask_text.Enable = 'off';
-            app.lastMask_text.Layout.Row = 2;
-            app.lastMask_text.Layout.Column = 1;
-            app.lastMask_text.Interpreter = 'html';
-            app.lastMask_text.Text = {'<b style="color: #a2142f; font-size: 14;">-1</b> '; 'VALIDAÇÕES '; '<b style="color: #a2142f; font-size: 14;">-1</b> '; 'ROMPIMENTOS '; '<font style="color: #a2142f;">-1.000 MHz '; '⌂ -1.0 kHz '; 'Ʌ -1.0 dB </font>'; 'dd-mmm-yyyy '; 'HH:MM:SS '};
-
-            % Create lastGPS_Panel
-            app.lastGPS_Panel = uipanel(app.TaskInfo_Panel);
-            app.lastGPS_Panel.AutoResizeChildren = 'off';
-            app.lastGPS_Panel.Layout.Row = 3;
-            app.lastGPS_Panel.Layout.Column = 1;
-
-            % Create lastGPS_Grid1
-            app.lastGPS_Grid1 = uigridlayout(app.lastGPS_Panel);
-            app.lastGPS_Grid1.ColumnWidth = {'1x', 18};
-            app.lastGPS_Grid1.RowHeight = {27, '1x', 18};
-            app.lastGPS_Grid1.ColumnSpacing = 0;
-            app.lastGPS_Grid1.RowSpacing = 0;
-            app.lastGPS_Grid1.Padding = [5 5 5 5];
-            app.lastGPS_Grid1.Tag = 'COLORLOCKED';
-            app.lastGPS_Grid1.BackgroundColor = [1 1 1];
-
-            % Create lastGPS_label
-            app.lastGPS_label = uilabel(app.lastGPS_Grid1);
-            app.lastGPS_label.VerticalAlignment = 'top';
-            app.lastGPS_label.FontSize = 10;
-            app.lastGPS_label.FontColor = [0.149 0.149 0.149];
-            app.lastGPS_label.Layout.Row = 1;
-            app.lastGPS_label.Layout.Column = [1 2];
-            app.lastGPS_label.Text = {'COORDENADAS'; 'GEOGRÁFICAS'};
-
-            % Create lastGPS_text
-            app.lastGPS_text = uilabel(app.lastGPS_Grid1);
-            app.lastGPS_text.HorizontalAlignment = 'right';
-            app.lastGPS_text.VerticalAlignment = 'top';
-            app.lastGPS_text.WordWrap = 'on';
-            app.lastGPS_text.FontSize = 10;
-            app.lastGPS_text.FontColor = [0.502 0.502 0.502];
-            app.lastGPS_text.Layout.Row = [2 3];
-            app.lastGPS_text.Layout.Column = [1 2];
-            app.lastGPS_text.Interpreter = 'html';
-            app.lastGPS_text.Text = {'<b style="color: #a2142f; font-size: 14;">-1.000</b> LAT '; '<b style="color: #a2142f; font-size: 14;">-1.000</b> LON '; 'dd-mmm-yyyy '; 'HH:MM:SS '};
-
-            % Create lastGPS_Grid2
-            app.lastGPS_Grid2 = uigridlayout(app.lastGPS_Grid1);
-            app.lastGPS_Grid2.ColumnWidth = {'1x'};
-            app.lastGPS_Grid2.RowHeight = {12, '1x'};
-            app.lastGPS_Grid2.ColumnSpacing = 0;
-            app.lastGPS_Grid2.RowSpacing = 0;
-            app.lastGPS_Grid2.Padding = [0 0 0 0];
-            app.lastGPS_Grid2.Layout.Row = 1;
-            app.lastGPS_Grid2.Layout.Column = 2;
-            app.lastGPS_Grid2.BackgroundColor = [1 1 1];
-
-            % Create lastGPS_color
-            app.lastGPS_color = uilamp(app.lastGPS_Grid2);
-            app.lastGPS_color.Layout.Row = 1;
-            app.lastGPS_color.Layout.Column = 1;
-            app.lastGPS_color.Color = [0.502 0.502 0.502];
-
-            % Create errorCount_txt_2
-            app.errorCount_txt_2 = uilabel(app.lastGPS_Grid1);
-            app.errorCount_txt_2.HorizontalAlignment = 'right';
-            app.errorCount_txt_2.FontSize = 10;
-            app.errorCount_txt_2.FontWeight = 'bold';
-            app.errorCount_txt_2.FontColor = [1 0.651 0.651];
-            app.errorCount_txt_2.Visible = 'off';
-            app.errorCount_txt_2.Layout.Row = 3;
-            app.errorCount_txt_2.Layout.Column = 1;
-            app.errorCount_txt_2.Text = '0';
-
-            % Create errorCount_img_2
-            app.errorCount_img_2 = uiimage(app.lastGPS_Grid1);
-            app.errorCount_img_2.ScaleMethod = 'none';
-            app.errorCount_img_2.Visible = 'off';
-            app.errorCount_img_2.Layout.Row = 3;
-            app.errorCount_img_2.Layout.Column = 2;
-            app.errorCount_img_2.HorizontalAlignment = 'right';
-            app.errorCount_img_2.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Warn_18.png');
-
-            % Create play_axesToolbar
-            app.play_axesToolbar = uigridlayout(app.task_docGrid);
-            app.play_axesToolbar.ColumnWidth = {22, 5, 110, 5, 22, 22, 22, 22, 22};
-            app.play_axesToolbar.RowHeight = {2, 18, 2};
-            app.play_axesToolbar.ColumnSpacing = 0;
-            app.play_axesToolbar.RowSpacing = 0;
-            app.play_axesToolbar.Padding = [2 2 2 0];
-            app.play_axesToolbar.Layout.Row = [3 5];
-            app.play_axesToolbar.Layout.Column = 4;
-            app.play_axesToolbar.BackgroundColor = [1 1 1];
-
-            % Create axesTool_RestoreView
-            app.axesTool_RestoreView = uiimage(app.play_axesToolbar);
-            app.axesTool_RestoreView.ImageClickedFcn = createCallbackFcn(app, @axesTool_RestoreViewImageClicked, true);
-            app.axesTool_RestoreView.Tag = 'MinHold';
-            app.axesTool_RestoreView.Tooltip = {'RestoreView'};
-            app.axesTool_RestoreView.Layout.Row = 2;
-            app.axesTool_RestoreView.Layout.Column = 1;
-            app.axesTool_RestoreView.VerticalAlignment = 'bottom';
-            app.axesTool_RestoreView.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Home_18.png');
-
-            % Create axesTool_PlotSource
-            app.axesTool_PlotSource = uidropdown(app.play_axesToolbar);
-            app.axesTool_PlotSource.Items = {'Nível'};
-            app.axesTool_PlotSource.ValueChangedFcn = createCallbackFcn(app, @axesTool_PlotSourceImageClicked, true);
-            app.axesTool_PlotSource.Enable = 'off';
-            app.axesTool_PlotSource.Tooltip = {'Fonte de dados'};
-            app.axesTool_PlotSource.FontSize = 11;
-            app.axesTool_PlotSource.FontColor = [0.129411764705882 0.129411764705882 0.129411764705882];
-            app.axesTool_PlotSource.BackgroundColor = [1 1 1];
-            app.axesTool_PlotSource.Layout.Row = [1 3];
-            app.axesTool_PlotSource.Layout.Column = 3;
-            app.axesTool_PlotSource.Value = 'Nível';
-
-            % Create axesTool_MinHold
-            app.axesTool_MinHold = uiimage(app.play_axesToolbar);
-            app.axesTool_MinHold.ImageClickedFcn = createCallbackFcn(app, @axesTool_TraceModeImageClicked, true);
-            app.axesTool_MinHold.Tag = 'MinHold';
-            app.axesTool_MinHold.Tooltip = {'MinHold'};
-            app.axesTool_MinHold.Layout.Row = 2;
-            app.axesTool_MinHold.Layout.Column = 5;
-            app.axesTool_MinHold.VerticalAlignment = 'bottom';
-            app.axesTool_MinHold.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'MinHold_32.png');
-
-            % Create axesTool_Average
-            app.axesTool_Average = uiimage(app.play_axesToolbar);
-            app.axesTool_Average.ImageClickedFcn = createCallbackFcn(app, @axesTool_TraceModeImageClicked, true);
-            app.axesTool_Average.Tag = 'Average';
-            app.axesTool_Average.Tooltip = {'Média'};
-            app.axesTool_Average.Layout.Row = 2;
-            app.axesTool_Average.Layout.Column = 6;
-            app.axesTool_Average.VerticalAlignment = 'bottom';
-            app.axesTool_Average.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Average_32.png');
-
-            % Create axesTool_MaxHold
-            app.axesTool_MaxHold = uiimage(app.play_axesToolbar);
-            app.axesTool_MaxHold.ImageClickedFcn = createCallbackFcn(app, @axesTool_TraceModeImageClicked, true);
-            app.axesTool_MaxHold.Tag = 'MaxHold';
-            app.axesTool_MaxHold.Tooltip = {'MaxHold'};
-            app.axesTool_MaxHold.Layout.Row = 2;
-            app.axesTool_MaxHold.Layout.Column = 7;
-            app.axesTool_MaxHold.VerticalAlignment = 'bottom';
-            app.axesTool_MaxHold.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'MaxHold_32.png');
-
-            % Create axesTool_Peak
-            app.axesTool_Peak = uiimage(app.play_axesToolbar);
-            app.axesTool_Peak.ScaleMethod = 'none';
-            app.axesTool_Peak.ImageClickedFcn = createCallbackFcn(app, @axesTool_TraceModeImageClicked, true);
-            app.axesTool_Peak.Tag = 'Persistance';
-            app.axesTool_Peak.Tooltip = {'Excursão de pico'};
-            app.axesTool_Peak.Layout.Row = 2;
-            app.axesTool_Peak.Layout.Column = 8;
-            app.axesTool_Peak.VerticalAlignment = 'bottom';
-            app.axesTool_Peak.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Detection_18.png');
-
-            % Create axesTool_Waterfall
-            app.axesTool_Waterfall = uiimage(app.play_axesToolbar);
-            app.axesTool_Waterfall.ScaleMethod = 'none';
-            app.axesTool_Waterfall.ImageClickedFcn = createCallbackFcn(app, @axesTool_ShowWaterfallImageClicked, true);
-            app.axesTool_Waterfall.Tag = 'Waterfall';
-            app.axesTool_Waterfall.Tooltip = {'Waterfall'};
-            app.axesTool_Waterfall.Layout.Row = 2;
-            app.axesTool_Waterfall.Layout.Column = 9;
-            app.axesTool_Waterfall.HorizontalAlignment = 'left';
-            app.axesTool_Waterfall.VerticalAlignment = 'bottom';
-            app.axesTool_Waterfall.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Waterfall_24.png');
-
-            % Create FAIXADEFREQUNCIALabel
-            app.FAIXADEFREQUNCIALabel = uilabel(app.task_docGrid);
-            app.FAIXADEFREQUNCIALabel.VerticalAlignment = 'bottom';
-            app.FAIXADEFREQUNCIALabel.FontSize = 10;
-            app.FAIXADEFREQUNCIALabel.Layout.Row = 3;
-            app.FAIXADEFREQUNCIALabel.Layout.Column = 1;
-            app.FAIXADEFREQUNCIALabel.Text = 'FAIXA DE FREQUÊNCIA:';
-
-            % Create DropDown
-            app.DropDown = uidropdown(app.task_docGrid);
-            app.DropDown.Items = {};
-            app.DropDown.ValueChangedFcn = createCallbackFcn(app, @onTaskSelectionChanged, true);
-            app.DropDown.FontSize = 11;
-            app.DropDown.BackgroundColor = [1 1 1];
-            app.DropDown.Layout.Row = [5 6];
-            app.DropDown.Layout.Column = 1;
-            app.DropDown.Value = {};
+            % Create SpectrumFlowList
+            app.SpectrumFlowList = uidropdown(app.Document);
+            app.SpectrumFlowList.Items = {};
+            app.SpectrumFlowList.ValueChangedFcn = createCallbackFcn(app, @onBandSelectionChanged, true);
+            app.SpectrumFlowList.FontSize = 11;
+            app.SpectrumFlowList.FontColor = [1 1 1];
+            app.SpectrumFlowList.BackgroundColor = [0.7216 0.1882 0.1686];
+            app.SpectrumFlowList.Layout.Row = [3 6];
+            app.SpectrumFlowList.Layout.Column = 1;
+            app.SpectrumFlowList.Value = {};
 
             % Create MetaData
-            app.MetaData = uilabel(app.task_docGrid);
+            app.MetaData = uilabel(app.Document);
             app.MetaData.BackgroundColor = [1 1 1];
             app.MetaData.VerticalAlignment = 'top';
             app.MetaData.WordWrap = 'on';
@@ -2697,76 +1835,324 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.MetaData.Interpreter = 'html';
             app.MetaData.Text = '';
 
-            % Create task_toolGrid
-            app.task_toolGrid = uigridlayout(app.Tab1Grid);
-            app.task_toolGrid.ColumnWidth = {22, 5, 22, 22, 5, 22, '1x'};
-            app.task_toolGrid.RowHeight = {4, 17, 2};
-            app.task_toolGrid.ColumnSpacing = 5;
-            app.task_toolGrid.RowSpacing = 0;
-            app.task_toolGrid.Padding = [10 5 10 5];
-            app.task_toolGrid.Layout.Row = 2;
-            app.task_toolGrid.Layout.Column = 1;
+            % Create AxesContainer
+            app.AxesContainer = uipanel(app.Document);
+            app.AxesContainer.AutoResizeChildren = 'off';
+            app.AxesContainer.BorderType = 'none';
+            app.AxesContainer.BackgroundColor = [0 0 0];
+            app.AxesContainer.Layout.Row = [3 8];
+            app.AxesContainer.Layout.Column = [3 5];
 
-            % Create tool_LeftPanel
-            app.tool_LeftPanel = uiimage(app.task_toolGrid);
-            app.tool_LeftPanel.ScaleMethod = 'none';
-            app.tool_LeftPanel.ImageClickedFcn = createCallbackFcn(app, @Toolbar_PanelVisibilityImageClicked, true);
-            app.tool_LeftPanel.Tooltip = {''};
-            app.tool_LeftPanel.Layout.Row = [1 3];
-            app.tool_LeftPanel.Layout.Column = 1;
-            app.tool_LeftPanel.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'layout-sidebar-left.svg');
+            % Create AxesToolbar
+            app.AxesToolbar = uigridlayout(app.Document);
+            app.AxesToolbar.ColumnWidth = {8, 25, 25, 5, '1x', 5, 25, 25, 25, 25, 25, 8};
+            app.AxesToolbar.RowHeight = {2, 18, 2};
+            app.AxesToolbar.ColumnSpacing = 0;
+            app.AxesToolbar.RowSpacing = 0;
+            app.AxesToolbar.Padding = [2 2 2 0];
+            app.AxesToolbar.Layout.Row = [3 5];
+            app.AxesToolbar.Layout.Column = 4;
+            app.AxesToolbar.BackgroundColor = [1 1 1];
 
-            % Create tool_Separator1
-            app.tool_Separator1 = uiimage(app.task_toolGrid);
-            app.tool_Separator1.ScaleMethod = 'none';
-            app.tool_Separator1.Enable = 'off';
-            app.tool_Separator1.Layout.Row = [1 3];
-            app.tool_Separator1.Layout.Column = 2;
-            app.tool_Separator1.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV.svg');
+            % Create axesTool_RestoreView
+            app.axesTool_RestoreView = uiimage(app.AxesToolbar);
+            app.axesTool_RestoreView.ScaleMethod = 'none';
+            app.axesTool_RestoreView.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarRestoreViewImageClicked, true);
+            app.axesTool_RestoreView.Layout.Row = 2;
+            app.axesTool_RestoreView.Layout.Column = 2;
+            app.axesTool_RestoreView.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Home_18.png');
 
-            % Create tool_ButtonPlay
-            app.tool_ButtonPlay = uiimage(app.task_toolGrid);
-            app.tool_ButtonPlay.ImageClickedFcn = createCallbackFcn(app, @Toolbar_ToggleTaskStatusButtonPushed, true);
-            app.tool_ButtonPlay.Enable = 'off';
-            app.tool_ButtonPlay.Tooltip = {''};
-            app.tool_ButtonPlay.Layout.Row = 2;
-            app.tool_ButtonPlay.Layout.Column = 3;
-            app.tool_ButtonPlay.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'play_32.png');
+            % Create axesTool_ExportGraphics
+            app.axesTool_ExportGraphics = uiimage(app.AxesToolbar);
+            app.axesTool_ExportGraphics.ScaleMethod = 'none';
+            app.axesTool_ExportGraphics.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarExportGraphicsClicked, true);
+            app.axesTool_ExportGraphics.Layout.Row = 2;
+            app.axesTool_ExportGraphics.Layout.Column = 3;
+            app.axesTool_ExportGraphics.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'screen-cut.svg');
 
-            % Create tool_ButtonDel
-            app.tool_ButtonDel = uiimage(app.task_toolGrid);
-            app.tool_ButtonDel.ImageClickedFcn = createCallbackFcn(app, @Toolbar_DelTaskButtonPushed, true);
-            app.tool_ButtonDel.Enable = 'off';
-            app.tool_ButtonDel.Tooltip = {''};
-            app.tool_ButtonDel.Layout.Row = 2;
-            app.tool_ButtonDel.Layout.Column = 4;
-            app.tool_ButtonDel.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Delete_32Red.png');
+            % Create axesTool_PlotSource
+            app.axesTool_PlotSource = uidropdown(app.AxesToolbar);
+            app.axesTool_PlotSource.Items = {'Nível'};
+            app.axesTool_PlotSource.ValueChangedFcn = createCallbackFcn(app, @onAxesToolbarPlotSourceImageClicked, true);
+            app.axesTool_PlotSource.Enable = 'off';
+            app.axesTool_PlotSource.FontSize = 11;
+            app.axesTool_PlotSource.Layout.Row = [1 3];
+            app.axesTool_PlotSource.Layout.Column = 5;
+            app.axesTool_PlotSource.Value = 'Nível';
 
-            % Create tool_Separator2
-            app.tool_Separator2 = uiimage(app.task_toolGrid);
-            app.tool_Separator2.ScaleMethod = 'none';
-            app.tool_Separator2.Enable = 'off';
-            app.tool_Separator2.Layout.Row = [1 3];
-            app.tool_Separator2.Layout.Column = 5;
-            app.tool_Separator2.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV.svg');
+            % Create axesTool_MinHold
+            app.axesTool_MinHold = uiimage(app.AxesToolbar);
+            app.axesTool_MinHold.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarTraceModeImageClicked, true);
+            app.axesTool_MinHold.Enable = 'off';
+            app.axesTool_MinHold.Layout.Row = 2;
+            app.axesTool_MinHold.Layout.Column = 7;
+            app.axesTool_MinHold.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'MinHold_32.png');
 
-            % Create tool_ButtonLOG
-            app.tool_ButtonLOG = uiimage(app.task_toolGrid);
-            app.tool_ButtonLOG.ImageClickedFcn = createCallbackFcn(app, @Toolbar_ShowTaskLogButtonPushed, true);
-            app.tool_ButtonLOG.Enable = 'off';
-            app.tool_ButtonLOG.Tooltip = {''};
-            app.tool_ButtonLOG.Layout.Row = 2;
-            app.tool_ButtonLOG.Layout.Column = 6;
-            app.tool_ButtonLOG.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LOG_32.png');
+            % Create axesTool_Average
+            app.axesTool_Average = uiimage(app.AxesToolbar);
+            app.axesTool_Average.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarTraceModeImageClicked, true);
+            app.axesTool_Average.Enable = 'off';
+            app.axesTool_Average.Layout.Row = 2;
+            app.axesTool_Average.Layout.Column = 8;
+            app.axesTool_Average.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Average_32.png');
 
-            % Create tool_RevisitTime
-            app.tool_RevisitTime = uilabel(app.task_toolGrid);
-            app.tool_RevisitTime.HorizontalAlignment = 'right';
-            app.tool_RevisitTime.WordWrap = 'on';
-            app.tool_RevisitTime.FontSize = 10;
-            app.tool_RevisitTime.Layout.Row = [1 3];
-            app.tool_RevisitTime.Layout.Column = 7;
-            app.tool_RevisitTime.Text = '';
+            % Create axesTool_MaxHold
+            app.axesTool_MaxHold = uiimage(app.AxesToolbar);
+            app.axesTool_MaxHold.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarTraceModeImageClicked, true);
+            app.axesTool_MaxHold.Enable = 'off';
+            app.axesTool_MaxHold.Layout.Row = 2;
+            app.axesTool_MaxHold.Layout.Column = 9;
+            app.axesTool_MaxHold.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'MaxHold_32.png');
+
+            % Create axesTool_Peak
+            app.axesTool_Peak = uiimage(app.AxesToolbar);
+            app.axesTool_Peak.ScaleMethod = 'none';
+            app.axesTool_Peak.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarTraceModeImageClicked, true);
+            app.axesTool_Peak.Enable = 'off';
+            app.axesTool_Peak.Layout.Row = 2;
+            app.axesTool_Peak.Layout.Column = 10;
+            app.axesTool_Peak.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Detection_18.png');
+
+            % Create axesTool_Waterfall
+            app.axesTool_Waterfall = uiimage(app.AxesToolbar);
+            app.axesTool_Waterfall.ScaleMethod = 'none';
+            app.axesTool_Waterfall.ImageClickedFcn = createCallbackFcn(app, @onAxesToolbarShowWaterfallImageClicked, true);
+            app.axesTool_Waterfall.Layout.Row = 2;
+            app.axesTool_Waterfall.Layout.Column = 11;
+            app.axesTool_Waterfall.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Waterfall_24.png');
+
+            % Create TaskStatusGrid
+            app.TaskStatusGrid = uigridlayout(app.Document);
+            app.TaskStatusGrid.ColumnWidth = {'1x'};
+            app.TaskStatusGrid.RowHeight = {82, '1x', '1x'};
+            app.TaskStatusGrid.Padding = [0 0 0 0];
+            app.TaskStatusGrid.Layout.Row = [3 8];
+            app.TaskStatusGrid.Layout.Column = 7;
+            app.TaskStatusGrid.BackgroundColor = [1 1 1];
+
+            % Create SweepsPanel
+            app.SweepsPanel = uipanel(app.TaskStatusGrid);
+            app.SweepsPanel.AutoResizeChildren = 'off';
+            app.SweepsPanel.Layout.Row = 1;
+            app.SweepsPanel.Layout.Column = 1;
+
+            % Create SweepsGrid
+            app.SweepsGrid = uigridlayout(app.SweepsPanel);
+            app.SweepsGrid.ColumnWidth = {32, '1x', 18};
+            app.SweepsGrid.RowHeight = {27, '1x', 18};
+            app.SweepsGrid.ColumnSpacing = 0;
+            app.SweepsGrid.RowSpacing = 0;
+            app.SweepsGrid.Padding = [5 5 5 5];
+            app.SweepsGrid.BackgroundColor = [1 1 1];
+
+            % Create SweepsLabel
+            app.SweepsLabel = uilabel(app.SweepsGrid);
+            app.SweepsLabel.FontSize = 10;
+            app.SweepsLabel.FontColor = [0.149 0.149 0.149];
+            app.SweepsLabel.Layout.Row = 1;
+            app.SweepsLabel.Layout.Column = [1 3];
+            app.SweepsLabel.Text = {'VARREDURAS'; 'EM ARQUIVO'};
+
+            % Create Sweeps
+            app.Sweeps = uilabel(app.SweepsGrid);
+            app.Sweeps.HorizontalAlignment = 'right';
+            app.Sweeps.WordWrap = 'on';
+            app.Sweeps.FontSize = 14;
+            app.Sweeps.FontWeight = 'bold';
+            app.Sweeps.FontColor = [0.6706 0.302 0.349];
+            app.Sweeps.Layout.Row = 2;
+            app.Sweeps.Layout.Column = [1 3];
+            app.Sweeps.Text = '-1';
+
+            % Create RecordingIcon
+            app.RecordingIcon = uiimage(app.SweepsGrid);
+            app.RecordingIcon.ScaleMethod = 'scaledown';
+            app.RecordingIcon.Visible = 'off';
+            app.RecordingIcon.Layout.Row = 3;
+            app.RecordingIcon.Layout.Column = 1;
+            app.RecordingIcon.HorizontalAlignment = 'left';
+            app.RecordingIcon.VerticalAlignment = 'bottom';
+            app.RecordingIcon.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'REC.gif');
+
+            % Create ReceiverErrorCount
+            app.ReceiverErrorCount = uilabel(app.SweepsGrid);
+            app.ReceiverErrorCount.HorizontalAlignment = 'right';
+            app.ReceiverErrorCount.FontSize = 10;
+            app.ReceiverErrorCount.FontWeight = 'bold';
+            app.ReceiverErrorCount.FontColor = [1 0.651 0.651];
+            app.ReceiverErrorCount.Visible = 'off';
+            app.ReceiverErrorCount.Layout.Row = 3;
+            app.ReceiverErrorCount.Layout.Column = 2;
+            app.ReceiverErrorCount.Text = '0';
+
+            % Create ReceiverErrorCountIcon
+            app.ReceiverErrorCountIcon = uiimage(app.SweepsGrid);
+            app.ReceiverErrorCountIcon.ScaleMethod = 'none';
+            app.ReceiverErrorCountIcon.Visible = 'off';
+            app.ReceiverErrorCountIcon.Layout.Row = 3;
+            app.ReceiverErrorCountIcon.Layout.Column = 3;
+            app.ReceiverErrorCountIcon.HorizontalAlignment = 'right';
+            app.ReceiverErrorCountIcon.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Warn_18.png');
+
+            % Create MaskPanel
+            app.MaskPanel = uipanel(app.TaskStatusGrid);
+            app.MaskPanel.AutoResizeChildren = 'off';
+            app.MaskPanel.Layout.Row = 2;
+            app.MaskPanel.Layout.Column = 1;
+
+            % Create MaskGrid
+            app.MaskGrid = uigridlayout(app.MaskPanel);
+            app.MaskGrid.ColumnWidth = {'1x'};
+            app.MaskGrid.RowHeight = {15, '1x'};
+            app.MaskGrid.ColumnSpacing = 2;
+            app.MaskGrid.RowSpacing = 0;
+            app.MaskGrid.Padding = [5 5 5 5];
+            app.MaskGrid.BackgroundColor = [1 1 1];
+
+            % Create MaskLabel
+            app.MaskLabel = uilabel(app.MaskGrid);
+            app.MaskLabel.VerticalAlignment = 'top';
+            app.MaskLabel.FontSize = 10;
+            app.MaskLabel.FontColor = [0.149 0.149 0.149];
+            app.MaskLabel.Layout.Row = 1;
+            app.MaskLabel.Layout.Column = 1;
+            app.MaskLabel.Text = 'MÁSCARA';
+
+            % Create MaskStatus
+            app.MaskStatus = uilabel(app.MaskGrid);
+            app.MaskStatus.HorizontalAlignment = 'right';
+            app.MaskStatus.VerticalAlignment = 'top';
+            app.MaskStatus.WordWrap = 'on';
+            app.MaskStatus.FontSize = 10;
+            app.MaskStatus.FontColor = [0.502 0.502 0.502];
+            app.MaskStatus.Enable = 'off';
+            app.MaskStatus.Layout.Row = 2;
+            app.MaskStatus.Layout.Column = 1;
+            app.MaskStatus.Interpreter = 'html';
+            app.MaskStatus.Text = {'<b style="color: #a2142f; font-size: 14;">-1</b> '; 'VALIDAÇÕES '; '<b style="color: #a2142f; font-size: 14;">-1</b> '; 'ROMPIMENTOS '; '<font style="color: #a2142f;">-1.000 MHz '; '⌂ -1.0 kHz '; 'Ʌ -1.0 dB </font>'; 'dd-mmm-yyyy '; 'HH:MM:SS '};
+
+            % Create GPSLastFixPanel
+            app.GPSLastFixPanel = uipanel(app.TaskStatusGrid);
+            app.GPSLastFixPanel.AutoResizeChildren = 'off';
+            app.GPSLastFixPanel.Layout.Row = 3;
+            app.GPSLastFixPanel.Layout.Column = 1;
+
+            % Create GPSLastFixGrid
+            app.GPSLastFixGrid = uigridlayout(app.GPSLastFixPanel);
+            app.GPSLastFixGrid.ColumnWidth = {'1x', 18};
+            app.GPSLastFixGrid.RowHeight = {27, '1x', 18};
+            app.GPSLastFixGrid.ColumnSpacing = 0;
+            app.GPSLastFixGrid.RowSpacing = 0;
+            app.GPSLastFixGrid.Padding = [5 5 5 5];
+            app.GPSLastFixGrid.BackgroundColor = [1 1 1];
+
+            % Create GPSLastFixLabel
+            app.GPSLastFixLabel = uilabel(app.GPSLastFixGrid);
+            app.GPSLastFixLabel.VerticalAlignment = 'top';
+            app.GPSLastFixLabel.FontSize = 10;
+            app.GPSLastFixLabel.FontColor = [0.149 0.149 0.149];
+            app.GPSLastFixLabel.Layout.Row = 1;
+            app.GPSLastFixLabel.Layout.Column = [1 2];
+            app.GPSLastFixLabel.Text = {'COORDENADAS'; 'GEOGRÁFICAS'};
+
+            % Create GPSLastFixIconGrid
+            app.GPSLastFixIconGrid = uigridlayout(app.GPSLastFixGrid);
+            app.GPSLastFixIconGrid.ColumnWidth = {'1x'};
+            app.GPSLastFixIconGrid.RowHeight = {12, '1x'};
+            app.GPSLastFixIconGrid.ColumnSpacing = 0;
+            app.GPSLastFixIconGrid.RowSpacing = 0;
+            app.GPSLastFixIconGrid.Padding = [0 0 0 0];
+            app.GPSLastFixIconGrid.Layout.Row = 1;
+            app.GPSLastFixIconGrid.Layout.Column = 2;
+            app.GPSLastFixIconGrid.BackgroundColor = [1 1 1];
+
+            % Create GPSLastFixIcon
+            app.GPSLastFixIcon = uilamp(app.GPSLastFixIconGrid);
+            app.GPSLastFixIcon.Layout.Row = 1;
+            app.GPSLastFixIcon.Layout.Column = 1;
+            app.GPSLastFixIcon.Color = [0.502 0.502 0.502];
+
+            % Create GPSLastFix
+            app.GPSLastFix = uilabel(app.GPSLastFixGrid);
+            app.GPSLastFix.HorizontalAlignment = 'right';
+            app.GPSLastFix.VerticalAlignment = 'top';
+            app.GPSLastFix.WordWrap = 'on';
+            app.GPSLastFix.FontSize = 10;
+            app.GPSLastFix.FontColor = [0.502 0.502 0.502];
+            app.GPSLastFix.Layout.Row = [2 3];
+            app.GPSLastFix.Layout.Column = [1 2];
+            app.GPSLastFix.Interpreter = 'html';
+            app.GPSLastFix.Text = {'<b style="color: #a2142f; font-size: 14;">-1.000</b> LAT '; '<b style="color: #a2142f; font-size: 14;">-1.000</b> LON '; 'dd-mmm-yyyy '; 'HH:MM:SS '};
+
+            % Create GPSErrorCount
+            app.GPSErrorCount = uilabel(app.GPSLastFixGrid);
+            app.GPSErrorCount.HorizontalAlignment = 'right';
+            app.GPSErrorCount.FontSize = 10;
+            app.GPSErrorCount.FontWeight = 'bold';
+            app.GPSErrorCount.FontColor = [1 0.651 0.651];
+            app.GPSErrorCount.Visible = 'off';
+            app.GPSErrorCount.Layout.Row = 3;
+            app.GPSErrorCount.Layout.Column = 1;
+            app.GPSErrorCount.Text = '0';
+
+            % Create GPSErrorCountIcon
+            app.GPSErrorCountIcon = uiimage(app.GPSLastFixGrid);
+            app.GPSErrorCountIcon.ScaleMethod = 'none';
+            app.GPSErrorCountIcon.Visible = 'off';
+            app.GPSErrorCountIcon.Layout.Row = 3;
+            app.GPSErrorCountIcon.Layout.Column = 2;
+            app.GPSErrorCountIcon.HorizontalAlignment = 'right';
+            app.GPSErrorCountIcon.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'Warn_18.png');
+
+            % Create Toolbar
+            app.Toolbar = uigridlayout(app.Tab1Grid);
+            app.Toolbar.ColumnWidth = {22, 22, 5, '1x', '1x'};
+            app.Toolbar.RowHeight = {4, 17, 2};
+            app.Toolbar.ColumnSpacing = 5;
+            app.Toolbar.RowSpacing = 0;
+            app.Toolbar.Padding = [10 5 10 5];
+            app.Toolbar.Layout.Row = 2;
+            app.Toolbar.Layout.Column = 1;
+
+            % Create PanelLeftVisibility
+            app.PanelLeftVisibility = uiimage(app.Toolbar);
+            app.PanelLeftVisibility.ScaleMethod = 'none';
+            app.PanelLeftVisibility.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonToogleVisibility, true);
+            app.PanelLeftVisibility.Layout.Row = [1 3];
+            app.PanelLeftVisibility.Layout.Column = 1;
+            app.PanelLeftVisibility.ImageSource = 'layout-sidebar-left.svg';
+
+            % Create TableVisibility
+            app.TableVisibility = uiimage(app.Toolbar);
+            app.TableVisibility.ScaleMethod = 'none';
+            app.TableVisibility.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonToogleVisibility, true);
+            app.TableVisibility.Layout.Row = [1 3];
+            app.TableVisibility.Layout.Column = 2;
+            app.TableVisibility.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'View_16.png');
+
+            % Create SelectedTaskSeparator
+            app.SelectedTaskSeparator = uiimage(app.Toolbar);
+            app.SelectedTaskSeparator.Enable = 'off';
+            app.SelectedTaskSeparator.Visible = 'off';
+            app.SelectedTaskSeparator.Layout.Row = [1 3];
+            app.SelectedTaskSeparator.Layout.Column = 3;
+            app.SelectedTaskSeparator.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'LineV.svg');
+
+            % Create SelectedTaskInfo
+            app.SelectedTaskInfo = uilabel(app.Toolbar);
+            app.SelectedTaskInfo.FontSize = 10;
+            app.SelectedTaskInfo.Layout.Row = [1 3];
+            app.SelectedTaskInfo.Layout.Column = 4;
+            app.SelectedTaskInfo.Interpreter = 'html';
+            app.SelectedTaskInfo.Text = '';
+
+            % Create RevisitTimeInfo
+            app.RevisitTimeInfo = uilabel(app.Toolbar);
+            app.RevisitTimeInfo.HorizontalAlignment = 'right';
+            app.RevisitTimeInfo.FontSize = 10;
+            app.RevisitTimeInfo.Layout.Row = [1 3];
+            app.RevisitTimeInfo.Layout.Column = 5;
+            app.RevisitTimeInfo.Text = '';
 
             % Create Tab2_InstrumentList
             app.Tab2_InstrumentList = uitab(app.TabGroup);
@@ -2776,12 +2162,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab3_TaskEdition
             app.Tab3_TaskEdition = uitab(app.TabGroup);
             app.Tab3_TaskEdition.AutoResizeChildren = 'off';
-            app.Tab3_TaskEdition.Title = 'TASK:EDIT';
+            app.Tab3_TaskEdition.Title = 'TASK_EDIT';
 
             % Create Tab4_TaskAdd
             app.Tab4_TaskAdd = uitab(app.TabGroup);
             app.Tab4_TaskAdd.AutoResizeChildren = 'off';
-            app.Tab4_TaskAdd.Title = 'TASK:ADD';
+            app.Tab4_TaskAdd.Title = 'TASK_ADD';
 
             % Create Tab5_Server
             app.Tab5_Server = uitab(app.TabGroup);
@@ -2800,7 +2186,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.NavBar.ColumnSpacing = 5;
             app.NavBar.RowSpacing = 0;
             app.NavBar.Padding = [10 5 5 5];
-            app.NavBar.Tag = 'COLORLOCKED';
             app.NavBar.Layout.Row = 1;
             app.NavBar.Layout.Column = 1;
             app.NavBar.BackgroundColor = [0.2 0.2 0.2];
@@ -2813,12 +2198,12 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.AppName.Layout.Row = [1 5];
             app.AppName.Layout.Column = [1 2];
             app.AppName.Interpreter = 'html';
-            app.AppName.Text = {'appColeta v. 1.64.0'; '<font style="font-size: 9px;">R2024a</font>'};
+            app.AppName.Text = {'appColeta v. 2.00.0'; '<font style="font-size: 9px;">R2024a</font>'};
 
             % Create Tab1Button
             app.Tab1Button = uibutton(app.NavBar, 'state');
             app.Tab1Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
-            app.Tab1Button.Tag = 'TASK:VIEW';
+            app.Tab1Button.Tag = 'TASK_VIEW';
             app.Tab1Button.Tooltip = {'Acompanha execução de tarefas'};
             app.Tab1Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'run-all-24px-yellow.svg');
             app.Tab1Button.Text = '';
@@ -2841,7 +2226,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab2Button = uibutton(app.NavBar, 'state');
             app.Tab2Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.Tab2Button.Tag = 'INSTRUMENT';
-            app.Tab2Button.Tooltip = {'Edita lista de instrumentos'};
+            app.Tab2Button.Tooltip = {'Instrumentos'};
             app.Tab2Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'circuit-board.svg');
             app.Tab2Button.Text = '';
             app.Tab2Button.BackgroundColor = [0.2 0.2 0.2];
@@ -2852,8 +2237,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab3Button
             app.Tab3Button = uibutton(app.NavBar, 'state');
             app.Tab3Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
-            app.Tab3Button.Tag = 'TASK:EDIT';
-            app.Tab3Button.Tooltip = {'Edita lista de tarefas'};
+            app.Tab3Button.Tag = 'TASK_EDIT';
+            app.Tab3Button.Tooltip = {'Tarefas de monitoração'};
             app.Tab3Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'server-process.svg');
             app.Tab3Button.Text = '';
             app.Tab3Button.BackgroundColor = [0.2 0.2 0.2];
@@ -2864,8 +2249,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             % Create Tab4Button
             app.Tab4Button = uibutton(app.NavBar, 'state');
             app.Tab4Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
-            app.Tab4Button.Tag = 'TASK:ADD';
-            app.Tab4Button.Tooltip = {'Adiciona nova tarefa'};
+            app.Tab4Button.Tag = 'TASK_ADD';
+            app.Tab4Button.Tooltip = {'Inclui nova tarefa de monitoração'};
             app.Tab4Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'empty-window.svg');
             app.Tab4Button.Text = '';
             app.Tab4Button.BackgroundColor = [0.2 0.2 0.2];
@@ -2886,7 +2271,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab5Button = uibutton(app.NavBar, 'state');
             app.Tab5Button.ValueChangedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.Tab5Button.Tag = 'SERVER';
-            app.Tab5Button.Tooltip = {'API'};
+            app.Tab5Button.Tooltip = {'Servidor de comunicação (TCP)'};
             app.Tab5Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'cloud-upload.svg');
             app.Tab5Button.Text = '';
             app.Tab5Button.BackgroundColor = [0.2 0.2 0.2];
@@ -2911,12 +2296,18 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.jsBackDoor.Layout.Row = 3;
             app.jsBackDoor.Layout.Column = 12;
 
+            % Create DataHubLamp
+            app.DataHubLamp = uiimage(app.NavBar);
+            app.DataHubLamp.Visible = 'off';
+            app.DataHubLamp.Layout.Row = 3;
+            app.DataHubLamp.Layout.Column = 13;
+            app.DataHubLamp.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'red-circle-blink.gif');
+
             % Create FigurePosition
             app.FigurePosition = uiimage(app.NavBar);
             app.FigurePosition.ScaleMethod = 'none';
             app.FigurePosition.ImageClickedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
             app.FigurePosition.Visible = 'off';
-            app.FigurePosition.Tooltip = {'Reposiciona janela'};
             app.FigurePosition.Layout.Row = 3;
             app.FigurePosition.Layout.Column = 15;
             app.FigurePosition.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'screen-normal-24px-white.svg');
@@ -2925,7 +2316,6 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.AppInfo = uiimage(app.NavBar);
             app.AppInfo.ScaleMethod = 'none';
             app.AppInfo.ImageClickedFcn = createCallbackFcn(app, @onTabNavigatorButtonPushed, true);
-            app.AppInfo.Tooltip = {'Informações gerais'};
             app.AppInfo.Layout.Row = 3;
             app.AppInfo.Layout.Column = 16;
             app.AppInfo.ImageSource = fullfile(pathToMLAPP, 'resources', 'Icons', 'kebab-vertical-24px-white.svg');

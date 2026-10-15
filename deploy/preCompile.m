@@ -7,9 +7,9 @@ function preCompile()
     %   do GitHub Desktop (ao invés de executar a comparação linha a linha 
     %   no próprio Matlab).
     %
-    % - "winConfig" etc
+    % - "winInstrument", "winTaskList", "winConfig" etc
     %   A versão .M  traz manipulações que possibilitam que esses módulos do 
-    %   app possam ser renderizados na figura de "winRFPreview".
+    %   app possam ser renderizados na sua figura principal.
 
     initFolder = fileparts(mfilename('fullpath'));
 

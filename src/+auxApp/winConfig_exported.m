@@ -5,14 +5,14 @@ classdef winConfig_exported < matlab.apps.AppBase
         UIFigure                       matlab.ui.Figure
         GridLayout                     matlab.ui.container.GridLayout
         DockModule                     matlab.ui.container.GridLayout
-        dockModule_Undock              matlab.ui.control.Image
-        dockModule_Close               matlab.ui.control.Image
+        DockCloseButton                matlab.ui.control.Image
+        DockUndockButton               matlab.ui.control.Image
         SubTabGroup                    matlab.ui.container.TabGroup
         SubTab1                        matlab.ui.container.Tab
         SubGrid1                       matlab.ui.container.GridLayout
         openAuxiliarApp2Debug          matlab.ui.control.CheckBox
         openAuxiliarAppAsDocked        matlab.ui.control.CheckBox
-        tool_versionInfoRefresh        matlab.ui.control.Image
+        versionInfoRefresh             matlab.ui.control.Image
         versionInfo                    matlab.ui.control.Label
         versionInfoLabel               matlab.ui.control.Label
         SubTab2                        matlab.ui.container.Tab
@@ -90,6 +90,7 @@ classdef winConfig_exported < matlab.apps.AppBase
     properties (Access = private)
         %-----------------------------------------------------------------%
         Role = 'secondaryApp'
+        Context = 'CONFIG'
     end
 
 
@@ -135,15 +136,48 @@ classdef winConfig_exported < matlab.apps.AppBase
             
             switch tabIndex
                 case 1
-                    elDataTag = ui.CustomizationBase.getElementsDataTag({app.versionInfo});
-                    if ~isempty(elDataTag)
-                        ui.TextView.startup(app.jsBackDoor, app.versionInfo, class(app));
+                    appName = class(app);
+                    elToModify = {
+                        app.versionInfo;
+                        app.versionInfoRefresh;
+                        app.tool_openDevTools;
+                        app.DockUndockButton;
+                        app.DockCloseButton
+                    };
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
+
+                    try
+                        ui.TextView.startup(app.jsBackDoor, app.versionInfo, appName);
+                    catch
+                    end
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.versionInfoRefresh.UserData.id,  'tooltip', struct('defaultPosition', 'top', 'textContent', 'Verifica atualizações')), ...
+                            struct('appName', appName, 'dataTag', app.tool_openDevTools.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Abre DevTools')), ...
+                            struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
+                            struct('appName', appName, 'dataTag', app.DockCloseButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Fecha módulo')) ...
+                        });
+                    catch
                     end
 
                 case 2
                     updatePanel_ERMx(app)
 
                 case 3
+                    appName = class(app);
+                    elToModify = {
+                        app.configPlotRefresh
+                    };
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.configPlotRefresh.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Retorna às configurações iniciais')) ...
+                        });
+                    catch
+                    end
+
                     updatePanel_Plot(app)
 
                 case 4
@@ -162,8 +196,8 @@ classdef winConfig_exported < matlab.apps.AppBase
             projectFilePath   = fullfile(projectFolder, 'GeneralSettings.json');
             projectGeneral    = jsondecode(fileread(projectFilePath));
 
-            app.defaultValues = struct('Plot',        projectGeneral.Plot, ...
-                                       'Integration', projectGeneral.Integration);
+            app.defaultValues = struct('plot',        projectGeneral.plot, ...
+                                       'integration', projectGeneral.context.TASK_VIEW.integration);
 
             app.general_FileLock.UserData    = struct('status', false);
             app.general_versionLock.UserData = struct('status', false);
@@ -172,9 +206,9 @@ classdef winConfig_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function initializeUIComponents(app)
             if ~strcmp(app.mainApp.executionMode, 'webApp')
-                app.dockModule_Undock.Enable       = 1;
+                app.DockUndockButton.Enable       = 1;
                 app.tool_openDevTools.Enable       = 1;
-                app.tool_versionInfoRefresh.Enable = 1;
+                app.versionInfoRefresh.Enable = 1;
                 app.openAuxiliarAppAsDocked.Enable = 1;
             end
 
@@ -199,41 +233,41 @@ classdef winConfig_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function updatePanel_ERMx(app)
             % ERMx
-            app.general_stationName.Value       = app.mainApp.General.stationInfo.Name;
-            app.general_stationType.Items       = {app.mainApp.General.stationInfo.Type};
-            app.general_stationLatitude.Value   = app.mainApp.General.stationInfo.Latitude;
-            app.general_stationLongitude.Value  = app.mainApp.General.stationInfo.Longitude;
-            app.general_lastSessionInfo.Value   = app.mainApp.General.startupInfo;
+            app.general_stationName.Value       = app.mainApp.General.context.CONFIG.station.name;
+            app.general_stationType.Items       = {app.mainApp.General.context.CONFIG.station.type};
+            app.general_stationLatitude.Value   = app.mainApp.General.context.CONFIG.station.latitude;
+            app.general_stationLongitude.Value  = app.mainApp.General.context.CONFIG.station.longitude;
+            app.general_lastSessionInfo.Value   = app.mainApp.General.context.CONFIG.restoreLastSession;
 
             % WEBSERVICE
-            switch app.mainApp.General.tcpServer.Status
+            switch app.mainApp.General.context.SERVER.status
                 case 1; app.server_Status.Value = 'ON';
                 case 0; app.server_Status.Value = 'OFF';
             end
 
-            app.server_Key.Value                = app.mainApp.General.tcpServer.Key;
-            app.server_ClientList.Value         = strjoin(app.mainApp.General.tcpServer.ClientList, ', ');
-            app.server_IP.Value                 = app.mainApp.General.tcpServer.IP;
-            app.server_Port.Value               = app.mainApp.General.tcpServer.Port;
+            app.server_Key.Value                = app.mainApp.General.context.SERVER.key;
+            app.server_ClientList.Value         = strjoin(app.mainApp.General.context.SERVER.clientList, ', ');
+            app.server_IP.Value                 = app.mainApp.General.context.SERVER.ip;
+            app.server_Port.Value               = app.mainApp.General.context.SERVER.port;
         end
 
         %-----------------------------------------------------------------%
         function updatePanel_Plot(app)
-            app.plot_TiledSpacing.Value      = app.mainApp.axes1.Parent.TileSpacing;
+            app.plot_TiledSpacing.Value      = app.mainApp.UIAxes1.Parent.TileSpacing;
 
-            app.plot_colorsMinHold.Value     = app.mainApp.General.Plot.MinHold.Color;
-            app.plot_colorsAverage.Value     = app.mainApp.General.Plot.Average.Color;
-            app.plot_colorsMaxHold.Value     = app.mainApp.General.Plot.MaxHold.Color;
-            app.plot_colorsClearWrite.Value  = app.mainApp.General.Plot.ClearWrite.Color;
+            app.plot_colorsMinHold.Value     = app.mainApp.General.plot.minHold.Color;
+            app.plot_colorsAverage.Value     = app.mainApp.General.plot.average.Color;
+            app.plot_colorsMaxHold.Value     = app.mainApp.General.plot.maxHold.Color;
+            app.plot_colorsClearWrite.Value  = app.mainApp.General.plot.clearWrite.Color;
             
-            app.plot_WaterfallColormap.Items = unique([app.plot_WaterfallColormap.Items, {app.mainApp.General.Plot.Waterfall.Colormap}]);
-            app.plot_WaterfallColormap.Value = app.mainApp.General.Plot.Waterfall.Colormap;
+            app.plot_WaterfallColormap.Items = unique([app.plot_WaterfallColormap.Items, {app.mainApp.General.plot.waterfall.Colormap}]);
+            app.plot_WaterfallColormap.Value = app.mainApp.General.plot.waterfall.Colormap;
 
-            app.plot_WaterfallDepth.Items    = unique([app.plot_WaterfallDepth.Items, {num2str(app.mainApp.General.Plot.Waterfall.Depth)}], 'stable');
-            app.plot_WaterfallDepth.Value    = {num2str(app.mainApp.General.Plot.Waterfall.Depth)};
+            app.plot_WaterfallDepth.Items    = unique([app.plot_WaterfallDepth.Items, {num2str(app.mainApp.General.plot.waterfall.Depth)}], 'stable');
+            app.plot_WaterfallDepth.Value    = {num2str(app.mainApp.General.plot.waterfall.Depth)};
 
-            app.plot_IntegrationTrace.Value  = app.mainApp.General.Integration.Trace;
-            app.plot_IntegrationTime.Value   = app.mainApp.General.Integration.SampleTime;
+            app.plot_IntegrationTrace.Value  = app.mainApp.General.context.TASK_VIEW.integration.traceMode;
+            app.plot_IntegrationTime.Value   = app.mainApp.General.context.TASK_VIEW.integration.sampleTimeSeconds;
 
             if checkEdition(app, 'PLOT')
                 app.configPlotRefresh.Visible = 1;
@@ -255,8 +289,8 @@ classdef winConfig_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function editionFlag = checkEdition(app, tabName)
             editionFlag   = false;
-            currentValues = struct('Plot',        app.mainApp.General.Plot, ...
-                                   'Integration', app.mainApp.General.Integration);
+            currentValues = struct('plot',        app.mainApp.General.plot, ...
+                                   'integration', app.mainApp.General.context.TASK_VIEW.integration);
 
             switch tabName
                 case 'ERMx'
@@ -307,18 +341,18 @@ classdef winConfig_exported < matlab.apps.AppBase
         % Close request function: UIFigure
         function closeFcn(app, event)
             
-            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'CONFIG')
+            ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', app.Context)
             delete(app)
             
         end
 
-        % Image clicked function: dockModule_Close, dockModule_Undock
-        function DockModuleGroup_ButtonPushed(app, event)
+        % Image clicked function: DockCloseButton, DockUndockButton
+        function onDockModuleGroupButtonClicked(app, event)
             
             [idx, auxAppTag, relatedButton] = getAppInfoFromHandle(app.mainApp.tabGroupController, app);
 
             switch event.Source
-                case app.dockModule_Undock
+                case app.DockUndockButton
                     appGeneral = app.mainApp.General;
                     appGeneral.operationMode.Dock = false;
 
@@ -330,7 +364,7 @@ classdef winConfig_exported < matlab.apps.AppBase
                     
                     delete(app)
 
-                case app.dockModule_Close
+                case app.DockCloseButton
                     closeModule(app.mainApp.tabGroupController, auxAppTag, app.mainApp.General)
             end
 
@@ -344,7 +378,7 @@ classdef winConfig_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: tool_versionInfoRefresh
+        % Image clicked function: versionInfoRefresh
         function Toolbar_AppEnvRefreshButtonPushed(app, event)
             
             app.progressDialog.Visible = 'visible';
@@ -453,65 +487,63 @@ classdef winConfig_exported < matlab.apps.AppBase
                             end
                     end
 
-                    app.mainApp.General.stationInfo.Name      = app.general_stationName.Value;
+                    app.mainApp.General.context.CONFIG.station.name = app.general_stationName.Value;
 
                 case app.general_stationType
-                    app.mainApp.General.stationInfo.Type      = app.general_stationType.Value;
+                    app.mainApp.General.context.CONFIG.station.type = app.general_stationType.Value;
 
                 case app.general_stationLatitude
                     closeAddTaskModuleFlag = true;
-                    app.mainApp.General.stationInfo.Latitude  = app.general_stationLatitude.Value;
+                    app.mainApp.General.context.CONFIG.station.latitude = app.general_stationLatitude.Value;
 
                 case app.general_stationLongitude
                     closeAddTaskModuleFlag = true;
-                    app.mainApp.General.stationInfo.Longitude = app.general_stationLongitude.Value;                    
+                    app.mainApp.General.context.CONFIG.station.longitude = app.general_stationLongitude.Value;
 
                 case app.general_lastSessionInfo
-                    app.mainApp.General.startupInfo           = app.general_lastSessionInfo.Value;                    
+                    app.mainApp.General.context.CONFIG.restoreLastSession = app.general_lastSessionInfo.Value;
 
                 case app.server_Status
                     switch app.server_Status.Value
-                        case 'ON';  app.mainApp.General.tcpServer.Status = 1;
-                        case 'OFF'; app.mainApp.General.tcpServer.Status = 0;
+                        case 'ON';  app.mainApp.General.context.SERVER.status = 1;
+                        case 'OFF'; app.mainApp.General.context.SERVER.status = 0;
                     end
 
                 case app.server_Key
                     app.server_Key.Value = replace(app.server_Key.Value, ' ', '');
-                    app.mainApp.General.tcpServer.Key = app.server_Key.Value;
+                    app.mainApp.General.context.SERVER.key = app.server_Key.Value;
 
                 case app.server_ClientList
                     app.server_ClientList.Value = replace(app.server_ClientList.Value, ' ', '');
                     
                     if isempty(app.server_ClientList.Value)
-                        app.mainApp.General.tcpServer.ClientList = {};
+                        app.mainApp.General.context.SERVER.clientList = {};
                     else
-                        app.mainApp.General.tcpServer.ClientList = strsplit(app.server_ClientList.Value, ',');
+                        app.mainApp.General.context.SERVER.clientList = strsplit(app.server_ClientList.Value, ',');
                     end
 
-                    app.server_ClientList.Value = strjoin(app.mainApp.General.tcpServer.ClientList, ', ');
+                    app.server_ClientList.Value = strjoin(app.mainApp.General.context.SERVER.clientList, ', ');
 
                 case app.server_IP
                     app.server_IP.Value = strtrim(app.server_IP.Value);
 
                     if IPv4Validation(app, app.server_IP.Value) || isempty(app.server_IP.Value)
-                        app.mainApp.General.tcpServer.IP = app.server_IP.Value;
+                        app.mainApp.General.context.SERVER.ip = app.server_IP.Value;
                     else
                         app.server_IP.Value = event.PreviousValue;
                         ui.Dialog(app.UIFigure, 'warning', 'Endereço inválido (IPv4).');
                     end
 
                 case app.server_Port
-                    app.mainApp.General.tcpServer.Port = app.server_Port.Value;
+                    app.mainApp.General.context.SERVER.port = app.server_Port.Value;
             end
 
             if closeAddTaskModuleFlag
-                ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK:ADD')
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'closeFcn', 'TASK_ADD')
             end
             
-            app.mainApp.General_I.stationInfo   = app.mainApp.General.stationInfo;
-            app.mainApp.General_I.startupInfo   = app.mainApp.General.startupInfo;
-            app.mainApp.General_I.tcpServer     = app.mainApp.General.tcpServer;
-
+            app.mainApp.General_I.context.CONFIG = app.mainApp.General.context.CONFIG;
+            app.mainApp.General_I.context.SERVER = app.mainApp.General.context.SERVER;
             saveGeneralSettings(app)
 
         end
@@ -557,24 +589,24 @@ classdef winConfig_exported < matlab.apps.AppBase
                 switch event.Source
                     case app.plot_colorsMinHold
                         plotTag = 'MinHold';
-                        app.mainApp.General.Plot.MinHold.Color    = selectedColor;
+                        app.mainApp.General.plot.minHold.Color    = selectedColor;
                     case app.plot_colorsAverage
                         plotTag = 'Average';
-                        app.mainApp.General.Plot.Average.Color    = selectedColor;
+                        app.mainApp.General.plot.average.Color    = selectedColor;
                     case app.plot_colorsMaxHold
                         plotTag = 'MaxHold';
-                        app.mainApp.General.Plot.MaxHold.Color    = selectedColor;
+                        app.mainApp.General.plot.maxHold.Color    = selectedColor;
                     case app.plot_colorsClearWrite
-                        plotTag = 'ClrWrite';
-                        app.mainApp.General.Plot.ClearWrite.Color = selectedColor;
+                        plotTag = 'ClearWrite';
+                        app.mainApp.General.plot.clearWrite.Color = selectedColor;
                 end
 
                 ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', plotTag)
             end
 
-            app.mainApp.General_I.Plot = app.mainApp.General.Plot;
+            app.mainApp.General_I.plot = app.mainApp.General.plot;
             saveGeneralSettings(app)
-            
+
             updatePanel_Plot(app)
 
         end
@@ -586,20 +618,20 @@ classdef winConfig_exported < matlab.apps.AppBase
             switch event.Source
                 case app.plot_WaterfallColormap
                     ipcMainMatlabCallsHandler(app.mainApp, app, 'onWaterfallColormapChange', app.plot_WaterfallColormap.Value)
-                    app.mainApp.General.Plot.Waterfall.Colormap = app.plot_WaterfallColormap.Value;
+                    app.mainApp.General.plot.waterfall.Colormap = app.plot_WaterfallColormap.Value;
 
                 case app.plot_WaterfallDepth
-                    app.mainApp.General.Plot.Waterfall.Depth    = str2double(app.plot_WaterfallDepth.Value);
+                    app.mainApp.General.plot.waterfall.Depth = str2double(app.plot_WaterfallDepth.Value);
                 
                 case app.plot_IntegrationTrace
-                    app.mainApp.General.Integration.Trace       = app.plot_IntegrationTrace.Value;
+                    app.mainApp.General.context.TASK_VIEW.integration.traceMode = app.plot_IntegrationTrace.Value;
 
                 case app.plot_IntegrationTime
-                    app.mainApp.General.Integration.SampleTime  = app.plot_IntegrationTime.Value;
+                    app.mainApp.General.context.TASK_VIEW.integration.sampleTimeSeconds = app.plot_IntegrationTime.Value;
             end
 
-            app.mainApp.General_I.Plot        = app.mainApp.General.Plot;
-            app.mainApp.General_I.Integration = app.mainApp.General.Integration;
+            app.mainApp.General_I.plot = app.mainApp.General.plot;
+            app.mainApp.General_I.context.TASK_VIEW = app.mainApp.General.context.TASK_VIEW;
             saveGeneralSettings(app)
 
             updatePanel_Plot(app)
@@ -614,16 +646,15 @@ classdef winConfig_exported < matlab.apps.AppBase
                 return
             
             else                
-                app.mainApp.General.Plot          = app.defaultValues.Plot;
-                app.mainApp.General.Integration   = app.defaultValues.Integration;
+                app.mainApp.General.plot = app.defaultValues.plot;
+                app.mainApp.General.context.TASK_VIEW.integration = app.defaultValues.integration;
 
-                app.mainApp.General_I.Plot        = app.mainApp.General.Plot;
-                app.mainApp.General_I.Integration = app.mainApp.General.Integration;
+                app.mainApp.General_I.plot = app.mainApp.General.plot;
+                app.mainApp.General_I.context.TASK_VIEW = app.mainApp.General.context.TASK_VIEW;
+                saveGeneralSettings(app)
                 
                 updatePanel_Plot(app)
-                saveGeneralSettings(app)
-    
-                ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', 'ClrWrite')
+                ipcMainMatlabCallsHandler(app.mainApp, app, 'onPlotColorChange', 'ClearWrite')
             end
 
         end
@@ -665,8 +696,8 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Container);
-            app.GridLayout.ColumnWidth = {10, '1x', 48, 8, 2};
-            app.GridLayout.RowHeight = {2, 8, 24, '1x', 10, 34};
+            app.GridLayout.ColumnWidth = {20, '1x', 38, 10, 8, 2};
+            app.GridLayout.RowHeight = {2, 8, 10, 14, '1x', 20, 34};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
             app.GridLayout.Padding = [0 0 0 0];
@@ -679,8 +710,8 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.RowSpacing = 0;
             app.Toolbar.Padding = [10 5 10 5];
-            app.Toolbar.Layout.Row = 6;
-            app.Toolbar.Layout.Column = [1 5];
+            app.Toolbar.Layout.Row = 7;
+            app.Toolbar.Layout.Column = [1 6];
             app.Toolbar.BackgroundColor = [0.9412 0.9412 0.9412];
 
             % Create tool_openDevTools
@@ -688,7 +719,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.tool_openDevTools.ScaleMethod = 'none';
             app.tool_openDevTools.ImageClickedFcn = createCallbackFcn(app, @Toolbar_OpenDevToolsClicked, true);
             app.tool_openDevTools.Enable = 'off';
-            app.tool_openDevTools.Tooltip = {'Abre DevTools'};
+            app.tool_openDevTools.Tooltip = {''};
             app.tool_openDevTools.Layout.Row = 2;
             app.tool_openDevTools.Layout.Column = 3;
             app.tool_openDevTools.ImageSource = 'Debug_18.png';
@@ -697,7 +728,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.SubTabGroup = uitabgroup(app.GridLayout);
             app.SubTabGroup.AutoResizeChildren = 'off';
             app.SubTabGroup.SelectionChangedFcn = createCallbackFcn(app, @SubTabGroup_TabSelectionChanged, true);
-            app.SubTabGroup.Layout.Row = [3 4];
+            app.SubTabGroup.Layout.Row = [4 5];
             app.SubTabGroup.Layout.Column = [2 3];
 
             % Create SubTab1
@@ -720,7 +751,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.versionInfoLabel.FontSize = 10;
             app.versionInfoLabel.Layout.Row = 1;
             app.versionInfoLabel.Layout.Column = 1;
-            app.versionInfoLabel.Text = 'AMBIENTE:';
+            app.versionInfoLabel.Text = 'AMBIENTE';
 
             % Create versionInfo
             app.versionInfo = uilabel(app.SubGrid1);
@@ -733,16 +764,16 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.versionInfo.Interpreter = 'html';
             app.versionInfo.Text = '';
 
-            % Create tool_versionInfoRefresh
-            app.tool_versionInfoRefresh = uiimage(app.SubGrid1);
-            app.tool_versionInfoRefresh.ScaleMethod = 'none';
-            app.tool_versionInfoRefresh.ImageClickedFcn = createCallbackFcn(app, @Toolbar_AppEnvRefreshButtonPushed, true);
-            app.tool_versionInfoRefresh.Enable = 'off';
-            app.tool_versionInfoRefresh.Tooltip = {'Verifica atualizações'};
-            app.tool_versionInfoRefresh.Layout.Row = 1;
-            app.tool_versionInfoRefresh.Layout.Column = 2;
-            app.tool_versionInfoRefresh.VerticalAlignment = 'bottom';
-            app.tool_versionInfoRefresh.ImageSource = 'Refresh_18.png';
+            % Create versionInfoRefresh
+            app.versionInfoRefresh = uiimage(app.SubGrid1);
+            app.versionInfoRefresh.ScaleMethod = 'none';
+            app.versionInfoRefresh.ImageClickedFcn = createCallbackFcn(app, @Toolbar_AppEnvRefreshButtonPushed, true);
+            app.versionInfoRefresh.Enable = 'off';
+            app.versionInfoRefresh.Tooltip = {''};
+            app.versionInfoRefresh.Layout.Row = 1;
+            app.versionInfoRefresh.Layout.Column = 2;
+            app.versionInfoRefresh.VerticalAlignment = 'bottom';
+            app.versionInfoRefresh.ImageSource = 'Refresh_18.png';
 
             % Create openAuxiliarAppAsDocked
             app.openAuxiliarAppAsDocked = uicheckbox(app.SubGrid1);
@@ -773,7 +804,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create SubGrid2
             app.SubGrid2 = uigridlayout(app.SubTab2);
             app.SubGrid2.ColumnWidth = {'1x', 16};
-            app.SubGrid2.RowHeight = {17, 136, 22, '1x'};
+            app.SubGrid2.RowHeight = {17, 144, 22, '1x'};
             app.SubGrid2.RowSpacing = 5;
             app.SubGrid2.BackgroundColor = [1 1 1];
 
@@ -783,7 +814,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.general_FileLabel.FontSize = 10;
             app.general_FileLabel.Layout.Row = 1;
             app.general_FileLabel.Layout.Column = 1;
-            app.general_FileLabel.Text = 'ESTAÇÃO';
+            app.general_FileLabel.Text = 'ESTAÇÃO DE MONITORAÇÃO (aplicável apenas quando se tratar de ERMx, UMS ou EMSat)';
 
             % Create general_FileLock
             app.general_FileLock = uiimage(app.SubGrid2);
@@ -802,15 +833,14 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create general_stationGrid
             app.general_stationGrid = uigridlayout(app.general_FilePanel);
             app.general_stationGrid.ColumnWidth = {150, 150, '1x'};
-            app.general_stationGrid.RowHeight = {17, 22, 25, 22, 17};
+            app.general_stationGrid.RowHeight = {17, 22, 22, 22, 17};
             app.general_stationGrid.RowSpacing = 5;
-            app.general_stationGrid.Padding = [10 9 10 4];
             app.general_stationGrid.BackgroundColor = [1 1 1];
 
             % Create general_stationNameLabel
             app.general_stationNameLabel = uilabel(app.general_stationGrid);
             app.general_stationNameLabel.VerticalAlignment = 'bottom';
-            app.general_stationNameLabel.FontSize = 10;
+            app.general_stationNameLabel.FontSize = 11;
             app.general_stationNameLabel.Layout.Row = 1;
             app.general_stationNameLabel.Layout.Column = 1;
             app.general_stationNameLabel.Text = 'Nome:';
@@ -826,7 +856,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create general_stationTypeLabel
             app.general_stationTypeLabel = uilabel(app.general_stationGrid);
             app.general_stationTypeLabel.VerticalAlignment = 'bottom';
-            app.general_stationTypeLabel.FontSize = 10;
+            app.general_stationTypeLabel.FontSize = 11;
             app.general_stationTypeLabel.Layout.Row = 1;
             app.general_stationTypeLabel.Layout.Column = 2;
             app.general_stationTypeLabel.Text = 'Tipo:';
@@ -845,10 +875,10 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create general_stationLatitudeLabel
             app.general_stationLatitudeLabel = uilabel(app.general_stationGrid);
             app.general_stationLatitudeLabel.VerticalAlignment = 'bottom';
-            app.general_stationLatitudeLabel.FontSize = 10;
+            app.general_stationLatitudeLabel.FontSize = 11;
             app.general_stationLatitudeLabel.Layout.Row = 3;
             app.general_stationLatitudeLabel.Layout.Column = 1;
-            app.general_stationLatitudeLabel.Text = {'Latitude:'; '(graus decimais)'};
+            app.general_stationLatitudeLabel.Text = 'Latitude (ª):';
 
             % Create general_stationLatitude
             app.general_stationLatitude = uieditfield(app.general_stationGrid, 'numeric');
@@ -864,10 +894,10 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create general_stationLongitudeLabel
             app.general_stationLongitudeLabel = uilabel(app.general_stationGrid);
             app.general_stationLongitudeLabel.VerticalAlignment = 'bottom';
-            app.general_stationLongitudeLabel.FontSize = 10;
+            app.general_stationLongitudeLabel.FontSize = 11;
             app.general_stationLongitudeLabel.Layout.Row = 3;
             app.general_stationLongitudeLabel.Layout.Column = 2;
-            app.general_stationLongitudeLabel.Text = {'Longitude:'; '(graus decimais)'};
+            app.general_stationLongitudeLabel.Text = 'Longitude (º):';
 
             % Create general_stationLongitude
             app.general_stationLongitude = uieditfield(app.general_stationGrid, 'numeric');
@@ -885,7 +915,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.general_lastSessionInfo.ValueChangedFcn = createCallbackFcn(app, @general_ParameterChanged, true);
             app.general_lastSessionInfo.Enable = 'off';
             app.general_lastSessionInfo.Text = 'Leitura dados armazenados na última sessão.';
-            app.general_lastSessionInfo.FontSize = 10;
+            app.general_lastSessionInfo.FontSize = 11;
             app.general_lastSessionInfo.Layout.Row = 5;
             app.general_lastSessionInfo.Layout.Column = [1 3];
 
@@ -895,7 +925,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.general_versionLabel.FontSize = 10;
             app.general_versionLabel.Layout.Row = 3;
             app.general_versionLabel.Layout.Column = 1;
-            app.general_versionLabel.Text = 'API';
+            app.general_versionLabel.Text = 'SERVIÇO DE COMUNICAÇÃO (TCP)';
 
             % Create general_versionLock
             app.general_versionLock = uiimage(app.SubGrid2);
@@ -914,15 +944,14 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_Grid
             app.server_Grid = uigridlayout(app.general_versionPanel);
             app.server_Grid.ColumnWidth = {150, 150};
-            app.server_Grid.RowHeight = {17, 22, 25, 22, 17, 22};
+            app.server_Grid.RowHeight = {17, 22, 27, 22, 22, 22};
             app.server_Grid.RowSpacing = 5;
-            app.server_Grid.Padding = [10 8 10 4];
             app.server_Grid.BackgroundColor = [1 1 1];
 
             % Create server_StatusLabel
             app.server_StatusLabel = uilabel(app.server_Grid);
             app.server_StatusLabel.VerticalAlignment = 'bottom';
-            app.server_StatusLabel.FontSize = 10;
+            app.server_StatusLabel.FontSize = 11;
             app.server_StatusLabel.Layout.Row = 1;
             app.server_StatusLabel.Layout.Column = 1;
             app.server_StatusLabel.Text = 'Estado:';
@@ -941,7 +970,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_KeyLabel
             app.server_KeyLabel = uilabel(app.server_Grid);
             app.server_KeyLabel.VerticalAlignment = 'bottom';
-            app.server_KeyLabel.FontSize = 10;
+            app.server_KeyLabel.FontSize = 11;
             app.server_KeyLabel.Layout.Row = 1;
             app.server_KeyLabel.Layout.Column = 2;
             app.server_KeyLabel.Text = 'Chave:';
@@ -957,7 +986,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_ClientListLabel
             app.server_ClientListLabel = uilabel(app.server_Grid);
             app.server_ClientListLabel.VerticalAlignment = 'bottom';
-            app.server_ClientListLabel.FontSize = 10;
+            app.server_ClientListLabel.FontSize = 11;
             app.server_ClientListLabel.Layout.Row = 3;
             app.server_ClientListLabel.Layout.Column = [1 2];
             app.server_ClientListLabel.Text = {'Lista de clientes:'; '(valores separados por vírgula)'};
@@ -973,10 +1002,10 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_IPLabel
             app.server_IPLabel = uilabel(app.server_Grid);
             app.server_IPLabel.VerticalAlignment = 'bottom';
-            app.server_IPLabel.FontSize = 10;
+            app.server_IPLabel.FontSize = 11;
             app.server_IPLabel.Layout.Row = 5;
             app.server_IPLabel.Layout.Column = 1;
-            app.server_IPLabel.Text = 'Endereço IP (OpenVPN):';
+            app.server_IPLabel.Text = 'IP (OpenVPN):';
 
             % Create server_IP
             app.server_IP = uieditfield(app.server_Grid, 'text');
@@ -989,7 +1018,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create server_PortLabel
             app.server_PortLabel = uilabel(app.server_Grid);
             app.server_PortLabel.VerticalAlignment = 'bottom';
-            app.server_PortLabel.FontSize = 10;
+            app.server_PortLabel.FontSize = 11;
             app.server_PortLabel.Layout.Row = 5;
             app.server_PortLabel.Layout.Column = 2;
             app.server_PortLabel.Text = 'Porta:';
@@ -1014,7 +1043,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create SubGrid3
             app.SubGrid3 = uigridlayout(app.SubTab3);
             app.SubGrid3.ColumnWidth = {104, '1x', 16};
-            app.SubGrid3.RowHeight = {17, 22, 22, 60, 22, 63, 22, '1x'};
+            app.SubGrid3.RowHeight = {17, 22, 22, 60, 22, 67, 22, '1x'};
             app.SubGrid3.RowSpacing = 5;
             app.SubGrid3.BackgroundColor = [1 1 1];
 
@@ -1024,7 +1053,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_TiledSpacingLabel.FontSize = 10;
             app.plot_TiledSpacingLabel.Layout.Row = 1;
             app.plot_TiledSpacingLabel.Layout.Column = [1 3];
-            app.plot_TiledSpacingLabel.Text = 'ESPAÇAMENTO ENTRE EIXOS:';
+            app.plot_TiledSpacingLabel.Text = 'ESPAÇAMENTO ENTRE EIXOS';
 
             % Create plot_TiledSpacing
             app.plot_TiledSpacing = uidropdown(app.SubGrid3);
@@ -1034,7 +1063,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_TiledSpacing.BackgroundColor = [1 1 1];
             app.plot_TiledSpacing.Layout.Row = 2;
             app.plot_TiledSpacing.Layout.Column = 1;
-            app.plot_TiledSpacing.Value = 'loose';
+            app.plot_TiledSpacing.Value = 'compact';
 
             % Create plot_colorsLabel
             app.plot_colorsLabel = uilabel(app.SubGrid3);
@@ -1042,7 +1071,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_colorsLabel.FontSize = 10;
             app.plot_colorsLabel.Layout.Row = 3;
             app.plot_colorsLabel.Layout.Column = 1;
-            app.plot_colorsLabel.Text = 'CORES:';
+            app.plot_colorsLabel.Text = 'CORES';
 
             % Create plot_colorsPanel
             app.plot_colorsPanel = uipanel(app.SubGrid3);
@@ -1136,13 +1165,12 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_WaterfallGrid.ColumnWidth = {94, 94};
             app.plot_WaterfallGrid.RowHeight = {17, 22};
             app.plot_WaterfallGrid.RowSpacing = 5;
-            app.plot_WaterfallGrid.Padding = [10 10 10 5];
             app.plot_WaterfallGrid.BackgroundColor = [1 1 1];
 
             % Create plot_WaterfallColormapLabel
             app.plot_WaterfallColormapLabel = uilabel(app.plot_WaterfallGrid);
             app.plot_WaterfallColormapLabel.VerticalAlignment = 'bottom';
-            app.plot_WaterfallColormapLabel.FontSize = 10;
+            app.plot_WaterfallColormapLabel.FontSize = 11;
             app.plot_WaterfallColormapLabel.Layout.Row = 1;
             app.plot_WaterfallColormapLabel.Layout.Column = 1;
             app.plot_WaterfallColormapLabel.Text = 'Mapa de cor:';
@@ -1155,12 +1183,12 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_WaterfallColormap.BackgroundColor = [1 1 1];
             app.plot_WaterfallColormap.Layout.Row = 2;
             app.plot_WaterfallColormap.Layout.Column = 1;
-            app.plot_WaterfallColormap.Value = 'gray';
+            app.plot_WaterfallColormap.Value = 'hot';
 
             % Create plot_WaterfallDepthLabel
             app.plot_WaterfallDepthLabel = uilabel(app.plot_WaterfallGrid);
             app.plot_WaterfallDepthLabel.VerticalAlignment = 'bottom';
-            app.plot_WaterfallDepthLabel.FontSize = 10;
+            app.plot_WaterfallDepthLabel.FontSize = 11;
             app.plot_WaterfallDepthLabel.Layout.Row = 1;
             app.plot_WaterfallDepthLabel.Layout.Column = 2;
             app.plot_WaterfallDepthLabel.Text = 'Profundidade:';
@@ -1181,7 +1209,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationLabel.FontSize = 10;
             app.plot_IntegrationLabel.Layout.Row = 7;
             app.plot_IntegrationLabel.Layout.Column = 1;
-            app.plot_IntegrationLabel.Text = 'INTEGRAÇÃO:';
+            app.plot_IntegrationLabel.Text = 'INTEGRAÇÃO';
 
             % Create plot_IntegrationPanel
             app.plot_IntegrationPanel = uipanel(app.SubGrid3);
@@ -1195,13 +1223,12 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationGrid.ColumnWidth = {94, 94, 94};
             app.plot_IntegrationGrid.RowHeight = {17, 22};
             app.plot_IntegrationGrid.RowSpacing = 5;
-            app.plot_IntegrationGrid.Padding = [10 10 10 5];
             app.plot_IntegrationGrid.BackgroundColor = [1 1 1];
 
             % Create plot_IntegrationTraceLabel
             app.plot_IntegrationTraceLabel = uilabel(app.plot_IntegrationGrid);
             app.plot_IntegrationTraceLabel.VerticalAlignment = 'bottom';
-            app.plot_IntegrationTraceLabel.FontSize = 10;
+            app.plot_IntegrationTraceLabel.FontSize = 11;
             app.plot_IntegrationTraceLabel.Layout.Row = 1;
             app.plot_IntegrationTraceLabel.Layout.Column = 1;
             app.plot_IntegrationTraceLabel.Text = 'Traço médio:';
@@ -1220,7 +1247,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             % Create plot_IntegrationTimeLabel
             app.plot_IntegrationTimeLabel = uilabel(app.plot_IntegrationGrid);
             app.plot_IntegrationTimeLabel.VerticalAlignment = 'bottom';
-            app.plot_IntegrationTimeLabel.FontSize = 10;
+            app.plot_IntegrationTimeLabel.FontSize = 11;
             app.plot_IntegrationTimeLabel.Layout.Row = 1;
             app.plot_IntegrationTimeLabel.Layout.Column = [2 3];
             app.plot_IntegrationTimeLabel.Text = 'Tempo médio escrita:';
@@ -1241,7 +1268,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.configPlotRefresh.ScaleMethod = 'none';
             app.configPlotRefresh.ImageClickedFcn = createCallbackFcn(app, @configPlotRefreshImageClicked, true);
             app.configPlotRefresh.Visible = 'off';
-            app.configPlotRefresh.Tooltip = {'Verifica atualizações'};
+            app.configPlotRefresh.Tooltip = {''};
             app.configPlotRefresh.Layout.Row = 3;
             app.configPlotRefresh.Layout.Column = 3;
             app.configPlotRefresh.VerticalAlignment = 'bottom';
@@ -1253,7 +1280,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_WaterfallLabel.FontSize = 10;
             app.plot_WaterfallLabel.Layout.Row = 5;
             app.plot_WaterfallLabel.Layout.Column = 1;
-            app.plot_WaterfallLabel.Text = 'WATERFALL:';
+            app.plot_WaterfallLabel.Text = 'WATERFALL';
 
             % Create SubTab4
             app.SubTab4 = uitab(app.SubTabGroup);
@@ -1275,7 +1302,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.DATAHUBPOSTLabel.FontSize = 10;
             app.DATAHUBPOSTLabel.Layout.Row = 1;
             app.DATAHUBPOSTLabel.Layout.Column = 1;
-            app.DATAHUBPOSTLabel.Text = 'DATAHUB - POST:';
+            app.DATAHUBPOSTLabel.Text = 'DATAHUB - POST';
 
             % Create DataHubPOST
             app.DataHubPOST = uieditfield(app.SubGrid4, 'text');
@@ -1287,12 +1314,13 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create DataHubPOSTButton
             app.DataHubPOSTButton = uiimage(app.SubGrid4);
+            app.DataHubPOSTButton.ScaleMethod = 'none';
             app.DataHubPOSTButton.ImageClickedFcn = createCallbackFcn(app, @Config_FolderButtonPushed, true);
             app.DataHubPOSTButton.Tag = 'DataHub_POST';
             app.DataHubPOSTButton.Enable = 'off';
             app.DataHubPOSTButton.Layout.Row = 2;
             app.DataHubPOSTButton.Layout.Column = 2;
-            app.DataHubPOSTButton.ImageSource = 'OpenFile_36x36.png';
+            app.DataHubPOSTButton.ImageSource = 'folder-opened-16px.svg';
 
             % Create userPathLabel
             app.userPathLabel = uilabel(app.SubGrid4);
@@ -1300,7 +1328,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.userPathLabel.FontSize = 10;
             app.userPathLabel.Layout.Row = 3;
             app.userPathLabel.Layout.Column = 1;
-            app.userPathLabel.Text = 'PASTA DO USUÁRIO:';
+            app.userPathLabel.Text = 'PASTA DO USUÁRIO';
 
             % Create userPath
             app.userPath = uieditfield(app.SubGrid4, 'text');
@@ -1312,12 +1340,13 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create userPathButton
             app.userPathButton = uiimage(app.SubGrid4);
+            app.userPathButton.ScaleMethod = 'none';
             app.userPathButton.ImageClickedFcn = createCallbackFcn(app, @Config_FolderButtonPushed, true);
             app.userPathButton.Tag = 'userPath';
             app.userPathButton.Enable = 'off';
             app.userPathButton.Layout.Row = 4;
             app.userPathButton.Layout.Column = 2;
-            app.userPathButton.ImageSource = 'OpenFile_36x36.png';
+            app.userPathButton.ImageSource = 'folder-opened-16px.svg';
 
             % Create DockModule
             app.DockModule = uigridlayout(app.GridLayout);
@@ -1325,30 +1354,26 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.DockModule.ColumnSpacing = 2;
             app.DockModule.Padding = [5 2 5 2];
             app.DockModule.Visible = 'off';
-            app.DockModule.Layout.Row = [2 3];
-            app.DockModule.Layout.Column = [3 4];
+            app.DockModule.Layout.Row = [2 4];
+            app.DockModule.Layout.Column = [3 5];
             app.DockModule.BackgroundColor = [0.2 0.2 0.2];
 
-            % Create dockModule_Close
-            app.dockModule_Close = uiimage(app.DockModule);
-            app.dockModule_Close.ScaleMethod = 'none';
-            app.dockModule_Close.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
-            app.dockModule_Close.Tag = 'DRIVETEST';
-            app.dockModule_Close.Tooltip = {'Fecha módulo'};
-            app.dockModule_Close.Layout.Row = 1;
-            app.dockModule_Close.Layout.Column = 2;
-            app.dockModule_Close.ImageSource = 'Delete_12SVG_white.svg';
+            % Create DockUndockButton
+            app.DockUndockButton = uiimage(app.DockModule);
+            app.DockUndockButton.ScaleMethod = 'none';
+            app.DockUndockButton.ImageClickedFcn = createCallbackFcn(app, @onDockModuleGroupButtonClicked, true);
+            app.DockUndockButton.Enable = 'off';
+            app.DockUndockButton.Layout.Row = 1;
+            app.DockUndockButton.Layout.Column = 1;
+            app.DockUndockButton.ImageSource = 'Undock_18White.png';
 
-            % Create dockModule_Undock
-            app.dockModule_Undock = uiimage(app.DockModule);
-            app.dockModule_Undock.ScaleMethod = 'none';
-            app.dockModule_Undock.ImageClickedFcn = createCallbackFcn(app, @DockModuleGroup_ButtonPushed, true);
-            app.dockModule_Undock.Tag = 'DRIVETEST';
-            app.dockModule_Undock.Enable = 'off';
-            app.dockModule_Undock.Tooltip = {'Reabre módulo em outra janela'};
-            app.dockModule_Undock.Layout.Row = 1;
-            app.dockModule_Undock.Layout.Column = 1;
-            app.dockModule_Undock.ImageSource = 'Undock_18White.png';
+            % Create DockCloseButton
+            app.DockCloseButton = uiimage(app.DockModule);
+            app.DockCloseButton.ScaleMethod = 'none';
+            app.DockCloseButton.ImageClickedFcn = createCallbackFcn(app, @onDockModuleGroupButtonClicked, true);
+            app.DockCloseButton.Layout.Row = 1;
+            app.DockCloseButton.Layout.Column = 2;
+            app.DockCloseButton.ImageSource = 'Delete_12SVG_white.svg';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

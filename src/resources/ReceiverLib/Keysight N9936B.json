@@ -1,0 +1,236 @@
+{
+    "family": "Receiver",
+    "name": "Keysight N9936B",
+    "tag": "N9936B",
+    "band": "5 kHz - 14.1 GHz",
+    "image": "Instr_KeySight_N9936B.png",
+    "connection": {
+        "types": [
+            "TCPIP Socket"
+        ],
+        "defaultPort": 5025,
+        "terminator": "LF",
+        "protocol": "scpi",
+        "traceData": {
+            "acquisitionMode": "polling",
+            "dataType": "level"
+        }
+    },
+    "communication": {
+        "set": [
+            {
+                "step": "initialization",
+                "commands": [
+                    {
+                        "name": "reset",
+                        "parameterNames": [
+                            "reset"
+                        ],
+                        "mandatory": false,
+                        "postDelay": 1
+                    },
+                    {
+                        "name": "startup",
+                        "parameterNames": [
+                            "startup"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0
+                    },
+                    {
+                        "name": "sweepMode",
+                        "parameterNames": [
+                            "sweepMode"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0
+                    }
+                ]
+            },
+            {
+                "step": "acquisition",
+                "commands": [
+                    {
+                        "name": "bandConfig",
+                        "parameterNames": [
+                            "traceMode",
+                            "averageCount",
+                            "detector",
+                            "levelUnit",
+                            "freqStart",
+                            "freqStop",
+                            "dataPoints",
+                            "resolutionValue",
+                            "preamp",
+                            "attenuationValue",
+                            "attenuationMode"
+                        ],
+                        "mandatory": true,
+                        "postDelay": 0.1
+                    }
+                ]
+            }
+        ],
+        "query": {
+            "identification": "*IDN?",
+            "status": "SYSTEM:ERROR?",
+            "bandConfig": "TRACe1:TYPE?;:AVERage:COUNt?;:DETector:FUNCtion?;:AMPLitude:UNIT?;:FREQuency:STARt?;:FREQuency:STOP?;:SWEep:POINTS?;:BANDwidth:RESolution:AUTO?;:BANDwidth:RESolution?;:POWer:RF:GAIN?;:POWer:RF:ATTenuation:AUTO?;:POWer:RF:ATTenuation?;:SWEep:ACQuisition:AUTO?;:SWEep:TIME?;:BANDwidth:VIDeo?",
+            "attenuation": "POWer:RF:ATTenuation?",
+            "bandConfigParameterNames": [
+                "traceMode",
+                "averageCount",
+                "detector",
+                "levelUnit",
+                "freqStart",
+                "freqStop",
+                "dataPoints",
+                "resolutionMode",
+                "resolutionValue",
+                "preamp",
+                "attenuationMode",
+                "attenuationValue",
+                "sampleTimeMode",
+                "sampleTimeValue",
+                "videoBandWidth"
+            ]
+        },
+        "fetch": {
+            "traceData": "INITiate:RESTart;*WAI;:TRACe1:DATA?",
+            "gpsData": "SYSTem:GPS:DATA?"
+        },
+        "parameters": [
+            {
+                "name": "attenuationMode",
+                "write": "POWer:RF:ATTenuation:AUTO %attenuationMode%",
+                "read": "POWer:RF:ATTenuation:AUTO?",
+                "requireMatch": false
+            },
+            {
+                "name": "attenuationValue",
+                "write": "POWer:RF:ATTenuation %attenuationValue%",
+                "read": "POWer:RF:ATTenuation?",
+                "requireMatch": false
+            },
+            {
+                "name": "averageCount",
+                "write": "AVERage:COUNt %averageCount%",
+                "read": "AVERage:COUNt?",
+                "requireMatch": false
+            },
+            {
+                "name": "dataPoints",
+                "write": "SWEep:POINTS %dataPoints%",
+                "read": "SWEep:POINTS?",
+                "requireMatch": true
+            },
+            {
+                "name": "detector",
+                "write": "DETector:FUNCtion %detector%",
+                "read": "DETector:FUNCtion?",
+                "requireMatch": true
+            },
+            {
+                "name": "freqStart",
+                "write": "FREQuency:STARt %freqStart%",
+                "read": "FREQuency:STARt?",
+                "requireMatch": true
+            },
+            {
+                "name": "freqStop",
+                "write": "FREQuency:STOP %freqStop%",
+                "read": "FREQuency:STOP?",
+                "requireMatch": true
+            },
+            {
+                "name": "levelUnit",
+                "write": "AMPLitude:UNIT %levelUnit%",
+                "read": "AMPLitude:UNIT?",
+                "requireMatch": true
+            },
+            {
+                "name": "preamp",
+                "write": "POWer:RF:GAIN %preamp%",
+                "read": "POWer:RF:GAIN?",
+                "requireMatch": false
+            },
+            {
+                "name": "reset",
+                "write": "*RST",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "resolutionMode",
+                "write": "",
+                "read": "BANDwidth:RESolution:AUTO?",
+                "requireMatch": false
+            },
+            {
+                "name": "resolutionValue",
+                "write": "BANDwidth:RESolution %resolutionValue%",
+                "read": "BANDwidth:RESolution?",
+                "requireMatch": true
+            },
+            {
+                "name": "sampleTimeMode",
+                "write": "",
+                "read": "SWEep:ACQuisition:AUTO?",
+                "requireMatch": false
+            },
+            {
+                "name": "sampleTimeValue",
+                "write": "",
+                "read": "SWEep:TIME?",
+                "requireMatch": false
+            },
+            {
+                "name": "startup",
+                "write": "*CLS;:INSTrument \"SA\";:FORMat:DATA REAL,32;:AVERage:TYPE VOLT;:DISP:WIND:TRAC1:Y:AUTO;:SYSTem:GPS:STATe INT",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "sweepMode",
+                "write": "INITiate:CONTinuous %sweepMode%",
+                "read": "",
+                "requireMatch": false
+            },
+            {
+                "name": "traceMode",
+                "write": "TRACe1:TYPE %traceMode%",
+                "read": "TRACe1:TYPE?",
+                "requireMatch": true
+            },
+            {
+                "name": "videoBandWidth",
+                "write": "",
+                "read": "BANDwidth:VIDeo?",
+                "requireMatch": false
+            }
+        ]
+    },
+    "features": {
+        "attenuationValues": "0 dB,5 dB,10 dB,15 dB,20 dB,25 dB,30 dB,35 dB,40 dB",
+        "levelUnits": "DBM,DBUV",
+        "stepWidths": "",
+        "resolutions": "1.000 kHz,3.000 kHz,10.000 kHz,30.000 kHz,100.000 kHz,300.000 kHz,1000.000 kHz,3000.000 kHz,5000.000 kHz",
+        "videoBandWidths": "auto",
+        "dataPoints": [
+            2,
+            20001
+        ],
+        "detector": {
+            "items": "Sample,Average/RMS,Positive Peak,Negative Peak",
+            "values": "SAMP,AVER,POS,NEG"
+        },
+        "sweepMode": {
+            "items": "Single Sweep",
+            "values": "OFF"
+        },
+        "traceMode": {
+            "items": "ClearWrite,Average,MaxHold,MinHold",
+            "values": "CLRW,AVG,MAXH,MINH",
+            "requiresAverageModeFor": []
+        }
+    }
+}
