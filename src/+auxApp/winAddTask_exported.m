@@ -499,19 +499,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function setAntennaFieldsState(app, Type)
-            switch Type
-                case "Enable"
-                    set(findobj('Parent', app.AntennaParametersGrid, '-not', 'Type', 'uigrid'), 'Enable', 1)
-                    set(app.AntennaAzimuthGrid.Children, 'Enable', 1)                                
-
-                case "Disable"
-                    set(findobj('Parent', app.AntennaParametersGrid,        '-not', {'Type', 'uigrid', '-or', 'Type', 'uilabel'}), 'Enable', 0)
-                    set(findobj('Parent', app.AntennaAzimuthGrid, '-not', 'Type', 'uilabel'),                            'Enable', 0)
-            end
-        end
-
-        %-----------------------------------------------------------------%
         function releaseAntennaTarget(app)
             app.AntennaTrackingMode.Items = {'LookAngles', 'Manual'};
             app.BandTarget.Value = '';
@@ -1219,39 +1206,44 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.AntennaAddButton.Enable = ~isempty(app.AntennaName.Value);
 
             if isempty(app.AntennaName.Value)
-                setAntennaFieldsState(app, 'Disable')
+                setAntennaFieldsState(false)
                 return
             end
 
             switch app.AntennaTrackingMode.Value
                 case 'Target'
-                    setAntennaFieldsState(app, 'Disable')
+                    setAntennaFieldsState(false)
                     app.AntennaTrackingMode.Enable = 1;
 
                 case 'LookAngles'
-                    setAntennaFieldsState(app, 'Enable')
+                    setAntennaFieldsState(true)
                     app.AntennaHeight.Enable = 0;
                     app.AntennaAzimuthReference.Enable = 0;
 
                 case 'Manual'
                     switch app.AntennaSwitchName.Value
                         case 'EMSat'
-                            setAntennaFieldsState(app, 'Enable')
+                            setAntennaFieldsState(true)
                             app.AntennaHeight.Enable = 0;
 
                         case 'ERMx'
-                            setAntennaFieldsState(app, 'Disable')
+                            setAntennaFieldsState(false)
                             app.AntennaHeight.Enable = 1;
 
                         otherwise
                             if strcmp(app.AntennaName.Value, 'Unlisted (Directional)')
-                                setAntennaFieldsState(app, 'Enable')
+                                setAntennaFieldsState(true)
                                 app.AntennaTrackingMode.Enable = 0;
                             else
-                                setAntennaFieldsState(app, 'Disable')
+                                setAntennaFieldsState(false)
                                 app.AntennaHeight.Enable = 1;
                             end
                     end
+            end
+
+            function setAntennaFieldsState(status)
+                antennaFields = findobj(app.AntennaParametersGrid, '-not', {'Type', 'uigrid', '-or', 'Type', 'uilabel'});
+                set(antennaFields, 'Enable', status)
             end
         end
 
@@ -2936,7 +2928,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
             % Create AntennaAzimuthGrid
             app.AntennaAzimuthGrid = uigridlayout(app.AntennaParametersGrid);
             app.AntennaAzimuthGrid.ColumnWidth = {'1x', 50};
-            app.AntennaAzimuthGrid.RowHeight = {25, 22};
+            app.AntennaAzimuthGrid.RowHeight = {22, 22};
             app.AntennaAzimuthGrid.ColumnSpacing = 5;
             app.AntennaAzimuthGrid.RowSpacing = 5;
             app.AntennaAzimuthGrid.Padding = [0 0 0 0];
