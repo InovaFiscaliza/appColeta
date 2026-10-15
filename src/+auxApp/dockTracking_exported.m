@@ -39,6 +39,8 @@ classdef dockTracking_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         Container
         isDocked = true        
+        isUpdatable = true
+        
         mainApp
         callingApp
     end
@@ -53,6 +55,8 @@ classdef dockTracking_exported < matlab.apps.AppBase
         TargetPosition
 
         UpdateStatus = false
+        RestartRequested = false
+        PendingTargets = struct('antennaPos', {}, 'targetPos', {})
         LogEntries = struct('type', {}, 'time', {}, 'msg',  {})
     end
     
@@ -117,17 +121,26 @@ classdef dockTracking_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function updatePosition(app, antennaPos, targetPos)
+        function updatePosition(app)
             STALL_TIME = 10;    % s
             TIMEOUT    = 600;   % s
             errorTol   = class.Constants.errorPosTolerance;
 
-            refPos      = antennaPos;
-            stallWarned = false;
-            trackTic    = tic;
-            totalTic    = tic;
-
             while isvalid(app) && app.UpdateStatus
+                % O reinício é aplicado aqui porque a requisição pode chegar durante o "pause" do laço.
+                if app.RestartRequested
+                    app.RestartRequested = false;
+
+                    antennaPos  = app.InitialPosition;
+                    targetPos   = app.TargetPosition;
+                    refPos      = antennaPos;
+                    stallWarned = false;
+                    trackTic    = tic;
+                    totalTic    = tic;
+
+                    setNewPosition(app, antennaPos, targetPos)
+                end
+
                 if toc(totalTic) > TIMEOUT
                     error('A antena não atingiu a posição alvo após decorridos %d segundos.', TIMEOUT)
                 end
@@ -161,7 +174,13 @@ classdef dockTracking_exported < matlab.apps.AppBase
                     set(app.StatusLabel, 'FontColor', 'black', 'Text', sprintf('%s - Coleta da posição atual do conjunto antena/LNB realizada com sucesso', timestamp))
 
                     if isSamePosition(app, targetPos, antennaPos, errorTol)
-                        break
+                        if isempty(app.PendingTargets)
+                            break
+                        end
+
+                        nextTarget = app.PendingTargets(1);
+                        app.PendingTargets(1) = [];
+                        startNextTarget(app, nextTarget.antennaPos, nextTarget.targetPos)
                     end
 
                 else
@@ -181,7 +200,17 @@ classdef dockTracking_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
+        function startNextTarget(app, antennaPos, targetPos)
+            app.InitialPosition  = antennaPos;
+            app.TargetPosition   = targetPos;
+            app.RestartRequested = true;
+
+            screenStartup(app, antennaPos, targetPos)
+        end
+
+        %-----------------------------------------------------------------%
         function showError(app, ME)
+            app.isUpdatable = false;
             ui.Dialog(app.UIFigure, 'error', getReport(ME), 'CloseFcn', @(~,~)closeFcn(app));
         end
 
@@ -189,12 +218,12 @@ classdef dockTracking_exported < matlab.apps.AppBase
         function startTracking(app)
             delete(app.TrackingTimer)
 
-            app.TrackingActive = true;
-            app.UpdateStatus   = true;
+            app.TrackingActive   = true;
+            app.UpdateStatus     = true;
+            app.RestartRequested = true;
 
             try
-                setNewPosition(app, app.InitialPosition, app.TargetPosition)
-                updatePosition(app, app.InitialPosition, app.TargetPosition)
+                updatePosition(app)
 
             catch ME
                 if isvalid(app)
@@ -208,6 +237,26 @@ classdef dockTracking_exported < matlab.apps.AppBase
                 app.TrackingActive = false;
                 closeFcn(app)
             end
+        end
+    end
+    
+
+    methods (Access = public)
+        %-----------------------------------------------------------------%
+        function updateState(app, antennaPos, targetPos)
+            if strcmp(targetPos.Name, app.TargetPosition.Name)
+                startNextTarget(app, antennaPos, targetPos)
+                return
+            end
+
+            % Antena distinta da que está sendo apontada: aguarda na fila 
+            % para não descartar o apontamento atual.
+            pendingNames = arrayfun(@(x) x.targetPos.Name, app.PendingTargets, 'UniformOutput', false);
+            idx = find(strcmp(pendingNames, targetPos.Name), 1);
+            if isempty(idx)
+                idx = numel(app.PendingTargets) + 1;
+            end
+            app.PendingTargets(idx) = struct('antennaPos', antennaPos, 'targetPos', targetPos);
         end
     end
     
@@ -247,6 +296,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
                 app.UpdateStatus = false;
                 return
             end
+            app.isUpdatable = false;
 
             if app.isDocked && ~isempty(app.callingApp) && isvalid(app.callingApp) && isstruct(app.GridLayout.UserData) && isfield(app.GridLayout.UserData, 'id')
                 sendEventToHTMLSource(app.callingApp.jsBackDoor, 'closePopupAppRequest', struct('dataTag', app.GridLayout.UserData.id));

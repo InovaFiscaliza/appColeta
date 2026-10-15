@@ -387,6 +387,19 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 varargin 
             end
 
+            % Um popup ativo do mesmo tipo é reaproveitado, pois só um app 
+            % dock é suportado por vez.
+            hasOpenPopup = ~isempty(app.popupCurrentApp) && isvalid(app.popupCurrentApp);
+            if hasOpenPopup
+                isSamePopupType = contains(class(app.popupCurrentApp), ['dock' auxAppName]);
+                isUpdatable     = isprop(app.popupCurrentApp, 'isUpdatable') && app.popupCurrentApp.isUpdatable;
+
+                if isSamePopupType && isUpdatable
+                    updateState(app.popupCurrentApp, varargin{:})
+                    return
+                end
+            end
+
             requestVisibilityChange(callingApp.progressDialog, 'visible', 'unlocked')
             inputArguments = [{app, callingApp, context}, varargin];
 
