@@ -131,10 +131,10 @@ classdef TaskController < handle
 
                     isRegularTask = ~contains(obj.Tasks(taskIdx).TaskSpec.Type, 'PRÉVIA');
 
-                    receiverHandle   = obj.Tasks(taskIdx).Connections.receiver;
+                    receiverHandle = obj.Tasks(taskIdx).Connections.receiver;
                     udpPortHandle  = obj.Tasks(taskIdx).Connections.stream;
-                    gpsHandle        = obj.Tasks(taskIdx).Connections.gps;
-                    receiverDriver   = model.ReceiverDriver.create(obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
+                    gpsHandle      = obj.Tasks(taskIdx).Connections.gps;
+                    receiverDriver = model.ReceiverDriver.create(obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
 
                     configMode  = true;
 
@@ -504,7 +504,7 @@ classdef TaskController < handle
                 [gpsIdx, msgError] = connect(obj.App.gpsObj, instrSelected);
                 if isempty(msgError)
                     task.TaskSpec.GPS.Handle = obj.App.gpsObj.Table.Handle{gpsIdx};
-                    task.GPS                 = task.TaskSpec.GPS.Handle;
+                    task.Connections.gps     = task.TaskSpec.GPS.Handle;
                 end
             end
         end
