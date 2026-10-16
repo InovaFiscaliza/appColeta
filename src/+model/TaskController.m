@@ -144,7 +144,7 @@ classdef TaskController < handle
                         if mod(sweepCount, revisitFactor) || revisitFactor == -1
                             continue
                         end
-                        sampleTimestamp = datetime('now');
+                        evaluatedAt = datetime('now');
 
                         if bandIdx == 0
                             % A atualização das coordenadas geográficas do
@@ -154,7 +154,7 @@ classdef TaskController < handle
                             % das coordenadas.
 
                             if ~receiverDriver.IsLevelAzimuth
-                                acquireGpsData(obj, taskIdx, receiverHandle, gpsHandle, sampleTimestamp);
+                                acquireGpsData(obj, taskIdx, receiverHandle, gpsHandle, evaluatedAt);
                             end
 
                         else
@@ -188,7 +188,7 @@ classdef TaskController < handle
 
                                 if isempty(obj.Tasks(taskIdx).Bands(bandIdx).Mask)
                                     % SINGLE TRACE
-                                    traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, sampleTimestamp);
+                                    traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, evaluatedAt);
                                     obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps = obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps+1;
 
                                 else
@@ -197,7 +197,7 @@ classdef TaskController < handle
                                     traceData   = zeros(burstSweeps, obj.Tasks(taskIdx).Bands(bandIdx).DataPoints, 'single');
 
                                     for sweepIdx = 1:burstSweeps
-                                        traceData(sweepIdx,:) = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, sampleTimestamp);
+                                        traceData(sweepIdx,:) = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, evaluatedAt);
                                         obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps = obj.Tasks(taskIdx).Bands(bandIdx).NumSweeps+1;
                                     end
 
@@ -215,13 +215,13 @@ classdef TaskController < handle
                                         if ~isempty(peaksTable)
                                             obj.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationCount  = obj.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationCount + 1;
                                             obj.Tasks(taskIdx).Bands(bandIdx).Mask.ExceedingPeaks  = peaksTable;
-                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.LastViolationAt = sampleTimestamp;
+                                            obj.Tasks(taskIdx).Bands(bandIdx).Mask.LastViolationAt = evaluatedAt;
 
                                             if isRegularTask
                                                 maskEvent = struct( ...
                                                     'violationCount',  obj.Tasks(taskIdx).Bands(bandIdx).Mask.ViolationCount, ...
                                                     'exceedingPeaks',  peaksTable, ...
-                                                    'lastViolationAt', sampleTimestamp ...
+                                                    'lastViolationAt', evaluatedAt ...
                                                 );
                                                 writematrix(jsonencode(maskEvent), ...
                                                     replace(obj.Tasks(taskIdx).Bands(bandIdx).OutputFile.CurrentFile.FullPath, {'~', '.bin'}, {'', '.txt'}), 'QuoteStrings', 'none', 'WriteMode', 'append', 'Encoding', 'UTF-8')
@@ -251,13 +251,13 @@ classdef TaskController < handle
                                 if isempty(obj.Tasks(taskIdx).Bands(bandIdx).LastTimestamp)
                                     obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = obj.RevisitInfo.GlobalRevisitTime * revisitFactor;
                                 else
-                                    obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = ((obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds-1)*obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime + seconds(sampleTimestamp-obj.Tasks(taskIdx).Bands(bandIdx).LastTimestamp))/obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds;
+                                    obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime = ((obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds-1)*obj.Tasks(taskIdx).Bands(bandIdx).RevisitTime + seconds(evaluatedAt-obj.Tasks(taskIdx).Bands(bandIdx).LastTimestamp))/obj.App.General.context.TASK_VIEW.integration.sampleTimeSeconds;
                                 end
-                                obj.Tasks(taskIdx).Bands(bandIdx).LastTimestamp = sampleTimestamp;
+                                obj.Tasks(taskIdx).Bands(bandIdx).LastTimestamp = evaluatedAt;
 
                                 % FILE
                                 if isRegularTask && (isempty(obj.Tasks(taskIdx).Bands(bandIdx).Mask) || ismember(obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).MaskTrigger.Status, [0, 3]) || ((obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).MaskTrigger.Status == 2) && maskTriggered))
-                                    class.RFlookBinLib.EditFile(obj.Tasks(taskIdx), bandIdx, traceData, attenuationFactor, sampleTimestamp)
+                                    class.RFlookBinLib.EditFile(obj.Tasks(taskIdx), bandIdx, traceData, attenuationFactor, evaluatedAt)
                                     obj.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples = obj.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples + 1;
                                 end
 
@@ -280,8 +280,8 @@ classdef TaskController < handle
                                     pause(1)
                                 end
 
-                                obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error (RECEIVER)', 'timestamp', char(sampleTimestamp), 'message', ME.message);
-                                recordFailure(obj, 'receiver', taskIdx, sampleTimestamp)
+                                obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error (RECEIVER)', 'timestamp', char(evaluatedAt), 'message', ME.message);
+                                recordFailure(obj, 'receiver', taskIdx, evaluatedAt)
 
                                 notify(obj, 'ErrorRaised', model.TaskEventData(taskIdx, [], 'Receiver'))
 
@@ -337,20 +337,21 @@ classdef TaskController < handle
             % (b) Seja realizada uma nova tentativa de iniciar uma tarefa
             %     no estado "Erro" (o que ocorrerá a cada 15 minutos).
 
-            timestamp = datetime('now');
+            evaluatedAt = datetime('now');
 
             hasChanged    = false;
+            hasExpired    = false;
             initialStatus = obj.Tasks(taskIdx).Status;
 
-            switch obj.Tasks(taskIdx).Status
+            switch initialStatus
                 case 'Em andamento'
                     % Verifica se a tarefa deve ser finalizada, seja 
                     % por ter atingido o tempo de término ou por ter 
                     % recebido um evento de erro ou cancelamento.
-                    if obj.Tasks(taskIdx).Timing.endedAt < timestamp || ismember(evtName, {'error', 'cancellationRequested'})
+                    if obj.Tasks(taskIdx).Timing.endedAt < evaluatedAt || ismember(evtName, {'error', 'cancellationRequested'})
                         hasChanged = true;
 
-                        if obj.Tasks(taskIdx).Timing.endedAt < timestamp
+                        if obj.Tasks(taskIdx).Timing.endedAt < evaluatedAt
                             obj.Tasks(taskIdx).Status = 'Concluída';
                         else
                             switch evtName
@@ -361,11 +362,7 @@ classdef TaskController < handle
                             end
                         end
 
-                        obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
-                            'level', 'task', ...
-                            'timestamp', char(timestamp), ...
-                            'message', sprintf('Alterado o estado da tarefa: Em andamento → %s.', obj.Tasks(taskIdx).Status) ...
-                        );
+                        obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(evaluatedAt), 'message', sprintf('Alterado o estado da tarefa: Em andamento → %s', obj.Tasks(taskIdx).Status));
 
                         for bandIdx = 1:numel(obj.Tasks(taskIdx).Bands)
                             obj.Tasks(taskIdx) = class.RFlookBinLib.CloseFile(obj.Tasks(taskIdx), bandIdx);
@@ -392,12 +389,8 @@ classdef TaskController < handle
                                 hasChanged = true;
 
                                 obj.Tasks(taskIdx).Status = 'Concluída';
-                                obj.Tasks(taskIdx).Timing.endedAt = timestamp;
-                                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
-                                    'level', 'task', ...
-                                    'timestamp', char(timestamp), ...
-                                    'message', sprintf('Alterado o estado da tarefa: Em andamento → %s.', obj.Tasks(taskIdx).Status) ...
-                                );
+                                obj.Tasks(taskIdx).Timing.endedAt = evaluatedAt;
+                                obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(evaluatedAt), 'message', sprintf('Alterado o estado da tarefa: Em andamento → %s', obj.Tasks(taskIdx).Status));
 
                             elseif any(bandCompletionFlags)
                                 hasChanged = true;
@@ -408,20 +401,25 @@ classdef TaskController < handle
                 case {'Na fila', 'Erro'}
                     if strcmp(obj.Tasks(taskIdx).Status, 'Erro')
                         if isnat(obj.Tasks(taskIdx).Timing.startupAt)
-                            obj.Tasks(taskIdx).Timing.startupAt = timestamp;
+                            obj.Tasks(taskIdx).Timing.startupAt = evaluatedAt;
                         end
 
                         startupTimestamp = obj.Tasks(taskIdx).Timing.startupAt;
-                        if isequal(dateshift(timestamp, 'start', 'minute'), dateshift(startupTimestamp, 'start', 'minute'))
+                        if isequal(dateshift(evaluatedAt, 'start', 'minute'), dateshift(startupTimestamp, 'start', 'minute'))
                             return
                         end
                     end
 
-                    if obj.Tasks(taskIdx).Timing.startedAt < timestamp
+                    if obj.Tasks(taskIdx).Timing.startedAt < evaluatedAt
                         switch obj.Tasks(taskIdx).TaskSpec.Script.Observation.Type
                             case {'Duration', 'Time'}
-                                if isnat(obj.Tasks(taskIdx).Timing.endedAt) || (obj.Tasks(taskIdx).Timing.endedAt > timestamp)
+                                if isnat(obj.Tasks(taskIdx).Timing.endedAt) || (obj.Tasks(taskIdx).Timing.endedAt > evaluatedAt)
                                     hasChanged = true;
+                                else
+                                    hasExpired = true;
+
+                                    obj.Tasks(taskIdx).Status = 'Concluída';
+                                    obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(evaluatedAt), 'message', sprintf('Alterado o estado da tarefa: %s → %s (Expirou)', initialStatus, obj.Tasks(taskIdx).Status));
                                 end
 
                             case 'Samples'
@@ -438,21 +436,21 @@ classdef TaskController < handle
 
                             obj.Tasks(taskIdx).Status = 'Em andamento';
                             obj.Tasks(taskIdx).Connections.receiver.UserData.SyncMode = obj.Tasks(taskIdx).TaskSpec.Receiver.Sync;
-                            obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(timestamp), 'message', 'Iniciada a execução da tarefa.');
+                            obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(evaluatedAt), 'message', 'Iniciada a execução da tarefa');
 
                         catch ME
                             if strcmp(obj.App.TaskSchedulerTimer.Running, 'off') && ~obj.IsRunning
                                 start(obj.App.TaskSchedulerTimer)
                             end
                             obj.Tasks(taskIdx).Status = 'Erro';
-                            obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error', 'timestamp', char(timestamp), 'message', getReport(ME));
+                            obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error', 'timestamp', char(evaluatedAt), 'message', getReport(ME));
 
                             hasChanged = false;
                         end
                     end
             end
 
-            if hasChanged
+            if hasChanged || hasExpired
                 notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
             end
 
@@ -619,7 +617,7 @@ classdef TaskController < handle
                     obj.Tasks(idx).Bands(bandIdx).Mask = struct('Table', maskInfo.Table, 'Array', maskArray, 'ValidationCount', 0, ...
                                                             'ViolationsPerBin', zeros(1, taskSpec.Script.Band(bandIdx).instrDataPoints), ...
                                                             'ViolationCount', 0, 'ExceedingPeaks', '', 'LastViolationAt', NaT, 'Configuration', maskConfiguration);
-                    obj.Tasks(idx).LogEntries(end+1)    = struct('level', 'mask', 'timestamp', datestr(now), 'message', sprintf('ID %.0f\n%s', bandId, jsonencode(maskInfo.Table)));
+                    obj.Tasks(idx).LogEntries(end+1) = struct('level', 'mask', 'timestamp', datestr(now), 'message', sprintf('ID %.0f\n%s', bandId, jsonencode(maskInfo.Table)));
                 end
 
                 % FILE
@@ -657,7 +655,7 @@ classdef TaskController < handle
         end
 
         %-----------------------------------------------------------------%
-        function acquireGpsData(obj, taskIdx, receiverHandle, gpsHandle, timestamp)
+        function acquireGpsData(obj, taskIdx, receiverHandle, gpsHandle, evaluatedAt)
             % O controle de erro do RECEPTOR se dá no método "runLoop".
             %
             % O controle de erro do GPS, por outro lado, se dá diretamente aqui,
@@ -684,10 +682,10 @@ classdef TaskController < handle
                 end
 
             catch ME
-                obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error (GPS)', 'timestamp', char(timestamp), 'message', ME.message);
+                obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error (GPS)', 'timestamp', char(evaluatedAt), 'message', ME.message);
 
                 if strcmp(obj.Tasks(taskIdx).TaskSpec.Script.GPS.Type, 'External')
-                    recordFailure(obj, 'gps', taskIdx, timestamp)
+                    recordFailure(obj, 'gps', taskIdx, evaluatedAt)
                     notify(obj, 'ErrorRaised', model.TaskEventData(taskIdx, [], 'GPS'))
 
                     if contains(obj.Tasks(taskIdx).TaskSpec.Type, 'Drive-test') || ~mod(obj.Tasks(taskIdx).RetryPolicy.gps.failureCount, class.Constants.errorGPSCountTrigger)
@@ -696,13 +694,13 @@ classdef TaskController < handle
                 end
             end
 
-            applyGpsFix(obj, taskIdx, gps, timestamp)
+            applyGpsFix(obj, taskIdx, gps, evaluatedAt)
         end
 
         %-----------------------------------------------------------------%
-        function applyGpsFix(obj, taskIdx, gps, timestamp)
+        function applyGpsFix(obj, taskIdx, gps, evaluatedAt)
             if isempty(gps.TimeStamp)
-                gps.TimeStamp = char(timestamp);
+                gps.TimeStamp = char(evaluatedAt);
             end
             obj.Tasks(taskIdx).GPSLastFix = gps;
 
@@ -738,7 +736,7 @@ classdef TaskController < handle
         end
 
         %-----------------------------------------------------------------%
-        function traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, timestamp)
+        function traceData = acquireSpectrumTrace(obj, taskIdx, bandIdx, receiverHandle, udpPortHandle, evaluatedAt)
             timeout  = class.Constants.Timeout;
             acquired = false;
 
@@ -810,7 +808,7 @@ classdef TaskController < handle
                     [traceData, gps, acquired] = class.EB500Lib.DatagramRead_FFM(taskInfo, receiverHandle, udpPortHandle);
 
                     % No datagrama tem a informação de gps... então vamos aproveitar! :)
-                    applyGpsFix(obj, taskIdx, gps, timestamp)
+                    applyGpsFix(obj, taskIdx, gps, evaluatedAt)
             end
             flush(receiverHandle)
 
@@ -824,19 +822,19 @@ classdef TaskController < handle
         end
 
         %-----------------------------------------------------------------%
-        function recordFailure(obj, errorType, taskIdx, timestamp)
+        function recordFailure(obj, errorType, taskIdx, evaluatedAt)
             arguments
                 obj
                 errorType char {mustBeMember(errorType, {'receiver', 'gps'})}
                 taskIdx (1, 1) double {mustBePositive}
-                timestamp datetime
+                evaluatedAt datetime
             end
 
             if isnat(obj.Tasks(taskIdx).RetryPolicy.(errorType).firstFailureAt)
-                obj.Tasks(taskIdx).RetryPolicy.(errorType).firstFailureAt = timestamp;
+                obj.Tasks(taskIdx).RetryPolicy.(errorType).firstFailureAt = evaluatedAt;
             end
 
-            obj.Tasks(taskIdx).RetryPolicy.(errorType).lastFailureAt = timestamp;
+            obj.Tasks(taskIdx).RetryPolicy.(errorType).lastFailureAt = evaluatedAt;
             obj.Tasks(taskIdx).RetryPolicy.(errorType).failureCount  = obj.Tasks(taskIdx).RetryPolicy.(errorType).failureCount + 1;
         end
     end
