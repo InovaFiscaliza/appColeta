@@ -1468,11 +1468,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         % MISCELÂNEAS
         %-----------------------------------------------------------------%
         function updateWarningLampVisibility(app)
-            if isfolder(app.General.fileFolder.DataHub_POST)
-                app.DataHubLamp.Visible = 0;
-            else
-                app.DataHubLamp.Visible = 1;
-            end
+            % app.DataHubLamp.Visible = ~isfolder(app.General.fileFolder.DataHub_POST);
         end
 
         %-----------------------------------------------------------------%
