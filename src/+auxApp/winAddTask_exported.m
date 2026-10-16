@@ -259,6 +259,8 @@ classdef winAddTask_exported < matlab.apps.AppBase
                         });
                     catch
                     end
+
+                    addStyle(app.AntennaTree, uistyle('Interpreter', 'html'))
             end
         end
 
@@ -374,49 +376,19 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     end
                 end
 
+                % Os nós são restaurados diretamente dos metadados salvos, sem passar pelos controles da GUI.
                 antennaList = app.mainApp.TaskController.Tasks(app.infoEdition.idx).TaskSpec.Antenna.MetaData;
+
+                switch app.AntennaSwitchName.Value
+                    case 'EMSat'
+                        antennaNameList = extractBefore(app.AntennaName.Items, ' ');
+                    otherwise
+                        antennaNameList = app.AntennaName.Items;
+                end
+
                 for kk = 1:numel(antennaList)
-                    antennaMetaData = antennaList(kk);
-
-                    % add new value
-                    switch app.AntennaSwitchName.Value
-                        case 'EMSat'
-                            antennaNameList = extractBefore(app.AntennaName.Items, ' ');
-                        otherwise
-                            antennaNameList = app.AntennaName.Items;
-                    end
-
-                    [~, antennaIndex] = ismember(antennaMetaData.Name, antennaNameList);
-
-                    if antennaIndex
-                        app.AntennaName.Value = app.AntennaName.Items{antennaIndex};
-                        updateAntennaTrackingItems(app)
-
-                        if ~ismember(antennaMetaData.TrackingMode, app.AntennaTrackingMode.Items)
-                            continue
-                        end
-
-                        app.AntennaTrackingMode.Value = antennaMetaData.TrackingMode;
-                        updateAntennaTrackingValues(app)
-                        updateUIControlState(app)
-
-                        if antennaMetaData.Height ~= "NA"
-                            app.AntennaHeight.Value = str2double(extractBefore(antennaMetaData.Height, 'm'));
-                        end
-
-                        if antennaMetaData.Azimuth ~= "NA"
-                            app.AntennaAzimuth.Value = str2double(extractBefore(antennaMetaData.Azimuth, 'º'));
-                        end
-
-                        if antennaMetaData.Elevation ~= "NA"
-                            app.AntennaElevation.Value = str2double(extractBefore(antennaMetaData.Elevation, 'º'));
-                        end
-
-                        if antennaMetaData.Polarization ~= "NA"
-                            app.AntennaPolarization.Value = str2double(extractBefore(antennaMetaData.Polarization, 'º'));
-                        end
-
-                        onAntennaAddButtonClicked(app)
+                    if ismember(antennaList(kk).Name, antennaNameList)
+                        upsertAntennaNode(app, antennaList(kk))
                     end
                 end
                 updateUIControlContent(app, 'band')
@@ -1248,6 +1220,88 @@ classdef winAddTask_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
+        function antennaMetaData = getAntennaMetaDataFromUI(app)
+            switch app.AntennaSwitchName.Value
+                case 'EMSat'
+                    antennaName = extractBefore(app.AntennaName.Value, ' ');
+                otherwise
+                    antennaName = app.AntennaName.Value;
+            end
+
+            target = 'NA';
+            if ~isempty(app.BandTarget.Value)
+                target = app.BandTarget.Value;
+            end
+
+            height = 'NA';
+            if app.AntennaHeight.Enable
+                height = sprintf('%.0fm', app.AntennaHeight.Value);
+            end
+
+            azimuth = 'NA';
+            elevation = 'NA';
+            polarization = 'NA';
+            if app.AntennaAzimuth.Enable
+                azimuth = sprintf('%.3fº %s', app.AntennaAzimuth.Value, app.AntennaAzimuthReference.Value);
+                elevation = sprintf('%.3fº', app.AntennaElevation.Value);
+                polarization = sprintf('%.1fº', app.AntennaPolarization.Value);
+            end
+
+            antennaMetaData = struct( ...
+                'Name',         antennaName, ...
+                'TrackingMode', app.AntennaTrackingMode.Value, ...
+                'Target',       target, ...
+                'Height',       height, ...
+                'Azimuth',      azimuth, ...
+                'Elevation',    elevation, ...
+                'Polarization', polarization ...
+            );
+        end
+
+        %-----------------------------------------------------------------%
+        function upsertAntennaNode(app, antennaMetaData)
+            % Os metadados ficam em "NodeData", sem necessidade de interpretar o texto do nó.
+            nodeText = buildAntennaNodeText(app, antennaMetaData);
+
+            [isFound, nodeIdx] = ismember(antennaMetaData.Name, getAntennaTreeNames(app));
+            if isFound
+                set(app.AntennaTree.Children(nodeIdx), 'Text', nodeText, 'NodeData', antennaMetaData)
+            else
+                uitreenode(app.AntennaTree, 'Text', nodeText, 'NodeData', antennaMetaData, 'ContextMenu', app.ContextMenu);
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function antennaNames = getAntennaTreeNames(app)
+            antennaNames = {};
+            if ~isempty(app.AntennaTree.Children)
+                antennaNames = cellfun(@(nodeData) nodeData.Name, {app.AntennaTree.Children.NodeData}, 'UniformOutput', false);
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function nodeText = buildAntennaNodeText(~, antennaMetaData)
+            separator = '&nbsp;&nbsp;•&nbsp;&nbsp;';
+
+            details = {};
+            if ~strcmp(antennaMetaData.Target, 'NA')
+                details{end+1} = antennaMetaData.Target;
+            end
+
+            if ~strcmp(antennaMetaData.Height, 'NA')
+                details{end+1} = sprintf('Alt. %s', antennaMetaData.Height);
+            end
+
+            if ~strcmp(antennaMetaData.Azimuth, 'NA')
+                details{end+1} = sprintf('Az. %s', antennaMetaData.Azimuth);
+                details{end+1} = sprintf('El. %s', antennaMetaData.Elevation);
+                details{end+1} = sprintf('Pol. %s', antennaMetaData.Polarization);
+            end
+
+            nodeText = sprintf('<b>%s</b><br><font style="color: gray;">Apontamento "%s"<br>%s</font>', replace(antennaMetaData.Name, '&', '&amp;'), antennaMetaData.TrackingMode, strjoin(details, separator));
+        end
+
+        %-----------------------------------------------------------------%
         function receiverKey = buildReceiverKey(~, receiverName, taskType)
             receiverKey = sprintf('%s|%d', receiverName, contains(taskType, 'Drive-test (Level+Azimuth)'));
         end
@@ -1536,16 +1590,16 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 if ~isempty(bandsWithoutAntennaIdxs)
                     error('Não selecionada a antena da(s) faixa(s) de frequência indicada(s) a seguir.\nID: %s', strjoin(string(bandsWithoutAntennaIdxs), ', '))
                 else
-                    antennaMetaData = {app.AntennaTree.Children.Text};
+                    antennaTreeNames = getAntennaTreeNames(app);
     
-                    antennaIdx = contains(antennaList, antennaMetaData);
+                    antennaIdx = contains(antennaList, antennaTreeNames);
                     if ~all(antennaIdx)
                         error('Não foram configurados os parâmetros de instalação da(s) antena(s) indicada(s) a seguir.\nAntenas: %s', strjoin(antennaList(~antennaIdx), ', '))
                     end
                 end
 
             else
-                if ~any(contains(app.AntennaName.Items, app.AntennaTree.Children.Text))
+                if ~any(contains(app.AntennaName.Items, getAntennaTreeNames(app)))
                     error('Foram configurados os parâmetros de instalação de antena que não faz parte do rol de antenas possíveis, visto que foi desabilitado o comutador.')
                 end
             end
@@ -1829,52 +1883,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
         % Image clicked function: AntennaAddButton
         function onAntennaAddButtonClicked(app, event)
             
-            % Características da antena selecionada:
-            switch app.AntennaSwitchName.Value
-                case 'EMSat'
-                    newAntennaName = extractBefore(app.AntennaName.Value, ' ');
-                otherwise
-                    newAntennaName = app.AntennaName.Value;
-            end
-
-            newAntennaSpec1 = app.AntennaTrackingMode.Value;
-            if ~isempty(app.BandTarget.Value)
-                newAntennaSpec1 = sprintf('%s; %s', newAntennaSpec1, app.BandTarget.Value);
-            else
-                newAntennaSpec1 = sprintf('%s; "NA"', newAntennaSpec1);
-            end
-
-            if app.AntennaHeight.Enable
-                newAntennaSpec2 = sprintf('%.0fm', app.AntennaHeight.Value);
-            else
-                newAntennaSpec2 = '"NA"';
-            end
-
-            if app.AntennaAzimuth.Enable
-                newAntennaSpec2 = sprintf('%s; %.3fº %s; %.3fº; %.1fº', newAntennaSpec2, app.AntennaAzimuth.Value, app.AntennaAzimuthReference.Value, app.AntennaElevation.Value, app.AntennaPolarization.Value);
-            else
-                newAntennaSpec2 = sprintf('%s; "NA"; "NA"; "NA"', newAntennaSpec2);
-            end
-
-            % Verifica se a antena seleciona já está na lista de antenas,
-            % incluindo-a como nova ou editando-a, a depender do caso.
-            antennaList = {};
-            if ~isempty(app.AntennaTree.Children)
-                antennaList = {app.AntennaTree.Children.Text};
-            end
-            
-            [~, idx] = ismember(newAntennaName, antennaList);
-            if idx
-                app.AntennaTree.Children(idx).Children(1).Text = newAntennaSpec1;
-                app.AntennaTree.Children(idx).Children(2).Text = newAntennaSpec2;
-
-            else
-                nodeData   = numel(app.AntennaTree.Children)+1;                
-                nodeHandle = uitreenode(app.AntennaTree, 'Text', newAntennaName, 'NodeData', nodeData, 'ContextMenu', app.ContextMenu);
-
-                uitreenode(nodeHandle, 'Text', newAntennaSpec1, 'NodeData', nodeData, 'ContextMenu', app.ContextMenu);
-                uitreenode(nodeHandle, 'Text', newAntennaSpec2, 'NodeData', nodeData, 'ContextMenu', app.ContextMenu);
-            end
+            upsertAntennaNode(app, getAntennaMetaDataFromUI(app))
 
         end
 
@@ -1882,18 +1891,7 @@ classdef winAddTask_exported < matlab.apps.AppBase
         function onAntennaDelButtonClicked(app, event)
             
             if ~isempty(app.AntennaTree.SelectedNodes)
-                nodeData = app.AntennaTree.SelectedNodes.NodeData;
-                nodeHandles = findobj(app.AntennaTree, 'NodeData', nodeData);
-
-                if ~isempty(nodeHandles)
-                    delete(nodeHandles)
-
-                    for ii = 1:numel(app.AntennaTree.Children)
-                        app.AntennaTree.Children(ii).NodeData             = ii;
-                        app.AntennaTree.Children(ii).Children(1).NodeData = ii;
-                        app.AntennaTree.Children(ii).Children(2).NodeData = ii;
-                    end
-                end
+                delete(app.AntennaTree.SelectedNodes)
             end
 
         end
@@ -2270,18 +2268,10 @@ classdef winAddTask_exported < matlab.apps.AppBase
                 antennaMetaData = struct('Name', {}, 'TrackingMode', {}, 'Target', {}, 'Height', {}, 'Azimuth', {}, 'Elevation', {}, 'Polarization', {});
 
                 for kk = 1:numel(app.AntennaTree.Children)
-                    antennaParameters = replace(strsplit(strjoin({app.AntennaTree.Children(kk).Children.Text}, '; '), '; '), '"', '');
+                    nodeData = app.AntennaTree.Children(kk).NodeData;
 
-                    if any(contains(antennaList, app.AntennaTree.Children(kk).Text))
-                        antennaMetaData(end+1,:) = struct( ...
-                            'Name',         app.AntennaTree.Children(kk).Text, ...
-                            'TrackingMode', antennaParameters{1}, ...
-                            'Target',       antennaParameters{2}, ...
-                            'Height',       antennaParameters{3}, ...
-                            'Azimuth',      antennaParameters{4}, ...
-                            'Elevation',    antennaParameters{5}, ...
-                            'Polarization', antennaParameters{6} ...
-                        );
+                    if any(contains(antennaList, nodeData.Name))
+                        antennaMetaData(end+1,:) = nodeData;
                     end
                 end
 
