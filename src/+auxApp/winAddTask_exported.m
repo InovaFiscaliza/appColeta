@@ -229,6 +229,11 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     elToModify = {
                         app.BandMetaData;
                         app.ConfirmEditionButtonGrid;
+                        ...
+                        app.MaskFileAddButton;
+                        app.MaskFileViewButton;
+                        app.BandRefreshButton;
+                        ...
                         app.DockUndockButton;
                         app.DockCloseButton
                     };
@@ -242,6 +247,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     try
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
                             struct('appName', appName, 'dataTag', app.ConfirmEditionButtonGrid.UserData.id, 'style', struct('background', 'none')), ...
+                            struct('appName', appName, 'dataTag', app.MaskFileAddButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Seleciona arquivo de máscara espectral')), ...
+                            struct('appName', appName, 'dataTag', app.MaskFileViewButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visualiza conteúdo do arquivo')), ...
+                            struct('appName', appName, 'dataTag', app.BandRefreshButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Retorna às configurações iniciais')), ...
                             struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
                             struct('appName', appName, 'dataTag', app.DockCloseButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Fecha módulo')) ...
                         });
@@ -249,7 +257,21 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     end
 
                 case 2
-                    % ...
+                    elToModify = {
+                        app.ReceiverConnectivityButton;
+                        app.GpsImportStationButton;
+                        app.GpsConnectivityButton;
+                    };
+                    ui.CustomizationBase.getElementsDataTag(elToModify);
+
+                    try
+                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                            struct('appName', appName, 'dataTag', app.ReceiverConnectivityButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Testa conectividade')), ...
+                            struct('appName', appName, 'dataTag', app.GpsImportStationButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Importa coordenadas geográficas da estação')), ...
+                            struct('appName', appName, 'dataTag', app.GpsConnectivityButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Testa conectividade')) ...
+                        });
+                    catch
+                    end
                     
                 case 3
                     ui.CustomizationBase.getElementsDataTag({app.AntennaTree});
@@ -2422,7 +2444,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.MaskFileAddButton.Icon = 'folder-opened-16px.svg';
             app.MaskFileAddButton.BackgroundColor = [0.9804 0.9804 0.9804];
             app.MaskFileAddButton.Visible = 'off';
-            app.MaskFileAddButton.Tooltip = {'Seleciona arquivo de máscara espectral'};
             app.MaskFileAddButton.Layout.Row = 4;
             app.MaskFileAddButton.Layout.Column = 2;
             app.MaskFileAddButton.Text = '';
@@ -2434,7 +2455,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.MaskFileViewButton.BackgroundColor = [0.9804 0.9804 0.9804];
             app.MaskFileViewButton.Enable = 'off';
             app.MaskFileViewButton.Visible = 'off';
-            app.MaskFileViewButton.Tooltip = {'Visualiza conteúdo do arquivo'};
             app.MaskFileViewButton.Layout.Row = 4;
             app.MaskFileViewButton.Layout.Column = 3;
             app.MaskFileViewButton.Text = '';
@@ -2665,7 +2685,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.ReceiverConnectivityButton.ButtonPushedFcn = createCallbackFcn(app, @onConnectivityTestButtonPushed, true);
             app.ReceiverConnectivityButton.Icon = 'Connectivity_32.png';
             app.ReceiverConnectivityButton.BackgroundColor = [0.9804 0.9804 0.9804];
-            app.ReceiverConnectivityButton.Tooltip = {'Teste de conectividade'};
             app.ReceiverConnectivityButton.Layout.Row = 2;
             app.ReceiverConnectivityButton.Layout.Column = 3;
             app.ReceiverConnectivityButton.Text = '';
@@ -2740,7 +2759,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GpsImportStationButton.Icon = 'Pin_18.png';
             app.GpsImportStationButton.BackgroundColor = [0.9804 0.9804 0.9804];
             app.GpsImportStationButton.Visible = 'off';
-            app.GpsImportStationButton.Tooltip = {'Importa coordenadas geográficas da estação'};
             app.GpsImportStationButton.Layout.Row = 5;
             app.GpsImportStationButton.Layout.Column = 2;
             app.GpsImportStationButton.Text = '';
@@ -2750,7 +2768,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.GpsConnectivityButton.ButtonPushedFcn = createCallbackFcn(app, @onConnectivityTestButtonPushed, true);
             app.GpsConnectivityButton.Icon = 'Connectivity_32.png';
             app.GpsConnectivityButton.BackgroundColor = [0.9804 0.9804 0.9804];
-            app.GpsConnectivityButton.Tooltip = {'Teste de conectividade'};
             app.GpsConnectivityButton.Layout.Row = 5;
             app.GpsConnectivityButton.Layout.Column = 3;
             app.GpsConnectivityButton.Text = '';
@@ -3111,11 +3128,9 @@ classdef winAddTask_exported < matlab.apps.AppBase
             app.BandRefreshButton = uiimage(app.BandParametersGrid);
             app.BandRefreshButton.ScaleMethod = 'none';
             app.BandRefreshButton.ImageClickedFcn = createCallbackFcn(app, @onBandRefreshButtonClicked, true);
-            app.BandRefreshButton.Tooltip = {'Retorna às configurações iniciais'};
+            app.BandRefreshButton.Visible = 'off';
             app.BandRefreshButton.Layout.Row = 4;
             app.BandRefreshButton.Layout.Column = 3;
-            app.BandRefreshButton.HorizontalAlignment = 'right';
-            app.BandRefreshButton.VerticalAlignment = 'bottom';
             app.BandRefreshButton.ImageSource = 'Refresh_18.png';
 
             % Create BandReceiverPanel

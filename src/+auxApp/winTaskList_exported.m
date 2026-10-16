@@ -97,13 +97,13 @@ classdef winTaskList_exported < matlab.apps.AppBase
         EditStateButton              matlab.ui.control.StateButton
         ViewStateButton              matlab.ui.control.StateButton
         TreePanel                    matlab.ui.container.GridLayout
-        TreeTitle                    matlab.ui.control.Label
         TreeMoveDown                 matlab.ui.control.Image
         TreeMoveUp                   matlab.ui.control.Image
         TreeDelNode                  matlab.ui.control.Image
         TreeAddBandNode              matlab.ui.control.Image
         TreeAddTaskNode              matlab.ui.control.Image
         Tree                         matlab.ui.container.Tree
+        TreeTitle                    matlab.ui.control.Label
         TreeIcon                     matlab.ui.control.Image
     end
 
@@ -1212,6 +1212,17 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TreeIcon.VerticalAlignment = 'top';
             app.TreeIcon.ImageSource = 'server-process - blue.svg';
 
+            % Create TreeTitle
+            app.TreeTitle = uilabel(app.TreePanel);
+            app.TreeTitle.VerticalAlignment = 'top';
+            app.TreeTitle.WordWrap = 'on';
+            app.TreeTitle.FontSize = 15;
+            app.TreeTitle.FontColor = [0 0.4471 0.7412];
+            app.TreeTitle.Layout.Row = [1 2];
+            app.TreeTitle.Layout.Column = [2 3];
+            app.TreeTitle.Interpreter = 'html';
+            app.TreeTitle.Text = {'<b>Tarefas de monitoração</b>'; '<font style="color: gray; font-size: 11px;">Selecione uma tarefa para visualizar seus detalhes, editar parâmetros e gerenciar as faixas de frequência</font>'};
+
             % Create Tree
             app.Tree = uitree(app.TreePanel);
             app.Tree.SelectionChangedFcn = createCallbackFcn(app, @onTreeSelectionChanged, true);
@@ -1224,7 +1235,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TreeAddTaskNode = uiimage(app.TreePanel);
             app.TreeAddTaskNode.ImageClickedFcn = createCallbackFcn(app, @onTreeAddTaskNodeButtonClicked, true);
             app.TreeAddTaskNode.Enable = 'off';
-            app.TreeAddTaskNode.Tooltip = {''};
             app.TreeAddTaskNode.Layout.Row = 3;
             app.TreeAddTaskNode.Layout.Column = 3;
             app.TreeAddTaskNode.ImageSource = 'addFileWithPlus_32.png';
@@ -1233,7 +1243,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TreeAddBandNode = uiimage(app.TreePanel);
             app.TreeAddBandNode.ImageClickedFcn = createCallbackFcn(app, @onTreeAddBandNodeButtonClicked, true);
             app.TreeAddBandNode.Enable = 'off';
-            app.TreeAddBandNode.Tooltip = {''};
             app.TreeAddBandNode.Layout.Row = 5;
             app.TreeAddBandNode.Layout.Column = 3;
             app.TreeAddBandNode.ImageSource = 'EditWithPlus_32.png';
@@ -1242,7 +1251,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TreeDelNode = uiimage(app.TreePanel);
             app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @onTreeDelNodeButtonClicked, true);
             app.TreeDelNode.Enable = 'off';
-            app.TreeDelNode.Tooltip = {''};
             app.TreeDelNode.Layout.Row = 7;
             app.TreeDelNode.Layout.Column = 3;
             app.TreeDelNode.ImageSource = 'Delete_32Red.png';
@@ -1251,7 +1259,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TreeMoveUp = uiimage(app.TreePanel);
             app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
             app.TreeMoveUp.Enable = 'off';
-            app.TreeMoveUp.Tooltip = {''};
             app.TreeMoveUp.Layout.Row = 10;
             app.TreeMoveUp.Layout.Column = 3;
             app.TreeMoveUp.ImageSource = 'ArrowUp_32.png';
@@ -1260,21 +1267,9 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.TreeMoveDown = uiimage(app.TreePanel);
             app.TreeMoveDown.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
             app.TreeMoveDown.Enable = 'off';
-            app.TreeMoveDown.Tooltip = {''};
             app.TreeMoveDown.Layout.Row = 12;
             app.TreeMoveDown.Layout.Column = 3;
             app.TreeMoveDown.ImageSource = 'ArrowDown_32.png';
-
-            % Create TreeTitle
-            app.TreeTitle = uilabel(app.TreePanel);
-            app.TreeTitle.VerticalAlignment = 'top';
-            app.TreeTitle.WordWrap = 'on';
-            app.TreeTitle.FontSize = 15;
-            app.TreeTitle.FontColor = [0 0.4471 0.7412];
-            app.TreeTitle.Layout.Row = [1 2];
-            app.TreeTitle.Layout.Column = [2 3];
-            app.TreeTitle.Interpreter = 'html';
-            app.TreeTitle.Text = {'<b>Tarefas de monitoração</b>'; '<font style="color: gray; font-size: 11px;">Selecione uma tarefa para visualizar seus detalhes, editar parâmetros e gerenciar as faixas de frequência</font>'};
 
             % Create ViewStateButton
             app.ViewStateButton = uibutton(app.GridLayout, 'state');
@@ -2091,7 +2086,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.ImportButton = uiimage(app.Toolbar);
             app.ImportButton.ScaleMethod = 'none';
             app.ImportButton.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
-            app.ImportButton.Tooltip = {''};
             app.ImportButton.Layout.Row = 1;
             app.ImportButton.Layout.Column = 1;
             app.ImportButton.ImageSource = 'Import_16.png';
@@ -2100,7 +2094,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.ExportButton = uiimage(app.Toolbar);
             app.ExportButton.ScaleMethod = 'none';
             app.ExportButton.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
-            app.ExportButton.Tooltip = {''};
             app.ExportButton.Layout.Row = 1;
             app.ExportButton.Layout.Column = 2;
             app.ExportButton.ImageSource = 'Export_16.png';

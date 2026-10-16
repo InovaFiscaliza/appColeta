@@ -12,8 +12,8 @@ classdef winConfig_exported < matlab.apps.AppBase
         SubGrid1                       matlab.ui.container.GridLayout
         openAuxiliarApp2Debug          matlab.ui.control.CheckBox
         openAuxiliarAppAsDocked        matlab.ui.control.CheckBox
-        versionInfoRefresh             matlab.ui.control.Image
         versionInfo                    matlab.ui.control.Label
+        versionInfoRefresh             matlab.ui.control.Image
         versionInfoLabel               matlab.ui.control.Label
         SubTab2                        matlab.ui.container.Tab
         SubGrid2                       matlab.ui.container.GridLayout
@@ -46,8 +46,6 @@ classdef winConfig_exported < matlab.apps.AppBase
         general_FileLabel              matlab.ui.control.Label
         SubTab3                        matlab.ui.container.Tab
         SubGrid3                       matlab.ui.container.GridLayout
-        plot_WaterfallLabel            matlab.ui.control.Label
-        configPlotRefresh              matlab.ui.control.Image
         plot_IntegrationPanel          matlab.ui.container.Panel
         plot_IntegrationGrid           matlab.ui.container.GridLayout
         plot_IntegrationTime           matlab.ui.control.NumericEditField
@@ -61,6 +59,7 @@ classdef winConfig_exported < matlab.apps.AppBase
         plot_WaterfallDepthLabel       matlab.ui.control.Label
         plot_WaterfallColormap         matlab.ui.control.DropDown
         plot_WaterfallColormapLabel    matlab.ui.control.Label
+        plot_WaterfallLabel            matlab.ui.control.Label
         plot_colorsPanel               matlab.ui.container.Panel
         plot_colorsGrid                matlab.ui.container.GridLayout
         plot_colorsClearWrite          matlab.ui.control.ColorPicker
@@ -71,6 +70,7 @@ classdef winConfig_exported < matlab.apps.AppBase
         plot_colorsAverageLabel        matlab.ui.control.Label
         plot_colorsMinHold             matlab.ui.control.ColorPicker
         plot_colorsMinHoldLabel        matlab.ui.control.Label
+        configPlotRefresh              matlab.ui.control.Image
         plot_colorsLabel               matlab.ui.control.Label
         plot_TiledSpacing              matlab.ui.control.DropDown
         plot_TiledSpacingLabel         matlab.ui.control.Label
@@ -153,8 +153,8 @@ classdef winConfig_exported < matlab.apps.AppBase
 
                     try
                         sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                            struct('appName', appName, 'dataTag', app.versionInfoRefresh.UserData.id,  'tooltip', struct('defaultPosition', 'top', 'textContent', 'Verifica atualizações')), ...
-                            struct('appName', appName, 'dataTag', app.tool_openDevTools.UserData.id,   'tooltip', struct('defaultPosition', 'top', 'textContent', 'Abre DevTools')), ...
+                            struct('appName', appName, 'dataTag', app.versionInfoRefresh.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Verifica atualizações')), ...
+                            struct('appName', appName, 'dataTag', app.tool_openDevTools.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Abre DevTools')), ...
                             struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
                             struct('appName', appName, 'dataTag', app.DockCloseButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Fecha módulo')) ...
                         });
@@ -206,14 +206,14 @@ classdef winConfig_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function initializeUIComponents(app)
             if ~strcmp(app.mainApp.executionMode, 'webApp')
-                app.DockUndockButton.Enable       = 1;
-                app.tool_openDevTools.Enable       = 1;
+                app.DockUndockButton.Enable = 1;
+                app.tool_openDevTools.Enable = 1;
                 app.versionInfoRefresh.Enable = 1;
                 app.openAuxiliarAppAsDocked.Enable = 1;
             end
 
             if ~isdeployed
-                app.openAuxiliarApp2Debug.Enable   = 1;
+                app.openAuxiliarApp2Debug.Enable = 1;
             end
         end
 
@@ -269,11 +269,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationTrace.Value  = app.mainApp.General.context.TASK_VIEW.integration.traceMode;
             app.plot_IntegrationTime.Value   = app.mainApp.General.context.TASK_VIEW.integration.sampleTimeSeconds;
 
-            if checkEdition(app, 'PLOT')
-                app.configPlotRefresh.Visible = 1;
-            else
-                app.configPlotRefresh.Visible = 0;
-            end
+            app.configPlotRefresh.Visible    = checkEdition(app, 'PLOT');
         end
 
         %-----------------------------------------------------------------%
@@ -705,7 +701,7 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Create Toolbar
             app.Toolbar = uigridlayout(app.GridLayout);
-            app.Toolbar.ColumnWidth = {'1x', 22, 22};
+            app.Toolbar.ColumnWidth = {'1x', 22};
             app.Toolbar.RowHeight = {4, 17, '1x'};
             app.Toolbar.ColumnSpacing = 5;
             app.Toolbar.RowSpacing = 0;
@@ -719,9 +715,8 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.tool_openDevTools.ScaleMethod = 'none';
             app.tool_openDevTools.ImageClickedFcn = createCallbackFcn(app, @Toolbar_OpenDevToolsClicked, true);
             app.tool_openDevTools.Enable = 'off';
-            app.tool_openDevTools.Tooltip = {''};
-            app.tool_openDevTools.Layout.Row = 2;
-            app.tool_openDevTools.Layout.Column = 3;
+            app.tool_openDevTools.Layout.Row = [1 3];
+            app.tool_openDevTools.Layout.Column = 2;
             app.tool_openDevTools.ImageSource = 'Debug_18.png';
 
             % Create SubTabGroup
@@ -753,6 +748,15 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.versionInfoLabel.Layout.Column = 1;
             app.versionInfoLabel.Text = 'AMBIENTE';
 
+            % Create versionInfoRefresh
+            app.versionInfoRefresh = uiimage(app.SubGrid1);
+            app.versionInfoRefresh.ScaleMethod = 'none';
+            app.versionInfoRefresh.ImageClickedFcn = createCallbackFcn(app, @Toolbar_AppEnvRefreshButtonPushed, true);
+            app.versionInfoRefresh.Enable = 'off';
+            app.versionInfoRefresh.Layout.Row = 1;
+            app.versionInfoRefresh.Layout.Column = 2;
+            app.versionInfoRefresh.ImageSource = 'Refresh_18.png';
+
             % Create versionInfo
             app.versionInfo = uilabel(app.SubGrid1);
             app.versionInfo.BackgroundColor = [1 1 1];
@@ -763,17 +767,6 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.versionInfo.Layout.Column = [1 2];
             app.versionInfo.Interpreter = 'html';
             app.versionInfo.Text = '';
-
-            % Create versionInfoRefresh
-            app.versionInfoRefresh = uiimage(app.SubGrid1);
-            app.versionInfoRefresh.ScaleMethod = 'none';
-            app.versionInfoRefresh.ImageClickedFcn = createCallbackFcn(app, @Toolbar_AppEnvRefreshButtonPushed, true);
-            app.versionInfoRefresh.Enable = 'off';
-            app.versionInfoRefresh.Tooltip = {''};
-            app.versionInfoRefresh.Layout.Row = 1;
-            app.versionInfoRefresh.Layout.Column = 2;
-            app.versionInfoRefresh.VerticalAlignment = 'bottom';
-            app.versionInfoRefresh.ImageSource = 'Refresh_18.png';
 
             % Create openAuxiliarAppAsDocked
             app.openAuxiliarAppAsDocked = uicheckbox(app.SubGrid1);
@@ -1073,6 +1066,15 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_colorsLabel.Layout.Column = 1;
             app.plot_colorsLabel.Text = 'CORES';
 
+            % Create configPlotRefresh
+            app.configPlotRefresh = uiimage(app.SubGrid3);
+            app.configPlotRefresh.ScaleMethod = 'none';
+            app.configPlotRefresh.ImageClickedFcn = createCallbackFcn(app, @configPlotRefreshImageClicked, true);
+            app.configPlotRefresh.Visible = 'off';
+            app.configPlotRefresh.Layout.Row = 3;
+            app.configPlotRefresh.Layout.Column = 3;
+            app.configPlotRefresh.ImageSource = 'Refresh_18.png';
+
             % Create plot_colorsPanel
             app.plot_colorsPanel = uipanel(app.SubGrid3);
             app.plot_colorsPanel.AutoResizeChildren = 'off';
@@ -1152,6 +1154,14 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_colorsClearWrite.Layout.Row = 1;
             app.plot_colorsClearWrite.Layout.Column = 4;
             app.plot_colorsClearWrite.BackgroundColor = [1 1 1];
+
+            % Create plot_WaterfallLabel
+            app.plot_WaterfallLabel = uilabel(app.SubGrid3);
+            app.plot_WaterfallLabel.VerticalAlignment = 'bottom';
+            app.plot_WaterfallLabel.FontSize = 10;
+            app.plot_WaterfallLabel.Layout.Row = 5;
+            app.plot_WaterfallLabel.Layout.Column = 1;
+            app.plot_WaterfallLabel.Text = 'WATERFALL';
 
             % Create plot_WaterfallPanel
             app.plot_WaterfallPanel = uipanel(app.SubGrid3);
@@ -1262,25 +1272,6 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.plot_IntegrationTime.Layout.Row = 2;
             app.plot_IntegrationTime.Layout.Column = 2;
             app.plot_IntegrationTime.Value = 10;
-
-            % Create configPlotRefresh
-            app.configPlotRefresh = uiimage(app.SubGrid3);
-            app.configPlotRefresh.ScaleMethod = 'none';
-            app.configPlotRefresh.ImageClickedFcn = createCallbackFcn(app, @configPlotRefreshImageClicked, true);
-            app.configPlotRefresh.Visible = 'off';
-            app.configPlotRefresh.Tooltip = {''};
-            app.configPlotRefresh.Layout.Row = 3;
-            app.configPlotRefresh.Layout.Column = 3;
-            app.configPlotRefresh.VerticalAlignment = 'bottom';
-            app.configPlotRefresh.ImageSource = 'Refresh_18.png';
-
-            % Create plot_WaterfallLabel
-            app.plot_WaterfallLabel = uilabel(app.SubGrid3);
-            app.plot_WaterfallLabel.VerticalAlignment = 'bottom';
-            app.plot_WaterfallLabel.FontSize = 10;
-            app.plot_WaterfallLabel.Layout.Row = 5;
-            app.plot_WaterfallLabel.Layout.Column = 1;
-            app.plot_WaterfallLabel.Text = 'WATERFALL';
 
             % Create SubTab4
             app.SubTab4 = uitab(app.SubTabGroup);

@@ -314,7 +314,7 @@ classdef dockTracking_exported < matlab.apps.AppBase
         end
 
         % Button pushed function: LogButton
-        function LogButtonPushed(app, event)
+        function onLogButtonClicked(app, event)
             
             if ~isempty(app.LogEntries)
                 logTable = struct2table(app.LogEntries);
@@ -549,10 +549,9 @@ classdef dockTracking_exported < matlab.apps.AppBase
 
             % Create LogButton
             app.LogButton = uibutton(app.GridLayout, 'push');
-            app.LogButton.ButtonPushedFcn = createCallbackFcn(app, @LogButtonPushed, true);
+            app.LogButton.ButtonPushedFcn = createCallbackFcn(app, @onLogButtonClicked, true);
             app.LogButton.Icon = 'LOG_32.png';
-            app.LogButton.BackgroundColor = [1 1 1];
-            app.LogButton.Tooltip = {'Apresenta LOG do processo de apontamento da antena'};
+            app.LogButton.BackgroundColor = [0.9804 0.9804 0.9804];
             app.LogButton.Layout.Row = 4;
             app.LogButton.Layout.Column = 1;
             app.LogButton.Text = '';

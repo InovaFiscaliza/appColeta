@@ -55,7 +55,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
         EditStateButton           matlab.ui.control.StateButton
         ViewStateButton           matlab.ui.control.StateButton
         TreePanel                 matlab.ui.container.GridLayout
-        TreeModeDown              matlab.ui.control.Image
+        TreeMoveDown              matlab.ui.control.Image
         TreeMoveUp                matlab.ui.control.Image
         TreeDelNode               matlab.ui.control.Image
         TreeAddNode               matlab.ui.control.Image
@@ -945,7 +945,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
 
         end
 
-        % Image clicked function: TreeModeDown, TreeMoveUp
+        % Image clicked function: TreeMoveDown, TreeMoveUp
         function onTreeNodeUpDownButtonClicked(app, event)
             
             instrIdx = app.Tree.SelectedNodes.NodeData.instrIdx;
@@ -960,7 +960,7 @@ classdef winInstrument_exported < matlab.apps.AppBase
                         flag = true;
                     end
 
-                case app.TreeModeDown
+                case app.TreeMoveDown
                     if nodeParentIdxPrevious < numel(parentNode.Children)
                         instrIdxNew = parentNode.Children(nodeParentIdxPrevious+1).NodeData.instrIdx;
                         flag = true;
@@ -1161,7 +1161,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreeAddNode = uiimage(app.TreePanel);
             app.TreeAddNode.ImageClickedFcn = createCallbackFcn(app, @onTreeAddNodeButtonClicked, true);
             app.TreeAddNode.Enable = 'off';
-            app.TreeAddNode.Tooltip = {''};
             app.TreeAddNode.Layout.Row = 3;
             app.TreeAddNode.Layout.Column = 3;
             app.TreeAddNode.ImageSource = 'addFileWithPlus_32.png';
@@ -1170,7 +1169,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreeDelNode = uiimage(app.TreePanel);
             app.TreeDelNode.ImageClickedFcn = createCallbackFcn(app, @onTreeDelNodeButtonClicked, true);
             app.TreeDelNode.Enable = 'off';
-            app.TreeDelNode.Tooltip = {''};
             app.TreeDelNode.Layout.Row = 5;
             app.TreeDelNode.Layout.Column = 3;
             app.TreeDelNode.ImageSource = 'Delete_32Red.png';
@@ -1179,19 +1177,17 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TreeMoveUp = uiimage(app.TreePanel);
             app.TreeMoveUp.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
             app.TreeMoveUp.Enable = 'off';
-            app.TreeMoveUp.Tooltip = {''};
             app.TreeMoveUp.Layout.Row = 7;
             app.TreeMoveUp.Layout.Column = 3;
             app.TreeMoveUp.ImageSource = 'ArrowUp_32.png';
 
-            % Create TreeModeDown
-            app.TreeModeDown = uiimage(app.TreePanel);
-            app.TreeModeDown.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
-            app.TreeModeDown.Enable = 'off';
-            app.TreeModeDown.Tooltip = {''};
-            app.TreeModeDown.Layout.Row = 9;
-            app.TreeModeDown.Layout.Column = 3;
-            app.TreeModeDown.ImageSource = 'ArrowDown_32.png';
+            % Create TreeMoveDown
+            app.TreeMoveDown = uiimage(app.TreePanel);
+            app.TreeMoveDown.ImageClickedFcn = createCallbackFcn(app, @onTreeNodeUpDownButtonClicked, true);
+            app.TreeMoveDown.Enable = 'off';
+            app.TreeMoveDown.Layout.Row = 9;
+            app.TreeMoveDown.Layout.Column = 3;
+            app.TreeMoveDown.ImageSource = 'ArrowDown_32.png';
 
             % Create ViewStateButton
             app.ViewStateButton = uibutton(app.GridLayout, 'state');
@@ -1545,7 +1541,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.ImportButton = uiimage(app.Toolbar);
             app.ImportButton.ScaleMethod = 'none';
             app.ImportButton.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
-            app.ImportButton.Tooltip = {''};
             app.ImportButton.Layout.Row = 1;
             app.ImportButton.Layout.Column = 1;
             app.ImportButton.ImageSource = 'Import_16.png';
@@ -1554,7 +1549,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.ExportButton = uiimage(app.Toolbar);
             app.ExportButton.ScaleMethod = 'none';
             app.ExportButton.ImageClickedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
-            app.ExportButton.Tooltip = {''};
             app.ExportButton.Layout.Row = 1;
             app.ExportButton.Layout.Column = 2;
             app.ExportButton.ImageSource = 'Export_16.png';
@@ -1572,7 +1566,6 @@ classdef winInstrument_exported < matlab.apps.AppBase
             app.TestConnectivityButton.ButtonPushedFcn = createCallbackFcn(app, @onToolbarButtonClicked, true);
             app.TestConnectivityButton.Icon = 'Connectivity_32.png';
             app.TestConnectivityButton.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.TestConnectivityButton.Tooltip = {''};
             app.TestConnectivityButton.Layout.Row = 1;
             app.TestConnectivityButton.Layout.Column = 4;
             app.TestConnectivityButton.Text = '';
