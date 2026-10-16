@@ -821,7 +821,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 updateGPSStatus(app, app.TaskController.Tasks(taskIdx).GPSLastFix)
 
                 app.SelectedTaskInfo.Text = sprintf('Tarefa "<b>%s</b>"\nFaixa %d de %d: %.3f – %.3f MHz', app.TaskController.Tasks(taskIdx).TaskSpec.Script.Name, bandIdx, numel(app.TaskController.Tasks(taskIdx).Bands), app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStart / 1e+6, app.TaskController.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx).FreqStop  / 1e+6);
-                app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).NumSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
+                updateRevisitTimeInfo(app, taskIdx, bandIdx)
 
             else
                 app.Sweeps.Text = string(-1);
@@ -829,7 +829,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 updateGPSStatus(app, [])
                 
                 app.SelectedTaskInfo.Text = '';
-                app.RevisitTimeInfo.Text = '';
+                updateRevisitTimeInfo(app, [], [])
             end
 
             app.SelectedTaskSeparator.Visible = ~isempty(app.SelectedTaskInfo.Text);
@@ -863,6 +863,20 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             else
                 set(app.ReceiverErrorCount, 'Text', '0', 'Visible', 'off')
                 app.ReceiverErrorCountIcon.Visible = 'off';
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function updateRevisitTimeInfo(app, taskIdx, bandIdx)
+            app.RevisitTimeInfo.Text = '';
+
+            if isempty(taskIdx) || isempty(bandIdx)
+                return
+            end
+
+            band = app.TaskController.Tasks(taskIdx).Bands(bandIdx);
+            if band.NumSweeps > 0
+                app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', band.NumSweeps, band.RevisitTime);
             end
         end
 
@@ -1415,7 +1429,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                     if app.SpectrumFlowList.Value == bandIdx
                         updatePlot(app, taskIdx, bandIdx)
                         updateMaskStatus(app, maskTrigger, taskIdx, bandIdx)
-                        app.RevisitTimeInfo.Text = sprintf('%d varreduras\n%.3f seg', app.TaskController.Tasks(taskIdx).Bands(bandIdx).NumSweeps, app.TaskController.Tasks(taskIdx).Bands(bandIdx).RevisitTime);
+                        updateRevisitTimeInfo(app, taskIdx, bandIdx)
                         app.Sweeps.Text = string(app.TaskController.Tasks(taskIdx).Bands(bandIdx).OutputFile.WritedSamples);
                         drawnow
                     end
