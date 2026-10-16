@@ -2285,10 +2285,6 @@ classdef winAddTask_exported < matlab.apps.AppBase
                     end
                 end
 
-                if strcmp(app.AntennaSwitchName.Value, 'EMSat')
-                    util.AntennaTracking.verifyPointing(app, app.Context, antennaMetaData, app.progressDialog);
-                end
-
             catch ME
                 ui.Dialog(app.UIFigure, 'warning', ME.message);
                 app.progressDialog.Visible = 'hidden';
