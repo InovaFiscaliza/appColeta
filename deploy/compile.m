@@ -55,7 +55,7 @@ function varargout = compile(compilationType, rootCompiledFolder, matlabRuntimeF
     % a figura do app principal (winAppColeta.mlapp) seja um container para
     % os apps auxiliares.
     cd(initFolder)
-    preCompile(prjInfo)
+    preCompile('generateExportedApps', prjInfo)
 
     % Gera as versões desktop e webapp.
     switch compilationType
