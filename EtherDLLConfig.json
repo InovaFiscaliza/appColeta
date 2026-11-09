@@ -1,0 +1,46 @@
+{
+    "dllDefault": {
+        "station": {
+            "address": "192.168.0.2",
+            "receiverHardwareVersion": "",
+            "receiverModel": "",
+            "receiverSoftwareVersion": "",
+            "receiverType": "TSMW"
+        }
+    },
+    "log": {
+        "console": {
+            "level": "info"
+        },
+        "file": {
+            "filename": "EtherDLL.log",
+            "level": "debug"
+        },
+        "name": "EtherDLL"
+    },
+    "service": {
+        "bufferSizeBytes": 4096,
+        "demoMode": false,
+        "msgKeys": {
+            "ack": "ACK",
+            "end": "\r\n",
+            "nack": "NACK",
+            "ping": "PING"
+        },
+        "pingEnable": true,
+        "pingPeriodS": 30,
+        "port": 5555,
+        "sleepMs": 100,
+        "taskKeys": {
+            "arguments": "ARGS",
+            "clientIP": "REQUEST_SOURCE",
+            "clientId": "ID",
+            "commandCode": "CODE",
+            "commandName": "COMMAND",
+            "message": "MSG",
+            "queueId": "QID",
+            "serverId": "SID"
+        },
+        "timeoutS": 10
+    }
+}
