@@ -119,8 +119,9 @@ classdef Receiver < handle
 
             idx = find(strcmp(obj.Table.Socket, socketTag), 1);
 
-            % O EtherDLL é um servidor local requerido pelo protocolo JSON do
-            % TSMW. Inicia/aguarda o serviço antes de tentar (re)usar o socket.
+            % O EtherDLL fornece o servidor TCP do protocolo JSON do TSMW.
+            % O gerenciador inicia/aguarda o processo apenas para endpoints locais;
+            % em endpoints remotos, a conexão TCP é tentada diretamente.
             if strcmpi(tag, 'TSMW')
                 try
                     model.TSMWServerManager.ensureRunning(obj.EtherDLLPath, ip, port, 10, ~isempty(idx));
@@ -251,6 +252,17 @@ classdef Receiver < handle
 
             [ip, port] = missingParameters(obj, receiverConfig.Parameters);
             model.TSMWServerManager.restartManaged(obj.EtherDLLPath, ip, port)
+        end
+
+        %-----------------------------------------------------------------%
+        function value = isLocalEtherDLL(obj, receiverConfig)
+            value = false;
+            if ~isfield(receiverConfig, 'Parameters')
+                return
+            end
+
+            [ip, ~] = missingParameters(obj, receiverConfig.Parameters);
+            value = model.TSMWServerManager.isLocalEndpoint(ip);
         end
 
         %-----------------------------------------------------------------%

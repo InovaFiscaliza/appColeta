@@ -10,6 +10,17 @@ classdef TSMWServerManager
 
     methods (Static)
         %-----------------------------------------------------------------%
+        function value = isLocalEndpoint(host)
+            arguments
+                host (1, :) char
+            end
+
+            host = strtrim(host);
+            value = strcmpi(host, 'localhost') || strcmp(host, '::1') || ...
+                strcmp(host, '[::1]') || ~isempty(regexp(host, '^127(?:\.\d{1,3}){3}$', 'once'));
+        end
+
+        %-----------------------------------------------------------------%
         function ensureRunning(executablePath, host, port, startupTimeout, allowEstablished)
             arguments
                 executablePath (1, :) char
@@ -17,6 +28,12 @@ classdef TSMWServerManager
                 port (1, 1) double {mustBeInteger, mustBePositive}
                 startupTimeout (1, 1) double {mustBePositive} = 10
                 allowEstablished (1, 1) logical = false
+            end
+
+            % Para um EtherDLL em outro computador, apenas o cliente TCP será
+            % aberto pelo Receiver; não verificar nem iniciar processos locais.
+            if ~model.TSMWServerManager.isLocalEndpoint(host)
+                return
             end
 
             if ~ispc
@@ -110,6 +127,11 @@ classdef TSMWServerManager
                 host (1, :) char
                 port (1, 1) double {mustBeInteger, mustBePositive}
                 startupTimeout (1, 1) double {mustBePositive} = 10
+            end
+
+            if ~model.TSMWServerManager.isLocalEndpoint(host)
+                error('ReceiverLib:EtherDLLRemoteRestartUnsupported', ...
+                    'O reinício automático do EtherDLL não é realizado em um computador remoto.')
             end
 
             if ~ispc
