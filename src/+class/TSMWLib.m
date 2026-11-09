@@ -102,11 +102,22 @@ classdef TSMWLib
         end
 
         %-----------------------------------------------------------------%
-        function trace = decodeTrace(payload)
+        function [trace, traceInfo] = decodeTrace(payload)
             % O traço é um vetor de "single" (IEEE 754, little-endian) em dBm,
             % codificado em Base64. Retorna [] se a resposta não o traz.
 
             trace = [];
+            traceInfo = struct('Count', [], 'FreqStart', [], 'FreqStop', []);
+
+            if isfield(payload, 'count')
+                traceInfo.Count = double(payload.count);
+            end
+            if isfield(payload, 'startFrequency')
+                traceInfo.FreqStart = double(payload.startFrequency);
+            end
+            if isfield(payload, 'stopFrequency')
+                traceInfo.FreqStop = double(payload.stopFrequency);
+            end
 
             if isfield(payload, class.TSMWLib.TRACE_KEY) && ~isempty(payload.(class.TSMWLib.TRACE_KEY))
                 spectrumRaw = matlab.net.base64decode(payload.(class.TSMWLib.TRACE_KEY));

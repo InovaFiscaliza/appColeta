@@ -575,7 +575,8 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
             % Others...
             resourcesFolder = fullfile(app.General.fileFolder.MFilePath, 'resources');
-            app.receiverObj = model.Receiver(app.rootFolder, resourcesFolder);
+            app.receiverObj = model.Receiver( ...
+                app.rootFolder, resourcesFolder, app.General.etherDLL.executablePath);
             app.gpsObj = model.GPS(app.rootFolder, resourcesFolder);            
             app.EB500Obj = class.EB500Lib(resourcesFolder);
             app.EMSatObj = class.EMSatLib(app.rootFolder);

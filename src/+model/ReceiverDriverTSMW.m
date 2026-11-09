@@ -53,12 +53,23 @@ classdef ReceiverDriverTSMW < model.ReceiverDriver
         end
 
         %-----------------------------------------------------------------%
-        function traceData = fetchTraceData(obj)
+        function traceData = fetchTraceData(obj, expected)
+            arguments
+                obj
+                expected (1, 1) struct = struct()
+            end
+
             response = request(obj, obj.Definition.communication.fetch.traceData, class.Constants.Timeout);
 
             traceData = [];
             if ~isempty(response)
-                traceData = class.TSMWLib.decodeTrace(class.TSMWLib.parseResponse(response));
+                payload = class.TSMWLib.parseResponse(response);
+                [traceData, traceInfo] = class.TSMWLib.decodeTrace(payload);
+
+                if ~isempty(fieldnames(expected)) && ...
+                        ~matchesExpectedTrace(obj, traceData, traceInfo, expected)
+                    traceData = [];
+                end
             end
         end
 
@@ -144,6 +155,27 @@ classdef ReceiverDriverTSMW < model.ReceiverDriver
 
 
     methods (Access = private)
+        %-----------------------------------------------------------------%
+        function value = matchesExpectedTrace(~, traceData, traceInfo, expected)
+            value = false;
+            requiredFields = {'DataPoints', 'FreqStart', 'FreqStop'};
+
+            if ~all(isfield(expected, requiredFields)) || isempty(traceData) || ...
+                    ~isscalar(traceInfo.Count) || ~isfinite(traceInfo.Count) || ...
+                    ~isscalar(traceInfo.FreqStart) || ~isfinite(traceInfo.FreqStart) || ...
+                    ~isscalar(traceInfo.FreqStop) || ~isfinite(traceInfo.FreqStop)
+                return
+            end
+
+            startTolerance = max(1, abs(expected.FreqStart)*1e-12);
+            stopTolerance  = max(1, abs(expected.FreqStop)*1e-12);
+
+            value = (traceInfo.Count == expected.DataPoints) && ...
+                    (numel(traceData) == expected.DataPoints) && ...
+                    (abs(traceInfo.FreqStart - expected.FreqStart) <= startTolerance) && ...
+                    (abs(traceInfo.FreqStop  - expected.FreqStop)  <= stopTolerance);
+        end
+
         %-----------------------------------------------------------------%
         function response = readJsonResponse(obj, timeout, key)
             % Retorna a primeira linha de dados, ignorando "ACK" e, se "key" for

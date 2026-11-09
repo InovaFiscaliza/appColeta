@@ -140,6 +140,10 @@ classdef TaskController < handle
 
                     numBands = numel(obj.Tasks(taskIdx).Bands);
                     for bandIdx = 0:numBands
+                        if strcmp(obj.Tasks(taskIdx).Status, 'Cancelamento solicitado')
+                            break
+                        end
+
                         revisitFactor = obj.RevisitInfo.Band(taskIdx).RevisitFactors(bandIdx+1);
                         if mod(sweepCount, revisitFactor) || revisitFactor == -1
                             continue
@@ -234,7 +238,13 @@ classdef TaskController < handle
                                     traceData = traceData(end,:);
                                 end
 
-                                obj.Tasks(taskIdx).RetryPolicy.receiver = struct('failureCount', 0, 'firstFailureAt', NaT, 'lastFailureAt', NaT);
+                                obj.Tasks(taskIdx).RetryPolicy.receiver = struct( ...
+                                    'failureCount', 0, ...
+                                    'firstFailureAt', NaT, ...
+                                    'lastFailureAt', NaT, ...
+                                    'etherDLLFailureSince', NaT, ...
+                                    'etherDLLRestarted', false ...
+                                );
 
                                 % WATERFALL MATRIX
                                 waterfallIdx = mod(obj.Tasks(taskIdx).Bands(bandIdx).Waterfall.idx, obj.Tasks(taskIdx).Bands(bandIdx).Waterfall.Depth) + 1;
@@ -265,6 +275,13 @@ classdef TaskController < handle
                                 notify(obj, 'BandDataAcquired', model.TaskEventData(taskIdx, bandIdx, maskTriggered))
 
                             catch ME
+                                if strcmp(ME.identifier, 'TaskController:AcquisitionCancelled') || ...
+                                        strcmp(obj.Tasks(taskIdx).Status, 'Cancelamento solicitado')
+                                    % A solicitação de parada não é falha do receptor:
+                                    % não registrar erro nem tentar reconectar.
+                                    break
+                                end
+
                                 % O controle de erro do GPS se dá na função "acquireGpsData".
                                 %
                                 % O controle de erro do RECEPTOR se dá aqui, neste trecho do
@@ -283,17 +300,121 @@ classdef TaskController < handle
                                 obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error (RECEIVER)', 'timestamp', char(sampleTimestamp), 'message', ME.message);
                                 recordFailure(obj, 'receiver', taskIdx, sampleTimestamp)
 
+                                receiverDefinition = obj.Tasks(taskIdx).TaskSpec.Receiver.Config;
+                                isTSMW = isfield(receiverDefinition, 'tag') && strcmpi(receiverDefinition.tag, 'TSMW');
+                                isTSMWTraceTimeout = isTSMW && strcmp(ME.identifier, 'ReceiverLib:TraceAcquisitionTimeout');
+
+                                if isTSMWTraceTimeout
+                                    if isnat(obj.Tasks(taskIdx).RetryPolicy.receiver.etherDLLFailureSince)
+                                        obj.Tasks(taskIdx).RetryPolicy.receiver.etherDLLFailureSince = sampleTimestamp;
+                                    end
+                                elseif isTSMW
+                                    % Um erro diferente do timeout de aquisição interrompe a
+                                    % continuidade da falha de comunicação do EtherDLL.
+                                    obj.Tasks(taskIdx).RetryPolicy.receiver.etherDLLFailureSince = NaT;
+                                    obj.Tasks(taskIdx).RetryPolicy.receiver.etherDLLRestarted = false;
+                                end
+
                                 notify(obj, 'ErrorRaised', model.TaskEventData(taskIdx, [], 'Receiver'))
 
-                                msgError = reconnectAttempt(obj.App.receiverObj, ...
-                                    obj.Tasks(taskIdx).Connections.receiver.UserData.Config, ...
-                                    obj.Tasks(taskIdx).TaskSpec.Receiver.Config, ...
-                                    obj.Tasks(taskIdx).Bands(bandIdx).ScpiCommands ...
-                                );
+                                msgError = '';
+                                if isTSMWTraceTimeout
+                                    receiverPolicy = obj.Tasks(taskIdx).RetryPolicy.receiver;
+                                    failureDuration = seconds(datetime('now') - receiverPolicy.etherDLLFailureSince);
 
-                                if ~isempty(msgError)
-                                    updateTaskStatus(obj, taskIdx, 'error');
-                                    break
+                                    % Suspende novas solicitações enquanto o EtherDLL pode estar
+                                    % bloqueado na chamada DLL; reiniciar/reconectar somente após
+                                    % a janela contínua de falha.
+                                    while failureDuration < class.Constants.errorTimeTrigger
+                                        if strcmp(obj.Tasks(taskIdx).Status, 'Cancelamento solicitado')
+                                            break
+                                        end
+                                        pause(min(0.1, class.Constants.errorTimeTrigger - failureDuration))
+                                        failureDuration = seconds(datetime('now') - receiverPolicy.etherDLLFailureSince);
+                                    end
+
+                                    if strcmp(obj.Tasks(taskIdx).Status, 'Cancelamento solicitado')
+                                        break
+                                    end
+
+                                    if failureDuration >= class.Constants.errorTimeTrigger
+                                        if receiverPolicy.etherDLLRestarted
+                                            updateTaskStatus(obj, taskIdx, 'error');
+                                            break
+                                        end
+
+                                        try
+                                            obj.App.receiverObj.restartEtherDLL( ...
+                                                obj.Tasks(taskIdx).Connections.receiver.UserData.Config);
+
+                                            obj.Tasks(taskIdx).RetryPolicy.receiver.etherDLLRestarted = true;
+                                            obj.Tasks(taskIdx).RetryPolicy.receiver.etherDLLFailureSince = datetime('now');
+                                            obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                                                'level', 'warning (ETHERDLL)', ...
+                                                'timestamp', char(datetime('now')), ...
+                                                'message', 'EtherDLL reiniciado após falha contínua de comunicação.' ...
+                                            );
+
+                                            [msgError, reconnectedHandle] = reconnectAttempt(obj.App.receiverObj, ...
+                                                obj.Tasks(taskIdx).Connections.receiver.UserData.Config, ...
+                                                obj.Tasks(taskIdx).TaskSpec.Receiver.Config, ...
+                                                obj.Tasks(taskIdx).Bands(bandIdx).ScpiCommands ...
+                                            );
+
+                                            if isempty(msgError) && ~isempty(reconnectedHandle)
+                                                receiverHandle = reconnectedHandle;
+                                                receiverHandle.UserData.SyncMode = obj.Tasks(taskIdx).TaskSpec.Receiver.Sync;
+                                                obj.Tasks(taskIdx).Connections.receiver = receiverHandle;
+                                                obj.Tasks(taskIdx).TaskSpec.Receiver.Handle = receiverHandle;
+                                                receiverDriver = model.ReceiverDriver.create( ...
+                                                    obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
+                                            end
+
+                                            if ~isempty(msgError)
+                                                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                                                    'level', 'warning (ETHERDLL)', ...
+                                                    'timestamp', char(datetime('now')), ...
+                                                    'message', sprintf('EtherDLL reiniciado, mas a reconexão falhou: %s', msgError) ...
+                                                );
+                                            end
+
+                                        catch restartError
+                                            obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                                                'level', 'error (ETHERDLL)', ...
+                                                'timestamp', char(datetime('now')), ...
+                                                'message', restartError.message ...
+                                            );
+                                            updateTaskStatus(obj, taskIdx, 'error');
+                                            break
+                                        end
+                                    end
+
+                                    % Se a reconexão foi recuperada, tenta as demais bandas
+                                    % neste ciclo; uma banda com resposta atrasada não deve
+                                    % bloquear a atualização das outras.
+                                    if isempty(msgError)
+                                        continue
+                                    else
+                                        break
+                                    end
+                                else
+                                    [msgError, reconnectedHandle] = reconnectAttempt(obj.App.receiverObj, ...
+                                        obj.Tasks(taskIdx).Connections.receiver.UserData.Config, ...
+                                        obj.Tasks(taskIdx).TaskSpec.Receiver.Config, ...
+                                        obj.Tasks(taskIdx).Bands(bandIdx).ScpiCommands ...
+                                    );
+
+                                    if isempty(msgError) && ~isempty(reconnectedHandle)
+                                        receiverHandle = reconnectedHandle;
+                                        receiverHandle.UserData.SyncMode = obj.Tasks(taskIdx).TaskSpec.Receiver.Sync;
+                                        obj.Tasks(taskIdx).Connections.receiver = receiverHandle;
+                                        obj.Tasks(taskIdx).TaskSpec.Receiver.Handle = receiverHandle;
+                                        receiverDriver = model.ReceiverDriver.create( ...
+                                            obj.Tasks(taskIdx).TaskSpec.Receiver.Config, receiverHandle);
+                                    elseif ~isempty(msgError)
+                                        updateTaskStatus(obj, taskIdx, 'error');
+                                        break
+                                    end
                                 end
                             end
                         end
@@ -415,6 +536,11 @@ classdef TaskController < handle
                         if isequal(dateshift(timestamp, 'start', 'minute'), dateshift(startupTimestamp, 'start', 'minute'))
                             return
                         end
+
+                        % Registra esta tentativa antes de chamar startTask. Se a
+                        % inicialização falhar e reativar o timer, o callback
+                        % reentrante não repetirá a tentativa no mesmo minuto.
+                        obj.Tasks(taskIdx).Timing.startupAt = timestamp;
                     end
 
                     if obj.Tasks(taskIdx).Timing.startedAt < timestamp
@@ -441,13 +567,13 @@ classdef TaskController < handle
                             obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(timestamp), 'message', 'Iniciada a execução da tarefa.');
 
                         catch ME
+                            obj.Tasks(taskIdx).Status = 'Erro';
+                            obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error', 'timestamp', char(timestamp), 'message', getReport(ME));
+                            hasChanged = false;
+
                             if strcmp(obj.App.TaskSchedulerTimer.Running, 'off') && ~obj.IsRunning
                                 start(obj.App.TaskSchedulerTimer)
                             end
-                            obj.Tasks(taskIdx).Status = 'Erro';
-                            obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error', 'timestamp', char(timestamp), 'message', getReport(ME));
-
-                            hasChanged = false;
                         end
                     end
             end
@@ -531,7 +657,7 @@ classdef TaskController < handle
             end
 
             % RECEIVER
-            msgError = reconnectAttempt(obj.App.receiverObj, ...
+            [msgError, receiverHandle] = reconnectAttempt(obj.App.receiverObj, ...
                 buildReceiverConfig(obj.Tasks(idx)), ...
                 obj.Tasks(idx).TaskSpec.Receiver.Config, ...
                 obj.Tasks(idx).Bands(1).ScpiCommands ...
@@ -539,6 +665,12 @@ classdef TaskController < handle
 
             if ~isempty(msgError)
                 error(msgError)
+            end
+
+            if ~isempty(receiverHandle)
+                obj.Tasks(idx).Connections.receiver = receiverHandle;
+                obj.Tasks(idx).TaskSpec.Receiver.Handle = receiverHandle;
+                receiverHandle.UserData.SyncMode = obj.Tasks(idx).TaskSpec.Receiver.Sync;
             end
             
             receiverHandle = obj.Tasks(idx).Connections.receiver;
@@ -754,16 +886,34 @@ classdef TaskController < handle
             switch traceSource
                 case 'polling' % Analisadores de espectro (R&S, KeySight, Tektronix, Anritsu)
                     acquisitionTic = tic;
-                    elapsed = 0;
 
-                    while elapsed < timeout
-                        elapsed = toc(acquisitionTic);
+                    while toc(acquisitionTic) < timeout
+                        if strcmp(obj.Tasks(taskIdx).Status, 'Cancelamento solicitado')
+                            error('TaskController:AcquisitionCancelled', ...
+                                'Aquisição interrompida a pedido do usuário.')
+                        end
 
                         try
-                            traceData = fetchTraceData(receiverDriver);
+                            if isa(receiverDriver, 'model.ReceiverDriverTSMW')
+                                scriptBand = obj.Tasks(taskIdx).TaskSpec.Script.Band(bandIdx);
+                                expectedTrace = struct( ...
+                                    'DataPoints', obj.Tasks(taskIdx).Bands(bandIdx).DataPoints, ...
+                                    'FreqStart', scriptBand.FreqStart, ...
+                                    'FreqStop', scriptBand.FreqStop ...
+                                );
+                                traceData = fetchTraceData(receiverDriver, expectedTrace);
+                            else
+                                traceData = fetchTraceData(receiverDriver);
+                            end
+
+                            if strcmp(obj.Tasks(taskIdx).Status, 'Cancelamento solicitado')
+                                error('TaskController:AcquisitionCancelled', ...
+                                    'Aquisição interrompida a pedido do usuário.')
+                            end
 
                             if numel(traceData) == obj.Tasks(taskIdx).Bands(bandIdx).DataPoints
-                                if strcmp(obj.Tasks(taskIdx).TaskSpec.Receiver.Sync, 'Continuous Sweep')
+                                if strcmp(obj.Tasks(taskIdx).TaskSpec.Receiver.Sync, 'Continuous Sweep') && ...
+                                        ~isa(receiverDriver, 'model.ReceiverDriverTSMW')
                                     % Normaliza o traço de dados para calcular o hash de sincronização
                                     syncHash = Hash.sha1(traceData - min(traceData));
 
@@ -819,7 +969,8 @@ classdef TaskController < handle
                     traceData(:,:,1) = flip(traceData(:,:,1));
                 end
             else
-                error('Não foi lido corretamente o vetor de nível do receptor dentro do tempo limite (%.0f segundos).', timeout)
+                error('ReceiverLib:TraceAcquisitionTimeout', ...
+                    'Não foi lido corretamente o vetor de nível do receptor dentro do tempo limite (%.0f segundos).', timeout)
             end
         end
 

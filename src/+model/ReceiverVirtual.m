@@ -30,6 +30,7 @@ classdef ReceiverVirtual < handle
         StreamSocket
         StreamTarget = struct('Address', "", 'Port', 0, 'Mode', '')
         DatagramId = 0
+        JsonMeasurementCount = 0
         SelectivityMap
         Protocol = 'scpi'
     end
@@ -39,6 +40,8 @@ classdef ReceiverVirtual < handle
         Verbose (1, 1) logical = true
         TracePeriod (1, 1) double = 0.2
         PointsPerDatagram (1, 1) double = 500
+        RepeatJsonTrace (1, 1) logical = false
+        DropJsonMeasurementAt double = []
     end
 
 
@@ -94,7 +97,11 @@ classdef ReceiverVirtual < handle
 
             obj.Server = tcpserver(obj.Address, obj.Port, 'Timeout', 1, ...
                 'ConnectionChangedFcn', @(src, ~) onConnectionChanged(obj, src));
-            configureTerminator(obj.Server, 'LF')
+            terminator = 'LF';
+            if strcmp(obj.Protocol, 'json') && isfield(definitions{1}.connection, 'terminator')
+                terminator = definitions{1}.connection.terminator;
+            end
+            configureTerminator(obj.Server, terminator)
             configureCallback(obj.Server, 'terminator', @(src, ~) processCommands(obj, src))
 
             logMessage(obj, 'INFO', sprintf('%s (virtual) em %s:%d', obj.Tag, obj.Address, obj.Port))
@@ -283,11 +290,28 @@ classdef ReceiverVirtual < handle
                     reply(obj, src, jsonencode(struct('sweepSettings', obj.State)))
 
                 case 'startpowerscanmeasurement'
+                    obj.JsonMeasurementCount = obj.JsonMeasurementCount + 1;
                     nPoints = max(1, round(obj.State.numBins));
-                    trace   = single(-80 + 3 .* randn(1, nPoints));
+                    if any(obj.JsonMeasurementCount == obj.DropJsonMeasurementAt)
+                        logMessage(obj, 'TEST', sprintf('Resposta omitida na medição virtual %d.', obj.JsonMeasurementCount))
+                        return
+                    end
 
-                    pause(.200) % 200ms
-                    reply(obj, src, jsonencode(struct('spectrumDbmBase64', matlab.net.base64encode(typecast(trace, 'uint8')))))
+                    if obj.RepeatJsonTrace
+                        trace = single(-80 + 5 .* sin(linspace(0, 2*pi, nPoints)));
+                    else
+                        trace = single(-80 + 3 .* randn(1, nPoints));
+                    end
+
+                    payload = struct( ...
+                        'count', nPoints, ...
+                        'startFrequency', double(obj.State.startFrequency), ...
+                        'stopFrequency', double(obj.State.stopFrequency), ...
+                        'spectrumDbmBase64', matlab.net.base64encode(typecast(trace, 'uint8')) ...
+                    );
+
+                    pause(max(0, obj.TracePeriod))
+                    reply(obj, src, jsonencode(payload))
 
                 case 'gpsgetlocation'
                     reply(obj, src, jsonencode(struct('latitude', -12.993198, 'longitude', -38.463093, 'altitude', 26)))

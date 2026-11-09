@@ -39,6 +39,7 @@ classdef Receiver < handle
 
     properties
         Config
+        EtherDLLPath
 
         List = table( ...
             'Size', [0, 6], ...
@@ -56,9 +57,14 @@ classdef Receiver < handle
 
     methods
         %-----------------------------------------------------------------%
-        function obj = Receiver(rootFolder, resourcesFolder)
+        function obj = Receiver(rootFolder, resourcesFolder, etherDLLPath)
+            if nargin < 3
+                etherDLLPath = '';
+            end
+
             obj.Config = loadDefinitions(obj, resourcesFolder);
             obj.List   = fileRead(obj, rootFolder);
+            obj.EtherDLLPath = etherDLLPath;
 
             if ~isdeployed()
                 arrayfun(@(x) delete(x), tcpclientfind())
@@ -112,6 +118,17 @@ classdef Receiver < handle
             end
 
             idx = find(strcmp(obj.Table.Socket, socketTag), 1);
+
+            % O EtherDLL é um servidor local requerido pelo protocolo JSON do
+            % TSMW. Inicia/aguarda o serviço antes de tentar (re)usar o socket.
+            if strcmpi(tag, 'TSMW')
+                try
+                    model.TSMWServerManager.ensureRunning(obj.EtherDLLPath, ip, port, 10, ~isempty(idx));
+                catch ME
+                    msgError = ME.message;
+                    return
+                end
+            end
 
             if ~isempty(idx)
                 receiverHandle = obj.Table.Handle{idx};
@@ -209,18 +226,31 @@ classdef Receiver < handle
         end
 
         %-----------------------------------------------------------------%
-        function msgError = reconnectAttempt(obj, receiverConfig, definition, bandCommands)
+        function [msgError, receiverHandle] = reconnectAttempt(obj, receiverConfig, definition, bandCommands)
             receiverConfig.Definition = definition;
             [idx, msgError] = connect(obj, receiverConfig);
+            receiverHandle = [];
 
             if isempty(msgError)
+                receiverHandle = obj.Table.Handle{idx};
                 try
-                    restoreConfiguration(model.ReceiverDriver.create(definition, obj.Table.Handle{idx}), bandCommands)
+                    restoreConfiguration(model.ReceiverDriver.create(definition, receiverHandle), bandCommands)
 
                 catch ME
                     msgError = ME.message;
                 end
             end
+        end
+
+        %-----------------------------------------------------------------%
+        function restartEtherDLL(obj, receiverConfig)
+            if ~isfield(receiverConfig, 'Tag') || ~strcmpi(receiverConfig.Tag, 'TSMW')
+                error('ReceiverLib:EtherDLLWrongReceiver', ...
+                    'O reinício automático do EtherDLL só é válido para o receptor TSMW.')
+            end
+
+            [ip, port] = missingParameters(obj, receiverConfig.Parameters);
+            model.TSMWServerManager.restartManaged(obj.EtherDLLPath, ip, port)
         end
 
         %-----------------------------------------------------------------%

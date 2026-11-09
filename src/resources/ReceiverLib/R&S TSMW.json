@@ -9,7 +9,7 @@
             "TCPIP Socket"
         ],
         "defaultPort": 5555,
-        "terminator": "LF",
+        "terminator": "CR/LF",
         "protocol": "json",
         "traceData": {
             "acquisitionMode": "polling",
