@@ -983,6 +983,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function editTask(app, taskIdx)
+            if app.TaskController.hasPendingTaskStart()
+                ui.Dialog(app.UIFigure, 'warning', 'Aguarde a conclusão da conexão com o TSMW remoto antes de editar uma tarefa.');
+                return
+            end
+
             if ismember(app.TaskController.Tasks(taskIdx).Status, {'Na fila', 'Em andamento'})
                 ui.Dialog(app.UIFigure, 'warning', 'Uma tarefa no estado "Na fila" ou "Em andamento" não poderá ser editada.');
                 return
@@ -1000,6 +1005,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function deleteTask(app, taskIdx)
+            if app.TaskController.hasPendingTaskStart()
+                ui.Dialog(app.UIFigure, 'warning', 'Aguarde a conclusão da conexão com o TSMW remoto antes de excluir uma tarefa.');
+                return
+            end
+
             if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
                 ui.Dialog(app.UIFigure, 'warning', 'A tarefa precisa ser interrompida antes da tentativa de exclusão.');
                 return

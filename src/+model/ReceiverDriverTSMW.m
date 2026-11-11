@@ -92,9 +92,13 @@ classdef ReceiverDriverTSMW < model.ReceiverDriver
     methods (Access = protected)
         %-----------------------------------------------------------------%
         function response = request(obj, text, timeout)
-            flush(obj.Handle)
-            sendCommand(obj, text)
-            response = readJsonResponse(obj, timeout, class.TSMWLib.responseKey(text));
+            try
+                flush(obj.Handle)
+                sendCommand(obj, text)
+                response = readJsonResponse(obj, timeout, class.TSMWLib.responseKey(text));
+            catch ME
+                rethrowPeerClose(obj, ME)
+            end
         end
 
         %-----------------------------------------------------------------%
@@ -185,18 +189,47 @@ classdef ReceiverDriverTSMW < model.ReceiverDriver
 
             statusTic = tic;
             while toc(statusTic) < timeout
-                if obj.Handle.NumBytesAvailable
-                    line = strtrim(readline(obj.Handle));
+                try
+                    if obj.Handle.NumBytesAvailable
+                        line = strtrim(readline(obj.Handle));
 
-                    if (strlength(line) > 0) && ~class.TSMWLib.isAck(line) && (isempty(key) || contains(line, ['"' key '"']))
-                        response = line;
-                        return
+                        if (strlength(line) > 0) && ~class.TSMWLib.isAck(line) && (isempty(key) || contains(line, ['"' key '"']))
+                            response = line;
+                            return
+                        end
+
+                    else
+                        pause(.001)
                     end
-
-                else
-                    pause(.001)
+                catch ME
+                    rethrowPeerClose(obj, ME)
                 end
             end
+
+            if isempty(response) && strcmp(key, class.TSMWLib.IDN_KEY)
+                error('ReceiverLib:JsonResponseTimeout', ...
+                    'O TSMW não respondeu à requisição de identificação em %.1f s.', timeout)
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function rethrowPeerClose(~, ME)
+            if strcmp(ME.identifier, 'ReceiverLib:JsonResponseReadFailed')
+                rethrow(ME)
+            end
+
+            errorText = lower(string(ME.message));
+            isPeerClose = contains(errorText, 'conexão fechada pela outra ponta') || ...
+                contains(errorText, 'connection closed by peer') || ...
+                contains(errorText, 'remote peer closed');
+            if ~isPeerClose
+                rethrow(ME)
+            end
+
+            wrappedError = MException('ReceiverLib:JsonResponseReadFailed', ...
+                'Falha de comunicação com o TSMW remoto: %s', ME.message);
+            wrappedError = addCause(wrappedError, ME);
+            throw(wrappedError)
         end
     end
 end

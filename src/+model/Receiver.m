@@ -227,6 +227,220 @@ classdef Receiver < handle
         end
 
         %-----------------------------------------------------------------%
+        function connectAsync(obj, receiver, completionFcn)
+            % Inicia a identificação do TSMW remoto sem manter o callback da
+            % interface aguardando readline/polling. O resultado é entregue
+            % como (idx, MException, receiverHandle) ao callback informado.
+            arguments
+                obj
+                receiver (1, 1) struct
+                completionFcn (1, 1) function_handle
+            end
+
+            if ~isfield(receiver, 'Tag') || ~strcmpi(receiver.Tag, 'TSMW')
+                completionFcn([], MException('ReceiverLib:AsyncConnectWrongReceiver', ...
+                    'A conexão assíncrona só é suportada para o receptor TSMW.'), []);
+                return
+            end
+
+            [ip, port, timeout] = missingParameters(obj, receiver.Parameters);
+            socketTag = sprintf('%s:%d', ip, port);
+
+            if isfield(receiver, 'Definition')
+                definition = receiver.Definition;
+            else
+                definition = findDefinitionByTag(obj, receiver.Tag);
+            end
+
+            if isempty(definition)
+                completionFcn([], MException('ReceiverLib:DefinitionNotFound', ...
+                    'O receptor "%s" não consta da biblioteca de receptores.', receiver.Tag), []);
+                return
+            end
+
+            existingIdx = find(strcmp(obj.Table.Socket, socketTag), 1);
+            usingExistingHandle = ~isempty(existingIdx);
+            usedFreshHandle = false;
+            attempt = 0;
+            completed = false;
+            lastFailure = [];
+            activeHandle = [];
+            responseTimer = [];
+            responseKey = class.TSMWLib.responseKey(definition.communication.query.identification);
+
+            if usingExistingHandle
+                activeHandle = obj.Table.Handle{existingIdx};
+            else
+                try
+                    activeHandle = createHandle();
+                catch ME
+                    finish([], wrapFailure(ME), []);
+                    return
+                end
+            end
+
+            try
+                configureTerminator(activeHandle, definition.connection.terminator)
+                configureCallback(activeHandle, 'terminator', @onDataAvailable)
+            catch ME
+                finish([], wrapFailure(ME), []);
+                return
+            end
+
+            responseTimer = timer( ...
+                'ExecutionMode', 'fixedSpacing', ...
+                'StartDelay', class.Constants.idnTimeout, ...
+                'Period', class.Constants.idnTimeout, ...
+                'TimerFcn', @onResponseTimeout);
+
+            start(responseTimer)
+            sendIdentificationRequest()
+
+            function sendIdentificationRequest()
+                if completed
+                    return
+                end
+
+                attempt = attempt + 1;
+                try
+                    flush(activeHandle)
+                    writeline(activeHandle, definition.communication.query.identification)
+                catch ME
+                    retryOrFinish(ME)
+                end
+            end
+
+            function onDataAvailable(source, ~)
+                if completed || ~isequal(source, activeHandle)
+                    return
+                end
+
+                try
+                    while source.NumBytesAvailable > 0
+                        line = strtrim(readline(source));
+                        if isempty(line) || class.TSMWLib.isAck(line) || ...
+                                ~contains(line, ['"' responseKey '"'])
+                            continue
+                        end
+
+                        payload = class.TSMWLib.parseResponse(line);
+                        idn = class.TSMWLib.parseIdentification(payload);
+                        if isempty(idn)
+                            retryOrFinish(MException('ReceiverLib:EmptyIDN', ...
+                                'O EtherDLL remoto não retornou a identificação do TSMW.'));
+                            return
+                        end
+
+                        if ~contains(idn, receiver.Tag, 'IgnoreCase', true)
+                            finish([], MException('ReceiverLib:WrongReceiver', ...
+                                'O instrumento identificado (%s) difere do configurado (%s).', ...
+                                idn, receiver.Tag), []);
+                            return
+                        end
+
+                        idx = storeConnectedHandle(idn);
+                        activeHandle.Timeout = timeout;
+                        finish(idx, [], activeHandle)
+                        return
+                    end
+                catch ME
+                    retryOrFinish(ME)
+                end
+            end
+
+            function onResponseTimeout(~, ~)
+                if completed
+                    return
+                end
+
+                retryOrFinish(MException('ReceiverLib:RemoteIDNTimeout', ...
+                    'O EtherDLL remoto em %s:%d não respondeu à identificação em %.1f s.', ...
+                    ip, port, class.Constants.idnTimeout));
+            end
+
+            function retryOrFinish(failure)
+                lastFailure = failure;
+
+                if usingExistingHandle && attempt < 3
+                    sendIdentificationRequest()
+                    return
+                end
+
+                if usingExistingHandle && ~usedFreshHandle
+                    usedFreshHandle = true;
+                    usingExistingHandle = false;
+                    try
+                        configureCallback(activeHandle, 'off')
+                        activeHandle = createHandle();
+                        configureTerminator(activeHandle, definition.connection.terminator)
+                        configureCallback(activeHandle, 'terminator', @onDataAvailable)
+                        attempt = 0;
+                        sendIdentificationRequest()
+                    catch ME
+                        finish([], wrapFailure(ME), []);
+                    end
+                    return
+                end
+
+                finish([], wrapFailure(lastFailure), [])
+            end
+
+            function idx = storeConnectedHandle(idn)
+                activeHandle.UserData = struct( ...
+                    'IDN', idn, ...
+                    'ClientIP', '', ...
+                    'SyncMode', '', ...
+                    'Config', receiver, ...
+                    'Definition', definition);
+
+                if usingExistingHandle && ~usedFreshHandle
+                    idx = existingIdx;
+                    obj.Table.Status(idx) = "Connected";
+                else
+                    idx = height(obj.Table) + 1;
+                    obj.Table{idx, :} = {"Receiver", socketTag, activeHandle, "Connected"};
+                end
+            end
+
+            function finish(idx, failure, receiverHandle)
+                if completed
+                    return
+                end
+                completed = true;
+
+                try
+                    configureCallback(activeHandle, 'off')
+                catch
+                end
+                try
+                    if isvalid(responseTimer)
+                        stop(responseTimer)
+                        delete(responseTimer)
+                    end
+                catch
+                end
+
+                try
+                    completionFcn(idx, failure, receiverHandle)
+                catch callbackError
+                    warning('ReceiverLib:AsyncCompletionCallbackFailed', ...
+                        'Falha ao concluir a conexão assíncrona do TSMW: %s', callbackError.message)
+                end
+            end
+
+            function handle = createHandle()
+                handle = tcpclient(ip, port, 'ConnectTimeout', class.Constants.idnTimeout);
+                handle.Timeout = class.Constants.idnTimeout;
+            end
+
+            function failure = wrapFailure(cause)
+                failure = MException('ReceiverLib:RemoteConnectionFailed', ...
+                    'Falha ao identificar o TSMW remoto em %s:%d: %s', ip, port, cause.message);
+                failure = addCause(failure, cause);
+            end
+        end
+
+        %-----------------------------------------------------------------%
         function [msgError, receiverHandle] = reconnectAttempt(obj, receiverConfig, definition, bandCommands)
             receiverConfig.Definition = definition;
             [idx, msgError] = connect(obj, receiverConfig);

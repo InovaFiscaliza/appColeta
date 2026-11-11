@@ -1,3 +1,61 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 classdef TaskController < handle
 
     %---------------------------------------------------------------------%
@@ -58,6 +116,9 @@ classdef TaskController < handle
     properties (Access = private)
         %-----------------------------------------------------------------%
         App                                                                 % Handle to the owning winAppColeta_exported app.
+        PendingStartTaskIdx (1,1) double = NaN
+        PreconnectedStartTaskIdx (1,1) double = NaN
+        PreconnectedStartHandle = []
     end
 
 
@@ -450,6 +511,11 @@ classdef TaskController < handle
 
     methods (Access = {?winAppColeta, ?winAppColeta_exported})
         %-----------------------------------------------------------------%
+        function value = hasPendingTaskStart(obj)
+            value = isfinite(obj.PendingStartTaskIdx) || isfinite(obj.PreconnectedStartTaskIdx);
+        end
+
+        %-----------------------------------------------------------------%
         function hasChanged = updateTaskStatus(obj, taskIdx, evtName)
             arguments
                 obj
@@ -477,6 +543,17 @@ classdef TaskController < handle
 
             hasChanged    = false;
             initialStatus = obj.Tasks(taskIdx).Status;
+
+            % Não iniciar outra tarefa enquanto uma conexão TSMW remota aguarda
+            % a resposta assíncrona de identificação.
+            if isfinite(obj.PendingStartTaskIdx) && ...
+                    (taskIdx == obj.PendingStartTaskIdx || ismember(initialStatus, {'Na fila', 'Erro'}))
+                return
+            end
+            if isfinite(obj.PreconnectedStartTaskIdx) && ...
+                    taskIdx ~= obj.PreconnectedStartTaskIdx && ismember(initialStatus, {'Na fila', 'Erro'})
+                return
+            end
 
             switch obj.Tasks(taskIdx).Status
                 case 'Em andamento'
@@ -571,17 +648,56 @@ classdef TaskController < handle
                     end
 
                     if hasChanged
+                        receiverConfig = buildReceiverConfig(obj.Tasks(taskIdx));
+                        isRemoteTSMW = isfield(receiverConfig, 'Tag') && ...
+                            strcmpi(receiverConfig.Tag, 'TSMW') && ...
+                            ~obj.App.receiverObj.isLocalEtherDLL(receiverConfig);
+                        isPreconnectedStart = isfinite(obj.PreconnectedStartTaskIdx) && ...
+                            obj.PreconnectedStartTaskIdx == taskIdx;
+
+                        if isRemoteTSMW && ~isPreconnectedStart
+                            obj.PendingStartTaskIdx = taskIdx;
+                            obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                                'level', 'task', ...
+                                'timestamp', char(datetime('now')), ...
+                                'message', 'Conectando ao EtherDLL remoto; aguardando identificação do TSMW.' ...
+                            );
+                            notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
+                            notify(obj, 'TasksChanged')
+
+                            try
+                                connectAsync(obj.App.receiverObj, receiverConfig, ...
+                                    @(receiverIdx, connectionError, receiverHandle) completeAsyncTaskStart( ...
+                                        obj, taskIdx, receiverIdx, connectionError, receiverHandle));
+                            catch ME
+                                completeAsyncTaskStart(obj, taskIdx, [], ME, []);
+                            end
+
+                            hasChanged = false;
+                            return
+                        end
+
                         try
                             if strcmp(obj.App.TaskSchedulerTimer.Running, 'on')
                                 stop(obj.App.TaskSchedulerTimer)
                             end
-                            startTask(obj, taskIdx);
+                            if isPreconnectedStart
+                                startTask(obj, taskIdx, obj.PreconnectedStartHandle)
+                                obj.PreconnectedStartTaskIdx = NaN;
+                                obj.PreconnectedStartHandle = [];
+                            else
+                                startTask(obj, taskIdx);
+                            end
 
                             obj.Tasks(taskIdx).Status = 'Em andamento';
                             obj.Tasks(taskIdx).Connections.receiver.UserData.SyncMode = obj.Tasks(taskIdx).TaskSpec.Receiver.Sync;
                             obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'task', 'timestamp', char(timestamp), 'message', 'Iniciada a execução da tarefa.');
 
                         catch ME
+                            if isfinite(obj.PreconnectedStartTaskIdx) && obj.PreconnectedStartTaskIdx == taskIdx
+                                obj.PreconnectedStartTaskIdx = NaN;
+                                obj.PreconnectedStartHandle = [];
+                            end
                             obj.Tasks(taskIdx).Status = 'Erro';
                             obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error', 'timestamp', char(timestamp), 'message', getReport(ME));
                             hasChanged = false;
@@ -654,32 +770,101 @@ classdef TaskController < handle
 
     methods (Access = private)
         %-----------------------------------------------------------------%
-        function startTask(obj, idx)
+        function completeAsyncTaskStart(obj, taskIdx, receiverIdx, connectionError, receiverHandle)
+            if ~isfinite(obj.PendingStartTaskIdx) || obj.PendingStartTaskIdx ~= taskIdx
+                return
+            end
+            obj.PendingStartTaskIdx = NaN;
+
+            if isempty(obj.App) || ~isvalid(obj.App)
+                return
+            end
+
+            if taskIdx > numel(obj.Tasks)
+                return
+            end
+
+            timestamp = datetime('now');
+            if ~isempty(connectionError)
+                obj.Tasks(taskIdx).Status = 'Erro';
+                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                    'level', 'error', ...
+                    'timestamp', char(timestamp), ...
+                    'message', getReport(connectionError) ...
+                );
+            elseif isempty(receiverIdx) || isempty(receiverHandle) || ~isvalid(receiverHandle)
+                obj.Tasks(taskIdx).Status = 'Erro';
+                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                    'level', 'error', ...
+                    'timestamp', char(timestamp), ...
+                    'message', 'A conexão assíncrona ao TSMW terminou sem disponibilizar um socket válido.' ...
+                );
+            else
+                obj.Tasks(taskIdx).Connections.receiver = receiverHandle;
+                obj.Tasks(taskIdx).TaskSpec.Receiver.Handle = receiverHandle;
+                obj.PreconnectedStartTaskIdx = taskIdx;
+                obj.PreconnectedStartHandle = receiverHandle;
+                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                    'level', 'task', ...
+                    'timestamp', char(timestamp), ...
+                    'message', 'Identificação do TSMW remoto concluída; iniciando a tarefa.' ...
+                );
+            end
+
+            notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
+            notify(obj, 'TasksChanged')
+
+            if ~obj.IsRunning
+                schedulerTimer = obj.App.TaskSchedulerTimer;
+                if strcmp(schedulerTimer.Running, 'on')
+                    stop(schedulerTimer)
+                end
+                schedulerTimer.StartDelay = 0.05;
+                start(schedulerTimer)
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function startTask(obj, idx, receiverHandle)
+            if nargin < 3
+                receiverHandle = [];
+            end
+            hasPreconnectedHandle = ~isempty(receiverHandle);
+
             taskSpec = obj.Tasks(idx).TaskSpec;
 
             % Uma tarefa criada com o receptor indisponível, ou cuja configuração foi
             % recusada, não tem as bandas inicializadas.
             if isempty(obj.Tasks(idx).Bands)
-                [receiverIdx, msgError] = connect(obj.App.receiverObj, buildReceiverConfig(obj.Tasks(idx)));
-                if ~isempty(msgError)
-                    error(msgError)
+                if isempty(receiverHandle)
+                    [receiverIdx, msgError] = connect(obj.App.receiverObj, buildReceiverConfig(obj.Tasks(idx)));
+                    if ~isempty(msgError)
+                        error(msgError)
+                    end
+                    receiverHandle = obj.App.receiverObj.Table.Handle{receiverIdx};
                 end
 
-                msgError = reinitializeReceiver(obj.Tasks(idx), obj.App.receiverObj.Table.Handle{receiverIdx}, obj.App.EMSatObj, obj.App.ERMxObj);
+                msgError = reinitializeReceiver(obj.Tasks(idx), receiverHandle, obj.App.EMSatObj, obj.App.ERMxObj);
                 if ~isempty(msgError)
                     error(msgError)
                 end
             end
 
             % RECEIVER
-            [msgError, receiverHandle] = reconnectAttempt(obj.App.receiverObj, ...
-                buildReceiverConfig(obj.Tasks(idx)), ...
-                obj.Tasks(idx).TaskSpec.Receiver.Config, ...
-                obj.Tasks(idx).Bands(1).ScpiCommands ...
-            );
+            if ~hasPreconnectedHandle
+                [msgError, receiverHandle] = reconnectAttempt(obj.App.receiverObj, ...
+                    buildReceiverConfig(obj.Tasks(idx)), ...
+                    obj.Tasks(idx).TaskSpec.Receiver.Config, ...
+                    obj.Tasks(idx).Bands(1).ScpiCommands ...
+                );
 
-            if ~isempty(msgError)
-                error(msgError)
+                if ~isempty(msgError)
+                    error(msgError)
+                end
+            else
+                receiverDriver = model.ReceiverDriver.create( ...
+                    obj.Tasks(idx).TaskSpec.Receiver.Config, receiverHandle);
+                restoreConfiguration(receiverDriver, obj.Tasks(idx).Bands(1).ScpiCommands)
             end
 
             if ~isempty(receiverHandle)
