@@ -129,6 +129,11 @@ classdef winConfig_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function applyJSCustomizations(app, tabIndex)
+            arguments
+                app
+                tabIndex = 1
+            end
+            
             if app.SubTabGroup.UserData.isTabInitialized(tabIndex)
                 return
             end
@@ -677,9 +682,11 @@ classdef winConfig_exported < matlab.apps.AppBase
                 app.Container = app.UIFigure;
 
             else
-                if ~isempty(Container.Children)
-                    delete(Container.Children)
+                children = Container.Children;
+                if isa(Container, 'matlab.ui.Figure') && isprop(Container, 'RunningAppInstance') && isprop(Container.RunningAppInstance, 'jsBackDoor')
+                    children(children == Container.RunningAppInstance.jsBackDoor) = [];
                 end
+                delete(children)
 
                 app.UIFigure  = ancestor(Container, 'figure');
                 app.Container = Container;
@@ -1347,7 +1354,7 @@ classdef winConfig_exported < matlab.apps.AppBase
             app.DockModule.Visible = 'off';
             app.DockModule.Layout.Row = [2 4];
             app.DockModule.Layout.Column = [3 5];
-            app.DockModule.BackgroundColor = [0.2 0.2 0.2];
+            app.DockModule.BackgroundColor = [0.1294 0.2 0.2392];
 
             % Create DockUndockButton
             app.DockUndockButton = uiimage(app.DockModule);
@@ -1393,7 +1400,11 @@ classdef winConfig_exported < matlab.apps.AppBase
 
             % Delete UIFigure when app is deleted
             if app.isDocked
-                delete(app.Container.Children)
+                children = app.Container.Children;
+                if isa(app.Container, 'matlab.ui.Figure') && isprop(app.Container, 'RunningAppInstance') && isprop(app.Container.RunningAppInstance, 'jsBackDoor')
+                    children(children == app.Container.RunningAppInstance.jsBackDoor) = [];
+                end
+                delete(children)
             else
                 delete(app.UIFigure)
             end

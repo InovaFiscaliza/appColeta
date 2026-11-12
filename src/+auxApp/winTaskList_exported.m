@@ -119,7 +119,6 @@ classdef winTaskList_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         Container
         isDocked = false
-        SubTabGroup = struct('Children', -1, 'UserData', [])
         
         mainApp
         jsBackDoor
@@ -149,43 +148,32 @@ classdef winTaskList_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function applyJSCustomizations(app, tabIndex)
-            if app.SubTabGroup.UserData.isTabInitialized(tabIndex)
-                return
-            end
-            app.SubTabGroup.UserData.isTabInitialized(tabIndex) = true;
-            
-            switch tabIndex
-                case 1
-                    appName = class(app);
-                    elToModify = {
-                        app.ViewStateButton;
-                        app.EditStateButton;
-                        app.ConfirmEditionButtonGrid;
-                        ...
-                        app.ImportButton;
-                        app.ExportButton;
-                        ...
-                        app.DockUndockButton;
-                        app.DockCloseButton
-                    };
-                    ui.CustomizationBase.getElementsDataTag(elToModify);
+        function applyJSCustomizations(app)
+            appName = class(app);
+            elToModify = {
+                app.ViewStateButton;
+                app.EditStateButton;
+                app.ConfirmEditionButtonGrid;
+                ...
+                app.ImportButton;
+                app.ExportButton;
+                ...
+                app.DockUndockButton;
+                app.DockCloseButton
+            };
+            ui.CustomizationBase.getElementsDataTag(elToModify);
 
-                    try
-                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                            struct('appName', appName, 'dataTag', app.ViewStateButton.UserData.id, 'generation', 1, 'styleImportant', struct('borderRadius', '5px 0px 0px 5px')), ...
-                            struct('appName', appName, 'dataTag', app.EditStateButton.UserData.id, 'generation', 1, 'styleImportant', struct('borderRadius', '0px 5px 5px 0px')), ...
-                            struct('appName', appName, 'dataTag', app.ConfirmEditionButtonGrid.UserData.id, 'style', struct('background', 'none')), ...
-                            struct('appName', appName, 'dataTag', app.ImportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Importa lista de tarefas')), ...
-                            struct('appName', appName, 'dataTag', app.ExportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta lista de tarefas')), ...
-                            struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
-                            struct('appName', appName, 'dataTag', app.DockCloseButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Fecha módulo')) ...
-                        });
-                    catch
-                    end
-
-                otherwise
-                    % ...
+            try
+                sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                    struct('appName', appName, 'dataTag', app.ViewStateButton.UserData.id, 'generation', 1, 'styleImportant', struct('borderRadius', '5px 0px 0px 5px')), ...
+                    struct('appName', appName, 'dataTag', app.EditStateButton.UserData.id, 'generation', 1, 'styleImportant', struct('borderRadius', '0px 5px 5px 0px')), ...
+                    struct('appName', appName, 'dataTag', app.ConfirmEditionButtonGrid.UserData.id, 'style', struct('background', 'none')), ...
+                    struct('appName', appName, 'dataTag', app.ImportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Importa lista de tarefas')), ...
+                    struct('appName', appName, 'dataTag', app.ExportButton.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta lista de tarefas')), ...
+                    struct('appName', appName, 'dataTag', app.DockUndockButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Reabre módulo em outra janela')), ...
+                    struct('appName', appName, 'dataTag', app.DockCloseButton.UserData.id, 'tooltip', struct('defaultPosition', 'bottom', 'textContent', 'Fecha módulo')) ...
+                });
+            catch
             end
         end
 
@@ -1171,9 +1159,11 @@ classdef winTaskList_exported < matlab.apps.AppBase
                 app.Container = app.UIFigure;
 
             else
-                if ~isempty(Container.Children)
-                    delete(Container.Children)
+                children = Container.Children;
+                if isa(Container, 'matlab.ui.Figure') && isprop(Container, 'RunningAppInstance') && isprop(Container.RunningAppInstance, 'jsBackDoor')
+                    children(children == Container.RunningAppInstance.jsBackDoor) = [];
                 end
+                delete(children)
 
                 app.UIFigure  = ancestor(Container, 'figure');
                 app.Container = Container;
@@ -2127,7 +2117,7 @@ classdef winTaskList_exported < matlab.apps.AppBase
             app.DockModule.Visible = 'off';
             app.DockModule.Layout.Row = [2 4];
             app.DockModule.Layout.Column = [9 12];
-            app.DockModule.BackgroundColor = [0.2 0.2 0.2];
+            app.DockModule.BackgroundColor = [0.1294 0.2 0.2392];
 
             % Create DockUndockButton
             app.DockUndockButton = uiimage(app.DockModule);
@@ -2173,7 +2163,11 @@ classdef winTaskList_exported < matlab.apps.AppBase
 
             % Delete UIFigure when app is deleted
             if app.isDocked
-                delete(app.Container.Children)
+                children = app.Container.Children;
+                if isa(app.Container, 'matlab.ui.Figure') && isprop(app.Container, 'RunningAppInstance') && isprop(app.Container.RunningAppInstance, 'jsBackDoor')
+                    children(children == app.Container.RunningAppInstance.jsBackDoor) = [];
+                end
+                delete(children)
             else
                 delete(app.UIFigure)
             end

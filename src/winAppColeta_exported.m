@@ -86,12 +86,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         tabGroupController
         renderCount = 0
 
-        executionMode
+        executionMode = ''
         progressDialog
         popupContainer
         popupCurrentApp
-
-        SubTabGroup = struct('Children', -1, 'UserData', [])
 
         % TAREFA+INSTRUMENTOS
         TaskController
@@ -460,68 +458,57 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         end
 
         %-----------------------------------------------------------------%
-        function applyJSCustomizations(app, tabIndex)
-            if app.SubTabGroup.UserData.isTabInitialized(tabIndex)
-                return
+        function applyJSCustomizations(app)
+            appName = class(app);
+            elToModify = {
+                app.Tab1Button;
+                app.Tab2Button;
+                app.Tab3Button;
+                app.Tab4Button;
+                app.Tab5Button;
+                app.Tab6Button;
+                ...
+                app.SpectrumFlowList;
+                app.MetaData;
+                app.AxesToolbar;
+                ...
+                app.axesTool_RestoreView;
+                app.axesTool_ExportGraphics;
+                app.axesTool_PlotSource;
+                app.axesTool_MinHold;
+                app.axesTool_Average;
+                app.axesTool_MaxHold;
+                app.axesTool_Peak;
+                app.axesTool_Waterfall;
+                ...
+                app.PanelLeftVisibility;
+                app.TableVisibility
+            };
+            ui.CustomizationBase.getElementsDataTag(elToModify);
+
+            try
+                ui.TextView.startup(app.jsBackDoor, app.MetaData, appName);
+            catch
             end
-            app.SubTabGroup.UserData.isTabInitialized(tabIndex) = true;
 
-            switch tabIndex
-                case 1
-                    appName = class(app);
-                    elToModify = {
-                        app.Tab1Button;
-                        app.Tab2Button;
-                        app.Tab3Button;
-                        app.Tab4Button;
-                        app.Tab5Button;
-                        app.Tab6Button;
-                        ...
-                        app.SpectrumFlowList;
-                        app.MetaData;
-                        app.AxesToolbar;
-                        ...
-                        app.axesTool_RestoreView;
-                        app.axesTool_ExportGraphics;
-                        app.axesTool_PlotSource;
-                        app.axesTool_MinHold;
-                        app.axesTool_Average;
-                        app.axesTool_MaxHold;
-                        app.axesTool_Peak;
-                        app.axesTool_Waterfall;
-                        ...
-                        app.PanelLeftVisibility;
-                        app.TableVisibility
-                    };
-                    ui.CustomizationBase.getElementsDataTag(elToModify);
-
-                    try
-                        ui.TextView.startup(app.jsBackDoor, app.MetaData, appName);
-                    catch
-                    end
-
-                    try
-                        sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
-                            struct('appName', appName, 'dataTag', app.AxesToolbar.UserData.id, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0')), ...
-                            struct('appName', appName, 'dataTag', app.SpectrumFlowList.UserData.id, 'selector', 'input', 'styleImportant', struct('height', '44px'), 'dropDownBackgroundColor', struct('items', 'rgba(183, 49, 44, 0.75)', 'selectedItem', 'rgb(108, 4, 4)')), ...
-                            ...
-                            struct('appName', appName, 'dataTag', app.axesTool_RestoreView.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Restaura limites iniciais dos eixos')), ...
-                            struct('appName', appName, 'dataTag', app.axesTool_ExportGraphics.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta plot')), ...
-                            struct('appName', appName, 'dataTag', app.axesTool_PlotSource.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Seleciona tipo de plot')), ...
-                            struct('appName', appName, 'dataTag', app.axesTool_MinHold.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "MinHold"')), ...
-                            struct('appName', appName, 'dataTag', app.axesTool_Average.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "Average"')), ...
-                            struct('appName', appName, 'dataTag', app.axesTool_MaxHold.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "MaxHold"')), ...
-                            struct('appName', appName, 'dataTag', app.axesTool_Peak.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Excursão de pico')), ...
-                            struct('appName', appName, 'dataTag', app.axesTool_Waterfall.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe waterfall')), ...
-                            ...
-                            struct('appName', appName, 'dataTag', app.PanelLeftVisibility.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
-                            struct('appName', appName, 'dataTag', app.TableVisibility.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade da tabela')) ...
-                        });
-                    catch
-                    end
-
-                otherwise
-                    % ...
+            try
+                sendEventToHTMLSource(app.jsBackDoor, 'initializeComponents', { ...
+                    struct('appName', appName, 'dataTag', app.AxesToolbar.UserData.id, 'styleImportant', struct('borderTopLeftRadius', '0', 'borderTopRightRadius', '0')), ...
+                    struct('appName', appName, 'dataTag', app.SpectrumFlowList.UserData.id, 'selector', 'input', 'styleImportant', struct('height', '44px'), 'dropDownBackgroundColor', struct('items', 'rgba(183, 49, 44, 0.75)', 'selectedItem', 'rgb(108, 4, 4)')), ...
+                    ...
+                    struct('appName', appName, 'dataTag', app.axesTool_RestoreView.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Restaura limites iniciais dos eixos')), ...
+                    struct('appName', appName, 'dataTag', app.axesTool_ExportGraphics.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exporta plot')), ...
+                    struct('appName', appName, 'dataTag', app.axesTool_PlotSource.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Seleciona tipo de plot')), ...
+                    struct('appName', appName, 'dataTag', app.axesTool_MinHold.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "MinHold"')), ...
+                    struct('appName', appName, 'dataTag', app.axesTool_Average.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "Average"')), ...
+                    struct('appName', appName, 'dataTag', app.axesTool_MaxHold.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe curva "MaxHold"')), ...
+                    struct('appName', appName, 'dataTag', app.axesTool_Peak.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Excursão de pico')), ...
+                    struct('appName', appName, 'dataTag', app.axesTool_Waterfall.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Exibe waterfall')), ...
+                    ...
+                    struct('appName', appName, 'dataTag', app.PanelLeftVisibility.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade do painel à esquerda')), ...
+                    struct('appName', appName, 'dataTag', app.TableVisibility.UserData.id, 'tooltip', struct('defaultPosition', 'top', 'textContent', 'Visibilidade da tabela')) ...
+                });
+            catch
             end
         end
 
@@ -610,14 +597,13 @@ classdef winAppColeta_exported < matlab.apps.AppBase
 
         %-----------------------------------------------------------------%
         function initializeUIComponents(app)
-            app.tabGroupController = ui.TabNavigator(app.NavBar, app.TabGroup, app.progressDialog, app.jsBackDoor);
-            addComponent(app.tabGroupController, "Built-in", "",                     app.Tab1Button, "AlwaysOn", struct('On', '', 'Off', ''), matlab.graphics.GraphicsPlaceholder, 1)
-            addComponent(app.tabGroupController, "External", "auxApp.winInstrument", app.Tab2Button, "AlwaysOn", struct('On', '', 'Off', ''), app.Tab1Button,                      2)
-            addComponent(app.tabGroupController, "External", "auxApp.winTaskList",   app.Tab3Button, "AlwaysOn", struct('On', '', 'Off', ''), app.Tab1Button,                      3)
-            addComponent(app.tabGroupController, "External", "auxApp.winAddTask",    app.Tab4Button, "AlwaysOn", struct('On', '', 'Off', ''), app.Tab1Button,                      4)
-            addComponent(app.tabGroupController, "External", "auxApp.winServer",     app.Tab5Button, "AlwaysOn", struct('On', '', 'Off', ''), app.Tab1Button,                      5)
-            addComponent(app.tabGroupController, "External", "auxApp.winConfig",     app.Tab6Button, "AlwaysOn", struct('On', '', 'Off', ''), app.Tab1Button,                      6)
-            app.tabGroupController.inlineSVG = true;
+            app.tabGroupController = ui.TabNavigator(app);
+            addComponent(app.tabGroupController, "Built-in", "",                     app.Tab1Button, "AlwaysOn", matlab.graphics.GraphicsPlaceholder, 1)
+            addComponent(app.tabGroupController, "External", "auxApp.winInstrument", app.Tab2Button, "AlwaysOn", app.Tab1Button,                      2)
+            addComponent(app.tabGroupController, "External", "auxApp.winTaskList",   app.Tab3Button, "AlwaysOn", app.Tab1Button,                      3)
+            addComponent(app.tabGroupController, "External", "auxApp.winAddTask",    app.Tab4Button, "AlwaysOn", app.Tab1Button,                      4)
+            addComponent(app.tabGroupController, "External", "auxApp.winServer",     app.Tab5Button, "AlwaysOn", app.Tab1Button,                      5)
+            addComponent(app.tabGroupController, "External", "auxApp.winConfig",     app.Tab6Button, "AlwaysOn", app.Tab1Button,                      6)
 
             app.axesTool_MinHold.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'MinHold_32Filled.png', 'Off', 'MinHold_32.png'));
             app.axesTool_Average.UserData    = struct('id', '', 'status', false, 'icon', struct('On', 'Average_32Filled.png', 'Off', 'Average_32.png'));
@@ -2211,7 +2197,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.NavBar.Padding = [10 5 5 5];
             app.NavBar.Layout.Row = 1;
             app.NavBar.Layout.Column = 1;
-            app.NavBar.BackgroundColor = [0.2 0.2 0.2];
+            app.NavBar.BackgroundColor = [0.1294 0.2 0.2392];
 
             % Create AppName
             app.AppName = uilabel(app.NavBar);
@@ -2230,7 +2216,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab1Button.Tooltip = {'Acompanha execução de tarefas'};
             app.Tab1Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'run-all-24px-yellow.svg');
             app.Tab1Button.Text = '';
-            app.Tab1Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab1Button.BackgroundColor = [0.1294 0.2 0.2392];
             app.Tab1Button.FontSize = 11;
             app.Tab1Button.Layout.Row = [2 4];
             app.Tab1Button.Layout.Column = 3;
@@ -2252,7 +2238,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab2Button.Tooltip = {'Instrumentos'};
             app.Tab2Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'circuit-board.svg');
             app.Tab2Button.Text = '';
-            app.Tab2Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab2Button.BackgroundColor = [0.1294 0.2 0.2392];
             app.Tab2Button.FontSize = 11;
             app.Tab2Button.Layout.Row = [2 4];
             app.Tab2Button.Layout.Column = 5;
@@ -2264,7 +2250,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab3Button.Tooltip = {'Tarefas de monitoração'};
             app.Tab3Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'server-process.svg');
             app.Tab3Button.Text = '';
-            app.Tab3Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab3Button.BackgroundColor = [0.1294 0.2 0.2392];
             app.Tab3Button.FontSize = 11;
             app.Tab3Button.Layout.Row = [2 4];
             app.Tab3Button.Layout.Column = 6;
@@ -2276,7 +2262,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab4Button.Tooltip = {'Inclui nova tarefa de monitoração'};
             app.Tab4Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'empty-window.svg');
             app.Tab4Button.Text = '';
-            app.Tab4Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab4Button.BackgroundColor = [0.1294 0.2 0.2392];
             app.Tab4Button.FontSize = 11;
             app.Tab4Button.Layout.Row = [2 4];
             app.Tab4Button.Layout.Column = 7;
@@ -2297,7 +2283,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab5Button.Tooltip = {'Servidor de comunicação (TCP)'};
             app.Tab5Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'cloud-upload.svg');
             app.Tab5Button.Text = '';
-            app.Tab5Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab5Button.BackgroundColor = [0.1294 0.2 0.2392];
             app.Tab5Button.FontSize = 11;
             app.Tab5Button.Layout.Row = [2 4];
             app.Tab5Button.Layout.Column = 9;
@@ -2309,7 +2295,7 @@ classdef winAppColeta_exported < matlab.apps.AppBase
             app.Tab6Button.Tooltip = {'Configurações gerais'};
             app.Tab6Button.Icon = fullfile(pathToMLAPP, 'resources', 'Icons', 'gear-24px-white.svg');
             app.Tab6Button.Text = '';
-            app.Tab6Button.BackgroundColor = [0.2 0.2 0.2];
+            app.Tab6Button.BackgroundColor = [0.1294 0.2 0.2392];
             app.Tab6Button.FontSize = 11;
             app.Tab6Button.Layout.Row = [2 4];
             app.Tab6Button.Layout.Column = 10;
