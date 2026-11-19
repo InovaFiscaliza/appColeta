@@ -117,7 +117,15 @@ classdef Receiver < handle
                 return
             end
 
-            idx = find(strcmp(obj.Table.Socket, socketTag), 1);
+            matchingIdx = find(strcmp(obj.Table.Socket, socketTag));
+            connectedIdx = matchingIdx(obj.Table.Status(matchingIdx) == "Connected");
+            if ~isempty(connectedIdx)
+                idx = connectedIdx(1);
+            elseif ~isempty(matchingIdx)
+                idx = matchingIdx(1);
+            else
+                idx = [];
+            end
 
             % O EtherDLL fornece o servidor TCP do protocolo JSON do TSMW.
             % O gerenciador inicia/aguarda o processo apenas para endpoints locais;
@@ -227,7 +235,7 @@ classdef Receiver < handle
         end
 
         %-----------------------------------------------------------------%
-        function connectAsync(obj, receiver, completionFcn)
+        function cancelFcn = connectAsync(obj, receiver, completionFcn)
             % Inicia a identificação do TSMW remoto sem manter o callback da
             % interface aguardando readline/polling. O resultado é entregue
             % como (idx, MException, receiverHandle) ao callback informado.
@@ -236,6 +244,8 @@ classdef Receiver < handle
                 receiver (1, 1) struct
                 completionFcn (1, 1) function_handle
             end
+
+            cancelFcn = [];
 
             if ~isfield(receiver, 'Tag') || ~strcmpi(receiver.Tag, 'TSMW')
                 completionFcn([], MException('ReceiverLib:AsyncConnectWrongReceiver', ...
@@ -258,15 +268,26 @@ classdef Receiver < handle
                 return
             end
 
-            existingIdx = find(strcmp(obj.Table.Socket, socketTag), 1);
+            matchingIdx = find(strcmp(obj.Table.Socket, socketTag));
+            connectedIdx = matchingIdx(obj.Table.Status(matchingIdx) == "Connected");
+            if ~isempty(connectedIdx)
+                existingIdx = connectedIdx(1);
+            elseif ~isempty(matchingIdx)
+                existingIdx = matchingIdx(1);
+            else
+                existingIdx = [];
+            end
             usingExistingHandle = ~isempty(existingIdx);
             usedFreshHandle = false;
+            handleOwnedByAttempt = ~usingExistingHandle;
             attempt = 0;
             completed = false;
             lastFailure = [];
             activeHandle = [];
             responseTimer = [];
             responseKey = class.TSMWLib.responseKey(definition.communication.query.identification);
+
+            cancelFcn = @cancelAttempt;
 
             if usingExistingHandle
                 activeHandle = obj.Table.Handle{existingIdx};
@@ -369,9 +390,20 @@ classdef Receiver < handle
                 if usingExistingHandle && ~usedFreshHandle
                     usedFreshHandle = true;
                     usingExistingHandle = false;
+                    previousHandle = activeHandle;
                     try
-                        configureCallback(activeHandle, 'off')
-                        activeHandle = createHandle();
+                        configureCallback(previousHandle, 'off')
+                        freshHandle = createHandle();
+                    catch ME
+                        activeHandle = previousHandle;
+                        handleOwnedByAttempt = false;
+                        finish([], wrapFailure(ME), []);
+                        return
+                    end
+
+                    activeHandle = freshHandle;
+                    handleOwnedByAttempt = true;
+                    try
                         configureTerminator(activeHandle, definition.connection.terminator)
                         configureCallback(activeHandle, 'terminator', @onDataAvailable)
                         attempt = 0;
@@ -397,9 +429,21 @@ classdef Receiver < handle
                     idx = existingIdx;
                     obj.Table.Status(idx) = "Connected";
                 else
+                    if ~isempty(existingIdx) && existingIdx <= height(obj.Table)
+                        obj.Table.Status(existingIdx) = "Disconnected";
+                    end
                     idx = height(obj.Table) + 1;
                     obj.Table{idx, :} = {"Receiver", socketTag, activeHandle, "Connected"};
                 end
+            end
+
+            function cancelAttempt()
+                if completed
+                    return
+                end
+
+                finish([], MException('ReceiverLib:AsyncConnectCancelled', ...
+                    'A tentativa assíncrona de conexão foi cancelada.'), []);
             end
 
             function finish(idx, failure, receiverHandle)
@@ -420,11 +464,31 @@ classdef Receiver < handle
                 catch
                 end
 
+                if isempty(receiverHandle) && handleOwnedByAttempt
+                    discardActiveHandle()
+                elseif ~isempty(failure) && usingExistingHandle && ~usedFreshHandle && ...
+                        existingIdx <= height(obj.Table)
+                    obj.Table.Status(existingIdx) = "Disconnected";
+                end
+
                 try
                     completionFcn(idx, failure, receiverHandle)
                 catch callbackError
                     warning('ReceiverLib:AsyncCompletionCallbackFailed', ...
                         'Falha ao concluir a conexão assíncrona do TSMW: %s', callbackError.message)
+                end
+            end
+
+            function discardActiveHandle()
+                try
+                    configureCallback(activeHandle, 'off')
+                catch
+                end
+                try
+                    if isvalid(activeHandle)
+                        delete(activeHandle)
+                    end
+                catch
                 end
             end
 
@@ -437,6 +501,67 @@ classdef Receiver < handle
                 failure = MException('ReceiverLib:RemoteConnectionFailed', ...
                     'Falha ao identificar o TSMW remoto em %s:%d: %s', ip, port, cause.message);
                 failure = addCause(failure, cause);
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function didDisconnect = disconnectByConfig(obj, receiverConfig, protectedHandles)
+            if nargin < 3
+                protectedHandles = {};
+            end
+
+            [ip, port] = missingParameters(obj, receiverConfig.Parameters);
+            socketTag = sprintf('%s:%d', ip, port);
+            didDisconnect = false;
+            matchingIdx = find(strcmp(obj.Table.Socket, socketTag));
+            if isempty(matchingIdx)
+                return
+            end
+
+            for idx = fliplr(matchingIdx)
+                receiverHandle = obj.Table.Handle{idx};
+                isProtected = false;
+                for ii = 1:numel(protectedHandles)
+                    if ~isempty(protectedHandles{ii}) && isequal(receiverHandle, protectedHandles{ii})
+                        isProtected = true;
+                        break
+                    end
+                end
+                if isProtected
+                    continue
+                end
+
+                try
+                    configureCallback(receiverHandle, 'off')
+                catch
+                end
+                try
+                    if isvalid(receiverHandle)
+                        delete(receiverHandle)
+                    end
+                catch
+                end
+
+                obj.Table(idx, :) = [];
+                didDisconnect = true;
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function disconnectAll(obj)
+            for ii = height(obj.Table):-1:1
+                receiverHandle = obj.Table.Handle{ii};
+                try
+                    configureCallback(receiverHandle, 'off')
+                catch
+                end
+                try
+                    if isvalid(receiverHandle)
+                        delete(receiverHandle)
+                    end
+                catch
+                end
+                obj.Table(ii, :) = [];
             end
         end
 

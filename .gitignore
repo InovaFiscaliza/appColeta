@@ -35,3 +35,8 @@ codegen/
 
 # Cloud based storage dotfile
 .MATLABDriveTag
+etherdll-fluxo0.txt
+.vscode/launch.json
+tests/testEtherDLLConnection.m
+.gitignore
+tests/etherDLLTSMW.mlx

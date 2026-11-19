@@ -1006,8 +1006,11 @@ classdef winAppColeta_exported < matlab.apps.AppBase
         %-----------------------------------------------------------------%
         function deleteTask(app, taskIdx)
             if app.TaskController.hasPendingTaskStart()
-                ui.Dialog(app.UIFigure, 'warning', 'Aguarde a conclusão da conexão com o TSMW remoto antes de excluir uma tarefa.');
-                return
+                wasCancelled = cancelPendingTaskStart(app.TaskController, taskIdx, true);
+                if ~wasCancelled
+                    ui.Dialog(app.UIFigure, 'warning', 'Aguarde a conclusão da conexão com o TSMW remoto antes de excluir outra tarefa.');
+                    return
+                end
             end
 
             if strcmp(app.TaskController.Tasks(taskIdx).Status, 'Em andamento')
@@ -1502,6 +1505,10 @@ classdef winAppColeta_exported < matlab.apps.AppBase
                 if userSelection == "Não"
                     return
                 end
+            end
+
+            if ~isempty(app.TaskController) && isvalid(app.TaskController)
+                shutdown(app.TaskController)
             end
 
             if app.General.context.CONFIG.restoreLastSession

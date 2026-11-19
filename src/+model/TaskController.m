@@ -1,61 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 classdef TaskController < handle
 
     %---------------------------------------------------------------------%
@@ -117,6 +59,10 @@ classdef TaskController < handle
         %-----------------------------------------------------------------%
         App                                                                 % Handle to the owning winAppColeta_exported app.
         PendingStartTaskIdx (1,1) double = NaN
+        PendingStartAttemptId (1,1) double = 0
+        PendingStartAttemptCount (1,1) double = 0
+        PendingStartCancelFcn = []
+        PendingStartWatchdog = []
         PreconnectedStartTaskIdx (1,1) double = NaN
         PreconnectedStartHandle = []
     end
@@ -501,6 +447,7 @@ classdef TaskController < handle
                 pause(max(obj.RevisitInfo.GlobalRevisitTime-toc(sweepStartTic), .001))
             end
 
+            disconnectIdleTaskReceivers(obj)
             start(obj.App.TaskSchedulerTimer)
 
             obj.RevisitInfo = [];
@@ -513,6 +460,79 @@ classdef TaskController < handle
         %-----------------------------------------------------------------%
         function value = hasPendingTaskStart(obj)
             value = isfinite(obj.PendingStartTaskIdx) || isfinite(obj.PreconnectedStartTaskIdx);
+        end
+
+        %-----------------------------------------------------------------%
+        function wasCancelled = cancelPendingTaskStart(obj, taskIdx, disconnectReceiver)
+            if nargin < 2
+                taskIdx = [];
+            end
+            if nargin < 3
+                disconnectReceiver = false;
+            end
+
+            activeTaskIdx = obj.PendingStartTaskIdx;
+            if ~isfinite(activeTaskIdx)
+                activeTaskIdx = obj.PreconnectedStartTaskIdx;
+            end
+
+            wasCancelled = isfinite(activeTaskIdx) && ...
+                (isempty(taskIdx) || activeTaskIdx == taskIdx);
+            if ~wasCancelled
+                return
+            end
+
+            receiverConfig = [];
+            if activeTaskIdx <= numel(obj.Tasks)
+                try
+                    receiverConfig = buildReceiverConfig(obj.Tasks(activeTaskIdx));
+                catch
+                end
+            end
+
+            obj.PendingStartAttemptId = obj.PendingStartAttemptId + 1;
+            cancelFcn = obj.PendingStartCancelFcn;
+            clearPendingStartWatchdog(obj)
+            obj.PendingStartCancelFcn = [];
+            obj.PendingStartTaskIdx = NaN;
+            obj.PendingStartAttemptCount = 0;
+            if obj.PreconnectedStartTaskIdx == activeTaskIdx
+                obj.PreconnectedStartTaskIdx = NaN;
+                obj.PreconnectedStartHandle = [];
+            end
+
+            if isa(cancelFcn, 'function_handle')
+                try
+                    cancelFcn()
+                catch
+                end
+            end
+
+            if disconnectReceiver && ~isempty(receiverConfig)
+                disconnectTaskReceiver(obj, activeTaskIdx, receiverConfig)
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function shutdown(obj)
+            cancelPendingTaskStart(obj)
+
+            if isempty(obj.App) || ~isvalid(obj.App)
+                return
+            end
+
+            schedulerTimer = obj.App.TaskSchedulerTimer;
+            try
+                if isvalid(schedulerTimer)
+                    stop(schedulerTimer)
+                    delete(schedulerTimer)
+                end
+            catch
+            end
+
+            if ~isempty(obj.App.receiverObj)
+                disconnectAll(obj.App.receiverObj)
+            end
         end
 
         %-----------------------------------------------------------------%
@@ -656,22 +676,8 @@ classdef TaskController < handle
                             obj.PreconnectedStartTaskIdx == taskIdx;
 
                         if isRemoteTSMW && ~isPreconnectedStart
-                            obj.PendingStartTaskIdx = taskIdx;
-                            obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
-                                'level', 'task', ...
-                                'timestamp', char(datetime('now')), ...
-                                'message', 'Conectando ao EtherDLL remoto; aguardando identificação do TSMW.' ...
-                            );
-                            notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
-                            notify(obj, 'TasksChanged')
-
-                            try
-                                connectAsync(obj.App.receiverObj, receiverConfig, ...
-                                    @(receiverIdx, connectionError, receiverHandle) completeAsyncTaskStart( ...
-                                        obj, taskIdx, receiverIdx, connectionError, receiverHandle));
-                            catch ME
-                                completeAsyncTaskStart(obj, taskIdx, [], ME, []);
-                            end
+                            obj.PendingStartAttemptCount = 0;
+                            startAsyncTaskConnection(obj, taskIdx)
 
                             hasChanged = false;
                             return
@@ -700,6 +706,11 @@ classdef TaskController < handle
                             end
                             obj.Tasks(taskIdx).Status = 'Erro';
                             obj.Tasks(taskIdx).LogEntries(end+1) = struct('level', 'error', 'timestamp', char(timestamp), 'message', getReport(ME));
+                            receiverConfig = buildReceiverConfig(obj.Tasks(taskIdx));
+                            if isfield(receiverConfig, 'Tag') && strcmpi(receiverConfig.Tag, 'TSMW') && ...
+                                    ~obj.App.receiverObj.isLocalEtherDLL(receiverConfig)
+                                disconnectTaskReceiver(obj, taskIdx, receiverConfig)
+                            end
                             hasChanged = false;
 
                             if strcmp(obj.App.TaskSchedulerTimer.Running, 'off') && ~obj.IsRunning
@@ -770,36 +781,82 @@ classdef TaskController < handle
 
     methods (Access = private)
         %-----------------------------------------------------------------%
-        function completeAsyncTaskStart(obj, taskIdx, receiverIdx, connectionError, receiverHandle)
-            if ~isfinite(obj.PendingStartTaskIdx) || obj.PendingStartTaskIdx ~= taskIdx
-                return
-            end
-            obj.PendingStartTaskIdx = NaN;
-
-            if isempty(obj.App) || ~isvalid(obj.App)
+        function startAsyncTaskConnection(obj, taskIdx)
+            if taskIdx > numel(obj.Tasks) || isempty(obj.App) || ~isvalid(obj.App)
                 return
             end
 
-            if taskIdx > numel(obj.Tasks)
+            obj.PendingStartTaskIdx = taskIdx;
+            obj.PendingStartAttemptCount = obj.PendingStartAttemptCount + 1;
+            obj.PendingStartAttemptId = obj.PendingStartAttemptId + 1;
+            attemptId = obj.PendingStartAttemptId;
+            receiverConfig = buildReceiverConfig(obj.Tasks(taskIdx));
+
+            if obj.PendingStartAttemptCount == 1
+                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                    'level', 'task', ...
+                    'timestamp', char(datetime('now')), ...
+                    'message', 'Conectando ao EtherDLL remoto; aguardando identificação do TSMW.' ...
+                );
+                notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
+                notify(obj, 'TasksChanged')
+            else
+                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                    'level', 'task', ...
+                    'timestamp', char(datetime('now')), ...
+                    'message', sprintf('Nova tentativa de identificação do TSMW remoto (%d/3).', obj.PendingStartAttemptCount) ...
+                );
+                notify(obj, 'TasksChanged')
+            end
+
+            try
+                cancelFcn = connectAsync(obj.App.receiverObj, receiverConfig, ...
+                    @(receiverIdx, connectionError, receiverHandle) completeAsyncTaskStart( ...
+                        obj, taskIdx, attemptId, receiverIdx, connectionError, receiverHandle));
+            catch ME
+                completeAsyncTaskStart(obj, taskIdx, attemptId, [], ME, []);
+                return
+            end
+
+            if ~isfinite(obj.PendingStartTaskIdx) || obj.PendingStartTaskIdx ~= taskIdx || ...
+                    obj.PendingStartAttemptId ~= attemptId
+                return
+            end
+
+            obj.PendingStartCancelFcn = cancelFcn;
+            watchdogSeconds = max(5, 6 * class.Constants.idnTimeout);
+            obj.PendingStartWatchdog = timer( ...
+                'ExecutionMode', 'singleShot', ...
+                'StartDelay', watchdogSeconds, ...
+                'TimerFcn', @(~,~)handlePendingStartTimeout(obj, taskIdx, attemptId));
+            start(obj.PendingStartWatchdog)
+        end
+
+        %-----------------------------------------------------------------%
+        function completeAsyncTaskStart(obj, taskIdx, attemptId, receiverIdx, connectionError, receiverHandle)
+            if ~isfinite(obj.PendingStartTaskIdx) || obj.PendingStartTaskIdx ~= taskIdx || ...
+                    obj.PendingStartAttemptId ~= attemptId
+                return
+            end
+
+            clearPendingStartWatchdog(obj)
+            obj.PendingStartCancelFcn = [];
+
+            if isempty(obj.App) || ~isvalid(obj.App) || taskIdx > numel(obj.Tasks)
+                obj.PendingStartTaskIdx = NaN;
+                obj.PendingStartAttemptCount = 0;
                 return
             end
 
             timestamp = datetime('now');
             if ~isempty(connectionError)
-                obj.Tasks(taskIdx).Status = 'Erro';
-                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
-                    'level', 'error', ...
-                    'timestamp', char(timestamp), ...
-                    'message', getReport(connectionError) ...
-                );
+                retryPendingTaskStart(obj, taskIdx, getReport(connectionError));
             elseif isempty(receiverIdx) || isempty(receiverHandle) || ~isvalid(receiverHandle)
-                obj.Tasks(taskIdx).Status = 'Erro';
-                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
-                    'level', 'error', ...
-                    'timestamp', char(timestamp), ...
-                    'message', 'A conexão assíncrona ao TSMW terminou sem disponibilizar um socket válido.' ...
-                );
+                retryPendingTaskStart(obj, taskIdx, ...
+                    'A conexão assíncrona ao TSMW terminou sem disponibilizar um socket válido.');
             else
+                obj.PendingStartTaskIdx = NaN;
+                obj.PendingStartAttemptCount = 0;
                 obj.Tasks(taskIdx).Connections.receiver = receiverHandle;
                 obj.Tasks(taskIdx).TaskSpec.Receiver.Handle = receiverHandle;
                 obj.PreconnectedStartTaskIdx = taskIdx;
@@ -809,18 +866,187 @@ classdef TaskController < handle
                     'timestamp', char(timestamp), ...
                     'message', 'Identificação do TSMW remoto concluída; iniciando a tarefa.' ...
                 );
+
+                notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
+                notify(obj, 'TasksChanged')
+
+                scheduleTaskCheck(obj)
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function handlePendingStartTimeout(obj, taskIdx, attemptId)
+            if ~isfinite(obj.PendingStartTaskIdx) || obj.PendingStartTaskIdx ~= taskIdx || ...
+                    obj.PendingStartAttemptId ~= attemptId
+                return
             end
 
+            cancelFcn = obj.PendingStartCancelFcn;
+            obj.PendingStartCancelFcn = [];
+            obj.PendingStartAttemptId = obj.PendingStartAttemptId + 1;
+            clearPendingStartWatchdog(obj)
+            if isa(cancelFcn, 'function_handle')
+                try
+                    cancelFcn()
+                catch
+                end
+            end
+
+            retryPendingTaskStart(obj, taskIdx, ...
+                sprintf('A tentativa de identificação excedeu %.1f s; o socket foi cancelado.', ...
+                max(5, 6 * class.Constants.idnTimeout)));
+        end
+
+        %-----------------------------------------------------------------%
+        function retryPendingTaskStart(obj, taskIdx, failureMessage)
+            if taskIdx > numel(obj.Tasks)
+                obj.PendingStartTaskIdx = NaN;
+                obj.PendingStartAttemptCount = 0;
+                return
+            end
+
+            receiverConfig = buildReceiverConfig(obj.Tasks(taskIdx));
+            disconnectTaskReceiver(obj, taskIdx, receiverConfig)
+
+            if obj.PendingStartAttemptCount < 3
+                obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                    'level', 'warning', ...
+                    'timestamp', char(datetime('now')), ...
+                    'message', sprintf('Falha na tentativa %d/3 de conexão ao TSMW remoto: %s', ...
+                    obj.PendingStartAttemptCount, failureMessage) ...
+                );
+                notify(obj, 'TasksChanged')
+                startAsyncTaskConnection(obj, taskIdx)
+                return
+            end
+
+            obj.PendingStartTaskIdx = NaN;
+            obj.PendingStartAttemptCount = 0;
+            obj.Tasks(taskIdx).Status = 'Erro';
+            obj.Tasks(taskIdx).LogEntries(end+1) = struct( ...
+                'level', 'error', ...
+                'timestamp', char(datetime('now')), ...
+                'message', sprintf('Falha após três tentativas de conexão ao TSMW remoto. Instrumento desconectado. %s', failureMessage) ...
+            );
             notify(obj, 'StatusChanged', model.TaskEventData(taskIdx))
             notify(obj, 'TasksChanged')
+            scheduleTaskCheck(obj)
+        end
 
-            if ~obj.IsRunning
-                schedulerTimer = obj.App.TaskSchedulerTimer;
-                if strcmp(schedulerTimer.Running, 'on')
-                    stop(schedulerTimer)
+        %-----------------------------------------------------------------%
+        function disconnectTaskReceiver(obj, taskIdx, receiverConfig)
+            protectedHandles = {};
+            for ii = 1:numel(obj.Tasks)
+                if ii == taskIdx || ~ismember(obj.Tasks(ii).Status, ...
+                        {'Na fila', 'Em andamento', 'Cancelamento solicitado'})
+                    continue
                 end
-                schedulerTimer.StartDelay = 0.05;
-                start(schedulerTimer)
+                receiverHandle = obj.Tasks(ii).Connections.receiver;
+                if ~isempty(receiverHandle)
+                    protectedHandles{end+1} = receiverHandle; %#ok<AGROW>
+                end
+                receiverHandle = obj.Tasks(ii).TaskSpec.Receiver.Handle;
+                if ~isempty(receiverHandle)
+                    protectedHandles{end+1} = receiverHandle; %#ok<AGROW>
+                end
+            end
+
+            disconnectByConfig(obj.App.receiverObj, receiverConfig, protectedHandles)
+        end
+
+        %-----------------------------------------------------------------%
+        function disconnectIdleTaskReceivers(obj)
+            terminalStatuses = {'Concluída', 'Cancelada', 'Erro'};
+
+            for taskIdx = 1:numel(obj.Tasks)
+                if ~ismember(obj.Tasks(taskIdx).Status, terminalStatuses)
+                    continue
+                end
+
+                receiverConfig = buildReceiverConfig(obj.Tasks(taskIdx));
+                if ~isfield(receiverConfig, 'Tag') || ~strcmpi(receiverConfig.Tag, 'TSMW')
+                    continue
+                end
+
+                endpointKey = receiverEndpointKey(obj, receiverConfig);
+                hasPendingUse = false;
+                pendingTaskIdxs = [obj.PendingStartTaskIdx, obj.PreconnectedStartTaskIdx];
+                pendingTaskIdxs = pendingTaskIdxs(isfinite(pendingTaskIdxs));
+                for pendingIdx = pendingTaskIdxs
+                    if pendingIdx <= numel(obj.Tasks) && ...
+                            strcmp(endpointKey, receiverEndpointKey(obj, buildReceiverConfig(obj.Tasks(pendingIdx))))
+                        hasPendingUse = true;
+                        break
+                    end
+                end
+                if hasPendingUse
+                    continue
+                end
+
+                hasQueuedOrActiveUse = false;
+                for otherIdx = 1:numel(obj.Tasks)
+                    if otherIdx == taskIdx || ~ismember(obj.Tasks(otherIdx).Status, ...
+                            {'Na fila', 'Em andamento', 'Cancelamento solicitado'})
+                        continue
+                    end
+
+                    otherConfig = buildReceiverConfig(obj.Tasks(otherIdx));
+                    if strcmp(endpointKey, receiverEndpointKey(obj, otherConfig))
+                        hasQueuedOrActiveUse = true;
+                        break
+                    end
+                end
+
+                if ~hasQueuedOrActiveUse
+                    disconnectTaskReceiver(obj, taskIdx, receiverConfig)
+                end
+            end
+        end
+
+        %-----------------------------------------------------------------%
+        function endpointKey = receiverEndpointKey(~, receiverConfig)
+            parameters = receiverConfig.Parameters;
+            ip = '';
+            port = '';
+            if isfield(parameters, 'IP')
+                ip = char(string(parameters.IP));
+            end
+            if strcmpi(ip, 'localhost')
+                ip = '127.0.0.1';
+            end
+            if isfield(parameters, 'Port')
+                port = char(string(parameters.Port));
+            end
+            endpointKey = lower(sprintf('%s:%s', ip, port));
+        end
+
+        %-----------------------------------------------------------------%
+        function scheduleTaskCheck(obj)
+            if obj.IsRunning || isempty(obj.App) || ~isvalid(obj.App)
+                return
+            end
+
+            schedulerTimer = obj.App.TaskSchedulerTimer;
+            if isempty(schedulerTimer) || ~isvalid(schedulerTimer)
+                return
+            end
+            if strcmp(schedulerTimer.Running, 'on')
+                stop(schedulerTimer)
+            end
+            schedulerTimer.StartDelay = 0.05;
+            start(schedulerTimer)
+        end
+
+        %-----------------------------------------------------------------%
+        function clearPendingStartWatchdog(obj)
+            watchdog = obj.PendingStartWatchdog;
+            obj.PendingStartWatchdog = [];
+            try
+                if ~isempty(watchdog) && isvalid(watchdog)
+                    stop(watchdog)
+                    delete(watchdog)
+                end
+            catch
             end
         end
 
